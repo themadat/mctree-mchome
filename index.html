@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en" data-theme="light" data-button-style="both">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="A focused pre-launch local-first app foundation with a blank workspace, Notes, settings, and optional GitHub Sync.">
+  <meta name="theme-color" content="#f5f3ed">
+  <meta name="theme-color" content="#f5f3ed" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121616" media="(prefers-color-scheme: dark)">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="App Template">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>App Template</title>
+  <link rel="manifest" href="manifest.webmanifest?v=0.0.1.2">
+  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg?v=0.0.1.2">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=0.0.1.2">
+  <link rel="apple-touch-startup-image" href="assets/icons/splash-light.png?v=0.0.1.2" media="(prefers-color-scheme: light)">
+  <link rel="apple-touch-startup-image" href="assets/icons/splash-dark.png?v=0.0.1.2" media="(prefers-color-scheme: dark)">
+  <link rel="stylesheet" href="assets/css/app.css?v=0.0.1.2">
+  <script defer src="assets/js/config.js?v=0.0.1.2"></script>
+  <script defer src="assets/js/icons.js?v=0.0.1.2"></script>
+  <script defer src="assets/js/core/utils.js?v=0.0.1.2"></script>
+  <script defer src="assets/js/core/state.js?v=0.0.1.2"></script>
+  <script defer src="assets/js/core/storage.js?v=0.0.1.2"></script>
+  <script defer src="assets/js/core/components.js?v=0.0.1.2"></script>
+  <script defer src="assets/js/core/portability.js?v=0.0.1.2"></script>
+  <script defer src="assets/js/core/sync.js?v=0.0.1.2"></script>
+  <script defer src="assets/js/core/pwa.js?v=0.0.1.2"></script>
+  <script defer src="assets/js/app.js?v=0.0.1.2"></script>
+</head>
+<body>
+  <a class="skip-link" href="#mainContent">Skip to main content</a>
+
+  <header class="app-header">
+    <div class="title-cluster">
+      <button id="appIconButton" class="app-icon-button" type="button" aria-label="Switch color theme. Press and hold to toggle Developer Mode" title="Switch color theme · Press and hold for Developer Mode" aria-keyshortcuts="T" data-shortcut="T">
+        <img id="appIcon" src="assets/icons/app-icon-light.svg?v=0.0.1.2" alt="">
+      </button>
+      <div class="identity-copy">
+        <span id="appName" class="app-name">App Template</span>
+        <div class="identity-pill-row">
+          <button id="versionButton" class="version-pill" type="button" aria-label="Open release notes" aria-keyshortcuts="V" data-shortcut="V">v0.0.1.2</button>
+          <span id="betaPill" class="environment-pill beta-pill" title="This is the beta application" hidden>BETA</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="global-search-wrap">
+      <span class="search-icon" aria-hidden="true" data-symbol="search"></span>
+      <label class="visually-hidden" for="globalSearch">Search notes, help, releases, and roadmap</label>
+      <input id="globalSearch" type="search" autocomplete="off" placeholder="Search app" aria-haspopup="listbox" aria-controls="globalSearchResults" data-shortcut="/">
+      <kbd aria-hidden="true">/</kbd>
+      <div id="globalSearchResults" class="global-search-results" role="listbox" aria-label="Search results" hidden></div>
+    </div>
+
+    <div class="top-toolbar" aria-label="Application actions">
+      <button id="notesButton" class="button action-button" type="button" aria-haspopup="dialog" aria-controls="notesDialog" aria-keyshortcuts="N" data-shortcut="N">
+        <span class="button-icon" aria-hidden="true" data-symbol="notes"></span><span class="button-label">Notes</span>
+      </button>
+      <button id="supportButton" class="button icon-button action-button" type="button" aria-label="Open settings" title="Open settings" data-shortcut="?">
+        <span class="button-icon" aria-hidden="true" data-symbol="support"></span><span class="button-label">Settings</span>
+        <span id="releaseUnreadDot" class="unread-dot" aria-label="Unread release notes" hidden></span>
+      </button>
+    </div>
+
+  </header>
+
+  <aside id="whatsNewBanner" class="whats-new-banner" aria-labelledby="whatsNewTitle" hidden>
+    <div>
+      <span class="eyebrow">What’s New · <span data-whats-new-version></span></span>
+      <strong id="whatsNewTitle" data-whats-new-title></strong>
+      <span data-whats-new-summary></span>
+    </div>
+    <div class="banner-actions">
+      <button type="button" class="icon-button" data-open-releases aria-label="View release notes" title="View release notes"><span aria-hidden="true" data-symbol="releaseNotes"></span></button>
+      <button type="button" class="icon-button quiet" data-dismiss-release aria-label="Dismiss What’s New" title="Dismiss What’s New"><span aria-hidden="true" data-symbol="close"></span></button>
+    </div>
+  </aside>
+
+  <aside id="contextHint" class="context-hint" data-hint-key="workspace-basics" hidden>
+    <span aria-hidden="true">i</span>
+    <p>The floating status button combines local-save and optional GitHub Sync information.</p>
+    <button type="button" class="icon-button" data-dismiss-hint="workspace-basics" aria-label="Dismiss hint"><span aria-hidden="true" data-symbol="close"></span></button>
+  </aside>
+
+  <main id="mainContent" tabindex="-1" aria-label="Application workspace"></main>
+
+  <div class="floating-actions" aria-label="Storage and synchronization status">
+    <button id="floatingStatusButton" class="floating-button status-button" type="button" aria-label="Saved locally. GitHub setup required." title="Saved locally. GitHub setup required." data-sync-state="setup" data-shortcut="S">
+      <span class="floating-status-icon" data-floating-status-icon aria-hidden="true">○</span>
+      <span class="floating-status-copy"><strong data-floating-local-label>Saved locally</strong><small data-floating-sync-label>GitHub setup required</small></span>
+    </button>
+  </div>
+
+  <dialog id="notesDialog" class="app-dialog notes-dialog" aria-labelledby="notesDialogTitle">
+    <div class="dialog-shell">
+      <header class="dialog-header"><div><h2 id="notesDialogTitle" class="notes-dialog-title"><span class="notes-dialog-title-icon" aria-hidden="true" data-symbol="notes"></span><span>Notes</span></h2></div><button type="button" class="icon-button" data-close-dialog="notesDialog" aria-label="Close Notes"><span aria-hidden="true" data-symbol="close"></span></button></header>
+      <div class="dialog-body notes-dialog-body">
+        <label class="visually-hidden" for="notesTextarea">Notes</label>
+        <textarea id="notesTextarea" class="notes-textarea" placeholder="Jot down anything…"></textarea>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="supportDialog" class="app-dialog support-dialog" aria-labelledby="supportDialogTitle" data-backdrop-close="false">
+    <div class="dialog-shell">
+      <header class="dialog-header support-header"><div><span class="eyebrow">Application preferences</span><h2 id="supportDialogTitle">Settings</h2></div><button type="button" class="icon-button" data-close-dialog="supportDialog" aria-label="Close"><span aria-hidden="true" data-symbol="close"></span></button></header>
+      <div class="support-layout">
+        <div class="support-tabs" role="tablist" aria-label="Settings sections">
+          <button id="settingsTab" type="button" role="tab" aria-selected="true" aria-controls="settingsPanel" data-support-tab="settings">Settings</button>
+          <button id="helpTab" type="button" role="tab" aria-selected="false" aria-controls="helpPanel" data-support-tab="help">Help</button>
+          <button id="releasesTab" type="button" role="tab" aria-selected="false" aria-controls="releasesPanel" data-support-tab="releases">What’s New</button>
+          <button id="shortcutsTab" type="button" role="tab" aria-selected="false" aria-controls="shortcutsPanel" data-support-tab="shortcuts">Shortcuts</button>
+          <button id="supportRoadmapTab" type="button" role="tab" aria-selected="false" aria-controls="supportRoadmapPanel" data-support-tab="roadmap">Roadmap</button>
+          <button id="developerTab" type="button" role="tab" aria-selected="false" aria-controls="developerPanel" data-support-tab="developer" hidden>Developer</button>
+        </div>
+        <div class="support-panels dialog-body">
+          <section id="settingsPanel" class="support-panel" role="tabpanel" aria-labelledby="settingsTab" data-support-panel="settings">
+            <div class="settings-section">
+              <div class="section-heading"><div><span class="eyebrow">Personalization</span><h3>Appearance</h3></div></div>
+              <div class="setting-row"><div><strong>Color mode</strong><small>Use the device setting or choose a mode.</small></div><div class="segmented" aria-label="Color mode"><button type="button" data-theme-mode="system" aria-pressed="true">System</button><button type="button" data-theme-mode="light" aria-pressed="false">Light</button><button type="button" data-theme-mode="dark" aria-pressed="false">Dark</button></div></div>
+              <div class="setting-row stacked"><div><strong>Theme presets</strong><small>Apply a coordinated set of editable colors.</small></div><div id="themePresets" class="theme-presets"></div></div>
+              <div class="color-settings">
+                <label><span>Primary</span><input type="color" data-color-setting="accent"><input type="text" data-color-text="accent" maxlength="7" aria-label="Primary color hex"></label>
+                <label><span>Secondary</span><input type="color" data-color-setting="accent2"><input type="text" data-color-text="accent2" maxlength="7" aria-label="Secondary color hex"></label>
+                <label><span>Success</span><input type="color" data-color-setting="success"><input type="text" data-color-text="success" maxlength="7" aria-label="Success color hex"></label>
+                <label><span>Warning</span><input type="color" data-color-setting="warning"><input type="text" data-color-text="warning" maxlength="7" aria-label="Warning color hex"></label>
+                <label><span>Danger</span><input type="color" data-color-setting="danger"><input type="text" data-color-text="danger" maxlength="7" aria-label="Danger color hex"></label>
+              </div>
+              <div class="setting-row"><label for="appTextScale"><strong>Application text size</strong><small id="appTextScaleValue">100%</small></label><input id="appTextScale" type="range" min="85" max="130" step="5"></div>
+              <div class="setting-row"><label for="readingTextScale"><strong>Reading text size</strong><small id="readingTextScaleValue">100%</small></label><input id="readingTextScale" type="range" min="85" max="160" step="5"></div>
+              <div class="setting-row"><div><strong>Button presentation</strong><small>Choose symbols, text, or both.</small></div><div class="segmented" aria-label="Button presentation"><button type="button" data-button-style="icons" aria-pressed="false">Icons</button><button type="button" data-button-style="text" aria-pressed="false">Text</button><button type="button" data-button-style="both" aria-pressed="true">Both</button></div></div>
+              <div class="setting-row"><label for="motionPreference"><strong>Motion</strong><small>Respect the system setting or override it.</small></label><select id="motionPreference"><option value="system">System preference</option><option value="reduce">Reduce motion</option><option value="full">Allow motion</option></select></div>
+            </div>
+
+            <div class="settings-section">
+              <div class="section-heading"><div><span class="eyebrow">Workspace</span><h3>Guidance</h3></div></div>
+              <div class="setting-row"><div><strong>Contextual hints</strong><small>Hints can also be dismissed one at a time.</small></div><button id="hintsToggle" type="button" class="toggle-button" aria-pressed="true">On</button></div>
+              <div class="button-row"><button id="restoreHintsButton" class="button" type="button">Restore dismissed hints</button></div>
+            </div>
+
+            <div id="storageSyncSettings" class="settings-section">
+              <div class="section-heading"><div><span class="eyebrow">Data & connection</span><h3>Storage & GitHub</h3></div><span id="localStorageSettingsState" class="status-pill" data-kind="success">Saved locally</span></div>
+              <div id="localStorageSettingsSummary" class="inline-status" role="status" aria-live="polite"></div>
+              <div id="cloudSyncSettings" class="sync-settings-group">
+              <div class="section-heading subsection-heading"><div><span class="eyebrow">Optional integration</span><h4>GitHub synchronization</h4></div><span id="syncSettingsState" class="status-pill" data-kind="neutral">Setup required</span></div>
+              <p class="section-intro">Core features work without GitHub. A fine-grained token is stored only on this device, is never exported, and cannot be made cryptographically secure by browser storage.</p>
+              <div id="syncSettingsSummary" class="inline-status" role="status" aria-live="polite"></div>
+              <details id="syncAdvancedFields">
+                <summary>Connection settings</summary>
+                <div class="form-grid sync-grid">
+                  <label class="field"><span>Owner</span><input id="syncOwner" autocomplete="username" autocapitalize="none" spellcheck="false"></label>
+                  <label class="field"><span>Repository</span><input id="syncRepo" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
+                  <label class="field"><span>Branch</span><input id="syncBranch" value="main" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
+                  <label class="field"><span>JSON file path</span><input id="syncPath" value="data/workspace.json" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
+                  <label class="field full"><span>Fine-grained token <small id="storedTokenLabel"></small></span><input id="syncToken" type="password" autocomplete="new-password" placeholder="Enter or replace token"></label>
+                  <label class="check-field full"><input id="syncRememberToken" type="checkbox" checked><span>Remember the token on this device</span></label>
+                </div>
+                <div class="button-row"><button id="testSyncButton" class="button" type="button">Test connection</button><button id="saveSyncButton" class="button primary" type="button">Save settings</button><button id="forgetSyncButton" class="button danger-text" type="button">Forget GitHub</button></div>
+              </details>
+              <div class="button-row"><button id="syncNowSettingsButton" class="button primary" type="button">Sync now</button></div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <div class="section-heading"><div><span class="eyebrow">Data safety</span><h3>Backup, restore & reset</h3></div></div>
+              <p class="section-intro">JSON backups include notes, preferences, and module settings. Tokens are excluded.</p>
+              <div class="button-row"><button id="exportButton" class="button primary" type="button">Export JSON</button><button id="importButton" class="button" type="button">Import JSON</button><input id="importFileInput" type="file" accept="application/json,.json" hidden></div>
+              <div class="danger-zone"><div><strong>Reset preferences</strong><small>Keep notes, but restore appearance, filters, and hints.</small></div><button id="resetPreferencesButton" class="button danger-text" type="button">Reset preferences</button></div>
+              <div class="danger-zone"><div><strong>Erase all application data</strong><small>Permanently remove content, preferences, sync settings, token, and recovery data from this browser.</small></div><button id="eraseAllButton" class="button danger" type="button">Erase all data</button></div>
+            </div>
+          </section>
+
+          <section id="helpPanel" class="support-panel" role="tabpanel" aria-labelledby="helpTab" data-support-panel="help" hidden>
+            <div class="support-search sticky-controls"><label class="grow-control"><span class="visually-hidden">Search help</span><input id="helpSearch" type="search" placeholder="Search Help Center"></label><span id="helpResultCount" class="count-pill">0 topics</span></div>
+            <div id="helpContent" class="help-content"></div>
+          </section>
+
+          <section id="releasesPanel" class="support-panel" role="tabpanel" aria-labelledby="releasesTab" data-support-panel="releases" hidden>
+            <div class="release-summary"><div><span class="eyebrow">Current version</span><h3 id="releaseCurrentVersion">v0.0.1.2</h3></div><p>Browse released work and the configurable roadmap.</p></div>
+            <div class="segmented version-views" role="group" aria-label="Version views"><button type="button" data-version-view="released" aria-pressed="true">Released</button><button type="button" data-version-view="planned" aria-pressed="false">Planned</button><button type="button" data-version-view="wishlist" aria-pressed="false">Wishlist</button></div>
+            <div id="releaseContent" class="release-list"></div>
+          </section>
+
+          <section id="shortcutsPanel" class="support-panel" role="tabpanel" aria-labelledby="shortcutsTab" data-support-panel="shortcuts" hidden>
+            <div class="release-summary"><div><span class="eyebrow">Keyboard</span><h3>Shortcut reference</h3></div><p>Shortcuts never replace visible controls. Hold Alt to reveal hints when enabled.</p></div>
+            <div id="shortcutContent" class="shortcut-content"></div>
+          </section>
+
+          <section id="supportRoadmapPanel" class="support-panel" role="tabpanel" aria-labelledby="supportRoadmapTab" data-support-panel="roadmap" hidden>
+            <div class="support-search sticky-controls"><label class="grow-control"><span class="visually-hidden">Search support roadmap</span><input id="supportRoadmapSearch" type="search" placeholder="Search roadmap"></label><select id="supportRoadmapState" aria-label="Roadmap view"><option value="all">All</option><option value="released">Released</option><option value="planned">Planned</option><option value="wishlist">Wishlist</option></select><select id="supportRoadmapSort" aria-label="Sort roadmap"><option value="priority">Priority</option><option value="target">Target release</option><option value="effort">Effort</option><option value="age">Age</option><option value="title">Title</option></select></div>
+            <div id="supportRoadmapList" class="roadmap-list compact-roadmap"></div>
+          </section>
+
+          <section id="developerPanel" class="support-panel" role="tabpanel" aria-labelledby="developerTab" data-support-panel="developer" hidden>
+            <div class="release-summary"><div><span class="eyebrow">Hidden tools</span><h3>Developer mode</h3></div><p>Diagnostics are read-only and never expose the GitHub token.</p></div>
+            <dl id="developerDiagnostics" class="diagnostic-grid"></dl>
+            <div class="button-row developer-actions"><button id="restoreRecoveryButton" class="button" type="button">Restore recovery copy</button><button id="saveRecoveryButton" class="button" type="button">Save recovery copy</button><button id="disableDeveloperButton" class="button" type="button">Hide developer mode</button></div>
+            <h4>Normalized state</h4>
+            <pre id="developerState" class="developer-json" tabindex="0" aria-label="Normalized application state"></pre>
+          </section>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="importPreviewDialog" class="app-dialog import-dialog" aria-labelledby="importPreviewTitle" data-backdrop-close="false">
+    <div class="dialog-shell">
+      <header class="dialog-header"><div><span class="eyebrow">Validated backup</span><h2 id="importPreviewTitle">Review import</h2></div><button type="button" class="icon-button" data-close-dialog="importPreviewDialog" aria-label="Close"><span aria-hidden="true" data-symbol="close"></span></button></header>
+      <div class="dialog-body">
+        <p><strong data-import-file></strong> passed parsing, migration, sanitization, normalization, and validation.</p>
+        <dl class="preview-grid"><div><dt>Workspace</dt><dd data-import-workspace></dd></div><div><dt>Notes</dt><dd data-import-documents></dd></div><div><dt>Versions</dt><dd data-import-version></dd></div><div><dt>Last updated</dt><dd data-import-updated></dd></div><div data-import-migrations-row><dt>Migrations</dt><dd data-import-migrations></dd></div></dl>
+        <p class="inline-status warning" data-import-warning hidden></p>
+        <p class="inline-status"><span aria-hidden="true">↶</span><span>The current data will be saved as a local recovery copy before replacement.</span></p>
+      </div>
+      <footer class="dialog-footer"><button type="button" class="button" data-close-dialog="importPreviewDialog">Keep current data</button><button type="button" class="button primary" data-import-confirm>Continue</button></footer>
+    </div>
+  </dialog>
+
+  <dialog id="confirmDialog" class="app-dialog small-dialog" aria-labelledby="confirmTitle" data-backdrop-close="false">
+    <div class="dialog-shell">
+      <header class="dialog-header"><h2 id="confirmTitle" data-confirm-title>Confirm action</h2></header>
+      <div class="dialog-body"><p data-confirm-message></p></div>
+      <footer class="dialog-footer"><button type="button" class="button" data-confirm-cancel>Cancel</button><button type="button" class="button primary" data-confirm-action>Confirm</button></footer>
+    </div>
+  </dialog>
+
+  <dialog id="choiceDialog" class="app-dialog choice-dialog" aria-labelledby="choiceTitle" data-backdrop-close="false">
+    <div class="dialog-shell">
+      <header class="dialog-header"><h2 id="choiceTitle" data-choice-title>Choose an action</h2></header>
+      <div class="dialog-body"><p data-choice-message></p><div class="choice-actions" data-choice-actions></div></div>
+      <footer class="dialog-footer"><button type="button" class="button" data-choice-cancel>Cancel</button></footer>
+    </div>
+  </dialog>
+
+  <dialog id="messageDialog" class="app-dialog small-dialog" aria-labelledby="messageTitle">
+    <div class="dialog-shell"><header class="dialog-header"><h2 id="messageTitle" data-message-title>Message</h2></header><div class="dialog-body"><p data-message-text></p></div><footer class="dialog-footer"><button type="button" class="button primary" data-message-close data-close-dialog="messageDialog">Close</button></footer></div>
+  </dialog>
+
+  <div id="globalPopover" class="global-popover" hidden></div>
+
+  <aside id="appToast" class="app-toast" role="status" aria-live="polite" aria-atomic="true" hidden>
+    <span class="toast-mark" aria-hidden="true">●</span><div><strong data-toast-title>Saved</strong><span data-toast-message></span></div><button type="button" class="button small" data-toast-action hidden></button><button type="button" class="icon-button" data-toast-close aria-label="Dismiss notification"><span aria-hidden="true" data-symbol="close"></span></button>
+  </aside>
+
+  <div id="loadingOverlay" class="loading-overlay" role="status" aria-live="polite" hidden><div class="loading-card"><span class="spinner" aria-hidden="true"></span><strong data-loading-label>Loading…</strong></div></div>
+  <div id="assertiveStatus" class="visually-hidden" role="alert" aria-live="assertive"></div>
+</body>
+</html>
