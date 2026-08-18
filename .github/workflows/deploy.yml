@@ -1,0 +1,61 @@
+name: Deploy to GitHub Pages
+
+# Production:  main   -> https://themadat.github.io/app-template/
+# Beta:        beta   -> https://themadat.github.io/app-template/beta/
+#
+# Each branch publishes into its own subfolder of the gh-pages branch.
+# keep_files: true prevents one branch's deploy from wiping the other's folder.
+
+on:
+  push:
+    branches:
+      - main
+      - beta
+  workflow_dispatch:
+
+concurrency:
+  group: pages-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Decide destination subfolder
+        id: dest
+        run: |
+          case "${{ github.ref_name }}" in
+            main)
+              echo "dir=." >> "$GITHUB_OUTPUT"
+              echo "label=production" >> "$GITHUB_OUTPUT"
+              ;;
+            beta)
+              echo "dir=beta" >> "$GITHUB_OUTPUT"
+              echo "label=beta" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Unsupported branch: ${{ github.ref_name }}" >&2
+              exit 1
+              ;;
+          esac
+
+      - name: Mark deploy with .nojekyll
+        run: touch .nojekyll
+
+      - name: Publish to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./
+          destination_dir: ${{ steps.dest.outputs.dir }}
+          keep_files: true
+          exclude_assets: '.github,build,context,.claude,assets/svgs,assets/world-map.svg,assets/world-map_raw.svg,assets/optimize-world-svg.py'
+          commit_message: "Deploy ${{ steps.dest.outputs.label }} from ${{ github.sha }}"
+          user_name: "github-actions[bot]"
+          user_email: "github-actions[bot]@users.noreply.github.com"
