@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <style>
+    .bg{fill:#f5f3ed}.card{fill:#fffef9;stroke:#315f73}.tile{fill:#315f73}.line{fill:#b86b4b}
+    @media(prefers-color-scheme:dark){.bg{fill:#121616}.card{fill:#1a201f;stroke:#6fa7bd}.tile{fill:#6fa7bd}.line{fill:#d99274}}
+  </style>
+  <rect class="bg" width="64" height="64" rx="14"/>
+  <rect class="card" x="10" y="10" width="44" height="44" rx="9" stroke-width="4"/>
+  <rect class="tile" x="16" y="17" width="13" height="13" rx="3"/>
+  <rect class="line" x="34" y="17" width="14" height="5" rx="2.5"/>
+  <rect class="line" x="16" y="37" width="32" height="4" rx="2" opacity=".55"/>
+  <rect class="line" x="16" y="45" width="23" height="4" rx="2" opacity=".55"/>
+</svg>
