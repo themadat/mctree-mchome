@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.18",
-      buildId: "0.0.1.18",
+      version: "0.0.1.19",
+      buildId: "0.0.1.19",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -84,6 +84,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.19",
+        date: "2026-08-19T16:12:55.000Z",
+        title: "Explicit descendant date status",
+        summary: "Current McLineage imports now distinguish known date precision, unknown dates, and living people with a strict descendant date contract.",
+        features: ["Strict descendant date descriptors", "Explicit living and deceased import status"],
+        improvements: ["Partial dates collapse to their known year or month", "Legacy page references sit beside lineage IDs in source details"],
+        fixes: ["Unknown birth dates no longer use invalid source text", "G0-G4 descendants without death dates import as deceased with an unknown date"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.18",
         date: "2026-08-19T15:33:32.000Z",
