@@ -68,6 +68,8 @@
         descendantDepth: 2,
         directoryCollapsed: true,
         profileCollapsed: false,
+        showInferredParentLines: false,
+        profilePanelWidth: 300,
         directorySearch: "",
         directorySort: "first",
         livingFilter: "all",
@@ -388,6 +390,32 @@
     };
   }
 
+  function normalizeMcLineagePartnerHistory(relationships) {
+    const groups = new Map();
+    relationships.forEach(function (relationship) {
+      const fields = relationship.type === "partner" && relationship.source && relationship.source.format === "mclineage-cleaned" ? relationship.source.fields : null;
+      const slot = Number(fields && fields.spouse_slot);
+      if (!Number.isInteger(slot) || slot < 1) return;
+      if (!groups.has(relationship.person1Id)) groups.set(relationship.person1Id, []);
+      groups.get(relationship.person1Id).push({ relationship: relationship, slot: slot, fields: fields });
+    });
+    groups.forEach(function (entries) {
+      const matchesFormerImporter = entries.every(function (entry) {
+        const code = u.cleanLine(entry.fields.legacy_relationship_status_code, 20).toUpperCase();
+        const formerStatus = entry.slot === 1 && code === "M" ? "married" : entry.slot === 1 && code === "D" ? "divorced" : "unknown";
+        return entry.relationship.status === formerStatus;
+      });
+      if (!matchesFormerImporter) return;
+      const lastSlot = Math.max.apply(null, entries.map(function (entry) { return entry.slot; }));
+      entries.forEach(function (entry) {
+        const code = u.cleanLine(entry.fields.legacy_relationship_status_code, 20).toUpperCase();
+        if (entry.slot < lastSlot) entry.relationship.status = "divorced";
+        else if (code === "M") entry.relationship.status = "married";
+        else if (code === "D") entry.relationship.status = "divorced";
+      });
+    });
+  }
+
   function normalize(input) {
     const source = u.plainObject(input);
     const base = createDefaultState();
@@ -407,6 +435,7 @@
     const people = (Array.isArray(sourceWorkspace.people) ? sourceWorkspace.people : []).slice(0, config.controls.maxPeople).map(function (person, index) { return normalizePerson(person, index, personIds, now); });
     const relationshipIds = new Set();
     const relationships = (Array.isArray(sourceWorkspace.relationships) ? sourceWorkspace.relationships : []).slice(0, config.controls.maxRelationships).map(function (relationship, index) { return normalizeRelationship(relationship, index, relationshipIds, personIds, now); }).filter(Boolean);
+    normalizeMcLineagePartnerHistory(relationships);
     const documentIds = new Set();
     const documents = consolidateDocuments((Array.isArray(sourceWorkspace.documents) ? sourceWorkspace.documents : []).map(function (document, index) { return normalizeDocument(document, index, documentIds, now); }), now);
     const recordIds = new Set();
@@ -476,6 +505,8 @@
         descendantDepth: Math.round(u.clamp(sourceUi.descendantDepth, 0, 4, sourceUi.generationDepth == null ? 2 : sourceUi.generationDepth)),
         directoryCollapsed: sourceUi.directoryCollapsed === true,
         profileCollapsed: sourceUi.profileCollapsed === true,
+        showInferredParentLines: sourceUi.showInferredParentLines === true,
+        profilePanelWidth: Math.round(u.clamp(sourceUi.profilePanelWidth, 240, 600, 300)),
         directorySearch: u.cleanLine(sourceUi.directorySearch, 200),
         directorySort: sourceUi.directorySort === "last" ? "last" : "first",
         livingFilter: ["all", "living", "deceased", "unknown"].includes(sourceUi.livingFilter) ? sourceUi.livingFilter : "all",

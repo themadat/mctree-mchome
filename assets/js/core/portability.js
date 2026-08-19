@@ -210,6 +210,11 @@
     const sourceSubset = { originating_record_id: row.record_id || "", spouse_slot: String(slot) };
     Object.keys(row).filter(function (key) { return key.startsWith(prefix); }).forEach(function (key) { sourceSubset[key] = row[key]; });
     const deathRaw = u.cleanLine(row[prefix + "death_date_value"], 40);
+    const lastSpouseSlot = [1, 2, 3].filter(function (candidate) {
+      return u.cleanLine(row["spouse_" + candidate + "_first_names"], 200) || u.cleanLine(row["spouse_" + candidate + "_last_name"], 200);
+    }).slice(-1)[0] || slot;
+    const legacyStatus = u.cleanLine(row.legacy_relationship_status_code, 20).toUpperCase();
+    const partnerStatus = slot < lastSpouseSlot ? "divorced" : legacyStatus === "M" ? "married" : legacyStatus === "D" ? "divorced" : "unknown";
     return {
       person: {
         id: stableId("person", (row.record_id || index + 1) + "-spouse-" + slot, "spouse-" + index + "-" + slot),
@@ -225,7 +230,7 @@
       relationship: {
         id: stableId("relationship", (row.record_id || index + 1) + "-spouse-" + slot, "spouse-relationship-" + index + "-" + slot),
         type: "partner", person1Id: primaryId,
-        status: slot === 1 && row.legacy_relationship_status_code === "M" ? "married" : slot === 1 && row.legacy_relationship_status_code === "D" ? "divorced" : "unknown",
+        status: partnerStatus,
         startDate: sourceDate(row[prefix + "marriage_date_value"], row[prefix + "marriage_date_precision"], counters),
         endDate: { value: "", qualifier: "exact" }, place: "",
         notes: "Imported spouse slot " + slot + (row.legacy_relationship_status_code ? " · legacy status " + row.legacy_relationship_status_code : ""),
