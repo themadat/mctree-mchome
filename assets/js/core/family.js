@@ -244,7 +244,11 @@
     const fields = person && person.source && person.source.fields;
     const raw = String(fields && fields.lineage_id || "").trim();
     const parts = raw ? raw.split(".").map(function (part) { return part.trim(); }).filter(Boolean) : [];
-    return fields && Object.prototype.hasOwnProperty.call(fields, "lineage_parent_id") ? parts.reverse() : parts;
+    const directParentSchema = fields && Object.prototype.hasOwnProperty.call(fields, "lineage_parent_id");
+    const rootToPersonSchema = directParentSchema
+      && Object.prototype.hasOwnProperty.call(fields, "descendant_date_birth_descriptor")
+      && !Object.prototype.hasOwnProperty.call(fields, "legacy_page_reference");
+    return directParentSchema && !rootToPersonSchema ? parts.reverse() : parts;
   }
 
   function compareLineage(a, b) {

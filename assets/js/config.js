@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.19",
-      buildId: "0.0.1.19",
+      version: "0.0.1.20",
+      buildId: "0.0.1.20",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -84,6 +84,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.20",
+        date: "2026-08-19T16:40:01.000Z",
+        title: "Complete root-to-person lineage paths",
+        summary: "Current McLineage imports now carry one complete oldest-to-newest lineage path without a separate legacy page field.",
+        features: ["Full root-to-person lineage IDs", "Ancestor-prefix lineage emphasis"],
+        improvements: ["Legacy page references move into data-quality notes", "Family Tree sorting reads the current source order directly"],
+        fixes: ["Family line ordinals use each person's final path segment", "Current imports reject broken or duplicate lineage paths"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.19",
         date: "2026-08-19T16:12:55.000Z",

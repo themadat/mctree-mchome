@@ -17,7 +17,8 @@ Use synthetic families only.
 - [ ] No demo family, blank-family action, GEDCOM action, or bypass appears.
 - [ ] A valid cleaned McLineage or native McFamily CSV with at least one person shows a summary and opens the family.
 - [ ] Unknown headers, missing required cells, zero-person first import, malformed CSV, oversized file, duplicate ids, unsafe headers, self-links, duplicate links, and ancestry cycles are rejected without replacing state.
-- [ ] Current cleaned-source `P` record IDs and direct `lineage_parent_id` references import without remapping; `legacy_page_reference` follows `lineage_id` in retained source fields.
+- [ ] Current cleaned-source `P` record IDs and direct `lineage_parent_id` references import without remapping; `lineage_id` is a unique two-digit root-to-person path except for isolated `99` records, and `legacy_page_reference` is absent.
+- [ ] Every current non-root lineage path extends its direct parent's path by exactly one segment; malformed, duplicate, or parent-mismatched paths are rejected.
 - [ ] Current descendant date values accept only blank, `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`; descriptors accept only `year`, `month`, `day`, `UNKNOWN`, or blank, birth descriptors reject blank, and G0-G4 blank deaths require `UNKNOWN`.
 - [ ] A blank current death descriptor imports as living, `UNKNOWN` imports as deceased with an unknown date, and legacy descendant date columns remain compatible.
 - [ ] Legacy cleaned sources using root-to-person lineage IDs, `parent_lineage_id`, and lineage-name columns remain importable.
@@ -65,9 +66,9 @@ Use synthetic families only.
 - [ ] Directory appears left of Search and Favorites appears right; both show an icon above their visible name without causing desktop or mobile overflow.
 - [ ] Starring a person search result persists across reloads, pins them above unstarred matches, and exposes an accessible pressed state without activating the person.
 - [ ] Favorites opens every starred person with an empty search, allows narrowing that list, and shows useful empty guidance; unstarred or deleted people disappear immediately.
-- [ ] Lineage preserves the normalized person-to-root source order, two-digit-pads every segment, and bolds the selected person's first segment.
+- [ ] Lineage preserves the normalized root-to-person source order, two-digit-pads every segment, italicizes the first three segments, and bolds the final segment; overlapping emphasis is bold italic.
 - [ ] George McMillen (1745) is labelled G0, James G1, George (1818) G2, and Albon/Newton/Lucian G3 in Family line brackets.
-- [ ] Adam's imported lineage is `01.05.05.05.03` with the first `01` bold, and its Family line begins `Adam [01 | G7]`, then `Melanie [05 | G6]`; the corresponding readings begin `1st Child of Melanie`, then `5th Child of Max`.
+- [ ] Adam's imported lineage is `01.01.01.03.05.05.05.01` with the first three segments italic and the final `01` bold, and its Family line begins `Adam [01 | G7]`, then `Melanie [05 | G6]`; the corresponding readings begin `1st Child of Melanie`, then `5th Child of Max`.
 - [ ] A Family line heading introduces paired name/reading rows with equal row heights and vertically centered cells; the family totals span both columns on one line, there is no visible Reading heading, and the root reads `Root ancestor`.
 - [ ] Every resolved name selects that person and focuses the tree; unknown positions read `Child of` without `Nth`.
 - [ ] Parents, Siblings, Partners, and Children are compact open groups containing names only in that order; the bloodline parent is first, siblings and children are in birth order, and Melanie's Parents group contains both Max and Martha through display-only co-parent inference.

@@ -4,14 +4,33 @@ McLineage Dataset Metadata
 Current dataset
 ---------------
 
-Version: 4.0.0
+Version: 5.0.0
 Updated: 2026-08-19
-File: McLineage-4-0-0-2026-08-19.csv
+File: McLineage-5-0-0-2026-08-19.csv
 Source: McLineage.xlsx legacy database export
 Status: Private family data; do not commit to a public or shared source repository.
 
 Changelog
 ---------
+
+5.0.0 — 2026-08-19 — [128,388 bytes | 607 records | 47 fields]
+Author: Adam Lauer
+Agent: Codex [GPT-5-based Codex | Model UNK | Effort UNK | Speed UNK]
+Summary: Consolidated lineage into complete oldest-to-newest paths.
+
+- Rebuilt every non-isolated lineage_id as a two-digit path from the oldest known
+  ancestor through the person, including P044 as 01, P228 as 01.01, and P501 as
+  01.01.01.03.02.02.04.02.01.01.
+- Used 30 legacy page references to restore the oldest three lineage levels, then
+  extended each path through the authoritative direct lineage_parent_id chain.
+- Removed legacy_page_reference and moved each former value to the beginning of
+  data_quality_notes followed by a semicolon and space.
+- Resolved the placeholder branch for P085 as 01 from sibling order and reassigned
+  the later duplicated P583 sibling branch to the next available position, 03.
+- Reduced the schema from 48 fields to 47 without removing family records.
+- Verified UTF-8 CSV parsing, 607 unique P references, unique non-99 lineage paths,
+  resolvable direct parents, one-segment parent-path extensions, and no formula
+  errors.
 
 4.0.0 — 2026-08-19 — [123,572 bytes | 607 records | 48 fields]
 Author: Adam Lauer
@@ -140,9 +159,11 @@ Versioning rules for humans and agents
    - Start from the latest validated version.
    - Choose the next version before editing and save the result under its new name.
    - Preserve stable P-formatted record_id values unless correcting an actual collision.
-   - Keep lineage_id branches as two-digit segments in person-to-root order, such as
-     02.02.05.03. Store the direct parent P reference in lineage_parent_id and repeat
-     the resolved full name in lineage_parent_name_full for readability.
+   - Keep lineage_id as the complete oldest-to-newest path with two-digit segments,
+     such as 01.01.01.03.02.02.04.02.01.01. Every non-root path must extend its
+     direct parent's path by exactly one segment. Store the direct parent P reference
+     in lineage_parent_id and repeat the resolved full name in
+     lineage_parent_name_full for readability.
    - Store descendant date values only as YYYY, YYYY-MM, YYYY-MM-DD, or blank. Use
      year, month, day, UNKNOWN, or blank descriptors; birth descriptors cannot be
      blank, while a blank death descriptor means living.

@@ -704,6 +704,7 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .lineage-columns { padding-top: .55rem; }
 .lineage-columns h4, .lineage-background h4 { margin: 0 0 .4rem; color: var(--muted); font-size: .7rem; font-weight: 800; }
 .lineage-id { color: var(--muted); font-size: .82rem; letter-spacing: .025em; }
+.lineage-id em { font-style: italic; }
 .lineage-id strong { color: var(--text); font-size: 1.05em; }
 .lineage-paired-list { display: grid; gap: .22rem; margin: 0; padding: 0; list-style: none; }
 .lineage-paired-list li { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); align-items: stretch; gap: .3rem; min-height: 30px; }
