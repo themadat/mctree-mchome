@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.7",
-      buildId: "0.0.1.7",
+      version: "0.0.1.8",
+      buildId: "0.0.1.8",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -83,6 +83,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.8",
+        date: "2026-08-19T03:45:00.000Z",
+        title: "More tree, less repetition",
+        summary: "The family workspace now begins directly with the directory, tree, and selected person panes.",
+        features: [],
+        improvements: ["Removed the repeated family heading, counts, and text actions", "Reclaimed the freed vertical space for the tree on desktop and mobile"],
+        fixes: ["Add Person and PDF actions now appear only in the application title bar"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.7",
         date: "2026-08-19T03:15:00.000Z",
