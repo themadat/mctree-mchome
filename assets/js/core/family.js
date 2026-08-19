@@ -131,6 +131,7 @@
 
   function directLineageParentField(person) {
     const fields = person && person.source && person.source.fields;
+    if (fields && Object.prototype.hasOwnProperty.call(fields, "parent_consanguinity_person_id")) return "parent_consanguinity_person_id";
     if (fields && Object.prototype.hasOwnProperty.call(fields, "lineage_parent_id")) return "lineage_parent_id";
     return fields && Object.prototype.hasOwnProperty.call(fields, "parent_lineage_id") && Object.prototype.hasOwnProperty.call(fields, "person_first_names") ? "parent_lineage_id" : "";
   }
