@@ -229,8 +229,13 @@
     return true;
   }
 
+  function directParentReferenceField(parsed) {
+    if (parsed.headers.includes("lineage_parent_id")) return "lineage_parent_id";
+    return parsed.headers.includes("parent_lineage_id") && parsed.headers.includes("person_first_names") ? "parent_lineage_id" : "";
+  }
+
   function usesRootToPersonLineage(parsed) {
-    return parsed.headers.includes("lineage_parent_id")
+    return Boolean(directParentReferenceField(parsed))
       && (parsed.headers.includes("person_date_birth_descriptor") || parsed.headers.includes("descendant_date_birth_descriptor"))
       && !parsed.headers.includes("legacy_page_reference");
   }
@@ -262,11 +267,12 @@
 
   function validateRootToPersonLineage(parsed, byRecordId) {
     if (!usesRootToPersonLineage(parsed)) return;
+    const parentReferenceField = directParentReferenceField(parsed);
     const byLineageId = new Map();
     parsed.rows.forEach(function (row) {
       const recordId = sourceRecordKey(row.record_id);
       const lineageId = u.cleanLine(row.lineage_id, 100);
-      const parentRecordId = sourceRecordKey(row.lineage_parent_id);
+      const parentRecordId = sourceRecordKey(row[parentReferenceField]);
       if (!lineageId) {
         if (parentRecordId) throw new Error("A McLineage person with a lineage parent must also have a lineage_id: " + recordId + ".");
         return;
@@ -277,7 +283,7 @@
     });
     parsed.rows.forEach(function (row) {
       const recordId = sourceRecordKey(row.record_id);
-      const parentRecordId = sourceRecordKey(row.lineage_parent_id);
+      const parentRecordId = sourceRecordKey(row[parentReferenceField]);
       const lineageId = u.cleanLine(row.lineage_id, 100);
       if (!parentRecordId) return;
       const parentPerson = (byRecordId.get(parentRecordId) || [])[0];
@@ -382,7 +388,8 @@
 
   function prepareMcLineage(parsed, fileName) {
     const counters = { sourceRows: parsed.rows.length, orphanParents: 0, ambiguousParents: 0, partialDates: 0, unmappedDates: 0 };
-    const directParentReferences = parsed.headers.includes("lineage_parent_id");
+    const parentReferenceField = directParentReferenceField(parsed);
+    const directParentReferences = Boolean(parentReferenceField);
     validatePersonDateSchema(parsed);
     validateCurrentSourceDates(parsed, counters);
     const people = [];
@@ -415,15 +422,18 @@
     const partnerPairs = new Set();
     parsed.rows.forEach(function (row, index) {
       const primary = primaryByRow[index];
-      const parentReference = directParentReferences ? sourceRecordKey(row.lineage_parent_id) : u.cleanLine(row.parent_lineage_id, 100);
+      const parentReference = directParentReferences ? sourceRecordKey(row[parentReferenceField]) : u.cleanLine(row.parent_lineage_id, 100);
       if (parentReference) {
         const candidates = directParentReferences ? byRecordId.get(parentReference) || [] : byLineage.get(parentReference) || [];
+        const directSourceFields = { child_record_id: row.record_id || "" };
+        if (directParentReferences) directSourceFields[parentReferenceField] = parentReference;
+        if (directParentReferences && parsed.headers.includes("lineage_parent_name_full")) directSourceFields.lineage_parent_name_full = row.lineage_parent_name_full || "";
         if (candidates.length === 1) relationships.push({
           id: stableId("relationship", (row.record_id || index + 1) + "-parent", "parent-" + index),
           type: "parent-child", parentId: candidates[0].id, childId: primary.id, kind: "unknown",
           notes: "Imported lineage parent " + parentReference,
           source: { format: "mclineage-cleaned", fields: directParentReferences
-            ? { child_record_id: row.record_id || "", lineage_parent_id: parentReference, lineage_parent_name_full: row.lineage_parent_name_full || "" }
+            ? directSourceFields
             : { child_record_id: row.record_id || "", parent_lineage_id: parentReference } },
           order: relationships.length
         });
@@ -457,7 +467,7 @@
         relationships.push(spouse.relationship);
       });
     });
-    const firstRoot = parsed.rows.findIndex(function (row) { return !u.cleanLine(directParentReferences ? row.lineage_parent_id : row.parent_lineage_id, 100); });
+    const firstRoot = parsed.rows.findIndex(function (row) { return !u.cleanLine(directParentReferences ? row[parentReferenceField] : row.parent_lineage_id, 100); });
     const now = u.isoNow();
     const rawState = {
       schemaVersion: config.schemaVersion,

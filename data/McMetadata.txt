@@ -4,18 +4,34 @@ McLineage Dataset Metadata
 Current dataset
 ---------------
 
-Version: 6.0.0
+Version: 7.0.0
 Updated: 2026-08-19
-File: McLineage-6-0-0-2026-08-19.csv
+File: McLineage-7-0-0-2026-08-19.csv
 Source: McLineage.xlsx legacy database export
 Status: Private family data; do not commit to a public or shared source repository.
 
 Changelog
 ---------
 
-6.0.0 — 2026-08-19 — [158 KB (+28) | 912 records (+305) | 50 fields (+3)]
+7.0.0 — 2026-08-19 — [146 KB (-12) | 912 records (±0) | 49 fields (-1)]
 Author: Adam Lauer
 Agent: Codex [GPT-5-based Codex | Model UNK | Effort UNK | Speed UNK]
+Summary: Clarified person and parent identifiers and finalized source column order.
+
+- Made record_id the first column and moved source_row_number to immediately before
+  data_quality_notes.
+- Renamed lineage_parent_id to parent_lineage_id and removed the redundant
+  lineage_parent_name_full column.
+- Renamed legacy_sort_name to person_name_sort and positioned it immediately after
+  person_last_name.
+- Preserved all 912 person rows and every retained value while reducing the schema
+  from 50 fields to 49.
+- Verified unique P references, resolvable direct parents, exact retained-value
+  parity, consistent column counts, and the requested header order.
+
+6.0.0 — 2026-08-19 — [158 KB (+28) | 912 records (+305) | 50 fields (+3)]
+Author: Adam Lauer
+Agent: Codex [GPT-5-based Codex | Model 5.6 Sol | Effort High | Speed Standard]
 Summary: Promoted every spouse to a stable, first-class person record.
 
 - Added 305 spouse person rows with stable record IDs P608 through P912 and
@@ -201,8 +217,7 @@ Versioning rules for humans and agents
    - Keep lineage_id as the complete oldest-to-newest path with two-digit segments,
      such as 01.01.01.03.02.02.04.02.01.01. Every non-root path must extend its
      direct parent's path by exactly one segment. Store the direct parent P reference
-     in lineage_parent_id and repeat the resolved full name in
-     lineage_parent_name_full for readability.
+     in parent_lineage_id. Older direct lineage_parent_id sources remain compatible.
    - Store known date values as YYYY, YYYY-MM, or YYYY-MM-DD. Unknown digits may be
      represented by question marks anywhere in the same shapes and must use the
      partial descriptor. Do not use invalid as a descriptor.

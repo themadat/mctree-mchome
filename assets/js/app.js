@@ -363,6 +363,11 @@
     return Boolean(fields && Object.prototype.hasOwnProperty.call(fields, key));
   }
 
+  function directLineageParentField(person) {
+    if (sourceHasField(person, "lineage_parent_id")) return "lineage_parent_id";
+    return sourceHasField(person, "parent_lineage_id") && sourceHasField(person, "person_first_names") ? "parent_lineage_id" : "";
+  }
+
   function lineageSegments(person) {
     const raw = sourceField(person, "lineage_id");
     if (!raw) return [];
@@ -372,14 +377,14 @@
   }
 
   function lineageRunsRootToPerson(person) {
-    return sourceHasField(person, "lineage_parent_id")
+    return Boolean(directLineageParentField(person))
       && (sourceHasField(person, "person_date_birth_descriptor") || sourceHasField(person, "descendant_date_birth_descriptor"))
       && !sourceHasField(person, "legacy_page_reference");
   }
 
   function lineageId(person) {
     const segments = lineageSegments(person);
-    return sourceHasField(person, "lineage_parent_id") ? segments : segments.reverse();
+    return directLineageParentField(person) ? segments : segments.reverse();
   }
 
   function lineageOwnNumber(person) {
@@ -414,7 +419,8 @@
     const numbers = lineageId(person);
     const people = current.workspace.people;
 
-    if (sourceHasField(person, "lineage_parent_id")) {
+    const parentReferenceField = directLineageParentField(person);
+    if (parentReferenceField) {
       const byRecordId = new Map();
       people.forEach(function (candidate) {
         const recordId = sourceField(candidate, "record_id").toUpperCase();
@@ -426,7 +432,7 @@
       while (cursor && !used.has(cursor.id) && members.length <= config.controls.maxPeople) {
         used.add(cursor.id);
         members.push({ name: model.displayName(cursor), person: cursor, number: lineageOwnNumber(cursor) });
-        const parentRecordId = sourceField(cursor, "lineage_parent_id").toUpperCase();
+        const parentRecordId = sourceField(cursor, directLineageParentField(cursor)).toUpperCase();
         if (!parentRecordId) break;
         const parent = byRecordId.get(parentRecordId);
         if (!parent || used.has(parent.id)) {
