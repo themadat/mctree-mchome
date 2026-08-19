@@ -55,11 +55,13 @@ Use synthetic families only.
 - [ ] Directory rows show `[birth-death]` with `????` for unknown years followed by the lineage ID.
 - [ ] Internal stable `P` references are absent throughout ordinary app and print views and appear only in Developer Mode.
 - [ ] Partial and in-order fuzzy search finds name, address, phone, email, birth/death place, heritage, general notes, Notes, Help, releases, and Roadmap.
-- [ ] Lineage appears below Notes, preserves and two-digit-pads source ID order, and bolds the selected person's final segment.
+- [ ] Lineage preserves and two-digit-pads source ID order and bolds the selected person's final segment.
 - [ ] George McMillen (1745) reads Gen 0, James reads Gen 1, George (1818) reads Gen 2, and Albon/Newton/Lucian read Gen 3.
 - [ ] Adam's imported lineage is `03.05.05.05.01` with `01` bold, and its reading begins `Gen 7 · 1st Child of Melanie`, then `Gen 6 · 5th Child of Max`.
-- [ ] Names and Reading are left-aligned side-by-side columns, family totals appear beneath Reading, and every resolved name selects that person and focuses the tree; unknown positions read `Child of` without `Nth`.
-- [ ] Parents, Children, and Siblings are compact open groups containing names only; Melanie's Parents group contains both Max and Martha through display-only co-parent inference.
+- [ ] A Names heading introduces paired name/reading rows with equal row heights and vertically centered cells; the family totals span both columns on one line, and there is no visible Reading heading.
+- [ ] Every resolved name selects that person and focuses the tree; unknown positions read `Child of` without `Nth`.
+- [ ] Parents, Partners, Siblings, and Children are compact open groups containing names only in that order; Melanie's Parents group contains both Max and Martha through display-only co-parent inference.
+- [ ] Notes is the final profile content section on screen and in each printable person profile.
 - [ ] The profile X closes the module, clears directory/tree selection, disables the empty mobile Person tab, and a Family Tree selection reopens the profile without a Show person button.
 - [ ] A child listed from a parent's profile is labelled `Child`, without a redundant parent-kind suffix.
 

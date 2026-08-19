@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.13",
-      buildId: "0.0.1.13",
+      version: "0.0.1.14",
+      buildId: "0.0.1.14",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -84,6 +84,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.14",
+        date: "2026-08-19T06:30:00.000Z",
+        title: "Aligned lineage details",
+        summary: "Person details now align each lineage name with its reading and present immediate relationships in a more useful family order.",
+        features: ["Shared-height Names and lineage-reading rows", "Open Partners relationship group"],
+        improvements: ["Family totals span the full lineage module", "Relationships follow Parents, Partners, Siblings, Children"],
+        fixes: ["Notes now finish both on-screen and printable person profiles", "Removed the redundant Reading heading"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.13",
         date: "2026-08-19T06:00:00.000Z",
@@ -216,7 +226,7 @@
     help: [
       { id: "start", title: "Getting started", section: "Basics", keywords: "start import csv backup seed first launch", html: "<p>McFamily opens after you import the cleaned McLineage CSV or a native McFamily CSV export. The file is mapped, validated, and previewed before it replaces local data. There is no demo-family or blank-family bypass.</p>" },
       { id: "tree", title: "Exploring the Family Tree", section: "Family", keywords: "tree focus overview zoom pan scroll horizontal vertical generation ancestor descendant home person condensed detailed", html: "<p>Focus view shows the selected person and nearby generations. Select any person to recenter the Family Tree, choose separate Ancestor and Descendant depths, or switch between condensed and detailed cards. Scroll horizontally or vertically to explore larger layouts; Fit brings the complete current view into the canvas.</p>" },
-      { id: "people", title: "People and relationships", section: "Family", keywords: "people directory sort alphabet address phone email parent child partner ancestry lineage generation", html: "<p>Open Directory beside Search, sort by first or last name, and use the A–Z rail to jump through matching people. The person panel closes and deselects with its X; selecting a person in the Family Tree reopens it. Lineage shows its two-digit source ID, Names, Reading, and family totals. Parents, Children, and Siblings appear in compact open groups, including likely co-parents when the source records only one parent. Generations are rooted at George McMillen (1745) as Gen 0, and unknown child positions read simply as Child of.</p>" },
+      { id: "people", title: "People and relationships", section: "Family", keywords: "people directory sort alphabet address phone email parent child partner ancestry lineage generation", html: "<p>Open Directory beside Search, sort by first or last name, and use the A–Z rail to jump through matching people. The person panel closes and deselects with its X; selecting a person in the Family Tree reopens it. Lineage aligns each linked Name with its generation reading and places family totals beneath the full list. Parents, Partners, Siblings, and Children appear in compact open groups, including likely co-parents when the source records only one parent. Notes finish the profile. Generations are rooted at George McMillen (1745) as Gen 0, and unknown child positions read simply as Child of.</p>" },
       { id: "print", title: "Print or save a PDF", section: "Family", keywords: "print pdf atlas directory lineage family maps generation", html: "<p>Choose <strong>Print / Save PDF</strong> to build the complete atlas and open the browser print dialog. Family maps are named for their top sibling and use compact name-and-years cards; detailed profiles follow alphabetically. Select Save as PDF to create a file.</p>" },
       { id: "notes", title: "Working with Notes", section: "Features", keywords: "notes text edit modal autosave", html: "<p>Notes is a single local plain-text scratchpad. Open it from the top bar or press <kbd>N</kbd>; it is included in McFamily backups.</p>" },
       { id: "backup", title: "CSV backup and restore", section: "Data", keywords: "csv export import backup restore recovery private", html: "<p>CSV export is the complete editable copy of the family and contains private contact information. Native exports use typed rows for people, contacts, relationships, Notes, and settings. Store them securely. Replacement imports are previewed and confirmed; the prior local copy becomes the recovery snapshot.</p>" },
