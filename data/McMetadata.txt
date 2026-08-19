@@ -4,16 +4,33 @@ McLineage Dataset Metadata
 Current dataset
 ---------------
 
-Version: 5.0.1
+Version: 6.0.0
 Updated: 2026-08-19
-File: McLineage-5-0-1-2026-08-19.csv
+File: McLineage-6-0-0-2026-08-19.csv
 Source: McLineage.xlsx legacy database export
 Status: Private family data; do not commit to a public or shared source repository.
 
 Changelog
 ---------
 
-5.0.1 — 2026-08-19 — [117,310 bytes | 607 records | 47 fields]
+6.0.0 — 2026-08-19 — [158 KB (+28) | 912 records (+305) | 50 fields (+3)]
+Author: Adam Lauer
+Agent: Codex [GPT-5-based Codex | Model UNK | Effort UNK | Speed UNK]
+Summary: Promoted every spouse to a stable, first-class person record.
+
+- Added 305 spouse person rows with stable record IDs P608 through P912 and
+  left their source-row and lineage fields blank.
+- Added spouse_1_record_id, spouse_2_record_id, and spouse_3_record_id so every
+  populated spouse slot explicitly references its corresponding person row.
+- Renamed all six descendant identity and date columns to person_* and populated
+  the generated rows from the matching spouse names, birth dates, and death dates.
+- Preserved spouse-slot values for source compatibility while making each referenced
+  person's person_* fields authoritative for import.
+- Verified 912 unique P references, 305 resolvable spouse references, no duplicate
+  relationships, complete birth descriptors, valid current date values, and blank
+  source-row and lineage fields on every generated spouse record.
+
+5.0.1 — 2026-08-19 — [130 KB (+2) | 607 records (±0) | 47 fields (±0)]
 Author: Adam Lauer
 Agent: NONE
 Summary: Standardized partial dates and sanitized new lines in notes.
@@ -22,7 +39,7 @@ Summary: Standardized partial dates and sanitized new lines in notes.
   for unknown digits and the partial descriptor.
 - Converted the remaining 19XX notation to 19?? and zero-padded 2018-4-09 to the
   normalized 2018-04-09 form.
-- Removed new lines in Notes Field replacing with syntax that made sense to keep 
+- Removed new lines in Notes Field replacing with syntax that made sense to keep
   as a single line for 10 records.
 - NOTE: ROW 558 was basically empty in McLineage and was deleted during sanitation
   which is why source_row_number and record_id are not always off by 1 later on
@@ -32,7 +49,7 @@ Summary: Standardized partial dates and sanitized new lines in notes.
   its descriptor, record and non-99 lineage IDs are unique, and every direct parent
   reference resolves.
 
-5.0.0 — 2026-08-19 — [128,388 bytes | 607 records | 47 fields]
+5.0.0 — 2026-08-19 — [128 KB (+4) | 607 records (±0) | 47 fields (-1)]
 Author: Adam Lauer
 Agent: Codex [GPT-5-based Codex | Model 5.6 Sol | Effort High | Speed Standard]
 Summary: Consolidated lineage into complete oldest-to-newest paths.
@@ -51,7 +68,7 @@ Summary: Consolidated lineage into complete oldest-to-newest paths.
   resolvable direct parents, one-segment parent-path extensions, and no formula
   errors.
 
-4.0.0 — 2026-08-19 — [123,572 bytes | 607 records | 48 fields]
+4.0.0 — 2026-08-19 — [124 KB (+2) | 607 records (±0) | 48 fields (±0)]
 Author: Adam Lauer
 Agent: Codex [GPT-5-based Codex | Model 5.6 Sol | Effort High | Speed Standard]
 Summary: Standardized descendant dates and made living/deceased status explicit.
@@ -71,7 +88,7 @@ Summary: Standardized descendant dates and made living/deceased status explicit.
 - Verified UTF-8 CSV parsing, descriptor/value consistency, unique P references,
   direct lineage parents, and the absence of self-links or ancestry cycles.
 
-3.0.1 — 2026-08-19 — [122,183 bytes | 607 records | 48 fields]
+3.0.1 — 2026-08-19 — [122 KB (±0) | 607 records (±0) | 48 fields (±0)]
 Author: Adam Lauer
 Agent: NONE
 Summary: Corrected seven manually resolved ambiguous birth and death years.
@@ -84,7 +101,7 @@ Summary: Corrected seven manually resolved ambiguous birth and death years.
 - Preserved all 607 records and 48 fields and verified consistent column counts,
   unique P references, and a clean UTF-8 CSV round trip.
 
-3.0.0 — 2026-08-19 — [121,910 bytes | 607 records | 48 fields]
+3.0.0 — 2026-08-19 — [122 KB (-25) | 607 records (±0) | 48 fields (-8)]
 Author: Adam Lauer
 Agent: Codex [GPT-5-based Codex | Model 5.6 Sol | Effort High | Speed Standard]
 Summary: Replaced reconstructed lineage metadata with stable direct references.
@@ -101,7 +118,7 @@ Summary: Replaced reconstructed lineage metadata with stable direct references.
 - Verified UTF-8 CSV round-trip parsing, 607 unique P references, consistent column
   counts, resolvable parent IDs, and matching parent names.
 
-2.0.0 — 2026-08-18 — [147,311 bytes | 607 records | 56 fields]
+2.0.0 — 2026-08-18 — [147 KB (UNK) | 607 records (±0) | 56 fields (-13)]
 Author: Adam Lauer
 Agent: Codex [GPT-5-based Codex | Model 5.6 Sol | Effort High | Speed Standard]
 Summary: Simplified the import schema and made lineage branches explicit.
@@ -118,7 +135,7 @@ Summary: Simplified the import schema and made lineage branches explicit.
 - Verified 607 unique record IDs, valid CSV round-trip parsing, consistent dotted
   lineage depth, derived parent lineages, and matching date value/precision pairs.
 
-1.0.0 — 2026-08-18 — [UNK | 607 records | 69 fields]
+1.0.0 — 2026-08-18 — [UNK (baseline) | 607 records (baseline) | 69 fields (baseline)]
 Author: Adam Lauer
 Agent: Codex [GPT-5-based Codex | Model 5.6 Sol | Effort High | Speed Standard]
 Summary: Created the initial structured and sanitized McLineage CSV for web import.
@@ -178,6 +195,9 @@ Versioning rules for humans and agents
    - Start from the latest validated version.
    - Choose the next version before editing and save the result under its new name.
    - Preserve stable P-formatted record_id values unless correcting an actual collision.
+   - Store every person, including each spouse, as a separate row with a stable P
+     record ID. Connect spouse slots through spouse_#_record_id and leave
+     source_row_number plus all lineage fields blank on spouse-only rows.
    - Keep lineage_id as the complete oldest-to-newest path with two-digit segments,
      such as 01.01.01.03.02.02.04.02.01.01. Every non-root path must extend its
      direct parent's path by exactly one segment. Store the direct parent P reference
@@ -186,7 +206,7 @@ Versioning rules for humans and agents
    - Store known date values as YYYY, YYYY-MM, or YYYY-MM-DD. Unknown digits may be
      represented by question marks anywhere in the same shapes and must use the
      partial descriptor. Do not use invalid as a descriptor.
-   - Descendant date descriptors may be year, month, day, partial, UNKNOWN, or
+   - Person date descriptors may be year, month, day, partial, UNKNOWN, or
      blank; birth descriptors cannot be blank, while a blank death descriptor means
      living.
    - Use UNKNOWN with a blank death value when the person is deceased but the date
@@ -201,7 +221,7 @@ Versioning rules for humans and agents
 
 4. Use this changelog entry format:
 
-   Version X.Y.Z — YYYY-MM-DD — [###,### bytes | ### records | ## fields]
+   Version X.Y.Z — YYYY-MM-DD — [### KB (+#/-#/±0) | ### records (+#/-#/±0) | ## fields (+#/-#/±0)]
    Author: Person Name
    Agent: Agent Name [Agent family | Model MODEL | Effort EFFORT | Speed SPEED], or None
    Summary: One-line description of the release.
@@ -212,6 +232,10 @@ Versioning rules for humans and agents
 
    The human author is required. Record the agent separately when one assisted.
    Ask the human author to supply unknown author or agent details before finalizing.
-   Record the released CSV's exact byte size, or "UNK" if the file is unavailable.
+   Record the released CSV's decimal kilobyte size, rounded to the nearest whole KB,
+   or "UNK" if the file is unavailable. In parentheses after each size, record count,
+   and field count, record the change from the immediately preceding release using
+   +#, -#, or ±0. Mark the initial release as "baseline"; use "UNK" when a prior
+   value is unavailable.
    Copy model, effort, and speed from the active tool or interface when available.
    Never infer those settings; write "UNK" when they are unavailable.

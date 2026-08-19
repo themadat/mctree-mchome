@@ -373,7 +373,7 @@
 
   function lineageRunsRootToPerson(person) {
     return sourceHasField(person, "lineage_parent_id")
-      && sourceHasField(person, "descendant_date_birth_descriptor")
+      && (sourceHasField(person, "person_date_birth_descriptor") || sourceHasField(person, "descendant_date_birth_descriptor"))
       && !sourceHasField(person, "legacy_page_reference");
   }
 
@@ -394,7 +394,7 @@
 
   function sourceNameMatches(person, name) {
     const expected = model.normalizeSearchText(name);
-    const given = model.normalizeSearchText(sourceField(person, "descendant_first_names") || person.names.given);
+    const given = model.normalizeSearchText(sourceField(person, "person_first_names") || sourceField(person, "descendant_first_names") || person.names.given);
     const display = model.normalizeSearchText(model.displayName(person));
     return Boolean(expected && (given === expected || display === expected || given.startsWith(expected + " ") || display.startsWith(expected + " ")));
   }
