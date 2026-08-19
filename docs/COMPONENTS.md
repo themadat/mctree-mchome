@@ -38,6 +38,8 @@ Below Notes, the selected-person profile presents the two-digit source Lineage I
 
 Relationships use compact, initially open Parents, Children, and Siblings groups containing linked names only. A parent's partner is displayed as a likely co-parent when partnership dates permit, without adding or changing an explicit relationship record.
 
+Family Tree generation rows compare the numeric segments of source lineage IDs rather than display names. Partner arrangement then places divorced, former, separated, or widowed partners on the lineage person's left in chronological order and the current married or partnered person on the right. Imported spouse slot and relationship order provide deterministic fallbacks when dates are missing.
+
 The profile X closes the panel and clears the selected-person state. Its Family Tree focus remains in place, and selecting a tree node reopens the profile. There is no separate Show person control.
 
 Family-record mutation controls remain visible but disabled while `features.familyEditing` is false. This includes adding, editing, connecting, removing, deleting, and changing the home person.

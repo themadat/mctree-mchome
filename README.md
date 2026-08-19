@@ -4,13 +4,14 @@ McFamily is a private, local-first family atlas that runs as a static GitHub Pag
 
 There is no backend, account, cloud database, or runtime dependency. Family data stays in browser storage and moves only through an explicit CSV import or export. The published repository must never contain a real family CSV or private family data.
 
-Current version: `0.0.1.12` (`major.minor.patch.build`).
+Current version: `0.0.1.13` (`major.minor.patch.build`).
 
 ## What it does
 
 - Opens only after importing the cleaned McLineage CSV or a native McFamily CSV with at least one person on first launch.
 - Shows a focus tree around a home person and a whole-family overview of connected and isolated people.
 - Supports two-axis scrolling, pan, zoom, fit, separate ancestor and descendant depths, keyboard selection, touch, and accessible relationship descriptions.
+- Orders each Family Tree generation by numeric lineage ID; past partners appear chronologically to the left of the lineage person and the current spouse appears to the right.
 - Provides a header-opened directory with first/last-name sorting, A–Z quick jumps, lifespan and lineage context, and broad search across names, contact details, places, heritage, and notes.
 - Supports partial/fuzzy matches, collapsible side panels, and concise or detailed tree cards.
 - Keeps portrait placeholders and internal person references out of the ordinary workspace; Developer Mode reveals references for troubleshooting.

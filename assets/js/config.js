@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.12",
-      buildId: "0.0.1.12",
+      version: "0.0.1.13",
+      buildId: "0.0.1.13",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -84,6 +84,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.13",
+        date: "2026-08-19T06:00:00.000Z",
+        title: "Lineage-ordered family rows",
+        summary: "Family Tree rows now follow numeric lineage order and present partner histories in a consistent left-to-right sequence.",
+        features: ["Numeric lineage ordering within Family Tree generations", "Past partners ordered on the left with the current spouse on the right"],
+        improvements: ["Multi-partner groups use relationship dates and imported spouse order for stable chronology"],
+        fixes: ["Sibling order no longer falls back to alphabetic names when lineage IDs are available"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.12",
         date: "2026-08-19T05:30:00.000Z",
