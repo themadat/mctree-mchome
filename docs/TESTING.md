@@ -26,7 +26,8 @@ Use synthetic families only.
 
 ## Editing and derived relationships
 
-- [ ] Add and edit a person with partial dates, qualifiers, non-Latin text, international address lines, phones, email, heritage, and notes.
+- [ ] Family-record add, edit, relationship, home-person, remove, and delete controls are disabled and greyed while `features.familyEditing` is false.
+- The remaining mutation checks in this section apply when a developer temporarily enables `features.familyEditing` for regression testing.
 - [ ] Add and remove repeated contacts without losing adjacent entries.
 - [ ] Connect biological, adoptive, step, foster, guardian, and unknown parents.
 - [ ] Connect every partner status with dates, place, and notes.
@@ -49,7 +50,9 @@ Use synthetic families only.
 - [ ] Directory and selected-person panes collapse independently on desktop and can be reopened without losing selection or tree focus.
 - [ ] Directory sorting and living/deceased/unknown filters work.
 - [ ] Partial and in-order fuzzy search finds name, address, phone, email, birth/death place, heritage, general notes, Notes, Help, releases, and Roadmap.
-- [ ] Heritage shows the imported name line and Lineage ID; activating the name line toggles the relationship-derived Son/Daughter/Child reading.
+- [ ] Lineage shows ID before Name List, reverses and two-digit-pads ID segments, and bolds the selected person's first segment.
+- [ ] Adam's imported lineage begins `01.05`, and its reading begins `Gen 1 · 1st Child of Melanie`, then `Gen 2 · 5th Child of Max`.
+- [ ] Every resolved name in both Name List and Reading selects that person and focuses the tree; unknown positions read `Nth`.
 - [ ] A child listed from a parent's profile is labelled `Child`, without a redundant parent-kind suffix.
 
 ## Responsive and accessibility
