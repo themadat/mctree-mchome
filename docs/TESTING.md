@@ -25,8 +25,8 @@ Use synthetic families only.
 - [ ] Every current non-root lineage path extends its direct parent's path by exactly one segment; blank unlineaged people are accepted, while malformed, duplicate, or parent-mismatched paths are rejected.
 - [ ] Current source date values accept blank, `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, or the same shapes with `?` in unknown digit positions; question-mark values require `partial`, `invalid` descriptors are rejected, and birth descriptors reject blank.
 - [ ] Current `person_*` identity/date columns import lineage and partner rows consistently: known death values, explicit `UNKNOWN` death descriptors, G0-G4 lineage people, and people older than 100 import as deceased or presumed deceased; later blank death descriptors import as living, and legacy descendant date columns remain compatible.
-- [ ] Profile and print life details show estimated current age when possible, months below age two, age at death for a recorded death date, and counterfactual current age for deceased people.
-- [ ] Both desktop separators resize with pointer and keyboard input, persist independently, preserve a usable tree width, and show live position percentages only in Developer Mode.
+- [ ] Profile and print life details use one `Age` row: living ages are compact, ages below two include months, and deceased ages read `#y | Would be #y today` or `??? | Would be #y today` when the death date is unknown.
+- [ ] Desktop defaults to a thin-gutter 20/50/30 Directory/Tree/Profile split, both separators resize with pointer and keyboard input, the first resize persists both widths, a usable tree width remains, and live position percentages appear only in Developer Mode.
 - [ ] Loading schema v7 state migrates the same cleaned-source life statuses to schema v8 and saves them under the v8 storage key without losing family data.
 - [ ] Partial source dates remain in source details, produce a partial-only preview warning, and do not become invented normalized dates in editable/native state.
 - [ ] Older direct `parent_lineage_id` and `lineage_parent_id` sources and legacy lineage-path `parent_lineage_id` or lineage-name sources remain importable.
@@ -54,7 +54,7 @@ Use synthetic families only.
 - [ ] Focus mode shows the selected/home person's configured ancestor and descendant depth plus partners and siblings.
 - [ ] Overview contains every connected component and isolated person.
 - [ ] Single-person, multi-partner, adopted, disconnected, pedigree-collapse, and 1,500-person synthetic families render without exceptions.
-- [ ] Pan, Ctrl/Command-wheel and pinch zoom, grouped icon-over-label Out/In/Fit buttons, direct zoom percentage entry, node click, and independent numeric ancestor/descendant steppers work.
+- [ ] Pan, Ctrl/Command-wheel and pinch zoom, grouped icon-over-label Out/In/Fit buttons, direct zoom percentage entry, node click, and independent numeric ancestor/descendant steppers with labels above their inputs work.
 - [ ] Natural-size Family Tree layouts expose horizontal and vertical scrolling when needed; ordinary wheel input scrolls and Ctrl/Command-wheel zooms.
 - [ ] Arrow keys move between rendered nodes and Enter/Space selects.
 - [ ] Every node and relationship has an understandable accessible label.
@@ -83,7 +83,7 @@ Use synthetic families only.
 - [ ] Every resolved first-name parent link selects that person and focuses the tree; unknown positions read `Gen #, Child of FirstName` without an ordinal.
 - [ ] Parents, Siblings, Partners, and Children are compact open groups in that order; the bloodline parent is first, siblings and children are in birth order, and Melanie's Parents group contains both Max and Martha through display-only co-parent inference.
 - [ ] Partners lists the current partner first in bold, followed by prior partners in reverse history order with de-emphasized styling.
-- [ ] Notes follows Relationships, and Imported source is the final information section on screen and in each printable person profile.
+- [ ] Relationships appears immediately after identity details and before Lineage, Notes follows Relationships, and Imported source is the final information section on screen and in each printable person profile; Albon shows both parents and all six siblings.
 - [ ] The profile X closes the module, clears directory/tree selection, disables the empty mobile Person tab, and a Family Tree selection reopens the profile without a Show person button.
 - [ ] A child listed from a parent's profile is labelled `Child`, without a redundant parent-kind suffix.
 - [ ] Parents, Siblings, and Children headings show the correct `Gen #`; parents show `(Consanguinity)` or `(Affinity)`.

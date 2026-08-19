@@ -69,8 +69,9 @@
         directoryCollapsed: true,
         profileCollapsed: false,
         showInferredParentLines: false,
-        directoryPanelWidth: 280,
-        profilePanelWidth: 300,
+        panelSizingCustomized: false,
+        directoryPanelWidth: 0,
+        profilePanelWidth: 0,
         directorySearch: "",
         directorySort: "first",
         directoryFilters: [],
@@ -544,8 +545,9 @@
         directoryCollapsed: sourceUi.directoryCollapsed === true,
         profileCollapsed: sourceUi.profileCollapsed === true,
         showInferredParentLines: sourceUi.showInferredParentLines === true,
-        directoryPanelWidth: Math.round(u.clamp(sourceUi.directoryPanelWidth, 220, 480, 280)),
-        profilePanelWidth: Math.round(u.clamp(sourceUi.profilePanelWidth, 240, 600, 300)),
+        panelSizingCustomized: sourceUi.panelSizingCustomized === true,
+        directoryPanelWidth: sourceUi.panelSizingCustomized === true ? Math.round(u.clamp(sourceUi.directoryPanelWidth, 220, 480, 280)) : 0,
+        profilePanelWidth: sourceUi.panelSizingCustomized === true ? Math.round(u.clamp(sourceUi.profilePanelWidth, 240, 600, 300)) : 0,
         directorySearch: u.cleanLine(sourceUi.directorySearch, 200),
         directorySort: sourceUi.directorySort === "last" ? "last" : "first",
         directoryFilters: directoryFilters,
@@ -688,6 +690,7 @@
     next.ui.descendantDepth = defaults.ui.descendantDepth;
     next.ui.directoryCollapsed = defaults.ui.directoryCollapsed;
     next.ui.profileCollapsed = defaults.ui.profileCollapsed;
+    next.ui.panelSizingCustomized = defaults.ui.panelSizingCustomized;
     next.ui.directoryPanelWidth = defaults.ui.directoryPanelWidth;
     next.ui.profilePanelWidth = defaults.ui.profilePanelWidth;
     next.ui.directorySearch = "";
