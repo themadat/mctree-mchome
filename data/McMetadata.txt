@@ -4,18 +4,37 @@ McLineage Dataset Metadata
 Current dataset
 ---------------
 
-Version: 5.0.0
+Version: 5.0.1
 Updated: 2026-08-19
-File: McLineage-5-0-0-2026-08-19.csv
+File: McLineage-5-0-1-2026-08-19.csv
 Source: McLineage.xlsx legacy database export
 Status: Private family data; do not commit to a public or shared source repository.
 
 Changelog
 ---------
 
+5.0.1 — 2026-08-19 — [117,310 bytes | 607 records | 47 fields]
+Author: Adam Lauer
+Agent: NONE
+Summary: Standardized partial dates and sanitized new lines in notes.
+
+- Standardized 17 partial birth, death, and marriage dates to use question marks
+  for unknown digits and the partial descriptor.
+- Converted the remaining 19XX notation to 19?? and zero-padded 2018-4-09 to the
+  normalized 2018-04-09 form.
+- Removed new lines in Notes Field replacing with syntax that made sense to keep 
+  as a single line for 10 records.
+- NOTE: ROW 558 was basically empty in McLineage and was deleted during sanitation
+  which is why source_row_number and record_id are not always off by 1 later on
+  in the file:
+    - ,,,,,,,,,George,George,James,,,,,,,,,,,,,,,,,,,08/19/2011,Melanie Lauer,,,,,,,,,,,,,,,,,,,,,
+- Verified that no invalid date descriptors remain, every recognized date matches
+  its descriptor, record and non-99 lineage IDs are unique, and every direct parent
+  reference resolves.
+
 5.0.0 — 2026-08-19 — [128,388 bytes | 607 records | 47 fields]
 Author: Adam Lauer
-Agent: Codex [GPT-5-based Codex | Model UNK | Effort UNK | Speed UNK]
+Agent: Codex [GPT-5-based Codex | Model 5.6 Sol | Effort High | Speed Standard]
 Summary: Consolidated lineage into complete oldest-to-newest paths.
 
 - Rebuilt every non-isolated lineage_id as a two-digit path from the oldest known
@@ -34,7 +53,7 @@ Summary: Consolidated lineage into complete oldest-to-newest paths.
 
 4.0.0 — 2026-08-19 — [123,572 bytes | 607 records | 48 fields]
 Author: Adam Lauer
-Agent: Codex [GPT-5-based Codex | Model UNK | Effort UNK | Speed UNK]
+Agent: Codex [GPT-5-based Codex | Model 5.6 Sol | Effort High | Speed Standard]
 Summary: Standardized descendant dates and made living/deceased status explicit.
 
 - Renamed the four descendant birth/death columns to date-first value and
@@ -67,7 +86,7 @@ Summary: Corrected seven manually resolved ambiguous birth and death years.
 
 3.0.0 — 2026-08-19 — [121,910 bytes | 607 records | 48 fields]
 Author: Adam Lauer
-Agent: Codex [GPT-5-based Codex | Model UNK | Effort UNK | Speed UNK]
+Agent: Codex [GPT-5-based Codex | Model 5.6 Sol | Effort High | Speed Standard]
 Summary: Replaced reconstructed lineage metadata with stable direct references.
 
 - Changed record_id values from mclineage-#### to stable P references spanning
@@ -164,9 +183,12 @@ Versioning rules for humans and agents
      direct parent's path by exactly one segment. Store the direct parent P reference
      in lineage_parent_id and repeat the resolved full name in
      lineage_parent_name_full for readability.
-   - Store descendant date values only as YYYY, YYYY-MM, YYYY-MM-DD, or blank. Use
-     year, month, day, UNKNOWN, or blank descriptors; birth descriptors cannot be
-     blank, while a blank death descriptor means living.
+   - Store known date values as YYYY, YYYY-MM, or YYYY-MM-DD. Unknown digits may be
+     represented by question marks anywhere in the same shapes and must use the
+     partial descriptor. Do not use invalid as a descriptor.
+   - Descendant date descriptors may be year, month, day, partial, UNKNOWN, or
+     blank; birth descriptors cannot be blank, while a blank death descriptor means
+     living.
    - Use UNKNOWN with a blank death value when the person is deceased but the date
      is unknown. Treat G0-G4 descendants without death values as deceased.
    - Record unresolved source problems in data_quality_notes instead of silently
