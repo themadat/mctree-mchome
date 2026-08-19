@@ -657,6 +657,7 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .tree-edge { fill: none; stroke: var(--line-strong); stroke-width: 2; vector-effect: non-scaling-stroke; }
 .tree-edge.partner { stroke: var(--accent-2); stroke-dasharray: 6 4; }
 .tree-edge.partner[data-kind="married"] { stroke-dasharray: none; stroke-width: 2.5; }
+.tree-edge.partner[data-kind="widowed"] { stroke-dasharray: none; stroke-width: 2; opacity: .72; }
 .tree-edge.partner[data-kind="divorced"] { stroke-dasharray: 1 5; stroke-linecap: round; }
 .tree-edge.inferred-parent { stroke: color-mix(in srgb, var(--accent) 58%, var(--line)); stroke-width: 1.5; stroke-dasharray: 4 5; opacity: .72; }
 .tree-inferred-junction { fill: var(--surface); stroke: var(--accent); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
@@ -727,7 +728,9 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .relationship-group summary { display: flex; align-items: center; justify-content: space-between; gap: .45rem; min-height: 34px; padding: .32rem .45rem; color: var(--text); font-size: .72rem; font-weight: 800; cursor: pointer; }
 .relationship-group summary .count-pill { min-height: 20px; padding: .12rem .38rem; font-size: .62rem; }
 .relationship-names { display: grid; padding: 0 .3rem .3rem; }
-.relationship-name { min-height: 30px; padding: .28rem .35rem; border: 0; border-radius: 6px; background: transparent; color: var(--accent-strong); font-size: .75rem; font-weight: 750; text-align: left; }
+.relationship-name { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; min-height: 30px; padding: .28rem .35rem; border: 0; border-radius: 6px; background: transparent; color: var(--accent-strong); font-size: .75rem; font-weight: 750; text-align: left; }
+.relationship-name > span { min-width: 0; overflow-wrap: anywhere; }
+.relationship-context { flex: 0 0 auto; color: var(--muted); font-size: .68rem; font-weight: 650; white-space: nowrap; }
 .relationship-name:hover, .relationship-name:focus-visible { background: var(--accent-soft); }
 .relationship-name.current-partner { font-weight: 850; }
 .relationship-name.previous-partner { color: var(--muted); font-weight: 550; opacity: .76; }
