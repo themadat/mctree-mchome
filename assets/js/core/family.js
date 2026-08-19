@@ -246,7 +246,7 @@
     const parts = raw ? raw.split(".").map(function (part) { return part.trim(); }).filter(Boolean) : [];
     const directParentSchema = fields && Object.prototype.hasOwnProperty.call(fields, "lineage_parent_id");
     const rootToPersonSchema = directParentSchema
-      && Object.prototype.hasOwnProperty.call(fields, "descendant_date_birth_descriptor")
+      && (Object.prototype.hasOwnProperty.call(fields, "person_date_birth_descriptor") || Object.prototype.hasOwnProperty.call(fields, "descendant_date_birth_descriptor"))
       && !Object.prototype.hasOwnProperty.call(fields, "legacy_page_reference");
     return directParentSchema && !rootToPersonSchema ? parts.reverse() : parts;
   }

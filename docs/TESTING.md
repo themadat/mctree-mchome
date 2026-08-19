@@ -18,9 +18,12 @@ Use synthetic families only.
 - [ ] A valid cleaned McLineage or native McFamily CSV with at least one person shows a summary and opens the family.
 - [ ] Unknown headers, missing required cells, zero-person first import, malformed CSV, oversized file, duplicate ids, unsafe headers, self-links, duplicate links, and ancestry cycles are rejected without replacing state.
 - [ ] Current cleaned-source `P` record IDs and direct `lineage_parent_id` references import without remapping; `lineage_id` is a unique two-digit root-to-person path except for isolated `99` records, and `legacy_page_reference` is absent.
-- [ ] Every current non-root lineage path extends its direct parent's path by exactly one segment; malformed, duplicate, or parent-mismatched paths are rejected.
-- [ ] Current descendant date values accept only blank, `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`; descriptors accept only `year`, `month`, `day`, `UNKNOWN`, or blank, birth descriptors reject blank, and G0-G4 blank deaths require `UNKNOWN`.
-- [ ] A blank current death descriptor imports as living, `UNKNOWN` imports as deceased with an unknown date, and legacy descendant date columns remain compatible.
+- [ ] Current spouse rows import as their own P-referenced people; their source-row and lineage fields are blank, every populated spouse slot resolves through `spouse_#_record_id`, and no duplicate spouse people are synthesized.
+- [ ] Missing, self, partial-schema, and duplicate spouse-record references are rejected; older embedded-spouse sources still create compatibility spouse people.
+- [ ] Every current non-root lineage path extends its direct parent's path by exactly one segment; blank unlineaged people are accepted, while malformed, duplicate, or parent-mismatched paths are rejected.
+- [ ] Current source date values accept blank, `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, or the same shapes with `?` in unknown digit positions; question-mark values require `partial`, `invalid` descriptors are rejected, birth descriptors reject blank, and G0-G4 blank deaths require `UNKNOWN`.
+- [ ] Current `person_*` identity/date columns import primary and spouse rows consistently; a blank death descriptor imports as living, `UNKNOWN` imports as deceased with an unknown date, and legacy descendant date columns remain compatible.
+- [ ] Partial source dates remain in source details, produce a partial-only preview warning, and do not become invented normalized dates in editable/native state.
 - [ ] Legacy cleaned sources using root-to-person lineage IDs, `parent_lineage_id`, and lineage-name columns remain importable.
 - [ ] Legacy schema states migrate without losing Notes or retained compatibility fields.
 - [ ] Export/import round trips every person field, relationship field, preference, and Note.

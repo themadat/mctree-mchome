@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.20",
-      buildId: "0.0.1.20",
+      version: "0.0.1.22",
+      buildId: "0.0.1.22",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -84,6 +84,26 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.22",
+        date: "2026-08-19T19:21:52.000Z",
+        title: "First-class spouse records",
+        summary: "Current McLineage imports now resolve every spouse slot to its own stable person row instead of creating an extra person during import.",
+        features: ["Explicit spouse record references", "Shared person identity and date columns"],
+        improvements: ["Spouse rows keep stable P references", "Older descendant and embedded-spouse sources remain importable"],
+        fixes: ["Unlineaged spouse rows no longer fail lineage validation", "Missing, self, or duplicate spouse references are rejected"],
+        knownIssues: []
+      },
+      {
+        version: "0.0.1.21",
+        date: "2026-08-19T18:00:45.000Z",
+        title: "Question-mark partial dates",
+        summary: "Current McLineage imports now recognize question marks as unknown date digits when the source descriptor is partial.",
+        features: ["Question marks may appear anywhere in partial source dates"],
+        improvements: ["Partial and unrecognized source-date warnings are reported separately", "The cleaned-source contract rejects invalid date descriptors"],
+        fixes: ["Valid partial dates are no longer described as invalid"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.20",
         date: "2026-08-19T16:40:01.000Z",

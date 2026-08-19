@@ -4,7 +4,7 @@ McFamily is a private, local-first family atlas that runs as a static GitHub Pag
 
 There is no backend, account, cloud database, or runtime dependency. Family data stays in browser storage and moves only through an explicit CSV import or export. The published repository must never contain a real family CSV or private family data.
 
-Current version: `0.0.1.20` (`major.minor.patch.build`).
+Current version: `0.0.1.22` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -18,7 +18,8 @@ Current version: `0.0.1.20` (`major.minor.patch.build`).
 - Supports partial/fuzzy matches that return the tree to Focus, collapsible side panels, a resizable desktop tree/profile split, and concise or detailed tree cards.
 - Keeps portrait placeholders and internal person references out of the ordinary workspace; Developer Mode reveals references for troubleshooting.
 - Presents complete oldest-to-newest, two-digit Lineage IDs with the first three ancestral segments italicized and the selected person's final segment bold, followed by a compact direct-parent-linked Family line with each name's lineage number and generation.
-- Imports strict descendant birth/death values with explicit year, month, day, unknown, or living status while retaining older cleaned-source date columns for compatibility.
+- Imports every current McLineage row as one stable person, resolves spouse slots to explicit spouse-record references, and retains older embedded-spouse and descendant-column sources for compatibility.
+- Imports known and question-mark partial source dates with explicit year, month, day, partial, unknown, or living status.
 - Uses compact open Parents, Siblings, Partners, and Children groups with bloodline-first parents, birth-ordered siblings and children, and current-first partner history; Imported source finishes each profile.
 - Uses absolute lineage generations rooted at George McMillen (1745) as Gen 0; unknown ordinals read simply as `Child of`.
 - Lets the person panel close and clear selection; choosing any Family Tree person reopens it without a separate Show person control.
@@ -73,7 +74,7 @@ context/                       Durable agent workflow and wish ledger
 
 ## Data limits and compatibility
 
-Schema v7 supports up to 1,500 people so the 607-row McLineage source and its spouse records fit safely. Dates accept `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` with exact, about, before, or after qualifiers. Relationships are stored as explicit records; ancestry, descendants, siblings, family units, and lineage labels are derived when needed.
+Schema v7 supports up to 1,500 people so the current 912-person McLineage source fits safely. Dates accept `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` with exact, about, before, or after qualifiers. Relationships are stored as explicit records; ancestry, descendants, siblings, family units, and lineage labels are derived when needed.
 
 Older application states migrate without discarding the single Notes document or retained compatibility fields. A first import must be a supported CSV containing at least one valid person.
 
