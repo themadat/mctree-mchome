@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.22",
-      buildId: "0.0.1.22",
+      version: "0.0.1.23",
+      buildId: "0.0.1.23",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -84,6 +84,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.23",
+        date: "2026-08-19T19:41:43.000Z",
+        title: "Clearer McLineage columns",
+        summary: "Current McLineage imports now use a record-first layout, a concise direct-parent field, and person-oriented sort naming.",
+        features: ["Record-first McLineage schema", "Direct parent_lineage_id references"],
+        improvements: ["Person sort names sit beside surnames", "Source row numbers move beside data-quality notes"],
+        fixes: ["Older direct-parent and lineage-path source schemas remain distinguishable", "Removed parent display names are no longer required"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.22",
         date: "2026-08-19T19:21:52.000Z",
