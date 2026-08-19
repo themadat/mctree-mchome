@@ -585,11 +585,7 @@ body[data-onboarding="true"] main { min-height: 100svh; padding: max(1rem, var(-
 .large-button { min-height: 48px; padding-inline: 1.15rem; }
 
 .family-workspace { min-width: 0; }
-.workspace-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: .7rem; }
-.workspace-heading h1 { margin: .1rem 0; font-size: clamp(1.25rem, 2vw, 1.7rem); }
-.workspace-heading p { margin: 0; color: var(--muted); }
-.workspace-heading-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .45rem; }
-.family-workspace-grid { display: grid; grid-template-columns: minmax(230px, 280px) minmax(420px, 1fr) minmax(270px, 340px); gap: .65rem; min-width: 0; height: calc(100svh - 10.6rem - var(--safe-top)); min-height: 540px; }
+.family-workspace-grid { display: grid; grid-template-columns: minmax(230px, 280px) minmax(420px, 1fr) minmax(270px, 340px); gap: .65rem; min-width: 0; height: calc(100svh - 7.4rem - var(--safe-top)); min-height: 540px; }
 .workspace-card { min-width: 0; min-height: 0; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow-small); }
 .panel-header, .tree-toolbar { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; gap: .65rem; min-height: 64px; padding: .7rem .8rem; border-bottom: 1px solid var(--line); }
 .panel-header h2, .tree-toolbar h2 { margin: .05rem 0; font-size: 1rem; }
@@ -716,7 +712,7 @@ body[data-onboarding="true"] main { min-height: 100svh; padding: max(1rem, var(-
 }
 
 @media (max-width: 959px) {
-  .family-workspace-grid { grid-template-columns: minmax(220px, 270px) minmax(0, 1fr); height: calc(100svh - 13.6rem - var(--safe-top)); }
+  .family-workspace-grid { grid-template-columns: minmax(220px, 270px) minmax(0, 1fr); height: calc(100svh - 10.4rem - var(--safe-top)); }
   .profile-panel { display: none; }
   .family-workspace-grid[data-mobile-view="profile"] .directory-panel,
   .family-workspace-grid[data-mobile-view="profile"] .tree-panel { display: none; }
@@ -728,11 +724,9 @@ body[data-onboarding="true"] main { min-height: 100svh; padding: max(1rem, var(-
 }
 
 @media (max-width: 699px) {
-  .workspace-heading { align-items: flex-start; }
-  .workspace-heading-actions { display: none; }
   .mobile-workspace-tabs { display: flex; width: 100%; }
   .mobile-workspace-tabs [data-mobile-view] { display: inline-flex; flex: 1; }
-  .family-workspace-grid { display: block; height: calc(100svh - 15.5rem - var(--safe-top)); min-height: 440px; }
+  .family-workspace-grid { display: block; height: calc(100svh - 12.3rem - var(--safe-top)); min-height: 440px; }
   .family-workspace-grid .workspace-card { height: 100%; }
   .family-workspace-grid[data-mobile-view="tree"] .directory-panel,
   .family-workspace-grid[data-mobile-view="tree"] .profile-panel,
