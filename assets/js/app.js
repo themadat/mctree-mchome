@@ -22,6 +22,7 @@
   let pendingRelative = null;
   let currentTreeLayout = null;
   let treeNeedsFit = true;
+  let treeSurfaceMode = "natural";
   let treeTransform = { x: 24, y: 24, scale: 1 };
 
   const SHORTCUTS = [
@@ -328,7 +329,7 @@
   }
 
   function ordinalLineageNumber(value) {
-    if (!/^\d+$/.test(String(value || ""))) return "Nth";
+    if (!/^\d+$/.test(String(value || "")) || Number(value) < 1) return "";
     const number = Number(value);
     const lastTwo = number % 100;
     const suffix = lastTwo >= 11 && lastTwo <= 13 ? "th" : ({ 1: "st", 2: "nd", 3: "rd" }[number % 10] || "th");
@@ -355,8 +356,11 @@
 
     const rootNames = [1, 2, 3].map(function (level) { return sourceField(person, "root_ancestor_" + String(level).padStart(2, "0") + "_name"); }).filter(Boolean);
     const remainingRootNames = rootNames.slice();
+    const personBirthYear = sourceBirthYear(person);
     const rootCandidates = people.filter(function (candidate) {
       if (used.has(candidate.id) || sourceField(candidate, "lineage_id") !== "0") return false;
+      const candidateBirthYear = sourceBirthYear(candidate);
+      if (personBirthYear > 0 && candidateBirthYear > 0 && candidateBirthYear >= personBirthYear) return false;
       return remainingRootNames.some(function (name) { return sourceNameMatches(candidate, name); });
     }).sort(function (a, b) { return sourceBirthYear(b) - sourceBirthYear(a) || model.sortName(a).localeCompare(model.sortName(b)); });
     rootCandidates.forEach(function (target) {
@@ -367,6 +371,8 @@
       members.push({ name: name, person: target, number: "" });
     });
     remainingRootNames.reverse().forEach(function (name) { members.push({ name: name, person: null, number: "" }); });
+    const selectedGeneration = rawId === "0" ? rootNames.length : Math.max(0, rootNames.length - 1 + rawSegments.length);
+    members.forEach(function (member, index) { member.generation = Math.max(0, selectedGeneration - index); });
     return { numbers: numbers, members: members };
   }
 
@@ -381,10 +387,13 @@
   }
 
   function lineageReadingHtml(chain) {
-    if (chain.members.length < 2) return '<p class="muted-copy">No parent lineage recorded.</p>';
-    return '<ol class="lineage-reading-list">' + chain.members.slice(0, -1).map(function (member, index) {
+    if (chain.members.length < 2 && !chain.numbers.length) return '<p class="muted-copy">No parent lineage recorded.</p>';
+    return '<ol class="lineage-reading-list">' + chain.members.map(function (member, index) {
       const parent = chain.members[index + 1];
-      return '<li><span class="lineage-generation">Gen ' + (index + 1) + ' ·</span> <span><strong>' + u.escapeHtml(ordinalLineageNumber(member.number)) + "</strong> Child of " + lineagePersonLink(parent, false) + "</span></li>";
+      if (!parent) return '<li><span class="lineage-generation">Gen ' + member.generation + ' ·</span> <span>' + lineagePersonLink(member, false) + "</span></li>";
+      const ordinalLabel = ordinalLineageNumber(member.number);
+      const ordinal = ordinalLabel ? "<strong>" + u.escapeHtml(ordinalLabel) + "</strong> " : "";
+      return '<li><span class="lineage-generation">Gen ' + member.generation + ' ·</span> <span>' + ordinal + "Child of " + lineagePersonLink(parent, false) + "</span></li>";
     }).join("") + "</ol>";
   }
 
@@ -409,7 +418,13 @@
   function printLineage(person) {
     const chain = lineageChain(person);
     const nameList = chain.members.map(function (member) { return u.escapeHtml(member.name) + " [" + u.escapeHtml(member.number || "Nth") + "]"; }).join(" → ");
-    const reading = chain.members.slice(0, -1).map(function (member, index) { return "Gen " + (index + 1) + " · " + u.escapeHtml(ordinalLineageNumber(member.number)) + " Child of " + u.escapeHtml(chain.members[index + 1].name); }).join("<br>");
+    const reading = chain.members.map(function (member, index) {
+      const parent = chain.members[index + 1];
+      if (!parent) return "Gen " + member.generation + " · " + u.escapeHtml(member.name);
+      const ordinalLabel = ordinalLineageNumber(member.number);
+      const ordinal = ordinalLabel ? u.escapeHtml(ordinalLabel) + " " : "";
+      return "Gen " + member.generation + " · " + ordinal + "Child of " + u.escapeHtml(parent.name);
+    }).join("<br>");
     const background = person.heritageNote && !sourceField(person, "lineage_id") ? '<div><dt>Background</dt><dd>' + u.escapeHtml(person.heritageNote).replace(/\n/g, "<br>") + "</dd></div>" : "";
     return '<section class="print-wide"><h3>Lineage</h3><dl><div><dt>ID</dt><dd>' + lineageIdHtml(chain.numbers) + '</dd></div><div><dt>Name List</dt><dd>' + nameList + '</dd></div><div><dt>Reading</dt><dd>' + reading + "</dd></div>" + background + "</dl></section>";
   }
@@ -429,7 +444,7 @@
     const contactBlocks = [];
     if (person.addresses.length) contactBlocks.push('<section class="profile-section"><h3>Addresses</h3>' + person.addresses.slice().sort(function (a, b) { return a.order - b.order; }).map(function (address) { return '<article class="contact-card"><header><strong>' + u.escapeHtml(address.label) + '</strong><span class="status-pill" data-kind="' + (address.current ? "success" : "neutral") + '">' + (address.current ? "Current" : "Former") + '</span></header><address>' + u.escapeHtml(model.formatAddress(address)).replace(/\n/g, "<br>") + '</address>' + ((model.formatFlexibleDate(address.startDate) || model.formatFlexibleDate(address.endDate)) ? '<small>' + u.escapeHtml([model.formatFlexibleDate(address.startDate), model.formatFlexibleDate(address.endDate)].filter(Boolean).join(" – ")) + "</small>" : "") + (address.notes ? "<p>" + u.escapeHtml(address.notes) + "</p>" : "") + "</article>"; }).join("") + "</section>");
     if (person.phones.length || person.emails.length) contactBlocks.push('<section class="profile-section"><h3>Contact</h3><dl class="profile-list">' + person.phones.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + person.emails.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + "</dl></section>");
-    container.innerHTML = '<article class="person-profile"><header class="profile-header"><div class="profile-title">' + profileEyebrow + '<h2>' + u.escapeHtml(model.displayName(person)) + '</h2><p>' + u.escapeHtml(family.lifespan(person)) + '</p></div><button type="button" class="icon-button pane-collapse pane-collapse-right" data-toggle-pane="profile" aria-controls="profilePanel" aria-expanded="true" aria-label="Close selected person" title="Close selected person"><span data-symbol="close" aria-hidden="true"></span></button></header><div class="profile-action-bar"><button type="button" class="button primary" data-edit-person="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Edit person</button><button type="button" class="button" data-add-relative="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Add relative</button><button type="button" class="button" data-add-relationship="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Connect existing</button></div><dl class="profile-list identity-list">' + formatEvent("Born", person.birth) + formatEvent("Died", person.death) + (person.gender ? '<div><dt>Gender</dt><dd>' + u.escapeHtml(person.gender) + "</dd></div>" : "") + (person.pronouns ? '<div><dt>Pronouns</dt><dd>' + u.escapeHtml(person.pronouns) + "</dd></div>" : "") + '<div><dt>Status</dt><dd>' + u.escapeHtml(person.livingStatus) + '</dd></div><div><dt>Lineage</dt><dd>' + u.escapeHtml(lineage.label) + "</dd></div></dl>" + contactBlocks.join("") + profileLineage(person) + (person.notes ? '<section class="profile-section"><h3>Notes</h3><p class="preserve-lines">' + u.escapeHtml(person.notes) + "</p></section>" : "") + profileSource(person) + '<section class="profile-section"><div class="form-section-heading"><h3>Relationships</h3><button type="button" class="button small" data-add-relationship="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Add</button></div><div class="relationship-list">' + relationshipRows(person) + '</div></section><footer class="profile-footer">' + (isHome ? '<span class="status-pill" data-kind="success">Home person</span>' : '<button type="button" class="button" data-set-home="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Set as home person</button>') + '<button type="button" class="button danger-text" data-delete-person="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Delete person</button></footer></article>';
+    container.innerHTML = '<article class="person-profile"><header class="profile-header"><div class="profile-title">' + profileEyebrow + '<h2>' + u.escapeHtml(model.displayName(person)) + '</h2><p>' + u.escapeHtml(family.lifespan(person)) + '</p></div><button type="button" class="icon-button" data-close-profile aria-controls="profilePanel" aria-label="Close and deselect person" title="Close and deselect person"><span data-symbol="close" aria-hidden="true"></span></button></header><div class="profile-action-bar"><button type="button" class="button primary" data-edit-person="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Edit person</button><button type="button" class="button" data-add-relative="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Add relative</button><button type="button" class="button" data-add-relationship="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Connect existing</button></div><dl class="profile-list identity-list">' + formatEvent("Born", person.birth) + formatEvent("Died", person.death) + (person.gender ? '<div><dt>Gender</dt><dd>' + u.escapeHtml(person.gender) + "</dd></div>" : "") + (person.pronouns ? '<div><dt>Pronouns</dt><dd>' + u.escapeHtml(person.pronouns) + "</dd></div>" : "") + '<div><dt>Status</dt><dd>' + u.escapeHtml(person.livingStatus) + '</dd></div><div><dt>Lineage</dt><dd>' + u.escapeHtml(lineage.label) + "</dd></div></dl>" + contactBlocks.join("") + profileLineage(person) + (person.notes ? '<section class="profile-section"><h3>Notes</h3><p class="preserve-lines">' + u.escapeHtml(person.notes) + "</p></section>" : "") + profileSource(person) + '<section class="profile-section"><div class="form-section-heading"><h3>Relationships</h3><button type="button" class="button small" data-add-relationship="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Add</button></div><div class="relationship-list">' + relationshipRows(person) + '</div></section><footer class="profile-footer">' + (isHome ? '<span class="status-pill" data-kind="success">Home person</span>' : '<button type="button" class="button" data-set-home="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Set as home person</button>') + '<button type="button" class="button danger-text" data-delete-person="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Delete person</button></footer></article>';
     icons.mount(container);
   }
 
@@ -449,9 +464,23 @@
     return "M" + x1 + " " + y1 + " C" + x1 + " " + middle + " " + x2 + " " + middle + " " + x2 + " " + y2;
   }
 
+  function sizeTreeSurface() {
+    const svg = $("#familyTreeSvg");
+    const canvas = svg && svg.parentElement;
+    if (!svg || !canvas || !currentTreeLayout) return;
+    if (treeSurfaceMode === "fit") {
+      svg.style.width = Math.max(320, canvas.clientWidth) + "px";
+      svg.style.height = Math.max(280, canvas.clientHeight) + "px";
+      return;
+    }
+    svg.style.width = Math.max(canvas.clientWidth, currentTreeLayout.width * treeTransform.scale + 80) + "px";
+    svg.style.height = Math.max(canvas.clientHeight, currentTreeLayout.height * treeTransform.scale + 80) + "px";
+  }
+
   function applyTreeTransform() {
     const viewport = $("#treeViewport");
     if (!viewport) return;
+    sizeTreeSurface();
     viewport.setAttribute("transform", "translate(" + treeTransform.x + " " + treeTransform.y + ") scale(" + treeTransform.scale + ")");
     const label = $("#zoomValue");
     if (label) label.textContent = Math.round(treeTransform.scale * 100) + "%";
@@ -460,13 +489,34 @@
   function fitTree() {
     const svg = $("#familyTreeSvg");
     if (!svg || !currentTreeLayout) return;
-    const width = Math.max(320, svg.clientWidth || 800);
-    const height = Math.max(280, svg.clientHeight || 600);
+    const canvas = svg.parentElement;
+    const width = Math.max(320, canvas && canvas.clientWidth || 800);
+    const height = Math.max(280, canvas && canvas.clientHeight || 600);
+    treeSurfaceMode = "fit";
     const scale = Math.min((width - 44) / currentTreeLayout.width, (height - 44) / currentTreeLayout.height, 1.2);
     treeTransform.scale = u.clamp(scale, 0.01, 2.5, 1);
     treeTransform.x = (width - currentTreeLayout.width * treeTransform.scale) / 2;
     treeTransform.y = (height - currentTreeLayout.height * treeTransform.scale) / 2;
     applyTreeTransform();
+    if (canvas) { canvas.scrollLeft = 0; canvas.scrollTop = 0; }
+  }
+
+  function resetTreeView() {
+    const svg = $("#familyTreeSvg");
+    const canvas = svg && svg.parentElement;
+    if (!svg || !canvas || !currentTreeLayout) return;
+    treeSurfaceMode = "natural";
+    treeTransform = { x: 40, y: 40, scale: 1 };
+    applyTreeTransform();
+    const focusId = state().ui.treeFocusId || state().workspace.family.homePersonId;
+    const focusNode = currentTreeLayout.nodes.find(function (node) { return node.id === focusId; });
+    if (focusNode) {
+      canvas.scrollLeft = Math.max(0, focusNode.x + focusNode.width / 2 + treeTransform.x - canvas.clientWidth / 2);
+      canvas.scrollTop = Math.max(0, focusNode.y + focusNode.height / 2 + treeTransform.y - canvas.clientHeight / 2);
+    } else {
+      canvas.scrollLeft = 0;
+      canvas.scrollTop = 0;
+    }
   }
 
   function condensedTreeNames(person) {
@@ -509,12 +559,11 @@
       return shell + '<text class="tree-name" x="12" y="23">' + u.escapeHtml(shortName) + '</text><text class="tree-life" x="12" y="46">' + u.escapeHtml(family.lifespan(person) + (home ? " · home" : "")) + "</text>" + reference + "</g>";
     }).join("");
     svg.innerHTML = '<g id="treeViewport"><g class="tree-edges">' + edges + '</g><g class="tree-nodes">' + nodes + "</g></g>";
-    applyTreeTransform();
     bindTreeInteractions(svg);
     if (treeNeedsFit) {
       treeNeedsFit = false;
-      requestAnimationFrame(fitTree);
-    }
+      requestAnimationFrame(resetTreeView);
+    } else applyTreeTransform();
   }
 
   function relativeForArrow(personId, key) {
@@ -560,6 +609,7 @@
         const centerY = (values[0].y + values[1].y) / 2;
         const distance = Math.hypot(values[1].x - values[0].x, values[1].y - values[0].y) || 1;
         treeTransform.scale = u.clamp(pinch.scale * distance / pinch.distance, 0.01, 2.5, pinch.scale);
+        treeSurfaceMode = "natural";
         treeTransform.x = centerX - pinch.worldX * treeTransform.scale;
         treeTransform.y = centerY - pinch.worldY * treeTransform.scale;
       } else if (drag && drag.id === event.pointerId) {
@@ -582,6 +632,7 @@
     svg.addEventListener("pointerup", endDrag);
     svg.addEventListener("pointercancel", endDrag);
     svg.addEventListener("wheel", function (event) {
+      if (!event.ctrlKey && !event.metaKey) return;
       event.preventDefault();
       const rect = svg.getBoundingClientRect();
       const cursorX = event.clientX - rect.left;
@@ -591,6 +642,7 @@
       treeTransform.x = cursorX - (cursorX - treeTransform.x) * (nextScale / oldScale);
       treeTransform.y = cursorY - (cursorY - treeTransform.y) * (nextScale / oldScale);
       treeTransform.scale = nextScale;
+      treeSurfaceMode = "natural";
       applyTreeTransform();
     }, { passive: false });
   }
@@ -599,8 +651,8 @@
     const directoryCollapsed = state().ui.directoryCollapsed;
     const profileCollapsed = state().ui.profileCollapsed;
     const overviewDisabled = state().ui.treeMode === "overview" ? "disabled" : "";
-    const profileReopen = profileCollapsed ? '<button type="button" class="button small" data-toggle-pane="profile" aria-controls="profilePanel" aria-expanded="false">Show person</button>' : "";
-    $("#mainContent").innerHTML = '<section class="family-workspace" aria-label="Family workspace"><nav class="mobile-workspace-tabs segmented" aria-label="Workspace views"><button type="button" data-mobile-view="directory" aria-pressed="' + String(state().ui.mobileView === "directory") + '">Directory</button><button type="button" data-mobile-view="tree" aria-pressed="' + String(state().ui.mobileView === "tree") + '">Tree</button><button type="button" data-mobile-view="profile" aria-pressed="' + String(state().ui.mobileView === "profile") + '">Person</button></nav><div class="family-workspace-grid" data-mobile-view="' + u.escapeHtml(state().ui.mobileView) + '" data-directory-collapsed="' + String(directoryCollapsed) + '" data-profile-collapsed="' + String(profileCollapsed) + '"><aside id="directoryPanel" class="directory-panel workspace-card' + (directoryCollapsed ? " is-collapsed" : "") + '" aria-label="Family directory"><header class="directory-module-bar"><span id="directoryCount" class="count-pill"></span><button type="button" class="icon-button" data-toggle-pane="directory" aria-controls="directoryPanel" aria-expanded="true" aria-label="Close directory" title="Close directory"><span data-symbol="close" aria-hidden="true"></span></button></header><div class="directory-controls"><label class="field full"><span class="visually-hidden">Search family directory</span><input id="directorySearch" type="search" placeholder="Name, address, phone, email…" value="' + u.escapeHtml(state().ui.directorySearch) + '"></label><div class="directory-filter-row"><label class="field"><span class="visually-hidden">Filter living status</span><select id="livingFilter"><option value="all">All people</option><option value="living">Living</option><option value="deceased">Deceased</option><option value="unknown">Unknown status</option></select></label><label class="field"><span class="visually-hidden">Sort directory</span><select id="directorySort"><option value="first">First name</option><option value="last">Last name</option></select></label></div></div><div class="directory-body"><div id="directoryList" class="directory-list"></div><nav id="directoryAlphaRail" class="directory-alpha-rail" aria-label="Jump to directory letter"></nav></div></aside><section class="tree-panel workspace-card" aria-label="Family tree"><header class="tree-toolbar"><div class="tree-view-controls"><div class="segmented" aria-label="Tree mode"><button type="button" data-tree-mode="focus" aria-pressed="' + String(state().ui.treeMode === "focus") + '">Focus</button><button type="button" data-tree-mode="overview" aria-pressed="' + String(state().ui.treeMode === "overview") + '">Overview</button></div><div class="segmented" aria-label="Person card detail"><button type="button" data-tree-node-view="condensed" aria-pressed="' + String(state().ui.treeNodeView === "condensed") + '">Condensed</button><button type="button" data-tree-node-view="detailed" aria-pressed="' + String(state().ui.treeNodeView === "detailed") + '">Detailed</button></div><label class="depth-control"><span>Ancestors <strong id="ancestorDepthValue">' + state().ui.ancestorDepth + '</strong></span><input id="ancestorDepth" type="range" min="0" max="4" step="1" value="' + state().ui.ancestorDepth + '" ' + overviewDisabled + '></label><label class="depth-control"><span>Descendants <strong id="descendantDepthValue">' + state().ui.descendantDepth + '</strong></span><input id="descendantDepth" type="range" min="0" max="4" step="1" value="' + state().ui.descendantDepth + '" ' + overviewDisabled + '></label><div class="zoom-controls" aria-label="Tree zoom"><button type="button" class="button small" data-zoom="out">Zoom out</button><span id="zoomValue" aria-live="polite">100%</span><button type="button" class="button small" data-zoom="in">Zoom in</button><button type="button" class="button small" data-fit-tree>Fit</button></div>' + profileReopen + '</div></header><div class="tree-canvas"><svg id="familyTreeSvg" role="group" aria-label="Interactive family relationship tree. Drag to pan, use the zoom controls, and select a person to focus." tabindex="0"></svg></div></section><aside id="profilePanel" class="profile-panel workspace-card' + (profileCollapsed ? " is-collapsed" : "") + '" aria-label="Selected person profile"><div id="profilePanelContent" class="profile-panel-content"></div></aside></div></section>';
+    const personTabDisabled = state().ui.selectedPersonId ? "" : " disabled";
+    $("#mainContent").innerHTML = '<section class="family-workspace" aria-label="Family workspace"><nav class="mobile-workspace-tabs segmented" aria-label="Workspace views"><button type="button" data-mobile-view="directory" aria-pressed="' + String(state().ui.mobileView === "directory") + '">Directory</button><button type="button" data-mobile-view="tree" aria-pressed="' + String(state().ui.mobileView === "tree") + '">Family Tree</button><button type="button" data-mobile-view="profile" aria-pressed="' + String(state().ui.mobileView === "profile") + '"' + personTabDisabled + '>Person</button></nav><div class="family-workspace-grid" data-mobile-view="' + u.escapeHtml(state().ui.mobileView) + '" data-directory-collapsed="' + String(directoryCollapsed) + '" data-profile-collapsed="' + String(profileCollapsed) + '"><aside id="directoryPanel" class="directory-panel workspace-card' + (directoryCollapsed ? " is-collapsed" : "") + '" aria-label="Family directory"><header class="directory-module-bar"><span id="directoryCount" class="count-pill"></span><button type="button" class="icon-button" data-toggle-pane="directory" aria-controls="directoryPanel" aria-expanded="true" aria-label="Close directory" title="Close directory"><span data-symbol="close" aria-hidden="true"></span></button></header><div class="directory-controls"><label class="field full"><span class="visually-hidden">Search family directory</span><input id="directorySearch" type="search" placeholder="Name, address, phone, email…" value="' + u.escapeHtml(state().ui.directorySearch) + '"></label><div class="directory-filter-row"><label class="field"><span class="visually-hidden">Filter living status</span><select id="livingFilter"><option value="all">All people</option><option value="living">Living</option><option value="deceased">Deceased</option><option value="unknown">Unknown status</option></select></label><label class="field"><span class="visually-hidden">Sort directory</span><select id="directorySort"><option value="first">First name</option><option value="last">Last name</option></select></label></div></div><div class="directory-body"><div id="directoryList" class="directory-list"></div><nav id="directoryAlphaRail" class="directory-alpha-rail" aria-label="Jump to directory letter"></nav></div></aside><section class="tree-panel workspace-card" aria-label="Family Tree"><header class="tree-toolbar"><div class="tree-view-controls"><div class="segmented" aria-label="Tree mode"><button type="button" data-tree-mode="focus" aria-pressed="' + String(state().ui.treeMode === "focus") + '">Focus</button><button type="button" data-tree-mode="overview" aria-pressed="' + String(state().ui.treeMode === "overview") + '">Overview</button></div><div class="segmented" aria-label="Person card detail"><button type="button" data-tree-node-view="condensed" aria-pressed="' + String(state().ui.treeNodeView === "condensed") + '">Condensed</button><button type="button" data-tree-node-view="detailed" aria-pressed="' + String(state().ui.treeNodeView === "detailed") + '">Detailed</button></div><label class="depth-control"><span>Ancestors <strong id="ancestorDepthValue">' + state().ui.ancestorDepth + '</strong></span><input id="ancestorDepth" type="range" min="0" max="4" step="1" value="' + state().ui.ancestorDepth + '" ' + overviewDisabled + '></label><label class="depth-control"><span>Descendants <strong id="descendantDepthValue">' + state().ui.descendantDepth + '</strong></span><input id="descendantDepth" type="range" min="0" max="4" step="1" value="' + state().ui.descendantDepth + '" ' + overviewDisabled + '></label><div class="zoom-controls" aria-label="Tree zoom"><button type="button" class="button small" data-zoom="out">Zoom out</button><span id="zoomValue" aria-live="polite">100%</span><button type="button" class="button small" data-zoom="in">Zoom in</button><button type="button" class="button small" data-fit-tree>Fit</button></div></div></header><div class="tree-canvas"><svg id="familyTreeSvg" role="group" aria-label="Interactive Family Tree. Scroll horizontally or vertically, drag to pan, use the zoom controls, and select a person to focus." tabindex="0"></svg></div></section><aside id="profilePanel" class="profile-panel workspace-card' + (profileCollapsed ? " is-collapsed" : "") + '" aria-label="Selected person profile"><div id="profilePanelContent" class="profile-panel-content"></div></aside></div></section>';
     $("#livingFilter").value = state().ui.livingFilter;
     $("#directorySort").value = state().ui.directorySort;
     renderDirectoryList();
@@ -619,6 +671,7 @@
     const settings = Object.assign({ focus: true, mobileProfile: false }, options || {});
     storage.mutate(function (next) {
       next.ui.selectedPersonId = id;
+      next.ui.profileCollapsed = false;
       if (settings.focus) next.ui.treeFocusId = id;
       if (settings.mobileProfile) next.ui.mobileView = "profile";
     }, { touch: false, reason: "select-person" });
@@ -1194,6 +1247,19 @@
   function handleMainClick(event) {
     const target = event.target;
     if (target.closest("#firstImportButton")) { $("#onboardingImportInput").click(); return; }
+    if (target.closest("[data-close-profile]")) {
+      const previousId = state().ui.selectedPersonId;
+      storage.mutate(function (next) {
+        next.ui.selectedPersonId = "";
+        next.ui.profileCollapsed = true;
+        if (next.ui.mobileView === "profile") next.ui.mobileView = "tree";
+      }, { touch: false, reason: "deselect-person" });
+      treeNeedsFit = false;
+      renderWorkspace();
+      requestAnimationFrame(function () { $('[data-tree-person="' + previousId + '"]')?.focus(); });
+      announce("Closed the selected person.");
+      return;
+    }
     const letterButton = target.closest("[data-directory-letter]");
     if (letterButton) {
       const list = $("#directoryList");
@@ -1223,7 +1289,7 @@
       return;
     }
     const select = target.closest("[data-select-person], [data-tree-person]");
-    if (select) { selectPerson(select.dataset.selectPerson || select.dataset.treePerson, { focus: true, mobileProfile: Boolean(select.dataset.selectPerson) }); return; }
+    if (select) { selectPerson(select.dataset.selectPerson || select.dataset.treePerson, { focus: true, mobileProfile: true }); return; }
     if (target.closest("[data-add-person]")) { pendingRelative = null; openPersonEditor("", target.closest("[data-add-person]")); return; }
     const editPerson = target.closest("[data-edit-person]");
     if (editPerson) { pendingRelative = null; openPersonEditor(editPerson.dataset.editPerson, editPerson); return; }
@@ -1255,7 +1321,7 @@
     const nodeViewButton = target.closest("[data-tree-node-view]");
     if (nodeViewButton) { storage.mutate(function (next) { next.ui.treeNodeView = nodeViewButton.dataset.treeNodeView; }, { touch: false, reason: "tree-node-view" }); treeNeedsFit = true; renderWorkspace(); return; }
     const zoomButton = target.closest("[data-zoom]");
-    if (zoomButton) { treeTransform.scale = u.clamp(treeTransform.scale * (zoomButton.dataset.zoom === "in" ? 1.2 : 0.833), 0.01, 2.5, treeTransform.scale); applyTreeTransform(); return; }
+    if (zoomButton) { treeSurfaceMode = "natural"; treeTransform.scale = u.clamp(treeTransform.scale * (zoomButton.dataset.zoom === "in" ? 1.2 : 0.833), 0.01, 2.5, treeTransform.scale); applyTreeTransform(); return; }
     if (target.closest("[data-fit-tree]")) { fitTree(); return; }
     if (target.closest("[data-clear-directory]")) { storage.mutate(function (next) { next.ui.directorySearch = ""; next.ui.livingFilter = "all"; }, { touch: false, reason: "directory-filter" }); renderWorkspace(); return; }
     if (target.closest("[data-print-atlas]")) printAtlas();
@@ -1316,8 +1382,8 @@
     const treeNode = event.target.closest && event.target.closest("[data-tree-person]");
     if (treeNode && ["Enter", " ", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
       event.preventDefault();
-      if (event.key === "Enter" || event.key === " ") selectPerson(treeNode.dataset.treePerson, { focus: true });
-      else { const relative = relativeForArrow(treeNode.dataset.treePerson, event.key); if (relative) selectPerson(relative.id, { focus: true }); }
+      if (event.key === "Enter" || event.key === " ") selectPerson(treeNode.dataset.treePerson, { focus: true, mobileProfile: true });
+      else { const relative = relativeForArrow(treeNode.dataset.treePerson, event.key); if (relative) selectPerson(relative.id, { focus: true, mobileProfile: true }); }
       return;
     }
     if (event.key === "Escape") { $("#globalSearchResults").hidden = true; return; }
@@ -1411,7 +1477,7 @@
     window.addEventListener("app:statesaved", renderLocalStatus);
     window.addEventListener("app:pwaerror", function (event) { components.toast(event.detail.message, { title: "Offline support unavailable", kind: "warning", duration: 5000 }); });
     window.addEventListener("app:statechange", function (event) { if (["import", "recovery", "erase-all", "reset-preferences"].includes(event.detail.reason)) { treeNeedsFit = true; renderAll(); } });
-    window.addEventListener("resize", u.debounce(function () { if (initialized() && currentTreeLayout) fitTree(); if ($("#developerPanel") && !$("#developerPanel").hidden) renderDeveloper(); }, 120));
+    window.addEventListener("resize", u.debounce(function () { if (initialized() && currentTreeLayout) { if (treeSurfaceMode === "fit") fitTree(); else sizeTreeSurface(); } if ($("#developerPanel") && !$("#developerPanel").hidden) renderDeveloper(); }, 120));
     ["(prefers-color-scheme: dark)", "(prefers-reduced-motion: reduce)"].forEach(function (query) { const media = window.matchMedia(query); if (typeof media.addEventListener === "function") media.addEventListener("change", applyAppearance); else if (typeof media.addListener === "function") media.addListener(applyAppearance); });
   }
 

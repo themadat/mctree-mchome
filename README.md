@@ -4,17 +4,19 @@ McFamily is a private, local-first family atlas that runs as a static GitHub Pag
 
 There is no backend, account, cloud database, or runtime dependency. Family data stays in browser storage and moves only through an explicit CSV import or export. The published repository must never contain a real family CSV or private family data.
 
-Current version: `0.0.1.10` (`major.minor.patch.build`).
+Current version: `0.0.1.11` (`major.minor.patch.build`).
 
 ## What it does
 
 - Opens only after importing the cleaned McLineage CSV or a native McFamily CSV with at least one person on first launch.
 - Shows a focus tree around a home person and a whole-family overview of connected and isolated people.
-- Supports pan, zoom, fit, separate ancestor and descendant depths, keyboard selection, touch, and accessible relationship descriptions.
+- Supports two-axis scrolling, pan, zoom, fit, separate ancestor and descendant depths, keyboard selection, touch, and accessible relationship descriptions.
 - Provides a header-opened directory with first/last-name sorting, A–Z quick jumps, lifespan and lineage context, and broad search across names, contact details, places, heritage, and notes.
 - Supports partial/fuzzy matches, collapsible side panels, and concise or detailed tree cards.
 - Keeps portrait placeholders and internal person references out of the ordinary workspace; Developer Mode reveals references for troubleshooting.
 - Presents person-first, two-digit Lineage IDs followed by clickable name lists and generation-by-generation child-of readings.
+- Uses absolute lineage generations rooted at George McMillen (1745) as Gen 0; unknown ordinals read simply as `Child of`.
+- Lets the person panel close and clear selection; choosing any Family Tree person reopens it without a separate Show person control.
 - Keeps family-record add, edit, relationship, home-person, and deletion controls visibly paused during the current build-out.
 - Retains structured profiles for people, multiple addresses, phones, emails, life events, and typed parent or partner relationships.
 - Rejects missing references, duplicate relationships, self-links, and ancestry cycles.
