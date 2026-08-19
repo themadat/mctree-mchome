@@ -1,0 +1,138 @@
+McLineage Dataset Metadata
+==========================
+
+Current dataset
+---------------
+
+Version: 3.0.0
+Updated: 2026-08-19
+File: McLineage-3-0-0-2026-08-19.csv
+Source: McLineage.xlsx legacy database export
+Status: Private family data; do not commit to a public or shared source repository.
+
+Changelog
+---------
+
+3.0.0 — 2026-08-19 — [121,910 bytes | 607 records | 48 fields]
+Author: Adam Lauer
+Agent: Codex [GPT-5-based Codex | Model UNK | Effort UNK | Speed UNK]
+Summary: Replaced reconstructed lineage metadata with stable direct references.
+
+- Changed record_id values from mclineage-#### to stable P references spanning
+  P001 through P607.
+- Reversed and two-digit-normalized lineage_id into person-to-root order, such as
+  3.05.02.02 becoming 02.02.05.03.
+- Replaced parent_lineage_id and nine repeated lineage-name fields with the
+  authoritative lineage_parent_id and readable lineage_parent_name_full fields.
+- Resolved 601 direct lineage-parent references, retained the true root and five
+  isolated lineage-99 records without parents, and rejected self-links and cycles.
+- Reduced the schema from 56 fields to 48 without removing family records.
+- Verified UTF-8 CSV round-trip parsing, 607 unique P references, consistent column
+  counts, resolvable parent IDs, and matching parent names.
+
+2.0.0 — 2026-08-18 — [147,311 bytes | 607 records | 56 fields]
+Author: Adam Lauer
+Agent: Codex [GPT-5-based Codex | Model 5.6 Sol | Effort High | Speed Standard]
+Summary: Simplified the import schema and made lineage branches explicit.
+
+- Changed lineage notation from compact decimals to two-digit dotted segments, such
+  as 3.050202 to 3.05.02.02.
+- Updated parent_lineage_id values to use the same dotted hierarchy and derive the
+  parent by removing the final branch.
+- Consolidated separate exact-date, date-text, and precision triplets into paired
+  date_value and date_precision fields.
+- Grouped spouse names with their corresponding birth, death, and marriage fields.
+- Renamed ambiguous database display, status, sort, and page fields as legacy fields.
+- Reduced the schema from 69 fields to 56 fields without removing family records.
+- Verified 607 unique record IDs, valid CSV round-trip parsing, consistent dotted
+  lineage depth, derived parent lineages, and matching date value/precision pairs.
+
+1.0.0 — 2026-08-18 — [UNK | 607 records | 69 fields]
+Author: Adam Lauer
+Agent: Codex [GPT-5-based Codex | Model 5.6 Sol | Effort High | Speed Standard]
+Summary: Created the initial structured and sanitized McLineage CSV for web import.
+
+- Converted the legacy Excel/database export into a UTF-8 CSV with explicit,
+  snake_case import fields.
+- Retained 607 family records and removed two metadata-only export rows.
+- Removed wholly empty export columns and the redundant secondary lineage field.
+- Added unique record_id values and retained source_row_number for traceability.
+- Trimmed and normalized whitespace, names, notes, boolean flags, and legacy sort
+  fields without inventing missing genealogy facts.
+- Extracted embedded deceased markers from applicable surname fields into explicit
+  boolean fields.
+- Restored lineage identifiers as text-safe compact hierarchies and derived parent
+  lineage identifiers from the final two-digit branch.
+- Converted exact dates to ISO YYYY-MM-DD, converted Excel serial dates, and retained
+  partial, ambiguous, or invalid source dates with explicit precision fields.
+- Verified 607 unique record IDs, valid CSV round-trip parsing, consistent lineage
+  depth, derived parent lineages, and matching date/precision structures.
+
+Versioning rules for humans and agents
+--------------------------------------
+
+1. Determine the update type before changing the file. If an update contains more
+   than one type, use the highest-impact type: major, then minor, then patch.
+
+   Major — schema change
+   - Increment major and reset minor and patch to zero.
+   - Includes adding, removing, renaming, reordering, splitting, or combining columns.
+   - Includes changing a column's meaning, data type, date representation, identifier
+     format, relationship structure, delimiter, or character encoding.
+
+   Minor — data update
+   - Increment minor and reset patch to zero.
+   - Includes adding or removing people or relationships, or recording new factual
+     genealogy information without changing the schema.
+   - Bulk factual updates count as one minor release when delivered together.
+
+   Patch — correction
+   - Increment patch only.
+   - Includes correcting typos, whitespace, capitalization, misplaced values,
+     duplicate records, malformed dates, or other errors in existing information.
+   - A patch must not add a new column or change the meaning of a column.
+
+2. Name every released CSV using this exact pattern:
+
+   McLineage-<major>-<minor>-<patch>-<YYYY>-<MM>-<DD>.csv
+
+   Example: McLineage-1-2-3-2026-08-19.csv
+
+   - Use integers for major, minor, and patch.
+   - Use a four-digit year and two-digit month and day.
+   - The date is the date that version was last updated.
+
+3. For every release:
+
+   - Start from the latest validated version.
+   - Choose the next version before editing and save the result under its new name.
+   - Preserve stable P-formatted record_id values unless correcting an actual collision.
+   - Keep lineage_id branches as two-digit segments in person-to-root order, such as
+     02.02.05.03. Store the direct parent P reference in lineage_parent_id and repeat
+     the resolved full name in lineage_parent_name_full for readability.
+   - Store exact dates as YYYY-MM-DD with precision "day". Preserve incomplete or
+     uncertain dates in the date value and state their precision; do not guess.
+   - Record unresolved source problems in data_quality_notes instead of silently
+     inventing or discarding genealogy facts.
+   - Parse the complete CSV after editing and verify consistent column counts,
+     unique record IDs, lineage/parent structure, and date value/precision pairs.
+   - Update the Current dataset section and add a newest-first changelog entry.
+   - Retain prior versions only in approved private storage. Never commit real family
+     data, exported names, notes, or this private dataset to the source repository.
+
+4. Use this changelog entry format:
+
+   Version X.Y.Z — YYYY-MM-DD — [###,### bytes | ### records | ## fields]
+   Author: Person Name
+   Agent: Agent Name [Agent family | Model MODEL | Effort EFFORT | Speed SPEED], or None
+   Summary: One-line description of the release.
+
+   - More detailed change.
+   - Record-count or schema-count change, when applicable.
+   - Validation performed and any remaining known limitations.
+
+   The human author is required. Record the agent separately when one assisted.
+   Ask the human author to supply unknown author or agent details before finalizing.
+   Record the released CSV's exact byte size, or "UNK" if the file is unavailable.
+   Copy model, effort, and speed from the active tool or interface when available.
+   Never infer those settings; write "UNK" when they are unavailable.
