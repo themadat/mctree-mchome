@@ -4,7 +4,7 @@ McFamily is a private, local-first family atlas that runs as a static GitHub Pag
 
 There is no backend, account, cloud database, or runtime dependency. Family data stays in browser storage and moves only through an explicit CSV import or export. The published repository must never contain a real family CSV or private family data.
 
-Current version: `0.0.1.28` (`major.minor.patch.build`).
+Current version: `0.0.1.29` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -15,11 +15,11 @@ Current version: `0.0.1.28` (`major.minor.patch.build`).
 - Can reveal likely affinal-parent branches through the Affinal Lines control without changing relationship records.
 - Provides a header-toggled directory with title-bar search and result count, visible Filter By and Sort By controls, combinable status and consanguineal/affinal checkbox filters, A–Z quick jumps, lifespan and lineage context, and broad search across names, contact details, places, heritage, and notes.
 - Lets people be starred directly in search, pins favorites above other matches, and provides a Favorites-only search control beside the search field.
-- Supports partial/fuzzy matches that return the tree to Focus, collapsible side panels, a resizable desktop tree/profile split, and narrow tree cards that stack each name word on its own line.
+- Supports partial/fuzzy matches that return the tree to Focus, collapsible side panels, resizable desktop directory/tree/profile splits, and compact tree cards that stack each name word on its own line.
 - Keeps portrait placeholders and internal person references out of the ordinary workspace; Developer Mode reveals references for troubleshooting.
 - Presents complete oldest-to-newest, two-digit Lineage IDs with the first three ancestral segments italicized and the selected person's final segment bold, followed by a compact direct-parent-linked Family line with each name's lineage number and generation.
 - Imports every current McLineage row as one stable person, expands `partner_relationships_json` into explicit partner records, and retains older spouse-slot, embedded-spouse, and descendant-column sources for compatibility.
-- Imports known and question-mark partial source dates; known deaths and G0-G4 lineage people are deceased, while later `UNKNOWN` death descriptors keep status unknown and blank descriptors mean living.
+- Imports known and question-mark partial source dates; known deaths, explicit `UNKNOWN` death dates, G0-G4 lineage people, and people older than 100 are deceased or presumed deceased, with profile and print age estimates when birth data permits.
 - Uses compact open Parents, Siblings, Partners, and Children groups with generation labels, consanguinity/affinity parent roles, birth order and year for siblings and children, marriage years for partners, and current-first partner history; Imported source finishes each profile.
 - Uses absolute lineage generations rooted at George McMillen (1745) as Gen 0; readings use concise forms such as `Gen 6, 5th Child of Max`.
 - Lets the person panel close and clear selection; choosing any Family Tree person reopens it without a separate Show person control.

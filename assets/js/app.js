@@ -300,6 +300,63 @@
     return '<div><dt>' + label + '</dt><dd>' + u.escapeHtml([date, event.place].filter(Boolean).join(" · ")) + "</dd></div>";
   }
 
+  function lifeDateValue(person, kind) {
+    const normalized = String(person && person[kind] && person[kind].date && person[kind].date.value || "");
+    if (normalized) return normalized;
+    return String(sourceField(person, "person_date_" + kind + "_value") || sourceField(person, "descendant_date_" + kind + "_value") || "");
+  }
+
+  function approximateDate(value) {
+    const match = String(value || "").match(/^(\d{4})(?:-(\d{2})(?:-(\d{2}))?)?$/);
+    if (!match) return null;
+    return new Date(Number(match[1]), match[2] ? Number(match[2]) - 1 : 6, match[3] ? Number(match[3]) : 1);
+  }
+
+  function ageInMonths(birthValue, endValue) {
+    const birth = approximateDate(birthValue);
+    const end = endValue instanceof Date ? endValue : approximateDate(endValue);
+    if (!birth || !end || end < birth) return null;
+    let months = (end.getFullYear() - birth.getFullYear()) * 12 + end.getMonth() - birth.getMonth();
+    if (end.getDate() < birth.getDate()) months -= 1;
+    return Math.max(0, months);
+  }
+
+  function ageLabel(months) {
+    if (!Number.isFinite(months)) return "";
+    const years = Math.floor(months / 12);
+    const remainder = months % 12;
+    if (months < 24) {
+      const parts = [];
+      if (years) parts.push(years + " year" + (years === 1 ? "" : "s"));
+      if (remainder) parts.push(remainder + " month" + (remainder === 1 ? "" : "s"));
+      return parts.join(", ") || "Under 1 month";
+    }
+    return years + " years";
+  }
+
+  function personStatusLabel(person) {
+    if (person.livingStatus === "deceased") return lifeDateValue(person, "death") ? "Deceased" : "Presumed deceased";
+    if (person.livingStatus === "living") return "Living";
+    return "Unknown";
+  }
+
+  function statusDetails(person) {
+    const birthValue = lifeDateValue(person, "birth");
+    const deathValue = lifeDateValue(person, "death");
+    const rows = ['<div><dt>Status</dt><dd>' + u.escapeHtml(personStatusLabel(person)) + "</dd></div>"];
+    if (!birthValue) return rows.join("");
+    if (person.livingStatus === "deceased") {
+      const deathAge = ageLabel(ageInMonths(birthValue, deathValue));
+      const currentAge = ageLabel(ageInMonths(birthValue, new Date()));
+      if (deathAge) rows.push('<div><dt>Age at death</dt><dd>' + u.escapeHtml(deathAge) + "</dd></div>");
+      if (currentAge) rows.push('<div><dt>Would be today</dt><dd>' + u.escapeHtml(currentAge) + "</dd></div>");
+    } else {
+      const currentAge = ageLabel(ageInMonths(birthValue, new Date()));
+      if (currentAge) rows.push('<div><dt>Estimated age</dt><dd>' + u.escapeHtml(currentAge) + "</dd></div>");
+    }
+    return rows.join("");
+  }
+
   function relationshipLabel(relationship, personId, other) {
     if (relationship.type === "parent-child") {
       const type = config.parentKinds.find(function (item) { return item.id === relationship.kind; });
@@ -678,7 +735,7 @@
     const contactBlocks = [];
     if (person.addresses.length) contactBlocks.push('<section class="profile-section"><h3>Addresses</h3>' + person.addresses.slice().sort(function (a, b) { return a.order - b.order; }).map(function (address) { return '<article class="contact-card"><header><strong>' + u.escapeHtml(address.label) + '</strong><span class="status-pill" data-kind="' + (address.current ? "success" : "neutral") + '">' + (address.current ? "Current" : "Former") + '</span></header><address>' + u.escapeHtml(model.formatAddress(address)).replace(/\n/g, "<br>") + '</address>' + ((model.formatFlexibleDate(address.startDate) || model.formatFlexibleDate(address.endDate)) ? '<small>' + u.escapeHtml([model.formatFlexibleDate(address.startDate), model.formatFlexibleDate(address.endDate)].filter(Boolean).join(" – ")) + "</small>" : "") + (address.notes ? "<p>" + u.escapeHtml(address.notes) + "</p>" : "") + "</article>"; }).join("") + "</section>");
     if (person.phones.length || person.emails.length) contactBlocks.push('<section class="profile-section"><h3>Contact</h3><dl class="profile-list">' + person.phones.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + person.emails.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + "</dl></section>");
-    container.innerHTML = '<article class="person-profile"><header class="profile-header"><div class="profile-title">' + profileEyebrow + '<h2>' + u.escapeHtml(model.displayName(person)) + '</h2><p>' + u.escapeHtml(family.lifespan(person)) + '</p></div><button type="button" class="icon-button" data-close-profile aria-controls="profilePanel" aria-label="Close and deselect person" title="Close and deselect person"><span data-symbol="close" aria-hidden="true"></span></button></header><div class="profile-action-bar"><button type="button" class="button primary" data-edit-person="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Edit person</button><button type="button" class="button" data-add-relative="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Add relative</button><button type="button" class="button" data-add-relationship="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Connect existing</button></div><dl class="profile-list identity-list">' + formatEvent("Born", person.birth) + formatEvent("Died", person.death) + (person.gender ? '<div><dt>Gender</dt><dd>' + u.escapeHtml(person.gender) + "</dd></div>" : "") + (person.pronouns ? '<div><dt>Pronouns</dt><dd>' + u.escapeHtml(person.pronouns) + "</dd></div>" : "") + '<div><dt>Status</dt><dd>' + u.escapeHtml(person.livingStatus) + "</dd></div></dl>" + contactBlocks.join("") + profileLineage(person) + '<section class="profile-section"><div class="form-section-heading"><h3>Relationships</h3><button type="button" class="button small" data-add-relationship="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Add</button></div><div class="relationship-list">' + relationshipRows(person) + "</div></section>" + (person.notes ? '<section class="profile-section"><h3>Notes</h3><p class="preserve-lines">' + u.escapeHtml(person.notes) + "</p></section>" : "") + profileSource(person) + '<footer class="profile-footer">' + (isHome ? '<span class="status-pill" data-kind="success">Home person</span>' : '<button type="button" class="button" data-set-home="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Set as home person</button>') + '<button type="button" class="button danger-text" data-delete-person="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Delete person</button></footer></article>';
+    container.innerHTML = '<article class="person-profile"><header class="profile-header"><div class="profile-title">' + profileEyebrow + '<h2>' + u.escapeHtml(model.displayName(person)) + '</h2><p>' + u.escapeHtml(family.lifespan(person)) + '</p></div><button type="button" class="icon-button" data-close-profile aria-controls="profilePanel" aria-label="Close and deselect person" title="Close and deselect person"><span data-symbol="close" aria-hidden="true"></span></button></header><div class="profile-action-bar"><button type="button" class="button primary" data-edit-person="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Edit person</button><button type="button" class="button" data-add-relative="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Add relative</button><button type="button" class="button" data-add-relationship="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Connect existing</button></div><dl class="profile-list identity-list">' + formatEvent("Born", person.birth) + formatEvent("Died", person.death) + (person.gender ? '<div><dt>Gender</dt><dd>' + u.escapeHtml(person.gender) + "</dd></div>" : "") + (person.pronouns ? '<div><dt>Pronouns</dt><dd>' + u.escapeHtml(person.pronouns) + "</dd></div>" : "") + statusDetails(person) + "</dl>" + contactBlocks.join("") + profileLineage(person) + '<section class="profile-section"><div class="form-section-heading"><h3>Relationships</h3><button type="button" class="button small" data-add-relationship="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Add</button></div><div class="relationship-list">' + relationshipRows(person) + "</div></section>" + (person.notes ? '<section class="profile-section"><h3>Notes</h3><p class="preserve-lines">' + u.escapeHtml(person.notes) + "</p></section>" : "") + profileSource(person) + '<footer class="profile-footer">' + (isHome ? '<span class="status-pill" data-kind="success">Home person</span>' : '<button type="button" class="button" data-set-home="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Set as home person</button>') + '<button type="button" class="button danger-text" data-delete-person="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Delete person</button></footer></article>';
     icons.mount(container);
   }
 
@@ -815,15 +872,15 @@
       const selected = state().ui.selectedPersonId === person.id;
       const home = state().workspace.family.homePersonId === person.id;
       const name = model.displayName(person);
-      const shell = '<g class="tree-node' + (selected ? " selected" : "") + (home ? " home" : "") + (person.livingStatus === "deceased" ? " deceased" : "") + '" data-view="' + u.escapeHtml(currentTreeLayout.nodeView) + '" tabindex="0" role="button" aria-label="' + u.escapeHtml(name + ", " + family.lifespan(person) + ". Select to focus.") + '" data-tree-person="' + u.escapeHtml(person.id) + '" transform="translate(' + node.x + " " + node.y + ')"><rect width="' + node.width + '" height="' + node.height + '" rx="12"></rect>';
+      const shell = '<g class="tree-node' + (selected ? " selected" : "") + (home ? " home" : "") + (person.livingStatus === "deceased" ? " deceased" : "") + '" data-view="' + u.escapeHtml(currentTreeLayout.nodeView) + '" tabindex="0" role="button" aria-label="' + u.escapeHtml(name + ", " + family.lifespan(person) + ". Select to focus.") + '" data-tree-person="' + u.escapeHtml(person.id) + '" transform="translate(' + node.x + " " + node.y + ')"><rect width="' + node.width + '" height="' + node.height + '" rx="10"></rect>';
       const detailed = currentTreeLayout.nodeView === "detailed";
       const nameLines = family.treeNameLines(person, detailed);
       const nameHtml = nameLines.map(function (line, index) {
         const familyClass = !detailed && index === nameLines.length - 1 ? " tree-family" : "";
-        return '<text class="tree-name-line' + familyClass + '" x="' + (node.width / 2) + '" y="' + (18 + index * 15) + '" text-anchor="middle">' + u.escapeHtml(line) + "</text>";
+        return '<text class="tree-name-line' + familyClass + '" x="' + (node.width / 2) + '" y="' + (16 + index * 14) + '" text-anchor="middle">' + u.escapeHtml(line) + "</text>";
       }).join("");
-      const lifeY = 24 + nameLines.length * 15;
-      const reference = detailed && developerReferencesEnabled() ? '<text class="tree-reference" x="' + (node.width / 2) + '" y="' + (lifeY + 15) + '" text-anchor="middle">' + u.escapeHtml(person.reference) + "</text>" : "";
+      const lifeY = 21 + nameLines.length * 14;
+      const reference = detailed && developerReferencesEnabled() ? '<text class="tree-reference" x="' + (node.width / 2) + '" y="' + (lifeY + 13) + '" text-anchor="middle">' + u.escapeHtml(person.reference) + "</text>" : "";
       return shell + nameHtml + '<text class="tree-life" x="' + (node.width / 2) + '" y="' + lifeY + '" text-anchor="middle">' + u.escapeHtml(family.lifespan(person) + (detailed && home ? " · home" : "")) + "</text>" + reference + "</g>";
     }).join("");
     svg.innerHTML = '<g id="treeViewport"><g class="tree-edges">' + edges + inferredEdges + '</g><g class="tree-nodes">' + nodes + "</g></g>";
@@ -917,59 +974,93 @@
 
   function bindFamilyResize() {
     const grid = $(".family-workspace-grid");
-    const divider = $("#treeProfileDivider");
+    if (!grid || window.matchMedia("(max-width: 959px)").matches) return;
+    const directory = $("#directoryPanel");
     const profile = $("#profilePanel");
-    if (!grid || !divider || !profile || divider.hidden || window.matchMedia("(max-width: 959px)").matches) return;
-    let drag = null;
-    function bounds() {
-      const directory = $("#directoryPanel");
-      const directoryWidth = directory && !directory.classList.contains("is-collapsed") ? directory.getBoundingClientRect().width : 0;
-      const maximum = grid.clientWidth - directoryWidth - 420 - divider.offsetWidth - 32;
-      return { min: 240, max: Math.max(240, Math.min(600, maximum)) };
+    const directoryDivider = $("#directoryTreeDivider");
+    const profileDivider = $("#treeProfileDivider");
+
+    function visible(element) {
+      return Boolean(element && !element.hidden && getComputedStyle(element).display !== "none");
     }
-    function applyWidth(value, persist) {
-      const limits = bounds();
-      const width = Math.round(u.clamp(value, limits.min, limits.max, state().ui.profilePanelWidth));
-      grid.style.setProperty("--profile-panel-width", width + "px");
-      divider.setAttribute("aria-valuemax", String(limits.max));
-      divider.setAttribute("aria-valuenow", String(width));
-      sizeTreeSurface();
-      if (persist) storage.mutate(function (next) { next.ui.profilePanelWidth = width; }, { touch: false, reason: "workspace-resize" });
-      return width;
+
+    function remainingWidth(excludedPanel) {
+      const children = Array.from(grid.children).filter(visible);
+      const gap = parseFloat(getComputedStyle(grid).columnGap) || 0;
+      return children.reduce(function (total, child) {
+        return child === excludedPanel || child.classList.contains("tree-panel") ? total : total + child.getBoundingClientRect().width;
+      }, gap * Math.max(0, children.length - 1));
     }
-    applyWidth(state().ui.profilePanelWidth, false);
-    divider.addEventListener("pointerdown", function (event) {
-      if (event.button !== 0) return;
-      drag = { x: event.clientX, width: profile.getBoundingClientRect().width };
-      divider.setPointerCapture(event.pointerId);
-      document.body.classList.add("resizing-family");
-      event.preventDefault();
-    });
-    divider.addEventListener("pointermove", function (event) {
-      if (!drag) return;
-      applyWidth(drag.width - (event.clientX - drag.x), false);
-    });
-    function finishResize(event) {
-      if (!drag) return;
-      drag = null;
-      if (divider.hasPointerCapture(event.pointerId)) divider.releasePointerCapture(event.pointerId);
-      document.body.classList.remove("resizing-family");
-      applyWidth(Number(divider.getAttribute("aria-valuenow")), true);
+
+    function updatePercentage(divider) {
+      if (!visible(divider)) return;
+      const gridRect = grid.getBoundingClientRect();
+      const dividerRect = divider.getBoundingClientRect();
+      const percent = Math.round((dividerRect.left - gridRect.left + dividerRect.width / 2) / Math.max(1, gridRect.width) * 100);
+      const output = $(".family-divider-percentage", divider);
+      if (output) output.textContent = percent + "%";
+      divider.setAttribute("aria-valuetext", percent + "% position");
     }
-    divider.addEventListener("pointerup", finishResize);
-    divider.addEventListener("pointercancel", finishResize);
-    divider.addEventListener("keydown", function (event) {
-      const current = Number(divider.getAttribute("aria-valuenow"));
-      const limits = bounds();
-      let next = current;
-      if (event.key === "ArrowLeft") next += 24;
-      else if (event.key === "ArrowRight") next -= 24;
-      else if (event.key === "Home") next = limits.min;
-      else if (event.key === "End") next = limits.max;
-      else return;
-      event.preventDefault();
-      applyWidth(next, true);
-    });
+
+    function bindDivider(options) {
+      const divider = options.divider;
+      const panel = options.panel;
+      if (!visible(divider) || !visible(panel)) return;
+      let drag = null;
+      function bounds() {
+        const narrowDesktop = window.matchMedia("(max-width: 1180px)").matches;
+        const minimumTreeWidth = !visible(profile) ? 520 : (!visible(directory) ? (narrowDesktop ? 390 : 520) : (narrowDesktop ? 390 : 420));
+        const maximum = grid.clientWidth - remainingWidth(panel) - minimumTreeWidth;
+        return { min: options.min, max: Math.max(options.min, Math.min(options.max, maximum)) };
+      }
+      function applyWidth(value, persist) {
+        const limits = bounds();
+        const width = Math.round(u.clamp(value, limits.min, limits.max, state().ui[options.stateKey]));
+        grid.style.setProperty(options.cssProperty, width + "px");
+        divider.setAttribute("aria-valuemax", String(limits.max));
+        divider.setAttribute("aria-valuenow", String(width));
+        updatePercentage(directoryDivider);
+        updatePercentage(profileDivider);
+        sizeTreeSurface();
+        if (persist) storage.mutate(function (next) { next.ui[options.stateKey] = width; }, { touch: false, reason: "workspace-resize" });
+      }
+      applyWidth(state().ui[options.stateKey], false);
+      divider.addEventListener("pointerdown", function (event) {
+        if (event.button !== 0) return;
+        drag = { x: event.clientX, width: panel.getBoundingClientRect().width };
+        divider.setPointerCapture(event.pointerId);
+        document.body.classList.add("resizing-family");
+        event.preventDefault();
+      });
+      divider.addEventListener("pointermove", function (event) {
+        if (!drag) return;
+        applyWidth(drag.width + options.direction * (event.clientX - drag.x), false);
+      });
+      function finishResize(event) {
+        if (!drag) return;
+        drag = null;
+        if (divider.hasPointerCapture(event.pointerId)) divider.releasePointerCapture(event.pointerId);
+        document.body.classList.remove("resizing-family");
+        applyWidth(Number(divider.getAttribute("aria-valuenow")), true);
+      }
+      divider.addEventListener("pointerup", finishResize);
+      divider.addEventListener("pointercancel", finishResize);
+      divider.addEventListener("keydown", function (event) {
+        const current = Number(divider.getAttribute("aria-valuenow"));
+        const limits = bounds();
+        let next = current;
+        if (event.key === "ArrowLeft") next -= options.direction * 24;
+        else if (event.key === "ArrowRight") next += options.direction * 24;
+        else if (event.key === "Home") next = options.direction === 1 ? limits.min : limits.max;
+        else if (event.key === "End") next = options.direction === 1 ? limits.max : limits.min;
+        else return;
+        event.preventDefault();
+        applyWidth(next, true);
+      });
+    }
+
+    bindDivider({ divider: directoryDivider, panel: directory, stateKey: "directoryPanelWidth", cssProperty: "--directory-panel-width", min: 220, max: 480, direction: 1 });
+    bindDivider({ divider: profileDivider, panel: profile, stateKey: "profilePanelWidth", cssProperty: "--profile-panel-width", min: 240, max: 600, direction: -1 });
   }
 
   function renderWorkspace() {
@@ -981,9 +1072,11 @@
     const directoryControls = '<div class="directory-controls"><div class="directory-filter-row"><div class="field directory-filter-control"><span id="directoryFilterLabel">Filter By</span><details class="directory-filter-menu"><summary aria-labelledby="directoryFilterLabel directoryFilterSummary"><span id="directoryFilterSummary">' + u.escapeHtml(directoryFilterSummary()) + '</span></summary><div class="directory-filter-options" role="group" aria-label="Filter directory by">' + directoryFilterOptionsHtml() + '</div></details></div><label class="field"><span>Sort By</span><select id="directorySort"><option value="first">First name</option><option value="last">Last name</option></select></label></div></div>';
     $("#mainContent").innerHTML = '<section class="family-workspace" aria-label="Family workspace"><nav class="mobile-workspace-tabs segmented" aria-label="Workspace views"><button type="button" data-mobile-view="directory" aria-pressed="' + String(state().ui.mobileView === "directory") + '">Directory</button><button type="button" data-mobile-view="tree" aria-pressed="' + String(state().ui.mobileView === "tree") + '">Family Tree</button><button type="button" data-mobile-view="profile" aria-pressed="' + String(state().ui.mobileView === "profile") + '"' + personTabDisabled + '>Person</button></nav><div class="family-workspace-grid" data-mobile-view="' + u.escapeHtml(state().ui.mobileView) + '" data-directory-collapsed="' + String(directoryCollapsed) + '" data-profile-collapsed="' + String(profileCollapsed) + '"><aside id="directoryPanel" class="directory-panel workspace-card' + (directoryCollapsed ? " is-collapsed" : "") + '" aria-label="Family directory">' + directoryHeader + directoryControls + '<div class="directory-body"><div id="directoryList" class="directory-list"></div><nav id="directoryAlphaRail" class="directory-alpha-rail" aria-label="Jump to directory letter"></nav></div></aside><section class="tree-panel workspace-card" aria-label="Family Tree"><header class="tree-toolbar"><div class="tree-view-controls"><div class="segmented" aria-label="Tree mode"><button type="button" data-tree-mode="focus" aria-pressed="' + String(state().ui.treeMode === "focus") + '">Focus</button><button type="button" data-tree-mode="overview" aria-pressed="' + String(state().ui.treeMode === "overview") + '">Overview</button></div><div class="segmented" aria-label="Person card detail"><button type="button" data-tree-node-view="condensed" aria-pressed="' + String(state().ui.treeNodeView === "condensed") + '">Condensed</button><button type="button" data-tree-node-view="detailed" aria-pressed="' + String(state().ui.treeNodeView === "detailed") + '">Detailed</button></div><label class="depth-control"><span>Ancestors</span><input id="ancestorDepth" type="number" min="0" max="4" step="1" value="' + state().ui.ancestorDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><label class="depth-control"><span>Descendants</span><input id="descendantDepth" type="number" min="0" max="4" step="1" value="' + state().ui.descendantDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><div class="zoom-controls" role="group" aria-label="Tree zoom controls"><button type="button" class="zoom-action" data-zoom="out" aria-label="Zoom out" title="Zoom out"><span class="zoom-action-icon" data-symbol="zoomOut" aria-hidden="true"></span><span>Out</span></button><label class="zoom-value-control"><span>Zoom %</span><input id="zoomValue" type="number" min="1" max="250" step="1" value="100" inputmode="numeric"></label><button type="button" class="zoom-action" data-zoom="in" aria-label="Zoom in" title="Zoom in"><span class="zoom-action-icon" data-symbol="zoomIn" aria-hidden="true"></span><span>In</span></button><button type="button" class="zoom-action" data-fit-tree aria-label="Fit tree" title="Fit tree"><span class="zoom-action-icon" data-symbol="fit" aria-hidden="true"></span><span>Fit</span></button><span id="zoomStatus" class="visually-hidden" aria-live="polite">100% zoom</span></div></div></header><div class="tree-canvas"><svg id="familyTreeSvg" role="group" aria-label="Interactive Family Tree. Scroll horizontally or vertically, drag to pan, use the zoom controls, and select a person to focus." tabindex="0"></svg></div></section><aside id="profilePanel" class="profile-panel workspace-card' + (profileCollapsed ? " is-collapsed" : "") + '" aria-label="Selected person profile"><div id="profilePanelContent" class="profile-panel-content"></div></aside></div></section>';
     const workspaceGrid = $(".family-workspace-grid", $("#mainContent"));
+    workspaceGrid.style.setProperty("--directory-panel-width", state().ui.directoryPanelWidth + "px");
     workspaceGrid.style.setProperty("--profile-panel-width", state().ui.profilePanelWidth + "px");
     $(".tree-view-controls", workspaceGrid).insertAdjacentHTML("beforeend", '<label class="tree-line-toggle check-field"><input id="inferredParentLinesToggle" type="checkbox"' + (state().ui.showInferredParentLines ? " checked" : "") + '><span>Affinal Lines</span></label>');
-    $(".tree-panel", workspaceGrid).insertAdjacentHTML("afterend", '<button id="treeProfileDivider" class="family-resize-handle" type="button" role="separator" aria-orientation="vertical" aria-label="Resize Family Tree and selected person" aria-valuemin="240" aria-valuemax="600" aria-valuenow="' + state().ui.profilePanelWidth + '"' + (profileCollapsed ? " hidden" : "") + '><span aria-hidden="true"></span></button>');
+    $("#directoryPanel", workspaceGrid).insertAdjacentHTML("afterend", '<button id="directoryTreeDivider" class="family-resize-handle" type="button" role="separator" aria-orientation="vertical" aria-label="Resize directory and Family Tree" aria-valuemin="220" aria-valuemax="480" aria-valuenow="' + state().ui.directoryPanelWidth + '"' + (directoryCollapsed ? " hidden" : "") + '><span aria-hidden="true"></span><output class="family-divider-percentage" aria-hidden="true"></output></button>');
+    $(".tree-panel", workspaceGrid).insertAdjacentHTML("afterend", '<button id="treeProfileDivider" class="family-resize-handle" type="button" role="separator" aria-orientation="vertical" aria-label="Resize Family Tree and selected person" aria-valuemin="240" aria-valuemax="600" aria-valuenow="' + state().ui.profilePanelWidth + '"' + (profileCollapsed ? " hidden" : "") + '><span aria-hidden="true"></span><output class="family-divider-percentage" aria-hidden="true"></output></button>');
     $("#directorySort").value = state().ui.directorySort;
     renderDirectoryList();
     renderProfile();
@@ -1331,7 +1424,7 @@
       const addressHtml = person.addresses.length ? '<section><h3>Addresses</h3>' + person.addresses.map(function (address) { return '<div class="print-address"><strong>' + u.escapeHtml(address.label + (address.current ? " · current" : " · former")) + '</strong><address>' + u.escapeHtml(model.formatAddress(address)).replace(/\n/g, "<br>") + '</address>' + ((model.formatFlexibleDate(address.startDate) || model.formatFlexibleDate(address.endDate)) ? '<small>' + u.escapeHtml([model.formatFlexibleDate(address.startDate), model.formatFlexibleDate(address.endDate)].filter(Boolean).join(" – ")) + "</small>" : "") + (address.notes ? "<p>" + u.escapeHtml(address.notes) + "</p>" : "") + "</div>"; }).join("") + "</section>" : "";
       const contactHtml = person.phones.length || person.emails.length ? '<section><h3>Contact</h3><dl>' + person.phones.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + person.emails.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + "</dl></section>" : "";
       const printReference = developerReferencesEnabled() ? '<span class="print-reference">' + u.escapeHtml(person.reference) + "</span>" : "";
-      return '<article id="print-' + u.escapeHtml(person.id) + '" class="print-person"><header>' + printReference + '<div><h2>' + u.escapeHtml(model.displayName(person)) + '</h2><p>' + u.escapeHtml(family.lifespan(person) + (current.workspace.family.homePersonId === person.id ? " · home person" : "")) + '</p></div></header><div class="print-profile-grid"><section><h3>Life details</h3><dl>' + formatEvent("Born", person.birth) + formatEvent("Died", person.death) + '<div><dt>Status</dt><dd>' + u.escapeHtml(person.livingStatus) + "</dd></div>" + (person.gender ? '<div><dt>Gender</dt><dd>' + u.escapeHtml(person.gender) + "</dd></div>" : "") + (person.pronouns ? '<div><dt>Pronouns</dt><dd>' + u.escapeHtml(person.pronouns) + "</dd></div>" : "") + '</dl></section><section><h3>Lineage references</h3><dl>' + printRelationshipList(person, graph) + "</dl></section>" + contactHtml + addressHtml + printLineage(person) + (person.notes ? '<section class="print-wide"><h3>Notes</h3><p>' + u.escapeHtml(person.notes).replace(/\n/g, "<br>") + "</p></section>" : "") + printSource(person) + "</div></article>";
+      return '<article id="print-' + u.escapeHtml(person.id) + '" class="print-person"><header>' + printReference + '<div><h2>' + u.escapeHtml(model.displayName(person)) + '</h2><p>' + u.escapeHtml(family.lifespan(person) + (current.workspace.family.homePersonId === person.id ? " · home person" : "")) + '</p></div></header><div class="print-profile-grid"><section><h3>Life details</h3><dl>' + formatEvent("Born", person.birth) + formatEvent("Died", person.death) + statusDetails(person) + (person.gender ? '<div><dt>Gender</dt><dd>' + u.escapeHtml(person.gender) + "</dd></div>" : "") + (person.pronouns ? '<div><dt>Pronouns</dt><dd>' + u.escapeHtml(person.pronouns) + "</dd></div>" : "") + '</dl></section><section><h3>Lineage references</h3><dl>' + printRelationshipList(person, graph) + "</dl></section>" + contactHtml + addressHtml + printLineage(person) + (person.notes ? '<section class="print-wide"><h3>Notes</h3><p>' + u.escapeHtml(person.notes).replace(/\n/g, "<br>") + "</p></section>" : "") + printSource(person) + "</div></article>";
     }).join("");
     const referenceGuide = developerReferencesEnabled() ? " Developer Mode adds stable P-numbers for cross-reference." : "";
     $("#printReport").innerHTML = '<article class="print-cover"><span class="eyebrow">Private family atlas</span><h1>' + u.escapeHtml(current.workspace.family.title) + '</h1><p>Prepared by McFamily on ' + u.escapeHtml(printDate()) + '</p><dl><div><dt>People</dt><dd>' + people.length + '</dd></div><div><dt>Relationships</dt><dd>' + current.workspace.relationships.length + '</dd></div><div><dt>Family units</dt><dd>' + familyUnits.length + '</dd></div><div><dt>Addresses</dt><dd>' + addressCount + '</dd></div><div><dt>Family maps</dt><dd>' + componentsList.length + '</dd></div></dl><aside><strong>Private document</strong><span>This atlas may contain home addresses, contact details, and family notes. Store and share it carefully.</span></aside></article><article class="print-legend"><h2>How to use this atlas</h2><p>Family maps are named for their top sibling and group people by generation using names and years.' + referenceGuide + '</p><div><span><strong>Parent links</strong> Biological, adoptive, step, foster, guardian, or unspecified</span><span><strong>Partner links</strong> Married, partnered, separated, divorced, widowed, former, or unspecified</span></div></article><section class="print-atlas"><h2>Family maps</h2>' + componentHtml + '</section><section class="print-directory"><h1>Person directory</h1>' + profiles + "</section>" + (notes ? '<article class="print-family-notes"><h1>Family Notes</h1><p>' + u.escapeHtml(notes).replace(/\n/g, "<br>") + "</p></article>" : "");

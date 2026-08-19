@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.28",
-      buildId: "0.0.1.28",
+      version: "0.0.1.29",
+      buildId: "0.0.1.29",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -92,6 +92,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.29",
+        date: "2026-08-19T21:46:50.000Z",
+        title: "Life status and workspace sizing",
+        summary: "Profiles now explain presumed-deceased status and estimated ages, while both desktop workspace dividers resize persistently.",
+        features: ["Estimated current and death ages", "Resizable directory/tree divider", "Developer divider-position percentages"],
+        improvements: ["Presumed deceased after age 100", "Smaller Family Tree nodes", "Printable age details"],
+        fixes: ["Unknown death dates retain deceased meaning", "Saved McLineage status is refreshed during normalization"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.28",
         date: "2026-08-19T21:23:49.000Z",

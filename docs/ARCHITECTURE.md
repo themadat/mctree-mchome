@@ -25,8 +25,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 8,
   "meta": {
-    "appVersion": "0.0.1.28",
-    "buildId": "0.0.1.28",
+    "appVersion": "0.0.1.29",
+    "buildId": "0.0.1.29",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -61,11 +61,11 @@ The compatibility `records`, `documents`, tombstone, UI, and module fields remai
 
 A fresh default has no `initializedAt` value and no people. `app.js` renders only the introduction and file input in that state. `portability.js` accepts the documented cleaned McLineage columns or native `mcfamily-csv-v1` rows and requires at least one valid person before the first local state is stored.
 
-Current cleaned McLineage rows represent every person and partner as a stable P-referenced row. Lineage people use complete root-to-person paths that extend each direct parent's path by one two-digit segment; partner-only rows intentionally leave lineage fields blank. The originating person's `partner_relationships_json` array expands into authoritative app relationship records with stable R IDs, partner P references, relationship types, ordering, dates, and ending reasons. Affinal parent references must resolve through those normalized partner pairs. Known and question-mark partial source date values share the `person_*` identity/date columns. A known death value imports as deceased, and G0-G4 lineage people without one are automatically deceased. Beyond G4, a blank descriptor imports as living and `UNKNOWN` imports as unknown status instead of asserting a death. Partial source dates remain in source details because the editable/native date model accepts only normalized known values. Older spouse-slot, embedded-spouse, person-to-root lineage, and descendant-date sources remain compatible.
+Current cleaned McLineage rows represent every person and partner as a stable P-referenced row. Lineage people use complete root-to-person paths that extend each direct parent's path by one two-digit segment; partner-only rows intentionally leave lineage fields blank. The originating person's `partner_relationships_json` array expands into authoritative app relationship records with stable R IDs, partner P references, relationship types, ordering, dates, and ending reasons. Affinal parent references must resolve through those normalized partner pairs. Known and question-mark partial source date values share the `person_*` identity/date columns. A known death value or explicit `UNKNOWN` death descriptor imports as deceased; G0-G4 lineage people and people whose known birth year makes them older than 100 are also presumed deceased. Partial source dates remain in source details because the editable/native date model accepts only normalized known values. Older spouse-slot, embedded-spouse, person-to-root lineage, and descendant-date sources remain compatible.
 
 After initialization, deleting the last person does not clear `initializedAt`; the workspace remains open and offers Add Person. Subsequent imports may contain an initialized empty family, but replacement always shows a summary, asks for confirmation, and writes the current state to recovery first.
 
-Startup checks the schema-v8 storage key and known legacy keys. Candidates pass through wrapper unwrapping, sequential migration, normalization, sanitization, and validation. The v7-to-v8 migration corrects saved cleaned-source statuses using the generation-limited deceased rule. A corrupt current copy falls back to recovery or to the uninitialized gate. Ordinary mutations update metadata and are saved locally with a short debounce.
+Startup checks the schema-v8 storage key and known legacy keys. Candidates pass through wrapper unwrapping, sequential migration, normalization, sanitization, and validation. Normalization refreshes cleaned-source living statuses so current death descriptors, lineage generations, and age-based inference also correct existing saved imports. A corrupt current copy falls back to recovery or to the uninitialized gate. Ordinary mutations update metadata and are saved locally with a short debounce.
 
 Person deletion also writes recovery before removing that person's relationship records. Recovery is a single last-known snapshot, not a history or merge log.
 

@@ -69,6 +69,7 @@
         directoryCollapsed: true,
         profileCollapsed: false,
         showInferredParentLines: false,
+        directoryPanelWidth: 280,
         profilePanelWidth: 300,
         directorySearch: "",
         directorySort: "first",
@@ -153,6 +154,13 @@
     const source = u.plainObject(person);
     const imported = u.plainObject(source.source);
     const fields = u.plainObject(imported.fields);
+    const normalizedBirthValue = u.cleanLine(source.birth && source.birth.date && source.birth.date.value, 40);
+    const sourceBirthValue = u.cleanLine(Object.prototype.hasOwnProperty.call(fields, "person_date_birth_value") ? fields.person_date_birth_value : fields.descendant_date_birth_value, 40);
+    const birthMatch = (normalizedBirthValue || sourceBirthValue).match(/^(\d{4})(?:-(\d{2})(?:-(\d{2}))?)?$/);
+    if (birthMatch) {
+      const hundredthBirthday = new Date(Number(birthMatch[1]) + 100, birthMatch[2] ? Number(birthMatch[2]) - 1 : 6, birthMatch[3] ? Number(birthMatch[3]) : 1);
+      if (new Date() > hundredthBirthday) return "deceased";
+    }
     if (imported.format !== "mclineage-cleaned") return fallback;
     const deathValueField = Object.prototype.hasOwnProperty.call(fields, "person_date_death_value") ? "person_date_death_value" : "descendant_date_death_value";
     const deathDescriptorField = Object.prototype.hasOwnProperty.call(fields, "person_date_death_descriptor") ? "person_date_death_descriptor" : "descendant_date_death_descriptor";
@@ -161,8 +169,8 @@
     const deathDescriptor = u.cleanLine(fields[deathDescriptorField], 40);
     const lineage = u.cleanLine(fields.lineage_id, 100);
     const generation = lineage && lineage !== "99" ? lineage.split(".").length - 1 : null;
-    if (deathValue || (generation !== null && generation <= 4)) return "deceased";
-    return deathDescriptor === "UNKNOWN" ? "unknown" : "living";
+    if (deathValue || deathDescriptor === "UNKNOWN" || (generation !== null && generation <= 4)) return "deceased";
+    return "living";
   }
 
   function migrate7to8(input) {
@@ -459,6 +467,7 @@
     const sourceRoadmap = u.plainObject(sourceModules.roadmap);
     const personIds = new Set();
     const people = (Array.isArray(sourceWorkspace.people) ? sourceWorkspace.people : []).slice(0, config.controls.maxPeople).map(function (person, index) { return normalizePerson(person, index, personIds, now); });
+    people.forEach(function (person) { person.livingStatus = mcLineageLivingStatus(person, person.livingStatus); });
     const relationshipIds = new Set();
     const relationships = (Array.isArray(sourceWorkspace.relationships) ? sourceWorkspace.relationships : []).slice(0, config.controls.maxRelationships).map(function (relationship, index) { return normalizeRelationship(relationship, index, relationshipIds, personIds, now); }).filter(Boolean);
     normalizeMcLineagePartnerHistory(relationships);
@@ -535,6 +544,7 @@
         directoryCollapsed: sourceUi.directoryCollapsed === true,
         profileCollapsed: sourceUi.profileCollapsed === true,
         showInferredParentLines: sourceUi.showInferredParentLines === true,
+        directoryPanelWidth: Math.round(u.clamp(sourceUi.directoryPanelWidth, 220, 480, 280)),
         profilePanelWidth: Math.round(u.clamp(sourceUi.profilePanelWidth, 240, 600, 300)),
         directorySearch: u.cleanLine(sourceUi.directorySearch, 200),
         directorySort: sourceUi.directorySort === "last" ? "last" : "first",
@@ -678,6 +688,8 @@
     next.ui.descendantDepth = defaults.ui.descendantDepth;
     next.ui.directoryCollapsed = defaults.ui.directoryCollapsed;
     next.ui.profileCollapsed = defaults.ui.profileCollapsed;
+    next.ui.directoryPanelWidth = defaults.ui.directoryPanelWidth;
+    next.ui.profilePanelWidth = defaults.ui.profilePanelWidth;
     next.ui.directorySearch = "";
     next.ui.directorySort = defaults.ui.directorySort;
     next.ui.directoryFilters = [];
