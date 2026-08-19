@@ -483,10 +483,15 @@
     return { numbers: numbers, members: members };
   }
 
-  function lineagePersonLink(member, includeLineageMeta) {
+  function firstName(value) {
+    return u.cleanLine(value, 200).split(/\s+/)[0] || "Unknown";
+  }
+
+  function lineagePersonLink(member, includeLineageMeta, visibleName) {
     const lineageMeta = (member.number || "—") + " | G" + member.generation;
-    const label = u.escapeHtml(member.name) + (includeLineageMeta ? ' <span class="lineage-bracket">[' + u.escapeHtml(lineageMeta) + "]</span>" : "");
-    return member.person ? '<button type="button" class="lineage-person-link" data-select-person="' + u.escapeHtml(member.person.id) + '">' + label + "</button>" : '<span class="lineage-unlinked-name">' + label + "</span>";
+    const label = u.escapeHtml(visibleName || member.name) + (includeLineageMeta ? ' <span class="lineage-bracket">[' + u.escapeHtml(lineageMeta) + "]</span>" : "");
+    const accessibleLabel = visibleName && visibleName !== member.name ? ' aria-label="Select ' + u.escapeHtml(member.name) + '"' : "";
+    return member.person ? '<button type="button" class="lineage-person-link" data-select-person="' + u.escapeHtml(member.person.id) + '"' + accessibleLabel + '>' + label + "</button>" : '<span class="lineage-unlinked-name">' + label + "</span>";
   }
 
   function lineageIdHtml(numbers) {
@@ -509,11 +514,12 @@
   }
 
   function lineageReadingCell(member, parent, hasRecordedLineage) {
-    if (!parent && !hasRecordedLineage) return '<span class="muted-copy">No parent lineage recorded.</span>';
-    if (!parent) return '<span class="lineage-root">Root ancestor</span>';
+    const generation = "<strong>Gen " + member.generation + "</strong>, ";
+    if (!parent && !hasRecordedLineage) return '<span class="muted-copy">' + generation + "No parent lineage recorded.</span>";
+    if (!parent) return '<span class="lineage-root">' + generation + "Root ancestor</span>";
     const ordinalLabel = ordinalLineageNumber(member.number);
     const ordinal = ordinalLabel ? "<strong>" + u.escapeHtml(ordinalLabel) + "</strong> " : "";
-    return "<span>" + ordinal + "Child of " + lineagePersonLink(parent, false) + "</span>";
+    return "<span>" + generation + ordinal + "Child of " + lineagePersonLink(parent, false, firstName(parent.name)) + "</span>";
   }
 
   function profileLineage(person) {
@@ -542,10 +548,10 @@
     const nameList = chain.members.map(function (member) { return u.escapeHtml(member.name) + " [" + u.escapeHtml((member.number || "—") + " | G" + member.generation) + "]"; }).join(" → ");
     const reading = chain.members.map(function (member, index) {
       const parent = chain.members[index + 1];
-      if (!parent) return "Root ancestor";
+      if (!parent) return "Gen " + member.generation + ", Root ancestor";
       const ordinalLabel = ordinalLineageNumber(member.number);
       const ordinal = ordinalLabel ? u.escapeHtml(ordinalLabel) + " " : "";
-      return ordinal + "Child of " + u.escapeHtml(parent.name);
+      return "Gen " + member.generation + ", " + ordinal + "Child of " + u.escapeHtml(firstName(parent.name));
     }).join("<br>");
     const background = person.heritageNote && !sourceField(person, "lineage_id") ? '<div><dt>Background</dt><dd>' + u.escapeHtml(person.heritageNote).replace(/\n/g, "<br>") + "</dd></div>" : "";
     return '<section class="print-wide"><h3>Lineage</h3><dl><div><dt>ID</dt><dd>' + lineageIdHtml(chain.numbers) + '</dd></div><div><dt>Family line</dt><dd>' + nameList + '</dd></div><div><dt>Reading</dt><dd>' + reading + '</dd></div><div><dt>Family</dt><dd>' + u.escapeHtml(lineageSummaryText(person)) + "</dd></div>" + background + "</dl></section>";
@@ -679,16 +685,6 @@
     }
   }
 
-  function condensedTreeNames(person) {
-    const names = person.names || {};
-    const displayParts = model.displayName(person).trim().split(/\s+/);
-    const shorten = function (value) { const text = String(value || ""); return text.length > 19 ? text.slice(0, 18) + "…" : text; };
-    return {
-      given: shorten(names.preferred || names.given || displayParts[0] || "Unnamed"),
-      family: shorten(names.family || names.birth || (displayParts.length > 1 ? displayParts[displayParts.length - 1] : ""))
-    };
-  }
-
   function renderTree() {
     const svg = $("#familyTreeSvg");
     if (!svg) return;
@@ -712,14 +708,16 @@
       const selected = state().ui.selectedPersonId === person.id;
       const home = state().workspace.family.homePersonId === person.id;
       const name = model.displayName(person);
-      const shortName = name.length > 25 ? name.slice(0, 24) + "…" : name;
       const shell = '<g class="tree-node' + (selected ? " selected" : "") + (home ? " home" : "") + (person.livingStatus === "deceased" ? " deceased" : "") + '" data-view="' + u.escapeHtml(currentTreeLayout.nodeView) + '" tabindex="0" role="button" aria-label="' + u.escapeHtml(name + ", " + family.lifespan(person) + ". Select to focus.") + '" data-tree-person="' + u.escapeHtml(person.id) + '" transform="translate(' + node.x + " " + node.y + ')"><rect width="' + node.width + '" height="' + node.height + '" rx="12"></rect>';
-      if (currentTreeLayout.nodeView === "condensed") {
-        const compact = condensedTreeNames(person);
-        return shell + '<text class="tree-given" x="' + (node.width / 2) + '" y="23" text-anchor="middle">' + u.escapeHtml(compact.given) + '</text><text class="tree-family" x="' + (node.width / 2) + '" y="43" text-anchor="middle">' + u.escapeHtml(compact.family) + '</text><text class="tree-life" x="' + (node.width / 2) + '" y="62" text-anchor="middle">' + u.escapeHtml(family.lifespan(person)) + "</text></g>";
-      }
-      const reference = developerReferencesEnabled() ? '<text class="tree-reference" x="12" y="62">' + u.escapeHtml(person.reference) + "</text>" : "";
-      return shell + '<text class="tree-name" x="12" y="23">' + u.escapeHtml(shortName) + '</text><text class="tree-life" x="12" y="46">' + u.escapeHtml(family.lifespan(person) + (home ? " · home" : "")) + "</text>" + reference + "</g>";
+      const detailed = currentTreeLayout.nodeView === "detailed";
+      const nameLines = family.treeNameLines(person, detailed);
+      const nameHtml = nameLines.map(function (line, index) {
+        const familyClass = !detailed && index === nameLines.length - 1 ? " tree-family" : "";
+        return '<text class="tree-name-line' + familyClass + '" x="' + (node.width / 2) + '" y="' + (18 + index * 15) + '" text-anchor="middle">' + u.escapeHtml(line) + "</text>";
+      }).join("");
+      const lifeY = 24 + nameLines.length * 15;
+      const reference = detailed && developerReferencesEnabled() ? '<text class="tree-reference" x="' + (node.width / 2) + '" y="' + (lifeY + 15) + '" text-anchor="middle">' + u.escapeHtml(person.reference) + "</text>" : "";
+      return shell + nameHtml + '<text class="tree-life" x="' + (node.width / 2) + '" y="' + lifeY + '" text-anchor="middle">' + u.escapeHtml(family.lifespan(person) + (detailed && home ? " · home" : "")) + "</text>" + reference + "</g>";
     }).join("");
     svg.innerHTML = '<g id="treeViewport"><g class="tree-edges">' + edges + inferredEdges + '</g><g class="tree-nodes">' + nodes + "</g></g>";
     bindTreeInteractions(svg);
