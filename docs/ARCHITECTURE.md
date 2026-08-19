@@ -25,8 +25,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 7,
   "meta": {
-    "appVersion": "0.0.1.17",
-    "buildId": "0.0.1.17",
+    "appVersion": "0.0.1.18",
+    "buildId": "0.0.1.18",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -71,8 +71,8 @@ Person deletion also writes recovery before removing that person's relationship 
 
 The family workspace has three coordinated surfaces:
 
-- Directory: header-opened people with first/last-name sorting, living-status filtering, broad local search, lifespan/lineage metadata, and A–Z quick jumps.
-- Family Tree: a two-axis-scrollable SVG focus view with separate ancestor and descendant depths around the home or selected person, an optional display-only co-parent overlay, or an overview containing all connected components and isolated people.
+- Directory: header-toggled people with first/last-name sorting, living-status filtering, broad local search, lifespan/lineage metadata, and A–Z quick jumps.
+- Family Tree: a two-axis-scrollable SVG focus view with direct numeric ancestor and descendant depths around the home or selected person, editable numeric zoom plus grouped Out/In/Fit actions, an optional display-only co-parent overlay, or an overview containing all connected components and isolated people.
 - Profile: a selected person's complete information and derived relationship groups. Closing it clears selection; choosing a Family Tree node reopens it.
 
 The SVG contains semantic relationship labels in addition to visual lines. Pan and zoom use a view transform, touch uses pointer events, Fit calculates the graph bounds, and keyboard arrows move between rendered people. Reduced-motion settings suppress nonessential transitions.

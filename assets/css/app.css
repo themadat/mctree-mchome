@@ -20,6 +20,9 @@
   --warning: #9b6a24;
   --danger: #a74747;
   --danger-soft: #f8e8e6;
+  --deceased-card: #eadcc9;
+  --deceased-card-text: #3f3025;
+  --deceased-card-muted: #6c5847;
   --focus: #176e9a;
   --radius: 14px;
   --radius-small: 9px;
@@ -639,10 +642,15 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .tree-toolbar { align-items: center; flex-wrap: wrap; }
 .tree-view-controls { display: flex; align-items: center; justify-content: flex-start; gap: .45rem; width: 100%; flex-wrap: wrap; }
 .tree-line-toggle { min-height: 32px; margin-left: auto; padding: .25rem .45rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); color: var(--muted); font-size: .68rem; font-weight: 750; }
-.depth-control { display: grid; min-width: 112px; color: var(--muted); font-size: .68rem; font-weight: 700; }
-.depth-control input { min-height: 24px; }
-.zoom-controls { display: flex; align-items: center; gap: .3rem; }
-.zoom-controls #zoomValue { min-width: 42px; color: var(--muted); font-size: .68rem; text-align: center; }
+.depth-control { display: flex; align-items: center; gap: .35rem; color: var(--muted); font-size: .68rem; font-weight: 700; }
+.depth-control input { width: 58px; min-height: 34px; padding: .3rem .22rem .3rem .4rem; color: var(--text); font-weight: 800; text-align: center; }
+.zoom-controls { display: flex; align-items: stretch; gap: .15rem; padding: .18rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
+.zoom-action { appearance: none; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: .08rem; min-width: 42px; min-height: 42px; padding: .2rem .32rem; border: 1px solid transparent; border-radius: 7px; background: transparent; color: var(--muted); font-size: .62rem; font-weight: 750; line-height: 1; }
+.zoom-action:hover, .zoom-action:focus-visible { border-color: var(--line); background: var(--surface); color: var(--accent-strong); }
+.zoom-action-icon { display: grid; place-items: center; font-size: 1rem; }
+.zoom-action-icon .sf-symbol { width: 1rem; height: 1rem; }
+.zoom-value-control { display: grid; place-items: center; gap: .05rem; min-width: 68px; color: var(--muted); font-size: .58rem; font-weight: 750; line-height: 1; }
+.zoom-value-control input { width: 68px; min-height: 27px; padding: .2rem .22rem .2rem .35rem; color: var(--text); font-size: .72rem; font-weight: 800; text-align: center; }
 .tree-canvas { flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; background-color: var(--surface-2); background-image: radial-gradient(circle, color-mix(in srgb, var(--line) 70%, transparent) 1px, transparent 1px); background-size: 20px 20px; }
 #familyTreeSvg { display: block; width: 100%; height: 100%; min-width: 100%; min-height: 380px; cursor: grab; touch-action: none; user-select: none; }
 #familyTreeSvg.dragging { cursor: grabbing; }
@@ -663,6 +671,9 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .tree-node[data-view="condensed"] .tree-life { font-size: 9px; }
 .tree-node.selected rect { stroke: var(--accent); stroke-width: 3; }
 .tree-node.home rect { fill: var(--accent-soft); }
+.tree-node.deceased rect { fill: var(--deceased-card); }
+.tree-node.deceased text, .tree-node.deceased .tree-family { fill: var(--deceased-card-text); }
+.tree-node.deceased .tree-life, .tree-node.deceased .tree-reference { fill: var(--deceased-card-muted); }
 .tree-node:focus rect { stroke: var(--focus); stroke-width: 4; }
 .tree-empty-text { fill: var(--text); font-size: 20px; font-weight: 800; }
 .tree-empty-subtext { fill: var(--muted); font-size: 13px; }
@@ -695,15 +706,14 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .lineage-id { color: var(--muted); font-size: .82rem; letter-spacing: .025em; }
 .lineage-id strong { color: var(--text); font-size: 1.05em; }
 .lineage-paired-list { display: grid; gap: .22rem; margin: 0; padding: 0; list-style: none; }
-.lineage-paired-list li { display: grid; grid-template-columns: minmax(0, .78fr) minmax(0, 1.22fr); align-items: stretch; gap: .65rem; min-height: 30px; }
+.lineage-paired-list li { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); align-items: stretch; gap: .3rem; min-height: 30px; }
 .lineage-name-cell, .lineage-reading-cell { display: flex; min-width: 0; align-items: center; }
-.lineage-reading-cell { display: grid; grid-template-columns: 48px minmax(0, 1fr); align-content: center; align-items: baseline; gap: .35rem; padding-left: .65rem; border-left: 1px solid var(--line); }
-.lineage-reading-cell > .muted-copy { grid-column: 1 / -1; }
+.lineage-reading-cell { padding-left: .45rem; border-left: 1px solid var(--line); }
 .lineage-person-link { min-height: 30px; margin: -.18rem -.28rem; padding: .18rem .28rem; border: 0; border-radius: 6px; background: transparent; color: var(--accent-strong); font: inherit; font-weight: 750; text-align: left; }
 .lineage-person-link:hover, .lineage-person-link:focus-visible { background: var(--accent-soft); text-decoration: underline; text-underline-offset: 2px; }
-.lineage-bracket { color: var(--muted); font-size: .72rem; font-weight: 700; }
+.lineage-bracket { color: var(--muted); font-size: .72rem; font-weight: 700; white-space: nowrap; }
 .lineage-unlinked-name { font-weight: 700; }
-.lineage-generation { color: var(--muted); font-size: .66rem; font-weight: 750; }
+.lineage-root { color: var(--muted); font-size: .7rem; font-weight: 750; }
 .lineage-summary { margin: .55rem 0 0; padding-top: .5rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .7rem; line-height: 1.4; white-space: nowrap; }
 .lineage-background { margin-top: .65rem; padding-top: .55rem; border-top: 1px solid var(--line); }
 .lineage-background p { margin: 0; }
@@ -718,6 +728,9 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .relationship-names { display: grid; padding: 0 .3rem .3rem; }
 .relationship-name { min-height: 30px; padding: .28rem .35rem; border: 0; border-radius: 6px; background: transparent; color: var(--accent-strong); font-size: .75rem; font-weight: 750; text-align: left; }
 .relationship-name:hover, .relationship-name:focus-visible { background: var(--accent-soft); }
+.relationship-name.current-partner { font-weight: 850; }
+.relationship-name.previous-partner { color: var(--muted); font-weight: 550; opacity: .76; }
+.relationship-name.previous-partner:hover, .relationship-name.previous-partner:focus-visible { color: var(--accent-strong); opacity: 1; }
 .relationship-empty { padding: .25rem .35rem; color: var(--muted); font-size: .7rem; }
 .profile-footer { display: flex; align-items: center; justify-content: space-between; gap: .45rem; flex-wrap: wrap; padding-top: .8rem; border-top: 1px solid var(--line); }
 .mobile-workspace-tabs { display: none; margin-bottom: .55rem; }
@@ -755,6 +768,8 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 
 @media (max-width: 959px) {
   .family-workspace-grid { grid-template-columns: minmax(220px, 270px) minmax(0, 1fr); height: calc(100svh - 10.4rem - var(--safe-top)); }
+  .family-workspace-grid[data-directory-collapsed="true"] { grid-template-columns: minmax(0, 1fr); }
+  .directory-panel.is-collapsed { display: none; }
   .family-resize-handle { display: none; }
   .profile-panel { display: none; }
   .family-workspace-grid[data-mobile-view="profile"] .directory-panel,
@@ -780,9 +795,10 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
   .family-workspace-grid[data-mobile-view="directory"] .directory-panel,
   .family-workspace-grid[data-mobile-view="tree"] .tree-panel,
   .family-workspace-grid[data-mobile-view="profile"] .profile-panel { display: flex; }
-  .tree-toolbar { max-height: 165px; overflow-y: auto; }
+  .tree-toolbar { max-height: 215px; overflow-y: auto; }
   .tree-view-controls { width: 100%; }
-  .tree-view-controls > .segmented { flex: 1; }
+  .tree-view-controls > .segmented, .depth-control { flex: 1 1 calc(50% - .25rem); }
+  .depth-control { justify-content: space-between; }
   .zoom-controls { width: 100%; justify-content: space-between; }
   #familyTreeSvg { min-height: 300px; }
   .person-name-grid { grid-template-columns: 1fr; }
