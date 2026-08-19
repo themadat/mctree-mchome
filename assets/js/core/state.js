@@ -38,7 +38,7 @@
       },
       preferences: {
         appearance: {
-          mode: "system",
+          mode: "light",
           preset: theme.id,
           accent: theme.accent,
           accent2: theme.accent2,
@@ -64,9 +64,12 @@
         treeMode: "focus",
         treeNodeView: "condensed",
         generationDepth: 2,
-        directoryCollapsed: false,
+        ancestorDepth: 2,
+        descendantDepth: 2,
+        directoryCollapsed: true,
         profileCollapsed: false,
         directorySearch: "",
+        directorySort: "first",
         livingFilter: "all",
         mobileView: "tree",
         search: "",
@@ -438,7 +441,7 @@
       },
       preferences: {
         appearance: {
-          mode: ["system", "light", "dark"].includes(sourceAppearance.mode) ? sourceAppearance.mode : "system",
+          mode: ["system", "light", "dark"].includes(sourceAppearance.mode) ? sourceAppearance.mode : "light",
           preset: theme.id,
           accent: u.normalizeColor(sourceAppearance.accent, theme.accent),
           accent2: u.normalizeColor(sourceAppearance.accent2, theme.accent2),
@@ -467,9 +470,12 @@
         treeMode: sourceUi.treeMode === "overview" ? "overview" : "focus",
         treeNodeView: sourceUi.treeNodeView === "detailed" ? "detailed" : "condensed",
         generationDepth: Math.round(u.clamp(sourceUi.generationDepth, 1, 4, 2)),
+        ancestorDepth: Math.round(u.clamp(sourceUi.ancestorDepth, 0, 4, sourceUi.generationDepth == null ? 2 : sourceUi.generationDepth)),
+        descendantDepth: Math.round(u.clamp(sourceUi.descendantDepth, 0, 4, sourceUi.generationDepth == null ? 2 : sourceUi.generationDepth)),
         directoryCollapsed: sourceUi.directoryCollapsed === true,
         profileCollapsed: sourceUi.profileCollapsed === true,
         directorySearch: u.cleanLine(sourceUi.directorySearch, 200),
+        directorySort: sourceUi.directorySort === "last" ? "last" : "first",
         livingFilter: ["all", "living", "deceased", "unknown"].includes(sourceUi.livingFilter) ? sourceUi.livingFilter : "all",
         mobileView: ["tree", "directory", "profile"].includes(sourceUi.mobileView) ? sourceUi.mobileView : "tree",
         search: u.cleanLine(sourceUi.search, 200),
@@ -604,9 +610,12 @@
     next.ui.treeMode = defaults.ui.treeMode;
     next.ui.treeNodeView = defaults.ui.treeNodeView;
     next.ui.generationDepth = defaults.ui.generationDepth;
+    next.ui.ancestorDepth = defaults.ui.ancestorDepth;
+    next.ui.descendantDepth = defaults.ui.descendantDepth;
     next.ui.directoryCollapsed = defaults.ui.directoryCollapsed;
     next.ui.profileCollapsed = defaults.ui.profileCollapsed;
     next.ui.directorySearch = "";
+    next.ui.directorySort = defaults.ui.directorySort;
     next.ui.livingFilter = "all";
     next.ui.mobileView = "tree";
     next.ui.search = "";

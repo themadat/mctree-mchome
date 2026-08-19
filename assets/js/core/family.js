@@ -157,27 +157,19 @@
     return level;
   }
 
-  function focusPeople(state, focusId, depth) {
+  function focusPeople(state, focusId, ancestorDepth, descendantDepth) {
     const graph = indexes(state);
     if (!graph.peopleById.has(focusId)) return [];
-    const distance = new Map([[focusId, 0]]);
-    const queue = [focusId];
-    while (queue.length) {
-      const id = queue.shift();
-      const current = distance.get(id);
-      const edges = [];
-      (graph.parents.get(id) || []).forEach(function (item) { edges.push({ id: item.person.id, cost: 1 }); });
-      (graph.children.get(id) || []).forEach(function (item) { edges.push({ id: item.person.id, cost: 1 }); });
-      (graph.partners.get(id) || []).forEach(function (item) { edges.push({ id: item.person.id, cost: 0 }); });
-      siblingsOf(id, graph).forEach(function (person) { edges.push({ id: person.id, cost: 1 }); });
-      edges.forEach(function (edge) {
-        const next = current + edge.cost;
-        if (next > depth || (distance.has(edge.id) && distance.get(edge.id) <= next)) return;
-        distance.set(edge.id, next);
-        queue.push(edge.id);
-      });
-    }
-    return state.workspace.people.filter(function (person) { return distance.has(person.id); });
+    const upwardDepth = Number.isFinite(Number(ancestorDepth)) ? Number(ancestorDepth) : 2;
+    const downwardDepth = Number.isFinite(Number(descendantDepth)) ? Number(descendantDepth) : upwardDepth;
+    const visibleIds = new Set([focusId]);
+    ancestorsOf(focusId, graph).filter(function (entry) { return entry.depth <= upwardDepth; }).forEach(function (entry) { visibleIds.add(entry.person.id); });
+    descendantsOf(focusId, graph).filter(function (entry) { return entry.depth <= downwardDepth; }).forEach(function (entry) { visibleIds.add(entry.person.id); });
+    siblingsOf(focusId, graph).forEach(function (person) { visibleIds.add(person.id); });
+    Array.from(visibleIds).forEach(function (id) {
+      (graph.partners.get(id) || []).forEach(function (entry) { visibleIds.add(entry.person.id); });
+    });
+    return state.workspace.people.filter(function (person) { return visibleIds.has(person.id); });
   }
 
   function connectedComponents(state) {
@@ -238,8 +230,12 @@
   }
 
   function layout(state, options) {
-    const settings = Object.assign({ mode: "focus", focusId: "", depth: 2, nodeView: "condensed" }, options || {});
-    const visiblePeople = settings.mode === "overview" ? state.workspace.people.slice() : focusPeople(state, settings.focusId, settings.depth);
+    const settings = Object.assign({ mode: "focus", focusId: "", ancestorDepth: 2, descendantDepth: 2, nodeView: "condensed" }, options || {});
+    if (options && options.depth != null) {
+      if (options.ancestorDepth == null) settings.ancestorDepth = options.depth;
+      if (options.descendantDepth == null) settings.descendantDepth = options.depth;
+    }
+    const visiblePeople = settings.mode === "overview" ? state.workspace.people.slice() : focusPeople(state, settings.focusId, settings.ancestorDepth, settings.descendantDepth);
     const visibleIds = new Set(visiblePeople.map(function (person) { return person.id; }));
     const visibleRelationships = state.workspace.relationships.filter(function (relationship) {
       return relationship.type === "parent-child"

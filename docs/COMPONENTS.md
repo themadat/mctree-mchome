@@ -6,9 +6,9 @@ An uninitialized browser shows only the McFamily introduction, privacy explanati
 
 ## Family workspace
 
-Desktop begins directly with directory, SVG tree, and profile columns; global Add and PDF actions live only in the application title bar. The directory and selected-person columns can be collapsed independently so the tree can fill the workspace. Mobile uses touch-sized People, Tree, and Profile tabs; selecting a person from the directory opens Profile. All modes share the same selected-person state.
+Desktop coordinates a header-opened directory, SVG tree, and profile columns; global Add and PDF actions live only in the application title bar. The directory and selected-person columns can be closed independently so the tree can fill the workspace. The directory sorts by first or last name, shows lifespan and lineage context, and has an A–Z quick-jump rail. Mobile uses touch-sized Directory, Tree, and Person tabs; selecting a person from the directory opens Person. All modes share the same selected-person state.
 
-The tree toolbar controls focus/overview mode, condensed/detailed cards, generation depth, zoom, fit, and reset. Condensed cards are the default and show given name, family name, and lifespan only. Partner pairs are kept adjacent when their generation allows it; married links are solid, divorced links are dotted, and other partner states are dashed. Person nodes are native SVG buttons by role and expose accessible labels; relationship paths also have textual descriptions.
+The tree toolbar controls focus/overview mode, condensed/detailed cards, separate ancestor and descendant depths, zoom, and fit. Condensed cards are the default and show given name, family name, and lifespan only. Neither tree mode uses a portrait or initial placeholder, and internal person references appear only in Developer Mode. Partner pairs are kept adjacent when their generation allows it; married links are solid, divorced links are dotted, and other partner states are dashed. Person nodes are native SVG buttons by role and expose accessible labels; relationship paths also have textual descriptions.
 
 ## Person and relationship editors
 

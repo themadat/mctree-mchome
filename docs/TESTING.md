@@ -42,13 +42,15 @@ Use synthetic families only.
 - [ ] Focus mode shows the selected/home person's configured ancestor and descendant depth plus partners and siblings.
 - [ ] Overview contains every connected component and isolated person.
 - [ ] Single-person, multi-partner, adopted, disconnected, pedigree-collapse, and 1,500-person synthetic families render without exceptions.
-- [ ] Pan, wheel/pinch zoom, zoom buttons, Fit, Reset, node click, and generation depth work.
+- [ ] Pan, wheel/pinch zoom, zoom buttons, Fit, node click, and independent ancestor/descendant depths work.
 - [ ] Arrow keys move between rendered nodes and Enter/Space selects.
 - [ ] Every node and relationship has an understandable accessible label.
 - [ ] Condensed cards are the default and show separate given/family name lines plus birth/death years, with no avatar or identifier; Detailed restores the fuller card.
 - [ ] Partner pairs are adjacent when possible; married lines are solid, divorced lines are dotted, and other partner states remain distinguishable.
-- [ ] Directory and selected-person panes collapse independently on desktop and can be reopened without losing selection or tree focus.
-- [ ] Directory sorting and living/deceased/unknown filters work.
+- [ ] Directory and selected-person panes collapse independently on desktop and can be reopened without losing selection or tree focus; the header Directory control and mobile tabs reopen a collapsed module.
+- [ ] Directory first/last-name sorting, living/deceased/unknown filters, and A–Z quick jumps work on the filtered result set.
+- [ ] Directory rows show `[birth-death]` with `????` for unknown years followed by the lineage ID.
+- [ ] Internal stable `P` references are absent throughout ordinary app and print views and appear only in Developer Mode.
 - [ ] Partial and in-order fuzzy search finds name, address, phone, email, birth/death place, heritage, general notes, Notes, Help, releases, and Roadmap.
 - [ ] Lineage shows ID before Name List, reverses and two-digit-pads ID segments, and bolds the selected person's first segment.
 - [ ] Adam's imported lineage begins `01.05`, and its reading begins `Gen 1 · 1st Child of Melanie`, then `Gen 2 · 5th Child of Max`.
@@ -59,7 +61,7 @@ Use synthetic families only.
 
 - [ ] At 1280px, 768px, and 390px, page and body widths do not exceed the viewport.
 - [ ] Desktop shows coordinated directory, tree, and detail panes.
-- [ ] Mobile People/Tree/Profile tabs are touch-sized; choosing a person opens Profile.
+- [ ] Mobile Directory/Tree/Person tabs are touch-sized; choosing a person opens Person.
 - [ ] Dialogs fit the mobile viewport with one usable scrolling surface.
 - [ ] Labels, landmarks, focus order, visible focus, live regions, and focus restoration are correct.
 - [ ] Escape closes temporary UI; `/`, `?`, `N`, `V`, `T`, and supported navigation keys work outside fields.
@@ -70,7 +72,7 @@ Use synthetic families only.
 
 - [ ] Report includes cover, statistics, relationship legend, every family map, every person profile, and Family Notes, with no alphabetical person index.
 - [ ] Every recorded contact, life, heritage, note, and relationship value appears.
-- [ ] Family maps are named for their top sibling; compact map items contain only names and years, while detailed relationship cross-references retain stable person `P` references.
+- [ ] Family maps are named for their top sibling; compact map items contain only names and years, while detailed relationship cross-references show stable person `P` references only in Developer Mode.
 - [ ] Large components split by generation instead of shrinking one giant tree.
 - [ ] Application controls are suppressed and print colors remain legible.
 - [ ] Profiles and section headings use sensible page breaks; long addresses and URLs remain complete.
