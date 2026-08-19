@@ -1,6 +1,6 @@
-# App Template — Agent Instructions
+# McFamily — Agent Instructions
 
-Static, local-first HTML/CSS/JavaScript application. There is no required build step, runtime dependency, backend, account, or sign-in. `context/LLM_HANDOFF.md` is the durable source of truth for agent workflows and repository-specific invariants; read it before implementing anything.
+Static, local-first HTML/CSS/JavaScript application. There is no required build step, runtime dependency, backend, account, or sign-in. `context/LLM_HANDOFF.md` is the durable source of truth for repository workflows and invariants; read it before implementing anything.
 
 ## Session start
 
@@ -10,39 +10,33 @@ Static, local-first HTML/CSS/JavaScript application. There is no required build 
 
 ## Working rules
 
-- Search with `rg` before reading broad file ranges. Keep edits narrow and never reformat unrelated code.
-- Keep the application static, dependency-free at runtime, and usable from an ordinary static host.
-- Central identity, versions, and shell settings live in `assets/js/config.js`.
-- Preserve the focused foundation: top bar with centered search, blank main workspace, single Notes modal, demonstrative Roadmap inside Settings, combined floating storage/sync status, local persistence/recovery, and optional GitHub Sync. Do not restore the removed Records interface, multi-note workspace, rich-text editor, or an app-space Roadmap without an explicit request.
-- Keep additions narrow and configurable. The compatibility state may retain legacy record/document fields so older backups and sync copies remain readable.
-- Application versions use `major.minor.patch.build`. Every completed application update increments the fourth `build` number. An explicit major, minor, or patch change resets `build` to `1` unless the user specifies another value. Keep `identity.buildId` identical to the full four-part `identity.version`, add or update the matching dated release entry, and update the build queries in `index.html` plus the service-worker cache/build ids. Wish, plan, and agent-instruction-only edits do not change the app version unless explicitly requested.
-- Use semantic HTML, labelled controls, visible focus, safe URLs, and escaped user text.
-- Use the shared inline SVG symbol catalog for interface icons whenever an appropriate symbol exists; do not use emoji or font glyphs for standard controls.
-- Verify proportionally: JavaScript syntax, manifest JSON parsing, `git diff --check`, referenced asset paths, and relevant desktop/mobile/offline workflows.
+- Search with `rg` before reading broad ranges. Keep edits narrow and never reformat unrelated code.
+- Keep McFamily static, dependency-free at runtime, and usable from an ordinary static host.
+- Central identity, versions, limits, and relationship vocabularies live in `assets/js/config.js`.
+- Preserve the strict initialized-CSV gate, directory/tree/profile workspace, single Notes modal, Settings/Roadmap, local backup status, recovery, themes, accessibility, installation, and offline behavior.
+- Never add a demo-family or blank-family first-run bypass. Never commit real family data; test with synthetic fixtures only.
+- Keep additions narrow and configurable. Compatibility fields may retain legacy record/document data so old backups remain readable.
+- Relationship records are authoritative. Reject missing references, self-links, duplicates, and ancestry cycles; derive family groupings rather than storing them on people.
+- Application versions use `major.minor.patch.build`. Every completed update increments build. An explicit major/minor/patch change resets build to `1` unless specified otherwise. Keep version/build, dated release, HTML asset queries, and service-worker cache/build ids identical.
+- Use semantic HTML, labelled controls, visible focus, safe URLs, escaped user text, touch-sized controls, and reduced-motion support.
+- Use the shared inline SVG symbol catalog for standard interface icons; do not use emoji or font glyphs.
+- Verify proportionally: syntax, manifest parsing, asset paths, `git diff --check`, schema/import/relationship behavior, desktop/mobile/print, and online/offline reloads.
 - Stop local preview servers before the final response.
 
 ## Workflow shorthands
 
-Treat these one-word user requests as repository workflows:
-
 - `wish`: capture a scoped idea in `context/WISHES.md`; do not plan or implement it.
-- `plan`: investigate a wish and write or revise `context/WISH-###-<slug>-PLAN.md`; do not implement it.
-- `start`: implement an approved plan, maintain its Resume block, update the app and build versions, and verify the work.
-- `cut`: finalize the active line as a release, update all version/release/cache surfaces, close the wish, and run the full release checklist.
+- `plan`: investigate a wish and write/revise `context/WISH-###-<slug>-PLAN.md`; do not implement it.
+- `start`: implement an approved plan, maintain Resume, update app/build versions, and verify.
+- `cut`: finalize the active line as a release, update version/release/cache surfaces, close the wish, and run the full release checklist.
 
-The detailed contracts are in `context/LLM_HANDOFF.md`. Do not silently advance from one lifecycle stage to another.
+Detailed contracts are in `context/LLM_HANDOFF.md`. Do not silently advance lifecycle stages.
 
 ## End of turn
 
-After changing files, finish with:
+After changing files:
 
-1. A concise outcome summary and verification result.
-2. Exactly one copy-paste-ready shell command that stages only the files belonging to the completed request, commits them with the exact subject shape `Version - Text`, and pushes the current branch to `origin`.
+1. Give a concise outcome and verification summary.
+2. Give exactly one copy-paste shell command that stages only completed-request files, commits with subject `Version - Text`, and pushes the current branch.
 
-Command shape:
-
-```bash
-git add . && git commit -m "X.Y.Z.B - Describe the completed change" && git push origin <current-branch>
-```
-
-Do not run the commit or push unless the user explicitly asks. Use `git add .` when `git status --short` confirms every change belongs to the completed request; otherwise list only the task files and call out the unrelated changes. Never use `git add -A` when unrelated or user-owned changes are present. If no files changed, do not suggest an empty commit.
+Use `git add .` only when every status entry belongs to the request; otherwise list only task files and call out unrelated changes. Never use `git add -A` when user-owned files are present. Do not commit or push unless explicitly asked. If no files changed, do not suggest an empty commit.

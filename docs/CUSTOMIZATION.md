@@ -1,48 +1,53 @@
 # Customization
 
-## Rename the application
+## Identity and version
 
-Change `identity` in `assets/js/config.js`, then mirror user-visible fallback metadata in `index.html`, `manifest.webmanifest`, and `manifest-dark.webmanifest`. Update repository and support URLs before publishing.
+Change `identity` in `assets/js/config.js`, then mirror public fallback metadata in `index.html`, `manifest.webmanifest`, and `manifest-dark.webmanifest`.
 
-## Replace demonstration data
+Versions use `major.minor.patch.build`. Every completed app update advances the fourth component. When major, minor, or patch changes, reset build to `1` unless another value is explicitly chosen. Keep the config version/build, newest dated release, HTML asset queries, and service-worker cache/version identical.
 
-- Edit `demoDocuments()` in `assets/js/core/state.js` for the first-run note.
-- Edit `roadmap` and `releases` in `assets/js/config.js`.
-- Keep stable ids and valid ISO dates.
-- Do not ship secrets, personal data, or domain-specific source-application content.
+## Family vocabulary
+
+Parent types, partner statuses, living statuses, date qualifiers, and the 1,500-person limit are centralized in `assets/js/config.js`. When adding an enum value, update normalizers, editor options, Help, print legend, and validation fixtures together. Never silently reinterpret an existing stored value.
+
+## State changes
+
+For a schema change:
+
+1. Add narrow defaults and normalizers in `assets/js/core/state.js`.
+2. Add a sequential migration that preserves existing content.
+3. Increment `schemaVersion` and the storage key only when the durable shape requires it.
+4. Update `docs/MCFAMILY_CSV.md` and synthetic fixtures.
+5. Verify old states, export/import round trips, unsafe text, and invalid relationships.
+
+Keep derived relationship information in `core/family.js`; do not duplicate ancestors, descendants, siblings, or lineage arrays on people.
+
+## Private seed preparation
+
+Follow `docs/MCFAMILY_CSV.md`. Keep the real canonical file private. This repository ignores `assets/data/`, allowing a maintainer to select a local working copy without publishing it. A committed test seed is allowed only when every value is unmistakably synthetic.
+
+The first-launch file must be a supported CSV with at least one person. Do not add a convenience bypass to production code.
+
+## Tree layout
+
+Graph data and derived family semantics live in `core/family.js`; DOM rendering and pan/zoom interaction live in `app.js`; presentation lives in `app.css`. Keep node coordinates deterministic so keyboard order, screenshots, and print references remain predictable.
+
+New relationship visuals must retain an accessible text description and print-safe distinction that does not rely only on color.
 
 ## Themes
 
-Base theme variables live at the top of `assets/css/app.css`. Editable user values are normalized in `state.js` and applied in `app.js`. Add a preset to `config.themes` with `accent`, `accent2`, `success`, `warning`, and `danger` six-digit hex values.
+Theme variables live near the top of `assets/css/app.css`. User values are normalized in `state.js` and applied in `app.js`. Add presets to `config.themes` with valid six-digit colors and check the tree, status, dialogs, and print output in light and dark appearance.
 
 ## Keyboard shortcuts
 
-Add a visible entry to `SHORTCUTS` in `assets/js/app.js`, add `data-shortcut` to the related control when a hint is useful, and handle the key in `handleGlobalKeydown()`. Ignore shortcuts in editable controls and always retain a visible, keyboard-operable action.
-
-## Add a record type or module
-
-1. Define a narrow default and normalizer in `assets/js/core/state.js`.
-2. Add migration handling before changing stored shapes.
-3. Add a semantic module surface and navigation control in `index.html`.
-4. Add render and event functions in `assets/js/app.js`.
-5. Add responsive and reduced-motion styles.
-6. Include the collection in export/sync payloads only if users manage it.
-7. Document and test empty, loading, disabled, offline, and error states that apply.
-
-Avoid generic abstractions until a second real module needs the same behavior.
-
-## Remove optional modules
-
-- Roadmap: remove its Settings tab/panel and event/render code, then set `features.roadmap` to `false`. Release history can remain without planned/wishlist views.
-- GitHub Sync: remove `core/sync.js`, its script tag, settings/status markup, related event wiring, and its `sw.js` cache entry. Keep JSON backup/restore.
-- Developer tools: set `features.developerTools` to `false` and remove the Developer panel if it will never be used.
-- Contextual hints: set `features.hints` to `false` and remove hint/settings markup if desired.
-- Notes: remove its top-bar control, modal, and event code. Retain legacy document migration fields until old backups no longer need support.
-
-## Publish a version
-
-Versions use `major.minor.patch.build`. Increment the fourth component for every completed application update. If a major, minor, or patch value changes, reset the build component to `1` unless another value is required. Add the newest release card first, show its date beside its version in the release log, keep `buildId` equal to the full version, update manifest text if public metadata changed, update the build queries in `index.html`, and set the matching `CACHE_NAME` and `ASSET_VERSION` in `sw.js`. Use the commit subject `Version - Text`, then run the complete checklist in `docs/TESTING.md`.
+Add a visible shortcut entry in `assets/js/app.js`, add `data-shortcut` when a hint is useful, and handle the key outside editable controls. Always retain a visible keyboard-operable action.
 
 ## Icons and PWA assets
 
-Follow the size and export instructions in the README. Keep the service worker asset list synchronized with renamed files and verify light, dark, maskable, touch, favicon, and splash variants.
+Editable and generated assets are in `assets/icons/`. Keep current names unless all references in HTML, manifests, config, and `sw.js` are updated. Verify favicon, touch, maskable, launcher, and splash variants in both appearances.
+
+## Publishing
+
+Never publish a real family CSV, exported PDF, screenshot with private information, authentication token, or generated family data. The Pages deployment consists only of public application code and assets.
+
+Run the full checklist in `docs/TESTING.md` before publishing.

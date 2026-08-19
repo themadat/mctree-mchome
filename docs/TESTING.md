@@ -1,65 +1,77 @@
-# Verification checklists
+# Verification checklist
+
+Use synthetic families only.
 
 ## Automated baseline
 
 - [ ] Every JavaScript file and `sw.js` passes `node --check`.
 - [ ] Both manifests parse as JSON.
+- [ ] Every local HTML `src`/`href`, manifest icon, and service-worker shell path exists.
 - [ ] `git diff --check` is clean.
-- [ ] Every local `src`, `href`, manifest icon, and service-worker shell path exists.
-- [ ] No console errors appear during startup or the tested workflows.
+- [ ] The visible version, build id, asset queries, newest release, cache name, and asset version all match.
+- [ ] No console errors appear during tested workflows.
 
-## Desktop
+## Initialization, migration, and portability
 
-- [ ] Header, version/Beta pills, centered global search, toolbar, and combined floating storage/sync status fit without horizontal overflow; the main workspace is blank.
-- [ ] `/` focuses global search; results route to Notes, Help, releases, and the Settings Roadmap.
-- [ ] Notes opens blank as one modal, focuses its textarea, autosaves plain text, has no Done button or autosave heading, appears in global search, and restores focus when closed.
-- [ ] The current four-part version matches the build id, asset queries, and service-worker cache; each release-log date appears beside its version number.
-- [ ] Roadmap search, Released/Planned/Wishlist filters, and every sort option work inside Settings.
-- [ ] Settings, Help, What’s New, Shortcuts, Roadmap, and Developer tabs render and manage focus.
-- [ ] Toasts and polite/assertive announcements communicate completion without relying on color.
+- [ ] A fresh profile shows only the introduction, privacy warning, and CSV picker.
+- [ ] No demo family, blank-family action, GEDCOM action, or bypass appears.
+- [ ] A valid cleaned McLineage or native McFamily CSV with at least one person shows a summary and opens the family.
+- [ ] Unknown headers, missing required cells, zero-person first import, malformed CSV, oversized file, duplicate ids, unsafe headers, self-links, duplicate links, and ancestry cycles are rejected without replacing state.
+- [ ] Cleaned-source orphan parent references and non-normalized dates are reported and remain available in source details.
+- [ ] Legacy schema states migrate without losing Notes or retained compatibility fields.
+- [ ] Export/import round trips every person field, relationship field, preference, and Note.
+- [ ] Later replacement creates recovery before changing state; Restore recovery returns the prior family.
+- [ ] Private export and PDF warnings are visible.
+- [ ] Reload restores the current family, selection, tree mode, filters, theme, and Notes.
 
-## Tablet and mobile
+## Editing and derived relationships
 
-- [ ] At representative 768px and 390px widths, document and body scroll widths do not exceed the viewport.
-- [ ] Top controls remain touch-sized and form fields do not trigger unwanted input zoom.
-- [ ] Notes fills the mobile viewport without horizontal overflow or nested page scrolling.
-- [ ] Settings fills the screen and uses one scrolling content surface.
-- [ ] Floating Sync stays inside safe areas and does not obscure required controls.
+- [ ] Add and edit a person with partial dates, qualifiers, non-Latin text, international address lines, phones, email, heritage, and notes.
+- [ ] Add and remove repeated contacts without losing adjacent entries.
+- [ ] Connect biological, adoptive, step, foster, guardian, and unknown parents.
+- [ ] Connect every partner status with dates, place, and notes.
+- [ ] Self-link, duplicate-link, missing-reference, and ancestry-cycle errors are clear and non-destructive.
+- [ ] Parents, children, partners, siblings, ancestors, descendants, and lineage labels update from relationships.
+- [ ] Set Home changes the focus root.
+- [ ] Deleting a person confirms, snapshots, removes attached links, and can recover.
+- [ ] Deleting the final person leaves an initialized empty workspace with Add Person.
 
-## Keyboard and accessibility
+## Tree and directory
 
-- [ ] Visible focus, logical focus order, labels, roles, and ARIA state are correct.
-- [ ] Escape closes menus, popovers, and dialogs and returns focus to the trigger.
-- [ ] `?`, `2`, `N`, `V`, `S`, `E`, `T`, and `D` work outside editable fields both alone and while Shift, Control, or Option is held.
-- [ ] Holding the configured modifier reveals shortcut hints and releasing it hides them.
-- [ ] Tabs and menu items support arrow-key movement.
-- [ ] Reduced-motion mode removes nonessential transitions and animations.
-- [ ] Light and dark themes meet contrast needs; status always includes text or an accessible label.
+- [ ] Focus mode shows the selected/home person's configured ancestor and descendant depth plus partners and siblings.
+- [ ] Overview contains every connected component and isolated person.
+- [ ] Single-person, multi-partner, adopted, disconnected, pedigree-collapse, and 1,500-person synthetic families render without exceptions.
+- [ ] Pan, wheel/pinch zoom, zoom buttons, Fit, Reset, node click, and generation depth work.
+- [ ] Arrow keys move between rendered nodes and Enter/Space selects.
+- [ ] Every node and relationship has an understandable accessible label.
+- [ ] Directory sorting and living/deceased/unknown filters work.
+- [ ] Search finds name, address, phone, email, birth/death place, heritage, general notes, Notes, Help, releases, and Roadmap.
 
-## Persistence, import, and migration
+## Responsive and accessibility
 
-- [ ] Notes, Roadmap filters and sorting, hints, release state, and preferences persist after reload.
-- [ ] Reset Preferences preserves notes; Erase All removes content, preferences, token, and recovery data only after custom confirmation.
-- [ ] Export contains state-model version, notes, preferences, and module settings, but never the GitHub token.
-- [ ] A malformed or oversized import is rejected without replacing current data.
-- [ ] A valid import shows its preview, migrates and sanitizes, confirms replacement, and preserves a recovery copy.
-- [ ] `docs/examples/legacy-backup-v1.json` and `legacy-backup-v2.json` migrate without losing their user content.
+- [ ] At 1280px, 768px, and 390px, page and body widths do not exceed the viewport.
+- [ ] Desktop shows coordinated directory, tree, and detail panes.
+- [ ] Mobile People/Tree/Profile tabs are touch-sized; choosing a person opens Profile.
+- [ ] Dialogs fit the mobile viewport with one usable scrolling surface.
+- [ ] Labels, landmarks, focus order, visible focus, live regions, and focus restoration are correct.
+- [ ] Escape closes temporary UI; `/`, `?`, `N`, `V`, `T`, and supported navigation keys work outside fields.
+- [ ] Reduced-motion mode removes nonessential animation.
+- [ ] Light and dark themes retain readable contrast and status text.
 
-## GitHub synchronization
+## Print / Save PDF
 
-- [ ] Missing configuration opens setup; invalid values show actionable validation.
-- [ ] Connection testing distinguishes authentication, permission, missing repository/branch, network, and malformed remote-file failures.
-- [ ] Local-only, remote-only, current, missing-file, first-sync, conflict, offline, and error states have distinct accessible labels and styles.
-- [ ] Conflict choices include merge, upload, download, and cancel; no divergent data is overwritten silently.
-- [ ] Download and merge preserve a recovery copy and keep device-local cloud settings.
-- [ ] Visibility, interval, and reconnect checks do not overlap or apply stale responses.
-- [ ] JSON backup/restore remains usable without GitHub.
+- [ ] Report includes cover, statistics, relationship legend, alphabetical index, every family component, every person, and Family Notes.
+- [ ] Every recorded contact, life, heritage, note, and relationship value appears.
+- [ ] Person `P` and component `F` references remain stable within the report.
+- [ ] Large components split by generation instead of shrinking one giant tree.
+- [ ] Application controls are suppressed and print colors remain legible.
+- [ ] Profiles and section headings use sensible page breaks; long addresses and URLs remain complete.
+- [ ] Representative browser Save as PDF output is visually inspected.
 
-## PWA and recovery
+## Offline and installation
 
-- [ ] First online visit caches every `SHELL` entry and a later offline reload opens Notes, the Settings Roadmap, and Settings.
-- [ ] An online refresh revalidates and displays current HTML, CSS, and JavaScript instead of preferring stale cache entries.
-- [ ] A waiting service worker shows a bottom New version available toast; its arrow-only Force refresh action activates it and reloads the browser tab or installed PWA.
-- [ ] Light/dark favicon, manifest, touch icon, install icon, and splash assets resolve.
-- [ ] Manual recovery copy enables Restore; restoring replaces state only after confirmation.
-- [ ] Storage quota and unavailable-API paths show useful fallback messages.
+- [ ] A fresh online load installs the current service worker and caches all shell assets.
+- [ ] Reload works offline with the locally stored family.
+- [ ] The worker does not cache or transmit family data.
+- [ ] A build change shows the new-version toast and Force refresh activates the waiting worker.
+- [ ] Both manifests install with correct McFamily identity and light/dark icons.

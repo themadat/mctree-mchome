@@ -3,10 +3,12 @@
 Start a new session with:
 
 ```text
-Continue work in /Users/stripes/Documents/GitHub/app-template. Read AGENTS.md and context/LLM_HANDOFF.md first. Preserve manual edits and run git status --short before editing.
+Continue work in /Users/stripes/Documents/GitHub/mctree-mchome. Read AGENTS.md and context/LLM_HANDOFF.md first. Preserve manual edits and run git status --short before editing.
 ```
 
-This repository is a focused application foundation. It includes the reusable top bar with centered global search, a blank main workspace, a single plain-text Notes modal, a replaceable demonstration Roadmap inside Settings, combined floating storage/sync status, local persistence/recovery, optional GitHub Sync, install assets, and the offline shell. The removed Records interface, multi-note workspace, rich-text editor, and app-space Roadmap are not part of the template.
+This repository is McFamily, a static, local-first family atlas. Version `0.0.1.5` uses schema v6, strict private-CSV onboarding, cleaned McLineage mapping, a complete native CSV transfer format, an editable family directory, derived relationship graph, interactive SVG tree, and print atlas. There is no backend, account, GitHub Sync, cloud database, or runtime dependency.
+
+The main product invariants are now the initialized import gate, directory/tree/profile workspace, single Notes modal, Settings Roadmap, local save/backup status, recovery copy, themes, accessibility, install assets, and offline shell. Do not restore the removed Records interface, multi-note workspace, rich-text editor, or GitHub Sync.
 
 ## Workflows
 
@@ -31,60 +33,71 @@ Investigate a wish without implementing it.
 
 Implement an approved plan.
 
-- Read the wish and plan, set the wish to `Active`, and keep the Resume section current.
-- Add only the architecture the real feature needs. Do not reintroduce the former Records interface, rich-text editor, or a speculative framework.
-- Use `major.minor.patch.build` versions. For every completed application update, increment the fourth `build` component. When the user chooses a new major, minor, or patch value, reset `build` to `1` unless they specify it. Keep `identity.buildId` equal to the full version, add or update the matching dated release entry, update the build queries in `index.html`, and update `CACHE_NAME` plus `ASSET_VERSION` in `sw.js` together.
-- Verify the affected desktop, mobile, accessibility, and offline behavior.
+- Read the wish and plan, set the wish to `Active`, and keep Resume current.
+- Add only the architecture the feature needs; keep the app static and dependency-free.
+- Preserve the schema-v6 privacy, validation, compatibility, accessibility, and offline invariants below.
+- Advance the four-part application version and verify affected workflows.
 
 ### `cut`
 
 Finalize an active line as a release.
 
-- Confirm the semantic version and update `identity.version`.
-- Confirm the major, minor, and patch values, set the fourth build component to `1` unless another value is requested, and use that full version for the build and service-worker cache ids.
-- Update the manifests and README when public identity or behavior changed.
-- Mark the wish `Shipped`, record its version/date, and archive its plan when useful.
-- Run the complete verification baseline below.
+- Confirm the semantic version and reset build to `1` for a new major/minor/patch unless another value is requested.
+- Update config identity, release notes, asset queries, manifests when needed, and service-worker ids.
+- Mark the wish Shipped and record version/date.
+- Run `docs/TESTING.md`.
 
-Do not silently move from one lifecycle stage to another.
+Do not silently move between lifecycle stages.
 
 ## Repository map
 
-- `index.html`: sticky shell, blank workspace, Notes, Settings, dialogs, and live regions.
-- `assets/css/app.css`: themes, safe areas, components, module layouts, and responsive behavior.
-- `assets/js/config.js`: identity, version/build id, assets, themes, Help, releases, and Roadmap data.
-- `assets/js/icons.js`: inline SF Symbol SVG catalog.
-- `assets/js/app.js`: rendering, event wiring, shortcuts, theme, Developer Mode, and Beta detection.
-- `assets/js/core/`: state, storage, reusable components, portability, GitHub Sync, and PWA behavior.
-- `assets/icons/`: editable SVG sources and generated install assets.
-- `manifest.webmanifest` and `manifest-dark.webmanifest`: install metadata.
-- `sw.js`: minimal offline shell.
-- `README.md`: setup, customization, icons, SSH, and hosting instructions.
+- `index.html`: header, family forms, Notes, Settings, dialogs, print host, and live regions.
+- `assets/css/app.css`: themes, family workspace, graph, responsive behavior, and print atlas.
+- `assets/js/config.js`: identity, version/build, limits, relationship enums, Help, releases, and Roadmap.
+- `assets/js/app.js`: onboarding, directory, profile, tree interaction, editing, search, Settings, and print assembly.
+- `assets/js/core/state.js`: schema v6, migrations, normalization, and validation.
+- `assets/js/core/family.js`: indexes, derived relationships, connected components, generations, and deterministic layout.
+- `assets/js/core/storage.js`: local save and single recovery snapshot.
+- `assets/js/core/portability.js`: cleaned-source mapping and complete private CSV export/replacement import.
+- `assets/js/core/components.js`: dialogs, popovers, toasts, and focus lifecycle.
+- `assets/js/core/pwa.js`: installation, service-worker registration, and updates.
+- `docs/MCFAMILY_CSV.md`: accepted source columns and canonical transfer-format contract.
+- `sw.js`: public offline shell only.
 
-## Invariants
+## Data and privacy invariants
 
-- Keep the runtime static, dependency-free, backend-free, and hostable as ordinary files.
-- Preserve the single Notes modal and Settings Roadmap unless the user explicitly removes or replaces them. Keep the blank main application workspace open to concrete app-specific work.
-- The built-in application icon click changes theme; press-and-hold toggles Developer Mode without also changing theme.
-- Developer Mode adds `DEV` to the single version pill. Beta remains a separate environment pill.
-- Standard interface icons use inline SF Symbol SVGs rather than emoji or icon fonts.
-- New controls use native elements, accessible names, visible focus, and touch-sized hit areas.
-- Avoid horizontal overflow and preserve safe-area and reduced-motion behavior.
-- Every application update advances the fourth component of the visible `major.minor.patch.build` version, with the same full value used for the build id, release, asset queries, and service-worker cache.
+- Never commit a real family CSV, spreadsheet, PDF, screenshot, name list, address, phone, email, heritage note, or family note. `assets/data/` is ignored; use synthetic committed fixtures only.
+- First launch accepts only the cleaned McLineage CSV or a native `mcfamily-csv-v1` CSV containing at least one person. There is no demo family, blank-family path, JSON/GEDCOM import, or bypass.
+- The gate is not security or authentication. Account roles, revocation, and audit history remain a clearly marked future-backend wishlist item.
+- Maximum family size is 1,500 people.
+- Export CSV is the complete editable plaintext transfer file. Imports replace; they do not merge. Later replacement and person deletion create recovery first.
+- Deleting the final person leaves an initialized empty workspace.
+- Parent and partner links are explicit records. Reject missing references, self-links, duplicates, and directed ancestry cycles.
+- Derive ancestors, descendants, siblings, units, and lineage labels; do not cache them on people.
+- Keep legacy Notes and compatibility fields readable through migration.
+
+## Application invariants
+
+- Keep the runtime static, dependency-free, backend-free, and hostable on ordinary GitHub Pages.
+- Preserve Directory, Tree, and Profile as the coordinated main workspace.
+- The SVG supports focus/overview, all components and isolated people, pan, zoom, fit, touch, keyboard selection, accessible relationship text, and reduced motion.
+- Standard controls use the shared inline SVG catalog rather than emoji or icon fonts.
+- Controls use native elements, labels, visible focus, touch-sized targets, and safe rendered user text.
+- Avoid horizontal overflow and preserve safe-area behavior at mobile widths.
+- Print builds semantic HTML for cover, counts, legend, index, component generation maps, every person profile, cross-references, and Notes; native browser print produces the PDF.
+- Keep the single Notes modal, Settings/Help/Releases/Roadmap, recovery, themes, installation, and service-worker update handling.
+- The icon click changes theme; press-and-hold toggles Developer Mode without also changing theme. Developer Mode adds `DEV` to the version pill; Beta stays separate.
+
+## Version invariant
+
+Versions use `major.minor.patch.build`. Every completed application update increments build. A major/minor/patch change resets build to `1` unless the user specifies another number. Keep `identity.version`, `identity.buildId`, newest dated release, `index.html` queries, and `sw.js` cache/build ids identical.
 
 ## Verification baseline
 
-From the repository root:
+Use the bundled workspace Node runtime if system Node is unavailable. Run JavaScript syntax checks, parse both manifests, validate local asset references, run `git diff --check`, and serve through an HTTP server.
 
-```sh
-for file in assets/js/*.js sw.js; do node --check "$file" || exit 1; done
-node -e "const fs=require('fs'); for (const file of ['manifest.webmanifest','manifest-dark.webmanifest']) JSON.parse(fs.readFileSync(file,'utf8'));"
-git diff --check
-python3 -m http.server 8000
-```
-
-Check desktop and mobile layout, no horizontal overflow, centered global search, blank main workspace, Notes editing and persistence, Settings Roadmap filtering/sorting, Settings tabs, combined floating storage/sync status, sync setup, modified and unmodified shortcuts, contextual hints, SVG controls, theme click/T shortcut, Developer Mode hold/toggle-back, Beta detection, fresh online reloads, bottom new-version toast with its arrow-only Force refresh action, and offline reload. Stop the server afterward.
+Follow `docs/TESTING.md`. At minimum cover strict onboarding, cleaned-source import, native CSV round-trip/recovery errors, people and relationship CRUD, cycle rejection, search, focus and overview graph, large synthetic layout, desktop/mobile overflow, keyboard/accessibility, print content, online reload, and offline shell. Stop preview servers afterward.
 
 ## End of turn
 
-After file changes, give one concise outcome/verification summary followed by exactly one copy-paste command that stages only task files, commits with the exact subject shape `Version - Text`, and pushes the current branch. Use `git add .` when `git status --short` confirms all changes belong to the task; otherwise name the task files explicitly. Do not run it unless explicitly requested.
+After file changes, give a concise outcome and verification summary followed by exactly one copy-paste command that stages only task files, commits with subject `Version - Text`, and pushes the current branch. Use `git add .` only when every change belongs to the task; otherwise name task files explicitly. Do not run it unless explicitly requested.

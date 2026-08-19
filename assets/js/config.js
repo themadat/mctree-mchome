@@ -5,63 +5,74 @@
 
   const CONFIG = {
     identity: {
-      name: "App Template",
-      shortName: "Template",
-      description: "A focused pre-launch local-first shell with a blank app workspace, Notes, settings, and optional GitHub Sync.",
-      version: "0.0.1.2",
-      buildId: "0.0.1.2",
+      name: "McFamily",
+      shortName: "McFamily",
+      description: "A private, local-first family tree, address book, and printable family atlas.",
+      version: "0.0.1.5",
+      buildId: "0.0.1.5",
       repository: {
         label: "Project repository",
-        url: "https://github.com/OWNER/REPOSITORY"
+        url: "https://github.com/themadat/mctree-mchome"
       },
       support: [
-        { label: "Report a problem", url: "https://github.com/OWNER/REPOSITORY/issues/new" },
-        { label: "View documentation", url: "https://github.com/OWNER/REPOSITORY#readme" }
+        { label: "Report a problem", url: "https://github.com/themadat/mctree-mchome/issues/new" },
+        { label: "View documentation", url: "https://github.com/themadat/mctree-mchome#readme" }
       ],
       assets: {
         favicon: "assets/icons/favicon.svg",
-        appIconLight: "assets/icons/app-icon-light.svg",
-        appIconDark: "assets/icons/app-icon-dark.svg",
+        appIconLight: "assets/icons/app-icon-light.png",
+        appIconDark: "assets/icons/app-icon-dark.png",
         manifestLight: "manifest.webmanifest",
         manifestDark: "manifest-dark.webmanifest"
       }
     },
 
-    schemaVersion: 4,
+    schemaVersion: 6,
+    csvFormat: "mcfamily-csv-v1",
     storage: {
-      stateKey: "appTemplate.state.v4",
-      legacyKeys: ["appTemplate.state.v3", "localWorkspace.state.v3", "localWorkspace.state.v2", "localWorkspace.state.v1"],
-      recoveryKey: "appTemplate.recovery.v1",
-      secretKey: "appTemplate.githubToken.v1",
-      sessionSecretKey: "appTemplate.githubToken.session.v1"
+      stateKey: "mcfamily.state.v6",
+      legacyKeys: ["mcfamily.state.v5", "appTemplate.state.v4", "appTemplate.state.v3", "localWorkspace.state.v3", "localWorkspace.state.v2", "localWorkspace.state.v1"],
+      recoveryKey: "mcfamily.recovery.v1"
     },
 
     features: {
-      records: false,
+      family: true,
       documents: true,
-      cloudSync: true,
       roadmap: true,
       developerTools: true,
       hints: true,
-      demoData: true
+      demoData: false
     },
 
     controls: {
       shortcutHintModifier: "Alt",
       autosaveDelayMs: 180,
-      syncCheckIntervalMs: 5 * 60 * 1000,
       maxImportBytes: 5 * 1024 * 1024,
-      maxRecords: 5000,
-      maxDocuments: 500,
+      maxPeople: 1500,
+      maxRelationships: 6000,
+      maxAddressesPerPerson: 20,
+      maxContactsPerPerson: 20,
       maxTextLength: 20000,
       maxDocumentHtmlLength: 250000
     },
 
-    statuses: [
-      { id: "active", label: "Active", icon: "●", color: "#2f7d68" },
-      { id: "paused", label: "Paused", icon: "Ⅱ", color: "#a86a1f" },
-      { id: "complete", label: "Complete", icon: "✓", color: "#4f6f52" },
-      { id: "idea", label: "Idea", icon: "◇", color: "#7058a3" }
+    parentKinds: [
+      { id: "biological", label: "Biological parent" },
+      { id: "adoptive", label: "Adoptive parent" },
+      { id: "step", label: "Step-parent" },
+      { id: "foster", label: "Foster parent" },
+      { id: "guardian", label: "Guardian" },
+      { id: "unknown", label: "Parent" }
+    ],
+
+    partnerStatuses: [
+      { id: "married", label: "Married" },
+      { id: "partnered", label: "Partners" },
+      { id: "separated", label: "Separated" },
+      { id: "divorced", label: "Divorced" },
+      { id: "widowed", label: "Widowed" },
+      { id: "former", label: "Former partners" },
+      { id: "unknown", label: "Partners" }
     ],
 
     themes: [
@@ -73,44 +84,64 @@
 
     releases: [
       {
+        version: "0.0.1.5",
+        date: "2026-08-19T01:30:00.000Z",
+        title: "CSV family portability",
+        summary: "McFamily now opens the cleaned McLineage CSV and uses a complete native CSV for future backups and replacement imports.",
+        features: ["First-launch McLineage-cleaned CSV mapping", "Complete McFamily CSV export and round-trip import", "Source-field preservation for future schema work"],
+        improvements: ["Capacity raised for the 607-row source plus spouse profiles", "Import previews identify source format and mapping warnings"],
+        fixes: ["Partial and invalid source dates remain preserved instead of being discarded"],
+        knownIssues: ["The import gate is not authentication; CSV files and PDFs must be stored privately."]
+      },
+      {
+        version: "0.0.1.4",
+        date: "2026-08-19T00:44:51.000Z",
+        title: "McFamily icon refresh",
+        summary: "McFamily now uses its tree-and-monogram artwork throughout the browser and installed application.",
+        features: [],
+        improvements: ["New light and dark McFamily artwork across header, launcher, touch, maskable, and splash surfaces", "New vector McFamily favicon"],
+        fixes: [],
+        knownIssues: []
+      },
+      {
+        version: "0.0.1.3",
+        date: "2026-08-18T12:00:00.000Z",
+        title: "McFamily local family atlas",
+        summary: "The application now combines an editable local family directory, interactive relationship tree, private backups, and a printable family atlas.",
+        features: ["Focus and whole-family SVG tree views", "Complete people, contact, heritage, and relationship editing", "Strict first-run McFamily backup import", "Print / Save PDF atlas and directory"],
+        improvements: ["Search covers people and contact details", "Local backup status replaces cloud synchronization", "McFamily identity and offline install metadata"],
+        fixes: ["Relationship validation prevents missing references, duplicates, self-links, and ancestry cycles"],
+        knownIssues: ["The import gate is not authentication; true roles and audit history require a future backend."]
+      },
+      {
         version: "0.0.1.2",
         date: "2026-08-03T15:00:00.000Z",
         title: "Blank application workspace",
-        summary: "The main app area is empty and ready for a future app while Notes, Roadmap, updates, and shortcuts remain available from the shell.",
+        summary: "The original application foundation provided the Notes, Settings, backup, appearance, and offline shell now used by McFamily.",
         features: ["Theme shortcut on the app icon", "Modifier-tolerant global shortcuts"],
-        improvements: ["Unaccented Notes toolbar action", "Icon-only release and force-refresh actions", "Roadmap search, filters, and sorting live in Settings"],
-        fixes: ["Fresh and unchanged demonstration Notes start blank", "Notes closes from its standard close control without a redundant Done button"],
-        knownIssues: ["GitHub Sync requires a user-provided repository and fine-grained token."]
-      },
-      {
-        version: "0.0.1.1",
-        date: "2026-08-03T12:00:00.000Z",
-        title: "Pre-launch application foundation",
-        summary: "A focused local-first shell with centered search, combined storage and GitHub status, and force-refreshable PWA updates.",
-        features: ["Single-modal Notes workspace", "Major.minor.patch.build versioning", "Combined Storage & GitHub settings"],
-        improvements: ["Centered app-bar search", "Unified floating save and sync status", "Dedicated Notes SF Symbol", "Bottom new-version toast with force refresh"],
-        fixes: ["Installed apps can explicitly activate and reload a waiting application update", "The redundant Roadmap navigation strip is removed"],
-        knownIssues: ["GitHub Sync requires a user-provided repository and fine-grained token."]
+        improvements: ["Centered search", "Local persistence and recovery"],
+        fixes: ["Fresh Notes start blank"],
+        knownIssues: []
       }
     ],
 
     roadmap: [
-      { id: "road-1", title: "Optional attachment adapter", description: "Document an extension point for local or remote file attachments.", state: "planned", priority: 2, target: "1.2", effort: 3, createdAt: "2026-07-08T12:00:00.000Z" },
-      { id: "road-2", title: "Notes print view", description: "Add a clean print layout for the single Notes workspace.", state: "wishlist", priority: 3, target: "Unscheduled", effort: 2, createdAt: "2026-07-20T12:00:00.000Z" },
-      { id: "road-3", title: "Local print layout", description: "Add a clean print view for notes and roadmap entries.", state: "planned", priority: 1, target: "1.1", effort: 1, createdAt: "2026-07-29T12:00:00.000Z" },
-      { id: "road-4", title: "Focused template foundation", description: "Ship the shell, Notes, Roadmap, sync, recovery, PWA, and settings modules.", state: "released", priority: 1, target: "1.0", effort: 4, createdAt: "2026-06-12T12:00:00.000Z" }
+      { id: "road-accounts", title: "Accounts, roles, and access history", description: "Add authenticated owner, editor, and viewer roles with access revocation and an audit trail for sign-ins, edits, exports, and other usage. This requires a secure backend and is intentionally outside the static local-only app.", state: "wishlist", priority: 1, target: "Future backend release", effort: 4, createdAt: "2026-08-18T12:00:00.000Z" },
+      { id: "road-photos", title: "Private profile photos", description: "Explore storage-safe, offline profile photos without making backups fragile or publishing image requests.", state: "wishlist", priority: 3, target: "Unscheduled", effort: 3, createdAt: "2026-08-18T12:00:00.000Z" },
+      { id: "road-gedcom", title: "GEDCOM import", description: "Map standard genealogy exports into McFamily people and relationships with a review step.", state: "wishlist", priority: 3, target: "Unscheduled", effort: 3, createdAt: "2026-08-18T12:00:00.000Z" },
+      { id: "road-family-atlas", title: "Local family atlas", description: "Ship the editable directory, interactive tree, private backups, and print-ready family atlas.", state: "released", priority: 1, target: "0.0.1.3", effort: 4, createdAt: "2026-08-18T12:00:00.000Z" }
     ],
 
     help: [
-      { id: "start", title: "Getting started", section: "Basics", keywords: "start notes roadmap", html: "<p>The main application workspace starts blank. Open <strong>Notes</strong> for a plain-text scratchpad, and find the replaceable <strong>Roadmap</strong> inside Settings. Local changes save automatically.</p>" },
-      { id: "notes", title: "Working with Notes", section: "Features", keywords: "notes text edit modal autosave", html: "<p>Open Notes from the top bar or press <kbd>N</kbd>. The single plain-text editor saves locally and is included in backup and synchronization data.</p>" },
-      { id: "roadmap", title: "Using Roadmap", section: "Features", keywords: "roadmap planned released wishlist priority target effort", html: "<p>Search Roadmap, filter its state, and sort by priority, target release, effort, age, or title. Replace the demonstration entries in configuration.</p>" },
-      { id: "backup", title: "Backup and restore", section: "Data", keywords: "json export import backup restore recovery", html: "<p>Export a JSON backup from Settings. Imports are parsed, migrated, sanitized, summarized, and confirmed before replacement. The current copy is saved as a recovery snapshot first.</p>" },
-      { id: "sync", title: "GitHub synchronization", section: "Data", keywords: "github cloud sync token conflict merge", html: "<p>GitHub sync is optional. Configure a private repository, branch, JSON file path, and a fine-grained token with Contents access. Conflicts always ask whether to upload, download, merge, or cancel.</p>" },
-      { id: "install", title: "Install the application", section: "Installation", keywords: "install add home screen iphone ipad android mac windows pwa offline", html: "<p>Use your browser’s Install app, Add to Home Screen, or Add to Dock command. There is no in-app installation dialog. Once the application shell has loaded, core local features continue to work offline.</p>" },
-      { id: "app-icon", title: "App icon controls", section: "Appearance", keywords: "icon theme dark light beta developer mode hold press shortcut", html: "<p>Click or tap the app icon, or press <kbd>T</kbd>, to switch between light and dark themes. Press and hold the icon to enable or disable Developer Mode. The Beta pill appears automatically on a <code>/beta/</code> URL or when <code>?beta=1</code> is present.</p>" },
-      { id: "privacy", title: "Privacy and local data", section: "Data", keywords: "privacy local storage token secret", html: "<p>Notes remain in browser storage unless you export them or explicitly use GitHub Sync. Tokens are stored separately per device and excluded from backups and diagnostics.</p>" },
-      { id: "shortcuts", title: "Keyboard access", section: "Accessibility", keywords: "keyboard shortcuts slash escape alt option shift control hints version", html: "<p>Press <kbd>/</kbd> for global search, <kbd>N</kbd> for Notes, <kbd>V</kbd> for What’s New, <kbd>T</kbd> for the theme, and <kbd>?</kbd> for Help. Listed shortcuts continue to work while Shift, Control, or Option is held. Hold the configured modifier to reveal shortcut hints.</p>" }
+      { id: "start", title: "Getting started", section: "Basics", keywords: "start import csv backup seed first launch", html: "<p>McFamily opens after you import the cleaned McLineage CSV or a native McFamily CSV export. The file is mapped, validated, and previewed before it replaces local data. There is no demo-family or blank-family bypass.</p>" },
+      { id: "tree", title: "Exploring the family tree", section: "Family", keywords: "tree focus overview zoom pan generation home person", html: "<p>Focus view shows the selected person and nearby generations. Select any person to recenter the tree, adjust generation depth, or switch to Overview to fit every family component.</p>" },
+      { id: "people", title: "People and relationships", section: "Family", keywords: "people add edit address phone email parent child partner", html: "<p>Add or edit people from the workspace. A profile can hold multiple addresses, phone numbers, and email addresses. Relationship links create the lineage shown in the tree and report.</p>" },
+      { id: "print", title: "Print or save a PDF", section: "Family", keywords: "print pdf atlas directory lineage", html: "<p>Choose <strong>Print / Save PDF</strong> to build the complete atlas and open the browser print dialog. Select Save as PDF to create a file.</p>" },
+      { id: "notes", title: "Working with Notes", section: "Features", keywords: "notes text edit modal autosave", html: "<p>Notes is a single local plain-text scratchpad. Open it from the top bar or press <kbd>N</kbd>; it is included in McFamily backups.</p>" },
+      { id: "backup", title: "CSV backup and restore", section: "Data", keywords: "csv export import backup restore recovery private", html: "<p>CSV export is the complete editable copy of the family and contains private contact information. Native exports use typed rows for people, contacts, relationships, Notes, and settings. Store them securely. Replacement imports are previewed and confirmed; the prior local copy becomes the recovery snapshot.</p>" },
+      { id: "privacy", title: "Privacy and local data", section: "Data", keywords: "privacy local storage static gate authentication", html: "<p>Family data stays in this browser unless you export it. The first-run import gate is an onboarding step, not authentication. Never commit a private family backup into the public Pages repository.</p>" },
+      { id: "install", title: "Install McFamily", section: "Installation", keywords: "install home screen pwa offline", html: "<p>Use the browser’s Install app, Add to Home Screen, or Add to Dock command. After the shell has loaded once, local features continue to work offline.</p>" },
+      { id: "shortcuts", title: "Keyboard access", section: "Accessibility", keywords: "keyboard shortcuts search add print notes settings", html: "<p>Press <kbd>/</kbd> for search, <kbd>A</kbd> to add a person, <kbd>P</kbd> to print, <kbd>N</kbd> for Notes, <kbd>T</kbd> for theme, and <kbd>?</kbd> for Help. Visible controls provide every shortcut action.</p>" }
     ]
   };
 

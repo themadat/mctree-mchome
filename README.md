@@ -1,19 +1,22 @@
-# App Template
+# McFamily
 
-A static, local-first HTML application foundation with no build step, runtime dependency, backend, account, or sign-in.
+McFamily is a private, local-first family atlas that runs as a static GitHub Pages app. It visualizes family relationships, keeps addresses and other profile information together, and builds a print-ready atlas for saving as PDF.
 
-The template starts on the pre-launch `0.0.1` line at version `0.0.1.2` (`major.minor.patch.build`). Routine updates increment the fourth number.
+There is no backend, account, cloud database, or runtime dependency. Family data stays in browser storage and moves only through an explicit CSV import or export. The published repository must never contain a real family CSV or private family data.
 
-The included product surface is intentionally focused:
+Current version: `0.0.1.5` (`major.minor.patch.build`).
 
-- Sticky application header with version, Beta, centered global search, Notes, and Settings controls.
-- Blank main application workspace ready for app-specific content.
-- Single plain-text Notes modal that starts empty and autosaves locally.
-- Replaceable Roadmap inside Settings with search, view filters, and sorting.
-- Settings, searchable Help, What’s New, release history, shortcut reference, and Roadmap views.
-- Optional GitHub Contents API synchronization with explicit conflict choices and manual JSON backup/restore.
-- Contextual hints, toast and live announcements, keyboard shortcuts, shortcut-hint mode, and hidden Developer Mode.
-- Installable offline PWA shell with light/dark assets and a bottom new-version toast with an icon-only Force refresh action.
+## What it does
+
+- Opens only after importing the cleaned McLineage CSV or a native McFamily CSV with at least one person on first launch.
+- Shows a focus tree around a home person and a whole-family overview of connected and isolated people.
+- Supports pan, zoom, fit, generation depth, keyboard selection, touch, and accessible relationship descriptions.
+- Provides an alphabetical directory and broad search across names, contact details, places, heritage, and notes.
+- Edits people, multiple addresses, phones, emails, life events, and typed parent or partner relationships.
+- Rejects missing references, duplicate relationships, self-links, and ancestry cycles.
+- Keeps a recovery snapshot before destructive replacement or deletion.
+- Exports a complete editable McFamily CSV and creates a print-only family atlas for the browser's Save as PDF command.
+- Preserves Notes, Settings, themes, accessibility, installation, and offline support from the application foundation.
 
 ## Run locally
 
@@ -23,126 +26,79 @@ From the repository folder:
 python3 -m http.server 8000
 ```
 
-Open `http://localhost:8000`. Use a local server instead of opening `index.html` directly so the service worker and PWA behavior can run.
+Open `http://localhost:8000`. Use a local server rather than opening `index.html` directly so the service worker and install behavior can run.
 
-## Start a new application
+On a fresh browser profile, McFamily intentionally has no demo family or blank-workspace bypass. Select the private cleaned McLineage CSV or a native export described in [`docs/MCFAMILY_CSV.md`](docs/MCFAMILY_CSV.md).
 
-1. Update identity, version, release notes, help, roadmap data, repository links, and feature flags in `assets/js/config.js`.
-2. Mirror the public name and description in `manifest.webmanifest`, `manifest-dark.webmanifest`, and the fallback metadata in `index.html`.
-3. Leave the default Notes document blank or add intentional starter text in `demoDocuments()` inside `assets/js/core/state.js`.
-4. Build the application-specific interface inside the blank `main` element. Extend or replace Notes and the Settings Roadmap only when the new app needs different behavior.
-5. Use `major.minor.patch.build` versions. Increment the fourth number for every completed application update; when intentionally changing major, minor, or patch, reset the build number to `1` unless another value is required. Keep `identity.buildId` equal to the full version, add the matching dated release entry, update the build query values in `index.html`, and update `CACHE_NAME` plus `ASSET_VERSION` in `sw.js` together.
+## Privacy model
+
+The first-launch import is an onboarding gate, not authentication. Anyone who can open the deployed files can load the application, and anyone who possesses a backup or exported PDF can read its private contents.
+
+- Store CSV exports and PDFs privately.
+- Do not commit real names, addresses, phone numbers, email addresses, heritage notes, or family notes.
+- Use synthetic people for tests and screenshots.
+- Browser storage is per browser profile and device. Clearing site data removes the active local copy.
+- The visible accounts wishlist requires a future authenticated backend; it cannot be provided securely by GitHub Pages alone.
 
 ## Project structure
 
 ```text
-index.html                     Application shell, blank workspace, Notes, and dialogs
-assets/css/app.css             Theme, layout, components, and responsive behavior
-assets/js/config.js            Identity, versions, themes, help, releases, and roadmap
-assets/js/icons.js             Inline SF Symbol SVG catalog
-assets/js/app.js               Application rendering, actions, and keyboard wiring
-assets/js/core/state.js        Defaults, normalization, migrations, validation, and merge
-assets/js/core/storage.js      Local persistence, secret storage, and recovery copies
-assets/js/core/components.js   Dialogs, popovers, menus, toasts, and loading UI
-assets/js/core/portability.js  JSON export, validation preview, and import
-assets/js/core/sync.js         Optional GitHub synchronization state machine
-assets/js/core/pwa.js          PWA assets, update notices, and device detection
-assets/icons/                  Editable and generated application assets
+index.html                     Application shell, forms, dialogs, and print report host
+assets/css/app.css             Themes, family workspace, responsive, and print styles
+assets/js/config.js            Identity, version, enums, help, releases, and roadmap
+assets/js/icons.js             Shared inline SVG symbol catalog
+assets/js/app.js               Rendering, editing, search, tree interaction, and print atlas
+assets/js/core/state.js        Schema v6 migration, normalization, and validation
+assets/js/core/family.js       Relationship indexes, derived family groups, and graph layout
+assets/js/core/storage.js      Local persistence and recovery snapshot
+assets/js/core/portability.js  Private CSV mapping, export, preview, and replacement import
+assets/js/core/components.js   Dialogs, popovers, toasts, and focus management
+assets/js/core/pwa.js          Install metadata, offline worker, and update notice
 manifest*.webmanifest          Light and dark install metadata
-sw.js                          Offline shell and update cache
-docs/                          Architecture, components, customization, and test checklists
-context/                       Agent wish, plan, start, and cut workflow
+sw.js                          Versioned offline application shell
+docs/                          Architecture, CSV contract, customization, and test checklists
+context/                       Durable agent workflow and wish ledger
 ```
 
-## Update the application icons
+## Data limits and compatibility
 
-Editable sources and generated install assets are in `assets/icons/`. Keep the existing filenames unless you also update every reference in `index.html`, both manifests, `assets/js/config.js`, and `sw.js`.
+Schema v6 supports up to 1,500 people so the 607-row McLineage source and its spouse records fit safely. Dates accept `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` with exact, about, before, or after qualifiers. Relationships are stored as explicit records; ancestry, descendants, siblings, family units, and lineage labels are derived when needed.
 
-1. Replace `app-icon-light.svg` and `app-icon-dark.svg` with square SVG artwork. Keep important artwork inside the central 80% for maskable crops.
-2. Replace `favicon.svg`.
-3. Export the light icon to:
+Older application states migrate without discarding the single Notes document or retained compatibility fields. A first import must be a supported CSV containing at least one valid person.
 
-   - `icon-192.png` at 192 × 192
-   - `icon-512.png` at 512 × 512
-   - `icon-512-maskable.png` at 512 × 512
-   - `apple-touch-icon.png` at 180 × 180
+## CSV and PDF workflow
 
-4. Export the dark icon to:
+The primary maintainer owns the canonical private CSV file:
 
-   - `icon-192-dark.png` at 192 × 192
-   - `icon-512-dark.png` at 512 × 512
-   - `icon-512-maskable-dark.png` at 512 × 512
-   - `apple-touch-icon-dark.png` at 180 × 180
+1. Import the cleaned source CSV or latest native McFamily CSV.
+2. Add or update people and relationships.
+3. Export a new McFamily CSV from Settings and store it privately.
+4. Distribute replacement CSV files to editors or print/PDF atlases to readers.
 
-5. Replace `splash-light.svg` and `splash-dark.svg`, then export `splash-light.png` and `splash-dark.png` at 1170 × 1170.
-6. Advance the fourth component of the app version, use the same full version as the build identifier, add the matching release entry, update the build queries in `index.html`, and update both `CACHE_NAME` and `ASSET_VERSION` in `sw.js` so installed copies receive the assets.
+Imports replace the current family after a summary and confirmation. McFamily creates a recovery snapshot first; it does not merge concurrent copies.
 
-Example Inkscape exports:
+`Print / Save PDF` builds a report with a cover, statistics, legend, person index, generation-grouped component maps, and a profile for every person. Use the native print dialog's Save as PDF destination.
 
-```sh
-inkscape assets/icons/app-icon-light.svg --export-filename=assets/icons/icon-512.png --export-width=512 --export-height=512
-inkscape assets/icons/app-icon-dark.svg --export-filename=assets/icons/icon-512-dark.png --export-width=512 --export-height=512
-```
+## Host on GitHub Pages
 
-Verify the favicon, launcher icon, maskable crop, and splash artwork in both appearances.
+Publish the repository contents without changing relative paths. Use HTTPS so the service worker and install features are available. Keep `sw.js` at the repository root because its location defines the offline scope.
 
-## Set up GitHub SSH for repository work
+The service worker caches only the public application shell and assets. It never uploads family data or makes synchronization requests. Online reloads revalidate the shell; offline reloads use the cached application and the browser's local family state.
 
-This controls Git clone, pull, and push from your computer. It is separate from the optional in-app sync module, which uses the GitHub Contents API and a fine-grained token because a browser cannot use your SSH key.
+## Versioning
 
-1. Check for an existing key:
+Every completed application change advances the fourth build number. Keep these surfaces identical:
 
-   ```sh
-   ls -al ~/.ssh
-   ```
+- `identity.version` and `identity.buildId` in `assets/js/config.js`
+- the newest dated release entry
+- asset query strings in `index.html`
+- `CACHE_NAME` and `ASSET_VERSION` in `sw.js`
 
-2. If `id_ed25519` and `id_ed25519.pub` do not exist, create them:
+Changing major, minor, or patch resets the build to `1` unless another value is explicitly chosen.
 
-   ```sh
-   ssh-keygen -t ed25519 -C "YOUR_GITHUB_EMAIL"
-   ```
+## Icons
 
-3. On macOS, load the key and save it in Keychain:
-
-   ```sh
-   eval "$(ssh-agent -s)"
-   ssh-add --apple-use-keychain ~/.ssh/id_ed25519
-   ```
-
-4. Copy the public key and add it in GitHub under **Settings → SSH and GPG keys → New SSH key**:
-
-   ```sh
-   pbcopy < ~/.ssh/id_ed25519.pub
-   ```
-
-   Never upload or share the private file without `.pub`.
-
-5. Test authentication and set the repository’s SSH remote:
-
-   ```sh
-   ssh -T git@github.com
-   git remote set-url origin git@github.com:OWNER/REPOSITORY.git
-   git remote -v
-   git push -u origin main
-   ```
-
-If Git reports `Permission denied (publickey)`, confirm the key is loaded and attached to the correct GitHub account. A prompt for the SSH key’s passphrase is local; it is not a GitHub password.
-
-## Configure optional in-app GitHub Sync
-
-Open **Settings → Storage & GitHub** and provide:
-
-- Repository owner and name.
-- Branch and JSON file path.
-- A fine-grained personal access token limited to the selected repository with **Contents: Read and write** permission.
-
-The token stays in browser storage on that device, is never included in exports or diagnostics, and is not displayed again. The Sync button checks local and remote state before choosing upload, download, merge, or conflict handling. JSON export/import remains the fallback.
-
-## Host as a static site
-
-Upload the repository contents without changing their relative paths. Use HTTPS in production so service-worker and install features are available. Keep `sw.js` at the application root because its location defines the offline scope.
-
-The service worker checks the network first for same-origin application files, and `index.html` gives build-stamped URLs to the application assets. An ordinary browser refresh therefore retrieves a consistent current set of HTML, CSS, and JavaScript when online, then falls back to the cached shell when offline. When a waiting worker is ready, a persistent **New version available** toast appears at the bottom. Its clockwise-arrow action force-activates that worker and reloads with a cache-busting URL, including in the installed PWA.
+Editable and generated assets are in `assets/icons/`. If filenames change, update `index.html`, both manifests, `assets/js/config.js`, and `sw.js`. Preserve light, dark, maskable, touch, favicon, and splash variants.
 
 ## Agent workflow
 
@@ -153,4 +109,4 @@ The service worker checks the network first for same-origin application files, a
 - `start`: implement an approved plan.
 - `cut`: finalize a release.
 
-After a completed change, agents provide one copy-paste command that stages only relevant files, creates a commit in the form `Version - Text` (for example, `0.0.1.2 - Refine the pre-launch shell`), and pushes the current branch. When every working-tree change belongs to the update, the command uses `git add .`; if unrelated changes exist, it names only the relevant files. Agents do not run it unless explicitly asked.
+After a completed change, agents provide one copy-paste command that stages only relevant files, commits with the subject `Version - Text`, and pushes the current branch. Agents do not commit or push unless explicitly asked.
