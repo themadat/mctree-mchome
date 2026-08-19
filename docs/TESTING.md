@@ -48,6 +48,8 @@ Use synthetic families only.
 - [ ] Every node and relationship has an understandable accessible label.
 - [ ] Condensed cards are the default and show separate given/family name lines plus birth/death years, with no avatar or identifier; Detailed restores the fuller card.
 - [ ] Partner pairs are adjacent when possible; married lines are solid, divorced lines are dotted, and other partner states remain distinguishable.
+- [ ] Family Tree rows use numeric lineage order rather than alphabetical names; Seth Lauer appears before Jared Lauer.
+- [ ] A multi-partner lineage person is preceded by past partners from earliest to latest and followed by the current married partner.
 - [ ] Directory and selected-person panes collapse independently on desktop and can be reopened without losing selection or tree focus; the header Directory control and mobile tabs reopen a collapsed module.
 - [ ] Directory first/last-name sorting, living/deceased/unknown filters, and A–Z quick jumps work on the filtered result set.
 - [ ] Directory rows show `[birth-death]` with `????` for unknown years followed by the lineage ID.
