@@ -6,9 +6,9 @@ An uninitialized browser shows only the McFamily introduction, privacy explanati
 
 ## Family workspace
 
-Desktop uses directory, SVG tree, and profile columns. Mobile uses touch-sized People, Tree, and Profile tabs; selecting a person from the directory opens Profile. All modes share the same selected-person state.
+Desktop uses directory, SVG tree, and profile columns. The directory and selected-person columns can be collapsed independently so the tree can fill the workspace. Mobile uses touch-sized People, Tree, and Profile tabs; selecting a person from the directory opens Profile. All modes share the same selected-person state.
 
-The tree toolbar controls focus/overview mode, generation depth, zoom, fit, and reset. Person nodes are native SVG buttons by role and expose accessible labels; relationship paths also have textual descriptions.
+The tree toolbar controls focus/overview mode, condensed/detailed cards, generation depth, zoom, fit, and reset. Condensed cards are the default and show given name, family name, and lifespan only. Partner pairs are kept adjacent when their generation allows it; married links are solid, divorced links are dotted, and other partner states are dashed. Person nodes are native SVG buttons by role and expose accessible labels; relationship paths also have textual descriptions.
 
 ## Person and relationship editors
 
@@ -30,7 +30,11 @@ Notes remains one large plain-text textarea. It opens from the header or `N`, au
 
 ## Global search
 
-`/` focuses global search outside editable controls. Results include people, contact data, life places, heritage, notes, the Notes document, Help topics, releases, and Roadmap items. A person result selects that person and routes to Profile on mobile.
+`/` focuses global search outside editable controls. Directory and global search support partial substrings and in-order fuzzy characters. Results include people, contact data, life places, heritage, notes, the Notes document, Help topics, releases, and Roadmap items. A person result selects that person and routes to Profile on mobile.
+
+## Heritage and lineage
+
+The selected-person profile presents the imported ancestry name line and Lineage ID together. Activating the name line swaps it for a relationship-derived family reading such as `Son of …`, `Daughter of …`, or the gender-neutral `Child of …`. The printable atlas includes both readings without requiring interaction.
 
 ## Print report
 

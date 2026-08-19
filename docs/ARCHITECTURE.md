@@ -17,16 +17,16 @@ McFamily is an ordered-script static page with no module loader or runtime packa
 
 All modules attach to `window.LocalApp`. Application runtime has no family-data network path.
 
-## Schema v6
+## Schema v7
 
 The durable state is normalized into this shape:
 
 ```json
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "meta": {
-    "appVersion": "0.0.1.5",
-    "buildId": "0.0.1.5",
+    "appVersion": "0.0.1.6",
+    "buildId": "0.0.1.6",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -63,7 +63,7 @@ A fresh default has no `initializedAt` value and no people. `app.js` renders onl
 
 After initialization, deleting the last person does not clear `initializedAt`; the workspace remains open and offers Add Person. Subsequent imports may contain an initialized empty family, but replacement always shows a summary, asks for confirmation, and writes the current state to recovery first.
 
-Startup checks the schema-v6 storage key and known legacy keys. Candidates pass through wrapper unwrapping, sequential migration, normalization, sanitization, and validation. A corrupt current copy falls back to recovery or to the uninitialized gate. Ordinary mutations update metadata and are saved locally with a short debounce.
+Startup checks the schema-v7 storage key and known legacy keys. Candidates pass through wrapper unwrapping, sequential migration, normalization, sanitization, and validation. A corrupt current copy falls back to recovery or to the uninitialized gate. Ordinary mutations update metadata and are saved locally with a short debounce.
 
 Person deletion also writes recovery before removing that person's relationship records. Recovery is a single last-known snapshot, not a history or merge log.
 
@@ -77,7 +77,7 @@ The family workspace has three coordinated surfaces:
 
 The SVG contains semantic relationship labels in addition to visual lines. Pan and zoom use a view transform, touch uses pointer events, Fit calculates the graph bounds, and keyboard arrows move between rendered people. Reduced-motion settings suppress nonessential transitions.
 
-The layout is deterministic and dependency-free. It favors readable generations and connected components rather than guaranteeing a traditional two-parent pedigree diagram in every pathological graph.
+The layout is deterministic and dependency-free. People in the same generation are reordered to keep recorded partners adjacent when possible; the partner status controls married, divorced, and other line treatments. It favors readable generations and connected components rather than guaranteeing a traditional two-parent pedigree diagram in every pathological graph.
 
 ## Print atlas
 

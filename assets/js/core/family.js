@@ -209,8 +209,36 @@
     return components.sort(function (a, b) { return b.length - a.length; });
   }
 
+  function arrangePartners(items, relationships) {
+    const peopleById = new Map(items.map(function (person) { return [person.id, person]; }));
+    const rank = { married: 0, partnered: 1, widowed: 2, separated: 3, divorced: 4, former: 5, unknown: 6 };
+    const links = new Map(items.map(function (person) { return [person.id, []]; }));
+    relationships.filter(function (relationship) {
+      return relationship.type === "partner" && peopleById.has(relationship.person1Id) && peopleById.has(relationship.person2Id);
+    }).forEach(function (relationship) {
+      links.get(relationship.person1Id).push({ id: relationship.person2Id, relationship: relationship });
+      links.get(relationship.person2Id).push({ id: relationship.person1Id, relationship: relationship });
+    });
+    const used = new Set();
+    const arranged = [];
+    items.forEach(function (person) {
+      if (used.has(person.id)) return;
+      arranged.push(person);
+      used.add(person.id);
+      (links.get(person.id) || []).filter(function (entry) { return !used.has(entry.id); }).sort(function (a, b) {
+        return (rank[a.relationship.status] ?? 9) - (rank[b.relationship.status] ?? 9)
+          || model.sortName(peopleById.get(a.id)).localeCompare(model.sortName(peopleById.get(b.id)));
+      }).forEach(function (entry) {
+        if (used.has(entry.id)) return;
+        arranged.push(peopleById.get(entry.id));
+        used.add(entry.id);
+      });
+    });
+    return arranged;
+  }
+
   function layout(state, options) {
-    const settings = Object.assign({ mode: "focus", focusId: "", depth: 2 }, options || {});
+    const settings = Object.assign({ mode: "focus", focusId: "", depth: 2, nodeView: "condensed" }, options || {});
     const visiblePeople = settings.mode === "overview" ? state.workspace.people.slice() : focusPeople(state, settings.focusId, settings.depth);
     const visibleIds = new Set(visiblePeople.map(function (person) { return person.id; }));
     const visibleRelationships = state.workspace.relationships.filter(function (relationship) {
@@ -239,7 +267,7 @@
     const sortedLevels = Array.from(groups.keys()).sort(function (a, b) { return a - b; });
     const positions = new Map();
     sortedLevels.forEach(function (level, levelIndex) {
-      groups.get(level).sort(function (a, b) {
+      let items = groups.get(level).sort(function (a, b) {
         const aParents = parentIds.get(a.id).map(function (id) { return positions.has(id) ? positions.get(id) : Infinity; });
         const bParents = parentIds.get(b.id).map(function (id) { return positions.has(id) ? positions.get(id) : Infinity; });
         const aAverage = aParents.length ? aParents.reduce(function (sum, value) { return sum + value; }, 0) / aParents.length : Infinity;
@@ -247,12 +275,15 @@
         if (Number.isFinite(aAverage) || Number.isFinite(bAverage)) return aAverage - bAverage || model.sortName(a).localeCompare(model.sortName(b));
         return model.sortName(a).localeCompare(model.sortName(b));
       });
-      groups.get(level).forEach(function (person, index) { positions.set(person.id, index); });
-      if (levelIndex === 0) groups.get(level).sort(function (a, b) { return model.sortName(a).localeCompare(model.sortName(b)); });
+      if (levelIndex === 0) items = items.sort(function (a, b) { return model.sortName(a).localeCompare(model.sortName(b)); });
+      items = arrangePartners(items, visibleRelationships);
+      groups.set(level, items);
+      items.forEach(function (person, index) { positions.set(person.id, index); });
     });
-    const nodeWidth = 176;
-    const nodeHeight = 72;
-    const horizontalGap = settings.mode === "overview" ? 34 : 48;
+    const detailed = settings.nodeView === "detailed";
+    const nodeWidth = detailed ? 176 : 148;
+    const nodeHeight = detailed ? 72 : 74;
+    const horizontalGap = settings.mode === "overview" ? (detailed ? 34 : 26) : (detailed ? 48 : 34);
     const verticalGap = 88;
     const maxCount = Math.max.apply(null, Array.from(groups.values()).map(function (items) { return items.length; }));
     const contentWidth = Math.max(680, maxCount * (nodeWidth + horizontalGap) - horizontalGap + 80);
@@ -281,7 +312,7 @@
       return { relationship: relationship, from: nodeById.get(aId), to: nodeById.get(bId) };
     }).filter(function (edge) { return edge.from && edge.to; });
     const height = 80 + sortedLevels.length * nodeHeight + Math.max(0, sortedLevels.length - 1) * verticalGap;
-    return { nodes: nodes, edges: edges, width: contentWidth, height: Math.max(360, height), bounds: { x: 0, y: 0, width: contentWidth, height: Math.max(360, height) }, peopleById: peopleById };
+    return { nodes: nodes, edges: edges, width: contentWidth, height: Math.max(360, height), bounds: { x: 0, y: 0, width: contentWidth, height: Math.max(360, height) }, peopleById: peopleById, nodeView: detailed ? "detailed" : "condensed" };
   }
 
   function validateRelationshipDraft(draft, state, ignoreId) {

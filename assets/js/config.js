@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.5",
-      buildId: "0.0.1.5",
+      version: "0.0.1.6",
+      buildId: "0.0.1.6",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -27,11 +27,11 @@
       }
     },
 
-    schemaVersion: 6,
+    schemaVersion: 7,
     csvFormat: "mcfamily-csv-v1",
     storage: {
-      stateKey: "mcfamily.state.v6",
-      legacyKeys: ["mcfamily.state.v5", "appTemplate.state.v4", "appTemplate.state.v3", "localWorkspace.state.v3", "localWorkspace.state.v2", "localWorkspace.state.v1"],
+      stateKey: "mcfamily.state.v7",
+      legacyKeys: ["mcfamily.state.v6", "mcfamily.state.v5", "appTemplate.state.v4", "appTemplate.state.v3", "localWorkspace.state.v3", "localWorkspace.state.v2", "localWorkspace.state.v1"],
       recoveryKey: "mcfamily.recovery.v1"
     },
 
@@ -84,6 +84,16 @@
 
     releases: [
       {
+        version: "0.0.1.6",
+        date: "2026-08-19T02:30:00.000Z",
+        title: "Focused family tree controls",
+        summary: "McFamily now gives lineage a readable family form and makes the tree easier to search, arrange, simplify, and expand.",
+        features: ["Clickable son, daughter, or child-of lineage readings with source lineage IDs", "Condensed and detailed tree cards", "Collapsible Directory and Selected person panes"],
+        improvements: ["Fuzzy partial-name search", "Partner-aware placement keeps couples adjacent", "Married and divorced links use distinct solid and dotted lines"],
+        fixes: ["Parent relationship labels no longer repeat Child · Parent"],
+        knownIssues: []
+      },
+      {
         version: "0.0.1.5",
         date: "2026-08-19T01:30:00.000Z",
         title: "CSV family portability",
@@ -134,8 +144,8 @@
 
     help: [
       { id: "start", title: "Getting started", section: "Basics", keywords: "start import csv backup seed first launch", html: "<p>McFamily opens after you import the cleaned McLineage CSV or a native McFamily CSV export. The file is mapped, validated, and previewed before it replaces local data. There is no demo-family or blank-family bypass.</p>" },
-      { id: "tree", title: "Exploring the family tree", section: "Family", keywords: "tree focus overview zoom pan generation home person", html: "<p>Focus view shows the selected person and nearby generations. Select any person to recenter the tree, adjust generation depth, or switch to Overview to fit every family component.</p>" },
-      { id: "people", title: "People and relationships", section: "Family", keywords: "people add edit address phone email parent child partner", html: "<p>Add or edit people from the workspace. A profile can hold multiple addresses, phone numbers, and email addresses. Relationship links create the lineage shown in the tree and report.</p>" },
+      { id: "tree", title: "Exploring the family tree", section: "Family", keywords: "tree focus overview zoom pan generation home person condensed detailed collapse panels", html: "<p>Focus view shows the selected person and nearby generations. Select any person to recenter the tree, adjust generation depth, switch between condensed and detailed cards, or collapse the side panes for a tree-only view. Overview fits every family component.</p>" },
+      { id: "people", title: "People and relationships", section: "Family", keywords: "people add edit address phone email parent child partner ancestry lineage", html: "<p>Add or edit people from the workspace. A profile can hold multiple addresses, phone numbers, and email addresses. Heritage shows the imported name line and lineage ID; activate the name line to read the person as a son, daughter, or child of their recorded parents.</p>" },
       { id: "print", title: "Print or save a PDF", section: "Family", keywords: "print pdf atlas directory lineage", html: "<p>Choose <strong>Print / Save PDF</strong> to build the complete atlas and open the browser print dialog. Select Save as PDF to create a file.</p>" },
       { id: "notes", title: "Working with Notes", section: "Features", keywords: "notes text edit modal autosave", html: "<p>Notes is a single local plain-text scratchpad. Open it from the top bar or press <kbd>N</kbd>; it is included in McFamily backups.</p>" },
       { id: "backup", title: "CSV backup and restore", section: "Data", keywords: "csv export import backup restore recovery private", html: "<p>CSV export is the complete editable copy of the family and contains private contact information. Native exports use typed rows for people, contacts, relationships, Notes, and settings. Store them securely. Replacement imports are previewed and confirmed; the prior local copy becomes the recovery snapshot.</p>" },

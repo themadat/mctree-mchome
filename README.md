@@ -4,7 +4,7 @@ McFamily is a private, local-first family atlas that runs as a static GitHub Pag
 
 There is no backend, account, cloud database, or runtime dependency. Family data stays in browser storage and moves only through an explicit CSV import or export. The published repository must never contain a real family CSV or private family data.
 
-Current version: `0.0.1.5` (`major.minor.patch.build`).
+Current version: `0.0.1.6` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -12,6 +12,8 @@ Current version: `0.0.1.5` (`major.minor.patch.build`).
 - Shows a focus tree around a home person and a whole-family overview of connected and isolated people.
 - Supports pan, zoom, fit, generation depth, keyboard selection, touch, and accessible relationship descriptions.
 - Provides an alphabetical directory and broad search across names, contact details, places, heritage, and notes.
+- Supports partial/fuzzy matches, collapsible side panels, and concise or detailed tree cards.
+- Presents imported ancestry name lines and Lineage IDs alongside relationship-derived family readings.
 - Edits people, multiple addresses, phones, emails, life events, and typed parent or partner relationships.
 - Rejects missing references, duplicate relationships, self-links, and ancestry cycles.
 - Keeps a recovery snapshot before destructive replacement or deletion.
@@ -48,7 +50,7 @@ assets/css/app.css             Themes, family workspace, responsive, and print s
 assets/js/config.js            Identity, version, enums, help, releases, and roadmap
 assets/js/icons.js             Shared inline SVG symbol catalog
 assets/js/app.js               Rendering, editing, search, tree interaction, and print atlas
-assets/js/core/state.js        Schema v6 migration, normalization, and validation
+assets/js/core/state.js        Schema v7 migration, normalization, fuzzy matching, and validation
 assets/js/core/family.js       Relationship indexes, derived family groups, and graph layout
 assets/js/core/storage.js      Local persistence and recovery snapshot
 assets/js/core/portability.js  Private CSV mapping, export, preview, and replacement import
@@ -62,7 +64,7 @@ context/                       Durable agent workflow and wish ledger
 
 ## Data limits and compatibility
 
-Schema v6 supports up to 1,500 people so the 607-row McLineage source and its spouse records fit safely. Dates accept `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` with exact, about, before, or after qualifiers. Relationships are stored as explicit records; ancestry, descendants, siblings, family units, and lineage labels are derived when needed.
+Schema v7 supports up to 1,500 people so the 607-row McLineage source and its spouse records fit safely. Dates accept `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` with exact, about, before, or after qualifiers. Relationships are stored as explicit records; ancestry, descendants, siblings, family units, and lineage labels are derived when needed.
 
 Older application states migrate without discarding the single Notes document or retained compatibility fields. A first import must be a supported CSV containing at least one valid person.
 

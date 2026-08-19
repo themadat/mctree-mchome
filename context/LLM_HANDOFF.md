@@ -6,7 +6,7 @@ Start a new session with:
 Continue work in /Users/stripes/Documents/GitHub/mctree-mchome. Read AGENTS.md and context/LLM_HANDOFF.md first. Preserve manual edits and run git status --short before editing.
 ```
 
-This repository is McFamily, a static, local-first family atlas. Version `0.0.1.5` uses schema v6, strict private-CSV onboarding, cleaned McLineage mapping, a complete native CSV transfer format, an editable family directory, derived relationship graph, interactive SVG tree, and print atlas. There is no backend, account, GitHub Sync, cloud database, or runtime dependency.
+This repository is McFamily, a static, local-first family atlas. Version `0.0.1.6` uses schema v7, strict private-CSV onboarding, cleaned McLineage mapping, fuzzy search, collapsible side panes, condensed/detailed couple-aware SVG trees, a complete native CSV transfer format, an editable family directory, and print atlas. There is no backend, account, GitHub Sync, cloud database, or runtime dependency.
 
 The main product invariants are now the initialized import gate, directory/tree/profile workspace, single Notes modal, Settings Roadmap, local save/backup status, recovery copy, themes, accessibility, install assets, and offline shell. Do not restore the removed Records interface, multi-note workspace, rich-text editor, or GitHub Sync.
 
@@ -35,7 +35,7 @@ Implement an approved plan.
 
 - Read the wish and plan, set the wish to `Active`, and keep Resume current.
 - Add only the architecture the feature needs; keep the app static and dependency-free.
-- Preserve the schema-v6 privacy, validation, compatibility, accessibility, and offline invariants below.
+- Preserve the schema-v7 privacy, validation, compatibility, accessibility, and offline invariants below.
 - Advance the four-part application version and verify affected workflows.
 
 ### `cut`
@@ -55,7 +55,7 @@ Do not silently move between lifecycle stages.
 - `assets/css/app.css`: themes, family workspace, graph, responsive behavior, and print atlas.
 - `assets/js/config.js`: identity, version/build, limits, relationship enums, Help, releases, and Roadmap.
 - `assets/js/app.js`: onboarding, directory, profile, tree interaction, editing, search, Settings, and print assembly.
-- `assets/js/core/state.js`: schema v6, migrations, normalization, and validation.
+- `assets/js/core/state.js`: schema v7, migrations, normalization, fuzzy matching, and validation.
 - `assets/js/core/family.js`: indexes, derived relationships, connected components, generations, and deterministic layout.
 - `assets/js/core/storage.js`: local save and single recovery snapshot.
 - `assets/js/core/portability.js`: cleaned-source mapping and complete private CSV export/replacement import.
@@ -80,6 +80,8 @@ Do not silently move between lifecycle stages.
 
 - Keep the runtime static, dependency-free, backend-free, and hostable on ordinary GitHub Pages.
 - Preserve Directory, Tree, and Profile as the coordinated main workspace.
+- Desktop Directory and Profile panes collapse independently. Tree nodes default to condensed given/family/lifespan cards and can switch to detailed cards; recorded partners sit together when possible, with solid married and dotted divorced links.
+- Heritage shows the imported name line and Lineage ID together, with a clickable relationship-derived Son/Daughter/Child reading. Directory and global search accept partial and in-order fuzzy matches.
 - The SVG supports focus/overview, all components and isolated people, pan, zoom, fit, touch, keyboard selection, accessible relationship text, and reduced motion.
 - Standard controls use the shared inline SVG catalog rather than emoji or icon fonts.
 - Controls use native elements, labels, visible focus, touch-sized targets, and safe rendered user text.

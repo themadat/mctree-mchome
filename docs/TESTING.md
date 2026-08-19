@@ -22,7 +22,7 @@ Use synthetic families only.
 - [ ] Export/import round trips every person field, relationship field, preference, and Note.
 - [ ] Later replacement creates recovery before changing state; Restore recovery returns the prior family.
 - [ ] Private export and PDF warnings are visible.
-- [ ] Reload restores the current family, selection, tree mode, filters, theme, and Notes.
+- [ ] Reload restores the current family, selection, tree mode, node detail mode, collapsed panes, filters, theme, and Notes.
 
 ## Editing and derived relationships
 
@@ -44,8 +44,13 @@ Use synthetic families only.
 - [ ] Pan, wheel/pinch zoom, zoom buttons, Fit, Reset, node click, and generation depth work.
 - [ ] Arrow keys move between rendered nodes and Enter/Space selects.
 - [ ] Every node and relationship has an understandable accessible label.
+- [ ] Condensed cards are the default and show separate given/family name lines plus birth/death years, with no avatar or identifier; Detailed restores the fuller card.
+- [ ] Partner pairs are adjacent when possible; married lines are solid, divorced lines are dotted, and other partner states remain distinguishable.
+- [ ] Directory and selected-person panes collapse independently on desktop and can be reopened without losing selection or tree focus.
 - [ ] Directory sorting and living/deceased/unknown filters work.
-- [ ] Search finds name, address, phone, email, birth/death place, heritage, general notes, Notes, Help, releases, and Roadmap.
+- [ ] Partial and in-order fuzzy search finds name, address, phone, email, birth/death place, heritage, general notes, Notes, Help, releases, and Roadmap.
+- [ ] Heritage shows the imported name line and Lineage ID; activating the name line toggles the relationship-derived Son/Daughter/Child reading.
+- [ ] A child listed from a parent's profile is labelled `Child`, without a redundant parent-kind suffix.
 
 ## Responsive and accessibility
 
