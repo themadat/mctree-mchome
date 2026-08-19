@@ -73,6 +73,8 @@
         livingFilter: "all",
         mobileView: "tree",
         search: "",
+        favoritePersonIds: [],
+        favoritesOnly: false,
         seenReleaseVersion: "",
         supportTab: "settings",
         dismissedHints: []
@@ -479,6 +481,8 @@
         livingFilter: ["all", "living", "deceased", "unknown"].includes(sourceUi.livingFilter) ? sourceUi.livingFilter : "all",
         mobileView: ["tree", "directory", "profile"].includes(sourceUi.mobileView) ? sourceUi.mobileView : "tree",
         search: u.cleanLine(sourceUi.search, 200),
+        favoritePersonIds: Array.from(new Set((Array.isArray(sourceUi.favoritePersonIds) ? sourceUi.favoritePersonIds : []).map(function (id) { return u.cleanLine(id, 100); }).filter(function (id) { return personIds.has(id); }))).slice(0, config.controls.maxPeople),
+        favoritesOnly: sourceUi.favoritesOnly === true,
         seenReleaseVersion: u.cleanLine(sourceUi.seenReleaseVersion, 32),
         supportTab: ["settings", "help", "releases", "shortcuts", "roadmap", "developer"].includes(sourceUi.supportTab) ? sourceUi.supportTab : "settings",
         dismissedHints: Array.from(new Set((Array.isArray(sourceUi.dismissedHints) ? sourceUi.dismissedHints : []).map(function (id) { return u.cleanLine(id, 80); }).filter(Boolean))).slice(0, 200)
