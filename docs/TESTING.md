@@ -50,6 +50,10 @@ Use synthetic families only.
 - [ ] Partner pairs are adjacent when possible; married lines are solid, divorced lines are dotted, and other partner states remain distinguishable.
 - [ ] Family Tree rows use numeric lineage order rather than alphabetical names; Seth Lauer appears before Jared Lauer.
 - [ ] A multi-partner lineage person is preceded by past partners from earliest to latest and followed by the current married partner.
+- [ ] Christine Perrietta McMillen renders with Ray Shanaman on her left using a divorced line and Howard David Weiss as the only partner on her right using a married line.
+- [ ] Other parent lines is disabled by default; enabling it adds accessible light branches to plausible visible co-parents without creating relationship records.
+- [ ] Selecting a person from global search or a filtered directory returns the Family Tree to Focus mode.
+- [ ] The desktop tree/profile divider resizes both modules with pointer drag and Left/Right/Home/End keys, persists locally, and disappears below 960px.
 - [ ] Directory and selected-person panes collapse independently on desktop and can be reopened without losing selection or tree focus; the header Directory control and mobile tabs reopen a collapsed module.
 - [ ] Directory first/last-name sorting, living/deceased/unknown filters, and A–Z quick jumps work on the filtered result set.
 - [ ] Directory rows show `[birth-death]` with `????` for unknown years followed by the lineage ID.
@@ -63,7 +67,7 @@ Use synthetic families only.
 - [ ] Adam's imported lineage is `03.05.05.05.01` with `01` bold, and its reading begins `Gen 7 · 1st Child of Melanie`, then `Gen 6 · 5th Child of Max`.
 - [ ] A Names heading introduces paired name/reading rows with equal row heights and vertically centered cells; the family totals span both columns on one line, and there is no visible Reading heading.
 - [ ] Every resolved name selects that person and focuses the tree; unknown positions read `Child of` without `Nth`.
-- [ ] Parents, Partners, Siblings, and Children are compact open groups containing names only in that order; Melanie's Parents group contains both Max and Martha through display-only co-parent inference.
+- [ ] Parents, Siblings, Partners, and Children are compact open groups containing names only in that order; Melanie's Parents group contains both Max and Martha through display-only co-parent inference.
 - [ ] Notes is the final profile content section on screen and in each printable person profile.
 - [ ] The profile X closes the module, clears directory/tree selection, disables the empty mobile Person tab, and a Family Tree selection reopens the profile without a Show person button.
 - [ ] A child listed from a parent's profile is labelled `Child`, without a redundant parent-kind suffix.
