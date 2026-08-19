@@ -25,8 +25,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 8,
   "meta": {
-    "appVersion": "0.0.1.29",
-    "buildId": "0.0.1.29",
+    "appVersion": "0.0.1.30",
+    "buildId": "0.0.1.30",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -74,12 +74,12 @@ Person deletion also writes recovery before removing that person's relationship 
 The family workspace has three coordinated surfaces:
 
 - Directory: header-toggled people with title-bar search and result count, first/last-name sorting, combinable checkbox filters for living status and consanguineal/affinal scope, lifespan/lineage metadata, and A–Z quick jumps.
-- Family Tree: a two-axis-scrollable SVG focus view with direct numeric ancestor and descendant depths around the home or selected person, editable numeric zoom plus grouped Out/In/Fit actions, an optional display-only Affinal Lines overlay, or an overview containing all connected components and isolated people.
+- Family Tree: a two-axis-scrollable SVG focus view with directly labelled numeric ancestor and descendant depths around the home or selected person, editable numeric zoom plus grouped Out/In/Fit actions, an optional display-only Affinal Lines overlay, or an overview containing all connected components and isolated people.
 - Profile: a selected person's complete information and derived relationship groups. Closing it clears selection; choosing a Family Tree node reopens it.
 
 The SVG contains semantic relationship labels in addition to visual lines. Pan and zoom use a view transform, touch uses pointer events, Fit calculates the graph bounds, and keyboard arrows move between rendered people. Reduced-motion settings suppress nonessential transitions.
 
-The layout is deterministic and dependency-free. Narrow cards stack each whitespace-separated name part on its own line, and generation rows expand vertically to the tallest card. People in the same generation are reordered around an imported lineage person: historical partners occupy the left and at most one current partner occupies the right. Partner status controls line treatment: married is solid, death-ended is solid and subdued, divorce is dotted, and other states are dashed. The optional co-parent overlay adds a lighter branch from a plausible recorded partner to the existing recorded parent-child path and never creates data. The layout favors readable generations and connected components rather than guaranteeing a traditional two-parent pedigree diagram in every pathological graph.
+The layout is deterministic and dependency-free. Desktop opens with a thin-gutter 20/50/30 Directory/Tree/Profile balance; moving either separator persists explicit widths. Narrow cards stack each whitespace-separated name part on its own line, and generation rows expand vertically to the tallest card. People in the same generation are reordered around an imported lineage person: historical partners occupy the left and at most one current partner occupies the right. Partner status controls line treatment: married is solid, death-ended is solid and subdued, divorce is dotted, and other states are dashed. The optional co-parent overlay adds a lighter branch from a plausible recorded partner to the existing recorded parent-child path and never creates data. The layout favors readable generations and connected components rather than guaranteeing a traditional two-parent pedigree diagram in every pathological graph.
 
 ## Print atlas
 

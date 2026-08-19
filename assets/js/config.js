@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.29",
-      buildId: "0.0.1.29",
+      version: "0.0.1.30",
+      buildId: "0.0.1.30",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -92,6 +92,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.30",
+        date: "2026-08-19T22:17:26.000Z",
+        title: "Workspace balance and relationship visibility",
+        summary: "The desktop workspace now opens at a compact 20/50/30 balance, while profile relationships and concise age details are easier to find.",
+        features: ["20% directory and 70% profile-divider defaults", "Combined age and would-be-today detail"],
+        improvements: ["Very thin module-divider spacing", "Ancestor and descendant labels above their number fields", "Relationships promoted above Lineage"],
+        fixes: ["Albon's existing parents and siblings are visible near the top of the profile", "Unknown death ages retain the would-be-today estimate"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.29",
         date: "2026-08-19T21:46:50.000Z",
