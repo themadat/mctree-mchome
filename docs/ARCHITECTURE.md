@@ -25,8 +25,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 7,
   "meta": {
-    "appVersion": "0.0.1.9",
-    "buildId": "0.0.1.9",
+    "appVersion": "0.0.1.10",
+    "buildId": "0.0.1.10",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -71,8 +71,8 @@ Person deletion also writes recovery before removing that person's relationship 
 
 The family workspace has three coordinated surfaces:
 
-- Directory: alphabetical people with living-status filtering and broad local search.
-- Tree: an SVG focus view around the home or selected person, or an overview containing all connected components and isolated people.
+- Directory: header-opened people with first/last-name sorting, living-status filtering, broad local search, lifespan/lineage metadata, and A–Z quick jumps.
+- Tree: an SVG focus view with separate ancestor and descendant depths around the home or selected person, or an overview containing all connected components and isolated people.
 - Profile: a selected person's complete information and derived relationship groups, with edit/connect actions.
 
 The SVG contains semantic relationship labels in addition to visual lines. Pan and zoom use a view transform, touch uses pointer events, Fit calculates the graph bounds, and keyboard arrows move between rendered people. Reduced-motion settings suppress nonessential transitions.
@@ -81,7 +81,7 @@ The layout is deterministic and dependency-free. People in the same generation a
 
 ## Print atlas
 
-The print action constructs hidden semantic HTML before calling `window.print()`. Print CSS suppresses application controls and exposes only the report. Stable `P` references identify people in detailed profiles and relationship cross-references.
+The print action constructs hidden semantic HTML before calling `window.print()`. Print CSS suppresses application controls and exposes only the report. Stable `P` references identify people in detailed profiles and relationship cross-references only while Developer Mode is enabled.
 
 The report contains a cover and counts, relationship legend, compact generation-grouped maps for every component, alphabetical profiles with all stored person fields, and Family Notes. Each map is named for the top-generation person with the most direct children, falling back to name order; cards show names and years without identifiers. Cross-references avoid scaling one enormous SVG tree to illegible size. Page-break rules prefer intact profiles and repeat important section headings where supported.
 
