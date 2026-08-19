@@ -411,7 +411,7 @@
     const records = (Array.isArray(sourceWorkspace.records) ? sourceWorkspace.records : []).map(function (record, index) { return normalizeRecord(record, index, recordIds, now); });
     const theme = config.themes.find(function (item) { return item.id === sourceAppearance.preset; }) || defaultTheme();
     const homePersonId = personIds.has(sourceFamily.homePersonId) ? sourceFamily.homePersonId : (people[0] ? people[0].id : "");
-    const selectedPersonId = personIds.has(sourceUi.selectedPersonId) ? sourceUi.selectedPersonId : homePersonId;
+    const selectedPersonId = sourceUi.selectedPersonId === "" ? "" : (personIds.has(sourceUi.selectedPersonId) ? sourceUi.selectedPersonId : homePersonId);
     const sourceTombstones = u.plainObject(sourceMeta.tombstones);
     const state = {
       schemaVersion: config.schemaVersion,

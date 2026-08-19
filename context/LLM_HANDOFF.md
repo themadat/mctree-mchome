@@ -6,7 +6,7 @@ Start a new session with:
 Continue work in /Users/stripes/Documents/GitHub/mctree-mchome. Read AGENTS.md and context/LLM_HANDOFF.md first. Preserve manual edits and run git status --short before editing.
 ```
 
-This repository is McFamily, a static, local-first family atlas. Version `0.0.1.10` uses schema v7, strict private-CSV onboarding, cleaned McLineage mapping, fuzzy search, a header-opened sortable directory with A–Z jumps, separate ancestor/descendant depths, condensed/detailed couple-aware SVG trees, a complete native CSV transfer format, a temporarily read-only family directory, and compact top-sibling-labelled print maps. There is no backend, account, GitHub Sync, cloud database, or runtime dependency.
+This repository is McFamily, a static, local-first family atlas. Version `0.0.1.11` uses schema v7, strict private-CSV onboarding, cleaned McLineage mapping, absolute root-based generations, fuzzy search, a header-opened sortable directory with A–Z jumps, separate ancestor/descendant depths, a two-axis-scrollable condensed/detailed Family Tree, a complete native CSV transfer format, a temporarily read-only family directory, and compact top-sibling-labelled print maps. There is no backend, account, GitHub Sync, cloud database, or runtime dependency.
 
 The main product invariants are now the initialized import gate, directory/tree/profile workspace, single Notes modal, Settings Roadmap, local save/backup status, recovery copy, themes, accessibility, install assets, and offline shell. Do not restore the removed Records interface, multi-note workspace, rich-text editor, or GitHub Sync.
 
@@ -79,12 +79,14 @@ Do not silently move between lifecycle stages.
 ## Application invariants
 
 - Keep the runtime static, dependency-free, backend-free, and hostable on ordinary GitHub Pages.
-- Preserve Directory, Tree, and Profile as the coordinated main workspace.
+- Preserve Directory, Family Tree, and Profile as the coordinated main workspace.
 - The workspace starts directly with its panes. Family title, privacy label, counts, Add Person, and PDF controls are not repeated below the application title bar.
 - The header Directory control opens the directory; its module bar contains only the result count and close control. Desktop Directory and Profile panes collapse independently. Directory sorting supports first or last name, with an A–Z rail based on the filtered results.
 - Tree nodes default to condensed given/family/lifespan cards and can switch to detailed cards; neither mode uses portrait or initial placeholders. Recorded partners sit together when possible, with solid married and dotted divorced links. Focus view has independent Ancestors and Descendants depth controls.
 - Internal stable `P` references remain in data but are visible only in Developer Mode, including printed cross-references. New and reset preferences default to light appearance.
-- Lineage shows a reversed, two-digit source ID with the selected person's segment first and bold, followed by a linked nearest-to-oldest name list and linked `Gen N · ordinal Child of …` reading. Unknown child positions use `Nth`. Directory and global search accept partial and in-order fuzzy matches.
+- Lineage shows a reversed, two-digit source ID with the selected person's segment first and bold, followed by a linked nearest-to-oldest name list and linked absolute-generation reading. George McMillen (1745) is Gen 0, James is Gen 1, George (1818) is Gen 2, and Albon/Newton/Lucian are Gen 3. Unknown positions omit the ordinal and read `Child of …`.
+- Closing Selected Person clears selection and collapses the panel. Selecting any Family Tree node reopens it; do not restore a Show person control in the tree toolbar.
+- The tree canvas supports native horizontal and vertical scrolling in addition to drag pan, zoom, and Fit. Ordinary wheel input scrolls; Ctrl/Command-wheel zooms.
 - `features.familyEditing` is currently false. Keep person, relationship, home-person, and deletion mutation controls present but disabled and visibly greyed until the maintainer is ready to enable editing.
 - The SVG supports focus/overview, all components and isolated people, pan, zoom, fit, touch, keyboard selection, accessible relationship text, and reduced motion.
 - Standard controls use the shared inline SVG catalog rather than emoji or icon fonts.
