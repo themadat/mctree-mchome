@@ -4,7 +4,7 @@ McFamily is a private, local-first family atlas that runs as a static GitHub Pag
 
 There is no backend, account, cloud database, or runtime dependency. Family data stays in browser storage and moves only through an explicit CSV import or export. The published repository must never contain a real family CSV or private family data.
 
-Current version: `0.0.1.11` (`major.minor.patch.build`).
+Current version: `0.0.1.12` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -14,7 +14,8 @@ Current version: `0.0.1.11` (`major.minor.patch.build`).
 - Provides a header-opened directory with first/last-name sorting, A–Z quick jumps, lifespan and lineage context, and broad search across names, contact details, places, heritage, and notes.
 - Supports partial/fuzzy matches, collapsible side panels, and concise or detailed tree cards.
 - Keeps portrait placeholders and internal person references out of the ordinary workspace; Developer Mode reveals references for troubleshooting.
-- Presents person-first, two-digit Lineage IDs followed by clickable name lists and generation-by-generation child-of readings.
+- Presents source-order, two-digit Lineage IDs with the selected person's final segment emphasized, followed by side-by-side clickable Names and Reading columns.
+- Places Lineage beneath Notes with immediate family totals, plus compact open Parents, Children, and Siblings groups that include likely co-parents.
 - Uses absolute lineage generations rooted at George McMillen (1745) as Gen 0; unknown ordinals read simply as `Child of`.
 - Lets the person panel close and clear selection; choosing any Family Tree person reopens it without a separate Show person control.
 - Keeps family-record add, edit, relationship, home-person, and deletion controls visibly paused during the current build-out.
