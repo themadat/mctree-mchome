@@ -62,7 +62,10 @@
         selectedPersonId: "",
         treeFocusId: "",
         treeMode: "focus",
+        treeNodeView: "condensed",
         generationDepth: 2,
+        directoryCollapsed: false,
+        profileCollapsed: false,
         directorySearch: "",
         livingFilter: "all",
         mobileView: "tree",
@@ -132,7 +135,14 @@
     return source;
   }
 
-  const migrations = { 1: migrate1to2, 2: migrate2to3, 3: migrate3to4, 4: migrate4to5, 5: migrate5to6 };
+  function migrate6to7(input) {
+    const source = u.plainObject(input);
+    source.schemaVersion = 7;
+    source.ui = Object.assign({ treeNodeView: "condensed", directoryCollapsed: false, profileCollapsed: false }, u.plainObject(source.ui));
+    return source;
+  }
+
+  const migrations = { 1: migrate1to2, 2: migrate2to3, 3: migrate3to4, 4: migrate4to5, 5: migrate5to6, 6: migrate6to7 };
 
   function unwrapInput(input) {
     const source = u.plainObject(input);
@@ -455,7 +465,10 @@
         selectedPersonId: selectedPersonId,
         treeFocusId: personIds.has(sourceUi.treeFocusId) ? sourceUi.treeFocusId : selectedPersonId,
         treeMode: sourceUi.treeMode === "overview" ? "overview" : "focus",
+        treeNodeView: sourceUi.treeNodeView === "detailed" ? "detailed" : "condensed",
         generationDepth: Math.round(u.clamp(sourceUi.generationDepth, 1, 4, 2)),
+        directoryCollapsed: sourceUi.directoryCollapsed === true,
+        profileCollapsed: sourceUi.profileCollapsed === true,
         directorySearch: u.cleanLine(sourceUi.directorySearch, 200),
         livingFilter: ["all", "living", "deceased", "unknown"].includes(sourceUi.livingFilter) ? sourceUi.livingFilter : "all",
         mobileView: ["tree", "directory", "profile"].includes(sourceUi.mobileView) ? sourceUi.mobileView : "tree",
@@ -589,7 +602,10 @@
     const next = u.clone(state);
     next.preferences = defaults.preferences;
     next.ui.treeMode = defaults.ui.treeMode;
+    next.ui.treeNodeView = defaults.ui.treeNodeView;
     next.ui.generationDepth = defaults.ui.generationDepth;
+    next.ui.directoryCollapsed = defaults.ui.directoryCollapsed;
+    next.ui.profileCollapsed = defaults.ui.profileCollapsed;
     next.ui.directorySearch = "";
     next.ui.livingFilter = "all";
     next.ui.mobileView = "tree";
@@ -661,6 +677,33 @@
     ].filter(Boolean).join(" ").toLowerCase();
   }
 
+  function normalizeSearchText(value) {
+    let text = String(value == null ? "" : value).toLowerCase();
+    if (typeof text.normalize === "function") text = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return text.replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ");
+  }
+
+  function isSubsequence(needle, value) {
+    let index = 0;
+    for (let position = 0; position < value.length && index < needle.length; position += 1) {
+      if (value[position] === needle[index]) index += 1;
+    }
+    return index === needle.length;
+  }
+
+  function fuzzySearchMatch(query, value) {
+    const needle = normalizeSearchText(query);
+    const haystack = normalizeSearchText(value);
+    if (!needle) return true;
+    if (!haystack) return false;
+    if (haystack.includes(needle)) return true;
+    const words = haystack.split(" ");
+    return needle.split(" ").every(function (token) {
+      if (haystack.includes(token)) return true;
+      return token.length > 1 && words.some(function (word) { return isSubsequence(token, word); });
+    });
+  }
+
   function wouldCreateAncestryCycle(relationships, parentId, childId, ignoreId) {
     const candidate = relationships.filter(function (item) { return item.type === "parent-child" && item.id !== ignoreId; }).concat({ id: "candidate", type: "parent-child", parentId: parentId, childId: childId });
     return hasAncestryCycle(candidate);
@@ -680,6 +723,8 @@
     formatFlexibleDate: formatFlexibleDate,
     formatAddress: formatAddress,
     personSearchText: personSearchText,
+    normalizeSearchText: normalizeSearchText,
+    fuzzySearchMatch: fuzzySearchMatch,
     hasAncestryCycle: hasAncestryCycle,
     wouldCreateAncestryCycle: wouldCreateAncestryCycle
   };
