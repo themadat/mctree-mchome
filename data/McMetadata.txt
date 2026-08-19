@@ -4,14 +4,27 @@ McLineage Dataset Metadata
 Current dataset
 ---------------
 
-Version: 3.0.0
+Version: 3.0.1
 Updated: 2026-08-19
-File: McLineage-3-0-0-2026-08-19.csv
+File: McLineage-3-0-1-2026-08-19.csv
 Source: McLineage.xlsx legacy database export
 Status: Private family data; do not commit to a public or shared source repository.
 
 Changelog
 ---------
+
+3.0.1 — 2026-08-19 — [122,183 bytes | 607 records | 48 fields]
+Author: Adam Lauer
+Agent: NONE
+Summary: Corrected seven manually resolved ambiguous birth and death years.
+
+- Replaced four ambiguous two-digit birth years and three ambiguous two-digit death
+  years with manually confirmed four-digit years and day precision.
+- Added dated provenance notes identifying Adam's manual corrections.
+- Repaired three malformed closing quotes introduced during the manual CSV patch
+  without changing the corrected dates or notes.
+- Preserved all 607 records and 48 fields and verified consistent column counts,
+  unique P references, and a clean UTF-8 CSV round trip.
 
 3.0.0 — 2026-08-19 — [121,910 bytes | 607 records | 48 fields]
 Author: Adam Lauer
