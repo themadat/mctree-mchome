@@ -211,6 +211,37 @@
     return true;
   }
 
+  function usesRootToPersonLineage(parsed) {
+    return parsed.headers.includes("lineage_parent_id")
+      && parsed.headers.includes("descendant_date_birth_descriptor")
+      && !parsed.headers.includes("legacy_page_reference");
+  }
+
+  function validateRootToPersonLineage(parsed, byRecordId) {
+    if (!usesRootToPersonLineage(parsed)) return;
+    const byLineageId = new Map();
+    parsed.rows.forEach(function (row) {
+      const recordId = sourceRecordKey(row.record_id);
+      const lineageId = u.cleanLine(row.lineage_id, 100);
+      if (!/^(?:\d{2})(?:\.\d{2})*$|^99$/.test(lineageId)) throw new Error("Current McLineage lineage_id values must use two-digit root-to-person segments.");
+      if (lineageId !== "99" && byLineageId.has(lineageId)) throw new Error("The McLineage CSV contains a duplicate lineage_id: " + lineageId + ".");
+      if (lineageId !== "99") byLineageId.set(lineageId, recordId);
+    });
+    parsed.rows.forEach(function (row) {
+      const recordId = sourceRecordKey(row.record_id);
+      const parentRecordId = sourceRecordKey(row.lineage_parent_id);
+      const lineageId = u.cleanLine(row.lineage_id, 100);
+      if (!parentRecordId) return;
+      const parentPerson = (byRecordId.get(parentRecordId) || [])[0];
+      if (!parentPerson) return;
+      const parentFields = parentPerson && parentPerson.source && parentPerson.source.fields;
+      const parentLineageId = u.cleanLine(parentFields && parentFields.lineage_id, 100);
+      if (!parentLineageId || !lineageId.startsWith(parentLineageId + ".") || lineageId.split(".").length !== parentLineageId.split(".").length + 1) {
+        throw new Error("The lineage_id for " + recordId + " must extend its direct parent's root-to-person lineage path by one segment.");
+      }
+    });
+  }
+
   function stableId(prefix, value, fallback) {
     const cleaned = u.cleanLine(value || fallback, 100).replace(/[^a-z0-9_-]/gi, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
     return prefix + "-" + (cleaned || u.uid("source"));
@@ -323,6 +354,7 @@
     });
     const duplicateRecordId = Array.from(byRecordId.entries()).find(function (entry) { return entry[1].length > 1; });
     if (duplicateRecordId) throw new Error("The McLineage CSV contains a duplicate record_id: " + duplicateRecordId[0] + ".");
+    validateRootToPersonLineage(parsed, byRecordId);
     parsed.rows.forEach(function (row, index) {
       const primary = primaryByRow[index];
       const parentReference = directParentReferences ? sourceRecordKey(row.lineage_parent_id) : u.cleanLine(row.parent_lineage_id, 100);

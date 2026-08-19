@@ -371,9 +371,20 @@
     });
   }
 
+  function lineageRunsRootToPerson(person) {
+    return sourceHasField(person, "lineage_parent_id")
+      && sourceHasField(person, "descendant_date_birth_descriptor")
+      && !sourceHasField(person, "legacy_page_reference");
+  }
+
   function lineageId(person) {
     const segments = lineageSegments(person);
     return sourceHasField(person, "lineage_parent_id") ? segments : segments.reverse();
+  }
+
+  function lineageOwnNumber(person) {
+    const segments = lineageId(person);
+    return lineageRunsRootToPerson(person) ? segments[segments.length - 1] || "" : segments[0] || "";
   }
 
   function sourceBirthYear(person) {
@@ -414,7 +425,7 @@
       let cursor = person;
       while (cursor && !used.has(cursor.id) && members.length <= config.controls.maxPeople) {
         used.add(cursor.id);
-        members.push({ name: model.displayName(cursor), person: cursor, number: lineageId(cursor)[0] || "" });
+        members.push({ name: model.displayName(cursor), person: cursor, number: lineageOwnNumber(cursor) });
         const parentRecordId = sourceField(cursor, "lineage_parent_id").toUpperCase();
         if (!parentRecordId) break;
         const parent = byRecordId.get(parentRecordId);
@@ -474,8 +485,10 @@
   function lineageIdHtml(numbers) {
     if (!numbers.length) return '<span class="muted-copy">Not recorded</span>';
     return '<code class="lineage-id">' + numbers.map(function (number, index) {
-      const value = u.escapeHtml(number);
-      return (index ? "." : "") + (index === 0 ? "<strong>" + value + "</strong>" : value);
+      let value = u.escapeHtml(number);
+      if (index === numbers.length - 1) value = "<strong>" + value + "</strong>";
+      if (index < 3) value = "<em>" + value + "</em>";
+      return (index ? "." : "") + value;
     }).join("") + "</code>";
   }
 
