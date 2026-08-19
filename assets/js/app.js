@@ -277,7 +277,9 @@
     const container = $("#directoryList");
     if (!container) return;
     const people = directoryPeople();
-    $("#directoryCount").textContent = people.length + " of " + state().workspace.people.length;
+    const totalPeople = state().workspace.people.length;
+    $("#directoryCount").textContent = people.length === totalPeople ? String(totalPeople) : people.length + " of " + totalPeople;
+    $("#directoryCount").title = people.length + " of " + totalPeople + " people shown";
     const filterSummary = $("#directoryFilterSummary");
     if (filterSummary) filterSummary.textContent = directoryFilterSummary();
     const availableLetters = new Set(people.map(directoryLetter));
@@ -303,7 +305,7 @@
   function lifeDateValue(person, kind) {
     const normalized = String(person && person[kind] && person[kind].date && person[kind].date.value || "");
     if (normalized) return normalized;
-    return String(sourceField(person, "person_date_" + kind + "_value") || sourceField(person, "descendant_date_" + kind + "_value") || "");
+    return sourceField(person, "person_date_" + kind + "_value");
   }
 
   function approximateDate(value) {
@@ -383,19 +385,6 @@
     return first + " and " + second + ": " + (status ? status.label : "Partners") + (relationshipMeta(edge.relationship) ? ". " + relationshipMeta(edge.relationship) : "");
   }
 
-  function relationshipYear(date) {
-    const match = String(date && date.value || "").match(/^\d{4}/);
-    return match ? Number(match[0]) : 0;
-  }
-
-  function partnerCouldBeParent(relationship, child) {
-    const birthYear = relationshipYear(child.birth && child.birth.date);
-    if (!birthYear) return true;
-    const startYear = relationshipYear(relationship.startDate);
-    const endYear = relationshipYear(relationship.endDate);
-    return (!startYear || startYear <= birthYear) && (!endYear || endYear >= birthYear);
-  }
-
   function relationshipGeneration(person) {
     if (lineageSegments(person).length) {
       const member = lineageChain(person).members[0];
@@ -410,8 +399,6 @@
 
   function relationshipBirthValue(person) {
     return sourceField(person, "person_date_birth_value")
-      || sourceField(person, "descendant_date_birth_value")
-      || sourceField(person, "descendant_birth_date_value")
       || String(person && person.birth && person.birth.date && person.birth.date.value || "");
   }
 
@@ -447,8 +434,8 @@
   function parentContext(child, entry) {
     const parent = entry.person || entry;
     const recordId = sourceField(parent, "record_id").toUpperCase();
-    const consanguinityId = sourceField(child, directLineageParentField(child)).toUpperCase();
-    const affinityId = sourceField(child, "parent_affinal_person_id").toUpperCase();
+    const consanguinityId = sourceField(child, CONSANGUINITY_FIELD).toUpperCase();
+    const affinityId = sourceField(child, AFFINITY_FIELD).toUpperCase();
     if (recordId && recordId === consanguinityId) return "(Consanguinity)";
     if (recordId && recordId === affinityId) return "(Affinity)";
     return entry.relationship && entry.relationship.kind === "biological" ? "(Consanguinity)" : "(Affinity)";
@@ -485,23 +472,9 @@
     return '<details class="relationship-group" open><summary><span>' + u.escapeHtml(relationshipGroupLabel(label, generation)) + '</span><span class="count-pill">' + count + '</span></summary><div class="relationship-names">' + relationshipNameList(entries, emptyText, contextForEntry) + "</div></details>";
   }
 
-  function expandedParentEntries(person, groups, graph) {
-    const parents = groups.parents.slice();
-    const parentIds = new Set(parents.map(function (entry) { return entry.person.id; }));
-    groups.parents.forEach(function (entry) {
-      (graph.partners.get(entry.person.id) || []).forEach(function (partnerEntry) {
-        if (!partnerEntry.person || partnerEntry.person.id === person.id || parentIds.has(partnerEntry.person.id) || !partnerCouldBeParent(partnerEntry.relationship, person)) return;
-        parentIds.add(partnerEntry.person.id);
-        parents.push({ person: partnerEntry.person, relationship: null });
-      });
-    });
-    return parents;
-  }
-
   function relationshipRows(person) {
-    const graph = family.indexes(state());
     const groups = family.relationGroups(person.id, state());
-    const parents = expandedParentEntries(person, groups, graph);
+    const parents = groups.parents;
     const generation = relationshipGeneration(person);
     const siblingOrder = birthOrderMap([person].concat(groups.siblings));
     const childOrder = birthOrderMap(groups.children);
@@ -519,19 +492,11 @@
     return String(key || "").replace(/_/g, " ").replace(/\b\w/g, function (character) { return character.toUpperCase(); });
   }
 
+  const CONSANGUINITY_FIELD = "parent_consanguinity_person_id";
+  const AFFINITY_FIELD = "parent_affinal_person_id";
+
   function sourceField(person, key) {
     return u.cleanLine(person && person.source && person.source.fields && person.source.fields[key], 4000);
-  }
-
-  function sourceHasField(person, key) {
-    const fields = person && person.source && person.source.fields;
-    return Boolean(fields && Object.prototype.hasOwnProperty.call(fields, key));
-  }
-
-  function directLineageParentField(person) {
-    if (sourceHasField(person, "parent_consanguinity_person_id")) return "parent_consanguinity_person_id";
-    if (sourceHasField(person, "lineage_parent_id")) return "lineage_parent_id";
-    return sourceHasField(person, "parent_lineage_id") && sourceHasField(person, "person_first_names") ? "parent_lineage_id" : "";
   }
 
   function lineageSegments(person) {
@@ -542,32 +507,13 @@
     });
   }
 
-  function lineageRunsRootToPerson(person) {
-    return Boolean(directLineageParentField(person))
-      && (sourceHasField(person, "person_date_birth_descriptor") || sourceHasField(person, "descendant_date_birth_descriptor"))
-      && !sourceHasField(person, "legacy_page_reference");
-  }
-
   function lineageId(person) {
-    const segments = lineageSegments(person);
-    return directLineageParentField(person) ? segments : segments.reverse();
+    return lineageSegments(person);
   }
 
   function lineageOwnNumber(person) {
-    const segments = lineageId(person);
-    return lineageRunsRootToPerson(person) ? segments[segments.length - 1] || "" : segments[0] || "";
-  }
-
-  function sourceBirthYear(person) {
-    const match = String(person && person.birth && person.birth.date && person.birth.date.value || "").match(/^\d{4}/);
-    return match ? Number(match[0]) : -1;
-  }
-
-  function sourceNameMatches(person, name) {
-    const expected = model.normalizeSearchText(name);
-    const given = model.normalizeSearchText(sourceField(person, "person_first_names") || sourceField(person, "descendant_first_names") || person.names.given);
-    const display = model.normalizeSearchText(model.displayName(person));
-    return Boolean(expected && (given === expected || display === expected || given.startsWith(expected + " ") || display.startsWith(expected + " ")));
+    const segments = lineageSegments(person);
+    return segments[segments.length - 1] || "";
   }
 
   function ordinalLineageNumber(value) {
@@ -580,70 +526,25 @@
 
   function lineageChain(person) {
     const current = state();
-    const rawId = sourceField(person, "lineage_id");
-    const rawSegments = rawId ? rawId.split(".").map(function (part) { return u.cleanLine(part, 20); }).filter(Boolean) : [];
-    const numbers = lineageId(person);
-    const people = current.workspace.people;
-
-    const parentReferenceField = directLineageParentField(person);
-    if (parentReferenceField) {
-      const byRecordId = new Map();
-      people.forEach(function (candidate) {
-        const recordId = sourceField(candidate, "record_id").toUpperCase();
-        if (recordId && !byRecordId.has(recordId)) byRecordId.set(recordId, candidate);
-      });
-      const members = [];
-      const used = new Set();
-      let cursor = person;
-      while (cursor && !used.has(cursor.id) && members.length <= config.controls.maxPeople) {
-        used.add(cursor.id);
-        members.push({ name: model.displayName(cursor), person: cursor, number: lineageOwnNumber(cursor) });
-        const parentRecordId = sourceField(cursor, directLineageParentField(cursor)).toUpperCase();
-        if (!parentRecordId) break;
-        const parent = byRecordId.get(parentRecordId);
-        if (!parent || used.has(parent.id)) {
-          const parentName = sourceField(cursor, "lineage_parent_name_full");
-          if (parentName) members.push({ name: parentName, person: null, number: "" });
-          break;
-        }
-        cursor = parent;
-      }
-      const selectedGeneration = Math.max(0, members.length - 1);
-      members.forEach(function (member, index) { member.generation = Math.max(0, selectedGeneration - index); });
-      return { numbers: numbers, members: members };
+    const numbers = lineageSegments(person);
+    const byRecordId = new Map();
+    current.workspace.people.forEach(function (candidate) {
+      const recordId = sourceField(candidate, "record_id").toUpperCase();
+      if (recordId && !byRecordId.has(recordId)) byRecordId.set(recordId, candidate);
+    });
+    const members = [];
+    const used = new Set();
+    let cursor = person;
+    while (cursor && !used.has(cursor.id) && members.length <= config.controls.maxPeople) {
+      used.add(cursor.id);
+      members.push({ name: model.displayName(cursor), person: cursor, number: lineageOwnNumber(cursor) });
+      const parentRecordId = sourceField(cursor, CONSANGUINITY_FIELD).toUpperCase();
+      if (!parentRecordId) break;
+      const parent = byRecordId.get(parentRecordId);
+      if (!parent || used.has(parent.id)) break;
+      cursor = parent;
     }
-
-    const chainNumbers = numbers;
-    const used = new Set([person.id]);
-    const members = [{ name: model.displayName(person), person: person, number: chainNumbers[0] || "" }];
-    const levelNames = [1, 2, 3, 4, 5, 6].map(function (level) { return sourceField(person, "lineage_level_" + String(level).padStart(2, "0") + "_name"); }).filter(Boolean).reverse();
-
-    levelNames.forEach(function (name, index) {
-      const prefix = rawSegments.slice(0, Math.max(0, rawSegments.length - index - 1)).join(".");
-      const candidates = people.filter(function (candidate) { return candidate.id !== person.id && sourceField(candidate, "lineage_id") === prefix; });
-      const target = candidates.length === 1 ? candidates[0] : candidates.find(function (candidate) { return sourceNameMatches(candidate, name); });
-      if (target) used.add(target.id);
-      members.push({ name: name, person: target || null, number: chainNumbers[index + 1] || "" });
-    });
-
-    const rootNames = [1, 2, 3].map(function (level) { return sourceField(person, "root_ancestor_" + String(level).padStart(2, "0") + "_name"); }).filter(Boolean);
-    const remainingRootNames = rootNames.slice();
-    const personBirthYear = sourceBirthYear(person);
-    const rootCandidates = people.filter(function (candidate) {
-      if (used.has(candidate.id) || sourceField(candidate, "lineage_id") !== "0") return false;
-      const candidateBirthYear = sourceBirthYear(candidate);
-      if (personBirthYear > 0 && candidateBirthYear > 0 && candidateBirthYear >= personBirthYear) return false;
-      return remainingRootNames.some(function (name) { return sourceNameMatches(candidate, name); });
-    }).sort(function (a, b) { return sourceBirthYear(b) - sourceBirthYear(a) || model.sortName(a).localeCompare(model.sortName(b)); });
-    rootCandidates.forEach(function (target) {
-      const nameIndex = remainingRootNames.findIndex(function (name) { return sourceNameMatches(target, name); });
-      if (nameIndex < 0) return;
-      const name = remainingRootNames.splice(nameIndex, 1)[0];
-      used.add(target.id);
-      members.push({ name: name, person: target, number: "" });
-    });
-    remainingRootNames.reverse().forEach(function (name) { members.push({ name: name, person: null, number: "" }); });
-    const selectedGeneration = rawId === "0" ? rootNames.length : Math.max(0, rootNames.length - 1 + rawSegments.length);
+    const selectedGeneration = Math.max(0, members.length - 1);
     members.forEach(function (member, index) { member.generation = Math.max(0, selectedGeneration - index); });
     return { numbers: numbers, members: members };
   }
@@ -741,6 +642,10 @@
     icons.mount(container);
   }
 
+  function isAffinalParentEdge(edge) {
+    return Boolean(edge && edge.relationship && edge.relationship.type === "parent-child" && edge.relationship.kind === "affinal");
+  }
+
   function edgePath(edge) {
     if (edge.relationship.type === "partner") {
       const x1 = edge.from.x + edge.from.width / 2;
@@ -755,43 +660,6 @@
     const y2 = edge.to.y;
     const middle = (y1 + y2) / 2;
     return "M" + x1 + " " + y1 + " C" + x1 + " " + middle + " " + x2 + " " + middle + " " + x2 + " " + y2;
-  }
-
-  function inferredParentBranches(layout) {
-    if (!state().ui.showInferredParentLines) return [];
-    const graph = family.indexes(state());
-    const nodeById = new Map(layout.nodes.map(function (node) { return [node.id, node]; }));
-    const explicitParents = new Set(state().workspace.relationships.filter(function (relationship) {
-      return relationship.type === "parent-child";
-    }).map(function (relationship) { return relationship.parentId + "|" + relationship.childId; }));
-    const seen = new Set();
-    const branches = [];
-    layout.edges.filter(function (edge) { return edge.relationship.type === "parent-child"; }).forEach(function (edge) {
-      const recordedParent = edge.from.person;
-      const child = edge.to.person;
-      (graph.partners.get(recordedParent.id) || []).forEach(function (partnerEntry) {
-        const otherParent = partnerEntry.person;
-        const otherNode = otherParent && nodeById.get(otherParent.id);
-        const key = otherParent && otherParent.id + "|" + child.id;
-        if (!otherNode || otherParent.id === child.id || explicitParents.has(key) || seen.has(key) || !partnerCouldBeParent(partnerEntry.relationship, child)) return;
-        seen.add(key);
-        const x1 = otherNode.x + otherNode.width / 2;
-        const y1 = otherNode.y + otherNode.height;
-        const parentX = edge.from.x + edge.from.width / 2;
-        const parentY = edge.from.y + edge.from.height;
-        const childX = edge.to.x + edge.to.width / 2;
-        const childY = edge.to.y;
-        const junctionX = (parentX + childX) / 2;
-        const junctionY = (parentY + childY) / 2;
-        branches.push({
-          path: "M" + x1 + " " + y1 + " C" + x1 + " " + junctionY + " " + junctionX + " " + junctionY + " " + junctionX + " " + junctionY,
-          junctionX: junctionX,
-          junctionY: junctionY,
-          description: model.displayName(otherParent) + " may be the other parent of " + model.displayName(child) + " through partnership with " + model.displayName(recordedParent) + ". Inferred display only."
-        });
-      });
-    });
-    return branches;
   }
 
   function sizeTreeSurface() {
@@ -860,14 +728,15 @@
       svg.innerHTML = '<text class="tree-empty-text" x="50%" y="46%" text-anchor="middle">No people yet</text><text class="tree-empty-subtext" x="50%" y="54%" text-anchor="middle">Family editing is paused while McFamily is being built.</text>';
       return;
     }
-    const edges = currentTreeLayout.edges.map(function (edge) {
+    const showAffinalLines = state().ui.showInferredParentLines;
+    const edges = currentTreeLayout.edges.filter(function (edge) {
+      return showAffinalLines || !isAffinalParentEdge(edge);
+    }).map(function (edge) {
       const relationship = edge.relationship;
       const kind = relationship.type === "parent-child" ? relationship.kind : relationship.status;
       const description = relationshipDescription(edge);
-      return '<path class="tree-edge ' + u.escapeHtml(relationship.type) + '" role="img" aria-label="' + u.escapeHtml(description) + '" data-kind="' + u.escapeHtml(kind) + '" d="' + edgePath(edge) + '"><title>' + u.escapeHtml(description) + "</title></path>";
-    }).join("");
-    const inferredEdges = inferredParentBranches(currentTreeLayout).map(function (branch) {
-      return '<g class="tree-inferred-parent"><path class="tree-edge inferred-parent" role="img" aria-label="' + u.escapeHtml(branch.description) + '" d="' + branch.path + '"><title>' + u.escapeHtml(branch.description) + '</title></path><circle class="tree-inferred-junction" cx="' + branch.junctionX + '" cy="' + branch.junctionY + '" r="3"></circle></g>';
+      const affinal = isAffinalParentEdge(edge) ? " affinal-parent" : "";
+      return '<path class="tree-edge ' + u.escapeHtml(relationship.type) + affinal + '" role="img" aria-label="' + u.escapeHtml(description) + '" data-kind="' + u.escapeHtml(kind) + '" d="' + edgePath(edge) + '"><title>' + u.escapeHtml(description) + "</title></path>";
     }).join("");
     const nodes = currentTreeLayout.nodes.map(function (node) {
       const person = node.person;
@@ -885,7 +754,7 @@
       const reference = detailed && developerReferencesEnabled() ? '<text class="tree-reference" x="' + (node.width / 2) + '" y="' + (lifeY + 13) + '" text-anchor="middle">' + u.escapeHtml(person.reference) + "</text>" : "";
       return shell + nameHtml + '<text class="tree-life" x="' + (node.width / 2) + '" y="' + lifeY + '" text-anchor="middle">' + u.escapeHtml(family.lifespan(person) + (detailed && home ? " · home" : "")) + "</text>" + reference + "</g>";
     }).join("");
-    svg.innerHTML = '<g id="treeViewport"><g class="tree-edges">' + edges + inferredEdges + '</g><g class="tree-nodes">' + nodes + "</g></g>";
+    svg.innerHTML = '<g id="treeViewport"><g class="tree-edges">' + edges + '</g><g class="tree-nodes">' + nodes + "</g></g>";
     bindTreeInteractions(svg);
     if (treeNeedsFit) {
       treeNeedsFit = false;
@@ -1081,9 +950,9 @@
     const profileCollapsed = state().ui.profileCollapsed;
     const overviewDisabled = state().ui.treeMode === "overview" ? "disabled" : "";
     const personTabDisabled = state().ui.selectedPersonId ? "" : " disabled";
-    const directoryHeader = '<header class="directory-module-bar"><label class="directory-search-field"><span class="visually-hidden">Search family directory</span><input id="directorySearch" type="search" aria-label="Search family directory" placeholder="Search directory…" value="' + u.escapeHtml(state().ui.directorySearch) + '"><span id="directoryCount" class="count-pill" role="status" aria-live="polite"></span></label><button type="button" class="icon-button" data-toggle-pane="directory" aria-controls="directoryPanel" aria-expanded="true" aria-label="Close directory" title="Close directory"><span data-symbol="close" aria-hidden="true"></span></button></header>';
+    const directoryHeader = '<header class="directory-module-bar"><label class="directory-search-field"><span class="visually-hidden">Search family directory</span><input id="directorySearch" type="search" aria-label="Search family directory" placeholder="Search Directory…" value="' + u.escapeHtml(state().ui.directorySearch) + '"><span id="directoryCount" class="count-pill" role="status" aria-live="polite"></span></label><button type="button" class="icon-button" data-toggle-pane="directory" aria-controls="directoryPanel" aria-expanded="true" aria-label="Close directory" title="Close directory"><span data-symbol="close" aria-hidden="true"></span></button></header>';
     const directoryControls = '<div class="directory-controls"><div class="directory-filter-row"><div class="field directory-filter-control"><span id="directoryFilterLabel">Filter By</span><details class="directory-filter-menu"><summary aria-labelledby="directoryFilterLabel directoryFilterSummary"><span id="directoryFilterSummary">' + u.escapeHtml(directoryFilterSummary()) + '</span></summary><div class="directory-filter-options" role="group" aria-label="Filter directory by">' + directoryFilterOptionsHtml() + '</div></details></div><label class="field"><span>Sort By</span><select id="directorySort"><option value="first">First name</option><option value="last">Last name</option></select></label></div></div>';
-    $("#mainContent").innerHTML = '<section class="family-workspace" aria-label="Family workspace"><nav class="mobile-workspace-tabs segmented" aria-label="Workspace views"><button type="button" data-mobile-view="directory" aria-pressed="' + String(state().ui.mobileView === "directory") + '">Directory</button><button type="button" data-mobile-view="tree" aria-pressed="' + String(state().ui.mobileView === "tree") + '">Family Tree</button><button type="button" data-mobile-view="profile" aria-pressed="' + String(state().ui.mobileView === "profile") + '"' + personTabDisabled + '>Person</button></nav><div class="family-workspace-grid" data-mobile-view="' + u.escapeHtml(state().ui.mobileView) + '" data-directory-collapsed="' + String(directoryCollapsed) + '" data-profile-collapsed="' + String(profileCollapsed) + '"><aside id="directoryPanel" class="directory-panel workspace-card' + (directoryCollapsed ? " is-collapsed" : "") + '" aria-label="Family directory">' + directoryHeader + directoryControls + '<div class="directory-body"><div id="directoryList" class="directory-list"></div><nav id="directoryAlphaRail" class="directory-alpha-rail" aria-label="Jump to directory letter"></nav></div></aside><section class="tree-panel workspace-card" aria-label="Family Tree"><header class="tree-toolbar"><div class="tree-view-controls"><div class="segmented" aria-label="Tree mode"><button type="button" data-tree-mode="focus" aria-pressed="' + String(state().ui.treeMode === "focus") + '">Focus</button><button type="button" data-tree-mode="overview" aria-pressed="' + String(state().ui.treeMode === "overview") + '">Overview</button></div><div class="segmented" aria-label="Person card detail"><button type="button" data-tree-node-view="condensed" aria-pressed="' + String(state().ui.treeNodeView === "condensed") + '">Condensed</button><button type="button" data-tree-node-view="detailed" aria-pressed="' + String(state().ui.treeNodeView === "detailed") + '">Detailed</button></div><label class="depth-control"><span>Ancestors</span><input id="ancestorDepth" type="number" min="0" max="4" step="1" value="' + state().ui.ancestorDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><label class="depth-control"><span>Descendants</span><input id="descendantDepth" type="number" min="0" max="4" step="1" value="' + state().ui.descendantDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><div class="zoom-controls" role="group" aria-label="Tree zoom controls"><button type="button" class="zoom-action" data-zoom="out" aria-label="Zoom out" title="Zoom out"><span class="zoom-action-icon" data-symbol="zoomOut" aria-hidden="true"></span><span>Out</span></button><label class="zoom-value-control"><span>Zoom %</span><input id="zoomValue" type="number" min="1" max="250" step="1" value="100" inputmode="numeric"></label><button type="button" class="zoom-action" data-zoom="in" aria-label="Zoom in" title="Zoom in"><span class="zoom-action-icon" data-symbol="zoomIn" aria-hidden="true"></span><span>In</span></button><button type="button" class="zoom-action" data-fit-tree aria-label="Fit tree" title="Fit tree"><span class="zoom-action-icon" data-symbol="fit" aria-hidden="true"></span><span>Fit</span></button><span id="zoomStatus" class="visually-hidden" aria-live="polite">100% zoom</span></div></div></header><div class="tree-canvas"><svg id="familyTreeSvg" role="group" aria-label="Interactive Family Tree. Scroll horizontally or vertically, drag to pan, use the zoom controls, and select a person to focus." tabindex="0"></svg></div></section><aside id="profilePanel" class="profile-panel workspace-card' + (profileCollapsed ? " is-collapsed" : "") + '" aria-label="Selected person profile"><div id="profilePanelContent" class="profile-panel-content"></div></aside></div></section>';
+    $("#mainContent").innerHTML = '<section class="family-workspace" aria-label="Family workspace"><nav class="mobile-workspace-tabs segmented" aria-label="Workspace views"><button type="button" data-mobile-view="directory" aria-pressed="' + String(state().ui.mobileView === "directory") + '">Directory</button><button type="button" data-mobile-view="tree" aria-pressed="' + String(state().ui.mobileView === "tree") + '">Family Tree</button><button type="button" data-mobile-view="profile" aria-pressed="' + String(state().ui.mobileView === "profile") + '"' + personTabDisabled + '>Person</button></nav><div class="family-workspace-grid" data-mobile-view="' + u.escapeHtml(state().ui.mobileView) + '" data-directory-collapsed="' + String(directoryCollapsed) + '" data-profile-collapsed="' + String(profileCollapsed) + '"><aside id="directoryPanel" class="directory-panel workspace-card' + (directoryCollapsed ? " is-collapsed" : "") + '" aria-label="Family directory">' + directoryHeader + directoryControls + '<div class="directory-body"><div id="directoryList" class="directory-list"></div><nav id="directoryAlphaRail" class="directory-alpha-rail" aria-label="Jump to directory letter"></nav></div></aside><section class="tree-panel workspace-card" aria-label="Family Tree"><header class="tree-toolbar"><div class="tree-view-controls"><div class="segmented" aria-label="Tree mode"><button type="button" data-tree-mode="focus" aria-pressed="' + String(state().ui.treeMode === "focus") + '">Focus</button><button type="button" data-tree-mode="overview" aria-pressed="' + String(state().ui.treeMode === "overview") + '">Overview</button></div><div class="segmented" aria-label="Person card detail"><button type="button" data-tree-node-view="condensed" aria-pressed="' + String(state().ui.treeNodeView === "condensed") + '">Condensed</button><button type="button" data-tree-node-view="detailed" aria-pressed="' + String(state().ui.treeNodeView === "detailed") + '">Detailed</button></div><label class="depth-control"><span>Ancestors</span><input id="ancestorDepth" type="number" min="0" max="' + config.controls.maxTreeDepth + '" step="1" value="' + state().ui.ancestorDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><label class="depth-control"><span>Descendants</span><input id="descendantDepth" type="number" min="0" max="' + config.controls.maxTreeDepth + '" step="1" value="' + state().ui.descendantDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><div class="zoom-controls" role="group" aria-label="Tree zoom controls"><button type="button" class="zoom-action" data-zoom="out" aria-label="Zoom out" title="Zoom out"><span class="zoom-action-icon" data-symbol="zoomOut" aria-hidden="true"></span><span>Out</span></button><label class="zoom-value-control"><span>Zoom %</span><input id="zoomValue" type="number" min="1" max="250" step="1" value="100" inputmode="numeric"></label><button type="button" class="zoom-action" data-zoom="in" aria-label="Zoom in" title="Zoom in"><span class="zoom-action-icon" data-symbol="zoomIn" aria-hidden="true"></span><span>In</span></button><button type="button" class="zoom-action" data-fit-tree aria-label="Fit tree" title="Fit tree"><span class="zoom-action-icon" data-symbol="fit" aria-hidden="true"></span><span>Fit</span></button><span id="zoomStatus" class="visually-hidden" aria-live="polite">100% zoom</span></div></div></header><div class="tree-canvas"><svg id="familyTreeSvg" role="group" aria-label="Interactive Family Tree. Scroll horizontally or vertically, drag to pan, use the zoom controls, and select a person to focus." tabindex="0"></svg></div></section><aside id="profilePanel" class="profile-panel workspace-card' + (profileCollapsed ? " is-collapsed" : "") + '" aria-label="Selected person profile"><div id="profilePanelContent" class="profile-panel-content"></div></aside></div></section>';
     const workspaceGrid = $(".family-workspace-grid", $("#mainContent"));
     workspaceGrid.style.setProperty("--directory-panel-width", state().ui.panelSizingCustomized ? state().ui.directoryPanelWidth + "px" : "20%");
     workspaceGrid.style.setProperty("--profile-panel-width", state().ui.panelSizingCustomized ? state().ui.profilePanelWidth + "px" : "30%");
@@ -1389,9 +1258,9 @@
     return new Intl.DateTimeFormat(undefined, { year: "numeric", month: "long", day: "numeric" }).format(new Date());
   }
 
-  function printRelationshipList(person, graph) {
+  function printRelationshipList(person) {
     const groups = family.relationGroups(person.id, state());
-    const parents = expandedParentEntries(person, groups, graph);
+    const parents = groups.parents;
     const generation = relationshipGeneration(person);
     const siblingOrder = birthOrderMap([person].concat(groups.siblings));
     const childOrder = birthOrderMap(groups.children);
@@ -1437,7 +1306,7 @@
       const addressHtml = person.addresses.length ? '<section><h3>Addresses</h3>' + person.addresses.map(function (address) { return '<div class="print-address"><strong>' + u.escapeHtml(address.label + (address.current ? " · current" : " · former")) + '</strong><address>' + u.escapeHtml(model.formatAddress(address)).replace(/\n/g, "<br>") + '</address>' + ((model.formatFlexibleDate(address.startDate) || model.formatFlexibleDate(address.endDate)) ? '<small>' + u.escapeHtml([model.formatFlexibleDate(address.startDate), model.formatFlexibleDate(address.endDate)].filter(Boolean).join(" – ")) + "</small>" : "") + (address.notes ? "<p>" + u.escapeHtml(address.notes) + "</p>" : "") + "</div>"; }).join("") + "</section>" : "";
       const contactHtml = person.phones.length || person.emails.length ? '<section><h3>Contact</h3><dl>' + person.phones.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + person.emails.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + "</dl></section>" : "";
       const printReference = developerReferencesEnabled() ? '<span class="print-reference">' + u.escapeHtml(person.reference) + "</span>" : "";
-      return '<article id="print-' + u.escapeHtml(person.id) + '" class="print-person"><header>' + printReference + '<div><h2>' + u.escapeHtml(model.displayName(person)) + '</h2><p>' + u.escapeHtml(family.lifespan(person) + (current.workspace.family.homePersonId === person.id ? " · home person" : "")) + '</p></div></header><div class="print-profile-grid"><section><h3>Life Details</h3><dl>' + formatEvent("Born", person.birth) + formatEvent("Died", person.death) + statusDetails(person) + (person.gender ? '<div><dt>Gender</dt><dd>' + u.escapeHtml(person.gender) + "</dd></div>" : "") + (person.pronouns ? '<div><dt>Pronouns</dt><dd>' + u.escapeHtml(person.pronouns) + "</dd></div>" : "") + '</dl></section><section><h3>Lineage References</h3><dl>' + printRelationshipList(person, graph) + "</dl></section>" + contactHtml + addressHtml + printLineage(person) + (person.notes ? '<section class="print-wide"><h3>Notes</h3><p>' + u.escapeHtml(person.notes).replace(/\n/g, "<br>") + "</p></section>" : "") + printSource(person) + "</div></article>";
+      return '<article id="print-' + u.escapeHtml(person.id) + '" class="print-person"><header>' + printReference + '<div><h2>' + u.escapeHtml(model.displayName(person)) + '</h2><p>' + u.escapeHtml(family.lifespan(person) + (current.workspace.family.homePersonId === person.id ? " · home person" : "")) + '</p></div></header><div class="print-profile-grid"><section><h3>Life Details</h3><dl>' + formatEvent("Born", person.birth) + formatEvent("Died", person.death) + statusDetails(person) + (person.gender ? '<div><dt>Gender</dt><dd>' + u.escapeHtml(person.gender) + "</dd></div>" : "") + (person.pronouns ? '<div><dt>Pronouns</dt><dd>' + u.escapeHtml(person.pronouns) + "</dd></div>" : "") + '</dl></section><section><h3>Lineage References</h3><dl>' + printRelationshipList(person) + "</dl></section>" + contactHtml + addressHtml + printLineage(person) + (person.notes ? '<section class="print-wide"><h3>Notes</h3><p>' + u.escapeHtml(person.notes).replace(/\n/g, "<br>") + "</p></section>" : "") + printSource(person) + "</div></article>";
     }).join("");
     const referenceGuide = developerReferencesEnabled() ? " Developer Mode adds stable P-numbers for cross-reference." : "";
     $("#printReport").innerHTML = '<article class="print-cover"><span class="eyebrow">Private family atlas</span><h1>' + u.escapeHtml(current.workspace.family.title) + '</h1><p>Prepared by McFamily on ' + u.escapeHtml(printDate()) + '</p><dl><div><dt>People</dt><dd>' + people.length + '</dd></div><div><dt>Relationships</dt><dd>' + current.workspace.relationships.length + '</dd></div><div><dt>Family Units</dt><dd>' + familyUnits.length + '</dd></div><div><dt>Addresses</dt><dd>' + addressCount + '</dd></div><div><dt>Family Maps</dt><dd>' + componentsList.length + '</dd></div></dl><aside><strong>Private document</strong><span>This atlas may contain home addresses, contact details, and family notes. Store and share it carefully.</span></aside></article><article class="print-legend"><h2>How to Use This Atlas</h2><p>Family maps are named for their top sibling and group people by generation using names and years.' + referenceGuide + '</p><div><span><strong>Parent links</strong> Biological, adoptive, step, foster, guardian, or unspecified</span><span><strong>Partner links</strong> Married, partnered, separated, divorced, widowed, former, or unspecified</span></div></article><section class="print-atlas"><h2>Family Maps</h2>' + componentHtml + '</section><section class="print-directory"><h1>Person Directory</h1>' + profiles + "</section>" + (notes ? '<article class="print-family-notes"><h1>Family Notes</h1><p>' + u.escapeHtml(notes).replace(/\n/g, "<br>") + "</p></article>" : "");
@@ -1727,7 +1596,7 @@
       if (commit) input.value = String(state().ui[key]);
       return;
     }
-    const value = Math.round(u.clamp(input.value, 0, 4, state().ui[key]));
+    const value = Math.round(u.clamp(input.value, 0, config.controls.maxTreeDepth, state().ui[key]));
     storage.mutate(function (next) { next.ui[key] = value; next.ui.generationDepth = Math.max(next.ui.ancestorDepth, next.ui.descendantDepth); }, { touch: false, reason: "tree-depth" });
     treeNeedsFit = true;
     input.value = String(state().ui[key]);
