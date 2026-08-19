@@ -17,6 +17,10 @@
     "source_json", "settings_json"
   ];
   const MCLINEAGE_REQUIRED = ["record_id", "lineage_id", "descendant_first_names", "descendant_last_name"];
+  const MCLINEAGE_DESCENDANT_DATE_HEADERS = [
+    "descendant_date_birth_value", "descendant_date_birth_descriptor",
+    "descendant_date_death_value", "descendant_date_death_descriptor"
+  ];
   let pendingImport = null;
 
   function parseCsv(text) {
@@ -169,6 +173,44 @@
     return { value: "", qualifier: "exact" };
   }
 
+  function sourceHasField(row, field) {
+    return Object.prototype.hasOwnProperty.call(row, field);
+  }
+
+  function descendantDateValue(row, kind) {
+    const current = "descendant_date_" + kind + "_value";
+    return sourceHasField(row, current) ? row[current] : row["descendant_" + kind + "_date_value"];
+  }
+
+  function descendantDateDescriptor(row, kind) {
+    const current = "descendant_date_" + kind + "_descriptor";
+    return sourceHasField(row, current) ? row[current] : row["descendant_" + kind + "_date_precision"];
+  }
+
+  function validateDescendantDateSchema(parsed) {
+    const present = MCLINEAGE_DESCENDANT_DATE_HEADERS.filter(function (header) { return parsed.headers.includes(header); });
+    if (!present.length) return false;
+    if (present.length !== MCLINEAGE_DESCENDANT_DATE_HEADERS.length) throw new Error("The current McLineage descendant date schema is incomplete.");
+    parsed.rows.forEach(function (row) {
+      ["birth", "death"].forEach(function (kind) {
+        const value = u.cleanLine(descendantDateValue(row, kind), 40);
+        const descriptor = u.cleanLine(descendantDateDescriptor(row, kind), 40);
+        if (!["year", "month", "day", "UNKNOWN", ""].includes(descriptor)) throw new Error("McLineage descendant date descriptors must be year, month, day, UNKNOWN, or blank.");
+        if (kind === "birth" && !descriptor) throw new Error("McLineage birth descriptors cannot be blank.");
+        if (value && !/^\d{4}(?:-(?:0[1-9]|1[0-2])(?:-(?:0[1-9]|[12]\d|3[01]))?)?$/.test(value)) throw new Error("McLineage descendant date values must be YYYY, YYYY-MM, YYYY-MM-DD, or blank.");
+        const expected = value.length === 4 ? "year" : value.length === 7 ? "month" : value.length === 10 ? "day" : "";
+        if (value && descriptor !== expected) throw new Error("A McLineage descendant date descriptor does not match its value.");
+        if (!value && !["UNKNOWN", ""].includes(descriptor)) throw new Error("A McLineage descendant date without a value must be UNKNOWN or blank.");
+      });
+      const lineage = u.cleanLine(row.lineage_id, 100);
+      const generation = lineage && lineage !== "99" ? lineage.split(".").length - 1 : null;
+      if (generation !== null && generation <= 4 && !u.cleanLine(row.descendant_date_death_value, 40) && row.descendant_date_death_descriptor !== "UNKNOWN") {
+        throw new Error("McLineage G0-G4 descendants without a death date must use the UNKNOWN death descriptor.");
+      }
+    });
+    return true;
+  }
+
   function stableId(prefix, value, fallback) {
     const cleaned = u.cleanLine(value || fallback, 100).replace(/[^a-z0-9_-]/gi, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
     return prefix + "-" + (cleaned || u.uid("source"));
@@ -191,7 +233,11 @@
   }
 
   function sourcePerson(row, index, counters) {
-    const deathRaw = u.cleanLine(row.descendant_death_date_value, 40);
+    const birthRaw = u.cleanLine(descendantDateValue(row, "birth"), 40);
+    const birthDescriptor = u.cleanLine(descendantDateDescriptor(row, "birth"), 40);
+    const deathRaw = u.cleanLine(descendantDateValue(row, "death"), 40);
+    const deathDescriptor = u.cleanLine(descendantDateDescriptor(row, "death"), 40);
+    const currentDateSchema = sourceHasField(row, "descendant_date_death_descriptor");
     const ancestry = ["root_ancestor_01_name", "root_ancestor_02_name", "root_ancestor_03_name", "lineage_level_01_name", "lineage_level_02_name", "lineage_level_03_name", "lineage_level_04_name", "lineage_level_05_name", "lineage_level_06_name"].map(function (key) { return u.cleanLine(row[key], 200); }).filter(Boolean);
     const notes = [];
     if (u.cleanText(row.notes, 4000).trim()) notes.push(u.cleanText(row.notes, 4000).trim());
@@ -200,9 +246,9 @@
       id: sourcePersonId(row, index),
       givenName: row.descendant_first_names,
       familyName: row.descendant_last_name,
-      livingStatus: deathRaw ? "deceased" : "unknown",
-      birth: { date: sourceDate(row.descendant_birth_date_value, row.descendant_birth_date_precision, counters), place: "" },
-      death: { date: sourceDate(row.descendant_death_date_value, row.descendant_death_date_precision, counters), place: "" },
+      livingStatus: currentDateSchema ? (deathRaw || deathDescriptor === "UNKNOWN" ? "deceased" : "living") : (deathRaw ? "deceased" : "unknown"),
+      birth: { date: sourceDate(birthRaw, birthDescriptor, counters), place: "" },
+      death: { date: sourceDate(deathRaw, deathDescriptor, counters), place: "" },
       addresses: [], phones: [], emails: [],
       heritageNote: ancestry.join(" → "),
       notes: notes.join("\n\n"),
@@ -253,6 +299,7 @@
   function prepareMcLineage(parsed, fileName) {
     const counters = { sourceRows: parsed.rows.length, orphanParents: 0, ambiguousParents: 0, unmappedDates: 0 };
     const directParentReferences = parsed.headers.includes("lineage_parent_id");
+    validateDescendantDateSchema(parsed);
     const people = [];
     const relationships = [];
     const primaryByRow = [];

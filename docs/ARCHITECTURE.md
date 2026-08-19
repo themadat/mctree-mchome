@@ -25,8 +25,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 7,
   "meta": {
-    "appVersion": "0.0.1.18",
-    "buildId": "0.0.1.18",
+    "appVersion": "0.0.1.19",
+    "buildId": "0.0.1.19",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -60,6 +60,8 @@ The compatibility `records`, `documents`, tombstone, UI, and module fields remai
 ## Initialization and persistence
 
 A fresh default has no `initializedAt` value and no people. `app.js` renders only the introduction and file input in that state. `portability.js` accepts the documented cleaned McLineage columns or native `mcfamily-csv-v1` rows and requires at least one valid person before the first local state is stored.
+
+Current cleaned McLineage rows use strict descendant date values and descriptors. A blank death descriptor imports as living, while `UNKNOWN` imports as deceased without a normalized death date. Older cleaned date-column names remain compatible.
 
 After initialization, deleting the last person does not clear `initializedAt`; the workspace remains open and offers Add Person. Subsequent imports may contain an initialized empty family, but replacement always shows a summary, asks for confirmation, and writes the current state to recovery first.
 
