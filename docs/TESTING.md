@@ -61,11 +61,13 @@ Use synthetic families only.
 - [ ] Family Tree rows use numeric lineage order rather than alphabetical names; Seth Lauer appears before Jared Lauer.
 - [ ] A multi-partner lineage person is preceded by past partners from earliest to latest and followed by the current married partner.
 - [ ] Christine Perrietta McMillen renders with Ray Shanaman on her left using a divorced line and Howard David Weiss as the only partner on her right using a married line.
-- [ ] Other parent lines is disabled by default; enabling it adds accessible light branches to plausible visible co-parents without creating relationship records.
+- [ ] Affinal Lines is disabled by default; enabling it adds accessible light branches to plausible visible co-parents without creating relationship records.
 - [ ] Selecting a person from global search or a filtered directory returns the Family Tree to Focus mode.
 - [ ] The desktop tree/profile divider resizes both modules with pointer drag and Left/Right/Home/End keys, persists locally, and disappears below 960px.
 - [ ] Directory and selected-person panes collapse independently and can be reopened without losing selection or tree focus; the header Directory control toggles the directory both open and closed, including mobile routing back to the tree.
-- [ ] Directory first/last-name sorting, living/deceased/unknown filters, and A–Z quick jumps work on the filtered result set.
+- [ ] Directory search and the `# of #` result-count pill share its title bar; Filter By and Sort By are visible labels.
+- [ ] Filter By is a checkbox menu that supports multiple living/deceased/unknown and Consanguineal/Affinal selections; status choices combine within their facet, kinship choices combine within their facet, and the two facets intersect.
+- [ ] Directory first/last-name sorting and A–Z quick jumps work on the filtered result set.
 - [ ] Directory rows show `[birth – death]` with `????` for unknown years followed by the lineage ID; other lifespan surfaces use the same four-character placeholder.
 - [ ] Internal stable `P` references are absent throughout ordinary app and print views and appear only in Developer Mode.
 - [ ] Partial and in-order fuzzy search finds name, address, phone, email, birth/death place, heritage, general notes, Notes, Help, releases, and Roadmap, but does not match a person solely through the imported `Source Last Modified By` value.
