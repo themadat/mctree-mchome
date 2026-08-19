@@ -1,102 +1,100 @@
 # Architecture
 
-## Layers
+## Runtime layers
 
-The application is a static page with ordered scripts and no module loader:
+McFamily is an ordered-script static page with no module loader or runtime packages:
 
-1. `config.js` defines identity, feature flags, themes, help, releases, and demonstration Roadmap content.
-2. `icons.js` provides reusable inline SF Symbol SVG markup.
-3. `core/utils.js` provides escaping, sanitization, URL/color validation, ids, dates, and hashing.
-4. `core/state.js` owns defaults, normalization, migrations, validation, export envelopes, sync payloads, and collection merging.
-5. `core/storage.js` loads and autosaves browser state, stores the optional token separately, and manages one recovery copy.
-6. `core/components.js` implements dialogs, choices, menus/popovers, loading UI, toasts, and long press.
-7. `core/portability.js` handles safe JSON import and export.
-8. `core/sync.js` implements optional GitHub synchronization.
-9. `core/pwa.js` manages appearance-aware install metadata, device detection, service-worker registration, and update messaging.
-10. `app.js` renders the shell and Settings modules and binds interactions and shortcuts. The main workspace intentionally starts blank.
+1. `config.js` defines identity, version, limits, relationship vocabularies, Help, releases, and Roadmap.
+2. `icons.js` provides reusable inline SVG markup.
+3. `core/utils.js` provides escaping, normalization, ids, dates, and hashing.
+4. `core/state.js` owns schema defaults, migration, sanitization, and validation.
+5. `core/storage.js` loads and autosaves browser state and manages one recovery snapshot.
+6. `core/components.js` implements dialogs, menus, toasts, loading UI, and focus restoration.
+7. `core/family.js` derives relationship indexes, ancestors, descendants, siblings, connected components, generations, and tree layout.
+8. `core/portability.js` handles cleaned-source mapping plus complete private CSV export and replacement import.
+9. `core/pwa.js` manages appearance-aware install metadata, service-worker registration, and updates.
+10. `app.js` renders the onboarding gate, family workspace, editors, Settings, search, SVG interaction, and print atlas.
 
-All modules attach to `window.LocalApp`. Runtime network access occurs only after the user configures or invokes GitHub Sync.
+All modules attach to `window.LocalApp`. Application runtime has no family-data network path.
 
-## State model
+## Schema v6
 
-The current model is version 4:
+The durable state is normalized into this shape:
 
 ```json
 {
-  "schemaVersion": 4,
+  "schemaVersion": 6,
   "meta": {
-    "appVersion": "0.0.1.2",
-    "buildId": "0.0.1.2",
+    "appVersion": "0.0.1.5",
+    "buildId": "0.0.1.5",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
     "tombstones": { "records": [], "documents": [] }
   },
   "workspace": {
-    "title": "My App",
+    "family": {
+      "title": "Example Family",
+      "initializedAt": "ISO timestamp",
+      "homePersonId": "person-id"
+    },
+    "people": [],
+    "relationships": [],
     "records": [],
-    "documents": [
-      {
-        "id": "app-notes",
-        "title": "Notes",
-        "html": "Escaped plain text"
-      }
-    ]
+    "documents": [{ "id": "app-notes", "title": "Notes", "html": "Escaped plain text" }]
   },
-  "preferences": {
-    "appearance": {},
-    "controls": {},
-    "hints": {},
-    "installation": {}
-  },
-  "ui": {
-    "activeModule": "roadmap",
-    "selectedDocumentId": "app-notes",
-    "search": "",
-    "documents": {},
-    "panels": {},
-    "navigation": {},
-    "seenReleaseVersion": "",
-    "supportTab": "settings"
-  },
-  "modules": {
-    "documents": {},
-    "roadmap": {},
-    "cloudSync": {}
-  }
+  "preferences": {},
+  "ui": {},
+  "modules": {}
 }
 ```
 
-The single Notes modal continues to use the legacy `documents` collection and `html` field so older exports remain compatible. New editing is plain text; it is escaped before being stored in the stable `app-notes` document. Fresh Notes are blank, and normalization removes the exact former demonstration sentence while preserving all other user text. The v3→v4 migration consolidates multiple older documents into this one note and keeps their titles as section headings. Empty `records` and related tombstone/UI fields are retained only as backward-compatibility scaffolding for older backups and sync data. There is no Records interface or demonstration record data.
+Each person has a stable id, a stable display reference, timestamps, structured name fields, status, optional gender and pronouns, birth and death events, repeated addresses/phones/emails, heritage text, general notes, and optional cleaned-source metadata. Flexible dates use a `value` plus an exact/about/before/after qualifier.
 
-The GitHub token is never part of application state. It lives under a separate per-device storage key and is excluded from export, sync payloads, diagnostics, and visible fields after entry.
+Relationships are independent records. Parent-child records contain `parentId`, `childId`, and biological/adoptive/step/foster/guardian/unknown type. Partner records contain two person ids, status, optional start/end dates and place, and notes. Validation rejects missing people, self-links, duplicate unordered partner pairs, duplicate typed parent-child pairs, and directed parent ancestry cycles.
 
-## Persistence and migration
+Derived family concepts are never copied onto people. `family.js` builds them from relationships so edits cannot leave contradictory ancestor, sibling, descendant, or family-unit arrays behind.
 
-Startup checks the current storage key and then known legacy keys. Every candidate runs through wrapper unwrapping, sequential migration, normalization, sanitization, and validation. Malformed saved state falls back to a valid recovery copy or a fresh default without replacing an import file.
+The compatibility `records`, `documents`, tombstone, UI, and module fields remain readable for older backups. Notes migration consolidates older documents into the stable `app-notes` document without exposing a former multi-note interface.
 
-User mutations update metadata and schedule an autosave. Storage failures emit an application event that becomes an actionable toast. Import, cloud download, merge, reset, and other replacements create or preserve recovery data as appropriate.
+## Initialization and persistence
 
-Add a migration by creating `migrateNtoNPlus1`, registering it in `migrations`, increasing `schemaVersion`, and adding a fixture that proves renamed, removed, split, or combined values preserve user content.
+A fresh default has no `initializedAt` value and no people. `app.js` renders only the introduction and file input in that state. `portability.js` accepts the documented cleaned McLineage columns or native `mcfamily-csv-v1` rows and requires at least one valid person before the first local state is stored.
 
-## GitHub conflict strategy
+After initialization, deleting the last person does not clear `initializedAt`; the workspace remains open and offers Add Person. Subsequent imports may contain an initialized empty family, but replacement always shows a summary, asks for confirmation, and writes the current state to recovery first.
 
-The sync module stores a baseline target, SHA, and content hash after a successful sync. A remote check compares local, remote, and baseline hashes:
+Startup checks the schema-v6 storage key and known legacy keys. Candidates pass through wrapper unwrapping, sequential migration, normalization, sanitization, and validation. A corrupt current copy falls back to recovery or to the uninitialized gate. Ordinary mutations update metadata and are saved locally with a short debounce.
 
-- Local only: upload.
-- Remote only: download after saving a recovery copy.
-- Equal: report Current.
-- No baseline or missing remote file: request a first-sync decision.
-- Both changed: offer merge, upload, download, or cancel.
+Person deletion also writes recovery before removing that person's relationship records. Recovery is a single last-known snapshot, not a history or merge log.
 
-Merging chooses the newer note for each stable id, honors newer deletion tombstones, and takes preferences from the newer whole state while preserving local per-device cloud configuration. Requests are sequenced and aborted to prevent overlap and stale responses. Checks repeat periodically, on visibility, and when connectivity returns.
+## Tree and directory
 
-## Accessibility and responsive behavior
+The family workspace has three coordinated surfaces:
 
-The shell uses landmarks, native buttons and inputs, native dialogs, tabs, status regions, and explicit ARIA state. Opening a dialog moves focus; closing restores the trigger. Escape closes temporary UI. All primary actions have keyboard and touch equivalents.
+- Directory: alphabetical people with living-status filtering and broad local search.
+- Tree: an SVG focus view around the home or selected person, or an overview containing all connected components and isolated people.
+- Profile: a selected person's complete information and derived relationship groups, with edit/connect actions.
 
-Notes uses one spacious modal on desktop and a full-screen editor on mobile. Settings also becomes a full-screen dialog with one scrolling content surface. Safe-area variables, 16px mobile form controls, reduced motion, and horizontal overflow protection are built into the shared stylesheet.
+The SVG contains semantic relationship labels in addition to visual lines. Pan and zoom use a view transform, touch uses pointer events, Fit calculates the graph bounds, and keyboard arrows move between rendered people. Reduced-motion settings suppress nonessential transitions.
+
+The layout is deterministic and dependency-free. It favors readable generations and connected components rather than guaranteeing a traditional two-parent pedigree diagram in every pathological graph.
+
+## Print atlas
+
+The print action constructs hidden semantic HTML before calling `window.print()`. Print CSS suppresses application controls and exposes only the report. Stable `P` references identify people; stable per-report `F` references identify components.
+
+The report contains a cover and counts, relationship legend, alphabetical index, generation-grouped maps for every component, alphabetical profiles with all stored person fields, and Family Notes. Cross-references avoid scaling one enormous SVG tree to illegible size. Page-break rules prefer intact profiles and repeat important section headings where supported.
+
+The browser owns PDF generation. McFamily does not create a binary PDF directly.
+
+## Security and privacy boundaries
+
+The import gate is not authentication. Browser storage, exported CSV, and printed PDFs all contain sensitive plaintext. The static application has no owner/editor/viewer roles, revocation, or usage audit. Those wishlist features require a future authenticated backend and are explicitly marked that way in the Roadmap.
+
+No real family CSV or export belongs in the repository. Only synthetic data should be used for committed tests or documentation.
 
 ## PWA and offline strategy
 
-`sw.js` precaches the application shell, all core scripts, manifests, and light/dark assets. Same-origin application requests use the network first with cache revalidation, then fall back to the cached shell when offline. Optional GitHub API traffic remains network-only. A waiting service worker triggers a persistent bottom **New version available** toast. Its accessible clockwise-arrow action activates the waiting worker and reloads through a cache-busting URL so installed PWAs can update immediately.
+`sw.js` precaches the public HTML, scripts, manifests, and install assets. Same-origin application requests use network-first revalidation and cached fallback. The service worker never reads browser family state and has no sync endpoint.
+
+A waiting worker triggers the persistent new-version toast; its refresh action activates the new worker and reloads with a cache-busting URL.

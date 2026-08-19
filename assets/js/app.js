@@ -8,43 +8,53 @@
   const model = App.stateModel;
   const storage = App.storage;
   const components = App.components;
+  const family = App.family;
   const portability = App.portability;
-  const sync = App.sync;
   const pwa = App.pwa;
+  const $ = function (selector, root) { return (root || document).querySelector(selector); };
+  const $$ = function (selector, root) { return Array.from((root || document).querySelectorAll(selector)); };
+  const versionedAsset = function (path) { return path + "?v=" + encodeURIComponent(config.identity.buildId); };
   let versionView = "released";
   let hintModifierActive = false;
   let appIconHoldTimer = 0;
   let appIconHoldHandled = false;
-
-  const $ = function (selector, root) { return (root || document).querySelector(selector); };
-  const $$ = function (selector, root) { return Array.from((root || document).querySelectorAll(selector)); };
-  const versionedAsset = function (path) { return path + "?v=" + encodeURIComponent(config.identity.buildId); };
+  let personDraft = { addresses: [], phones: [], emails: [] };
+  let pendingRelative = null;
+  let currentTreeLayout = null;
+  let treeNeedsFit = true;
+  let treeTransform = { x: 24, y: 24, scale: 1 };
 
   const SHORTCUTS = [
     { keys: "/", label: "Focus global search", group: "Global" },
     { keys: "Esc", label: "Close a dialog or menu", group: "Global" },
     { keys: "?", label: "Open Help Center", group: "Global" },
-    { keys: "2", label: "Open Roadmap in Settings", group: "Navigation" },
+    { keys: "A", label: "Add a person", group: "Family" },
+    { keys: "P", label: "Print or save the family atlas as PDF", group: "Family" },
     { keys: "N", label: "Open Notes", group: "Actions" },
     { keys: "V", label: "Open What’s New", group: "Actions" },
-    { keys: "S", label: "Run the primary sync action", group: "Actions" },
-    { keys: "E", label: "Export a JSON backup", group: "Actions" },
+    { keys: "E", label: "Export a private CSV backup", group: "Actions" },
     { keys: "T", label: "Switch color theme", group: "Actions" },
     { keys: "D", label: "Toggle hidden Developer Mode", group: "Developer" },
-    { keys: "Arrow keys", label: "Move through tabs, menus, and list choices", group: "Navigation" }
+    { keys: "Arrow keys", label: "Move through tree relatives, tabs, menus, and choices", group: "Navigation" }
   ];
 
   function state() {
     return storage.getState();
   }
 
+  function initialized() {
+    return Boolean(state().workspace.family.initializedAt);
+  }
+
   function setInputValue(input, value) {
     if (input && document.activeElement !== input) input.value = value == null ? "" : String(value);
   }
 
-  function activeModuleEnabled(id) {
-    if (id === "roadmap") return config.features.roadmap;
-    return false;
+  function announce(text, assertive) {
+    const target = $(assertive ? "#assertiveStatus" : "#politeStatus");
+    if (!target) return;
+    target.textContent = "";
+    window.setTimeout(function () { target.textContent = text; }, 20);
   }
 
   function applyIdentity() {
@@ -52,16 +62,10 @@
     document.title = config.identity.name;
     $("meta[name='description']").content = config.identity.description;
     $("#appName").textContent = config.identity.name;
-    $("#notesButton")?.toggleAttribute("hidden", !config.features.documents);
     $("#versionButton").textContent = "v" + config.identity.version;
     $("#versionButton").setAttribute("aria-label", "Open release notes for version " + config.identity.version);
     $("#appIcon").src = versionedAsset(config.identity.assets.appIconLight);
     $("#releaseCurrentVersion").textContent = "v" + config.identity.version;
-    if (!config.features.roadmap) {
-      $("[data-module='roadmap']")?.setAttribute("hidden", "");
-      $("#roadmapModule")?.setAttribute("hidden", "");
-      $("#supportRoadmapTab")?.setAttribute("hidden", "");
-    }
   }
 
   function applyAppearance() {
@@ -84,11 +88,13 @@
     root.style.setProperty("--success", appearance.success);
     root.style.setProperty("--warning", appearance.warning);
     root.style.setProperty("--danger", appearance.danger);
-    $("#appIcon").src = versionedAsset(dark ? config.identity.assets.appIconDark : config.identity.assets.appIconLight);
-    const iconButton = $("#appIconButton");
+    const iconAsset = dark ? config.identity.assets.appIconDark : config.identity.assets.appIconLight;
+    $("#appIcon").src = versionedAsset(iconAsset);
+    const onboardingIcon = $(".onboarding-icon");
+    if (onboardingIcon) onboardingIcon.src = versionedAsset(iconAsset);
     const nextTheme = dark ? "light" : "dark";
-    iconButton.setAttribute("aria-label", "Switch to " + nextTheme + " theme. Press and hold to toggle Developer Mode");
-    iconButton.title = "Switch to " + nextTheme + " theme · Press and hold for Developer Mode";
+    $("#appIconButton").setAttribute("aria-label", "Switch to " + nextTheme + " theme. Press and hold to toggle Developer Mode");
+    $("#appIconButton").title = "Switch to " + nextTheme + " theme · Press and hold for Developer Mode";
     pwa.applyAppearanceAssets?.();
   }
 
@@ -100,6 +106,8 @@
   }
 
   function renderHeader() {
+    const isInitialized = initialized();
+    document.body.dataset.onboarding = isInitialized ? "false" : "true";
     const developerMode = config.features.developerTools && state().preferences.controls.developerMode;
     const versionButton = $("#versionButton");
     versionButton.textContent = "v" + config.identity.version + (developerMode ? " DEV" : "");
@@ -108,9 +116,11 @@
     $("#betaPill").hidden = !isBetaDeploy();
     document.documentElement.dataset.developer = developerMode ? "on" : "off";
     setInputValue($("#globalSearch"), state().ui.search);
-    renderSyncStatus();
+    ["#addPersonButton", "#printButton", "#notesButton", "#supportButton"].forEach(function (selector) { $(selector).disabled = !isInitialized; });
+    $("#globalSearch").disabled = !isInitialized;
+    renderLocalStatus();
     const latest = config.releases[0];
-    const unread = latest && state().ui.seenReleaseVersion !== latest.version;
+    const unread = isInitialized && latest && state().ui.seenReleaseVersion !== latest.version;
     $("#releaseUnreadDot").hidden = !unread;
     const banner = $("#whatsNewBanner");
     banner.hidden = !unread;
@@ -120,24 +130,19 @@
       $("[data-whats-new-summary]").textContent = latest.summary;
     }
     const hint = $("#contextHint");
-    const hintHidden = !config.features.hints || !state().preferences.hints.enabled || state().preferences.hints.dismissed.includes("workspace-basics");
-    hint.hidden = hintHidden;
+    hint.hidden = !isInitialized || !config.features.hints || !state().preferences.hints.enabled || state().preferences.hints.dismissed.includes("workspace-basics");
   }
 
-  function renderSyncStatus() {
-    const info = sync.getInfo();
-    const offline = navigator.onLine === false;
-    const localAvailable = storage.isPersistent();
-    const localLabel = localAvailable ? "Saved locally" : "Storage unavailable";
-    const syncLabel = !config.features.cloudSync ? "GitHub disabled" : offline ? "GitHub offline" : !sync.configured() ? "GitHub setup required" : "GitHub · " + info.title;
+  function renderLocalStatus() {
     const button = $("#floatingStatusButton");
-    button.dataset.syncState = localAvailable ? (offline ? "offline" : info.state) : "error";
-    button.disabled = info.busy;
-    button.title = localLabel + ". " + syncLabel + ". " + info.message;
+    const available = storage.isPersistent();
+    button.dataset.storageState = available ? "saved" : "error";
+    button.disabled = !initialized();
+    $("[data-floating-local-label]").textContent = available ? "Saved locally" : "Storage unavailable";
+    $("[data-floating-backup-label]").textContent = initialized() ? state().workspace.people.length + " people · export backup" : "Import required";
+    $("[data-floating-status-icon]").innerHTML = icons.markup(available ? "check" : "close");
+    button.title = available ? "Saved only in this browser. Open private CSV settings." : "Browser storage is unavailable. Export a private CSV.";
     button.setAttribute("aria-label", button.title);
-    $("[data-floating-local-label]").textContent = localLabel;
-    $("[data-floating-sync-label]").textContent = syncLabel;
-    $("[data-floating-status-icon]").innerHTML = icons.markup(!localAvailable || info.kind === "danger" ? "close" : sync.configured() || info.busy ? "sync" : "check");
   }
 
   function documentText(documentItem) {
@@ -157,7 +162,6 @@
     const normalized = u.cleanText(value, config.controls.maxDocumentHtmlLength);
     storage.mutate(function (next) {
       const documentItem = next.workspace.documents[0];
-      if (!documentItem) return;
       documentItem.html = documentHtml(normalized);
       documentItem.updatedAt = u.isoNow();
     }, { reason: "edit-document" });
@@ -166,24 +170,643 @@
   }
 
   function openNotes(trigger) {
+    if (!initialized()) return;
     renderNotesEditor();
     components.openDialog("#notesDialog", { trigger: trigger, focus: "#notesTextarea" });
   }
 
-  function filteredRoadmap(overrides) {
+  function renderOnboarding() {
+    const icon = document.documentElement.dataset.theme === "dark" ? config.identity.assets.appIconDark : config.identity.assets.appIconLight;
+    $("#mainContent").innerHTML = '<section class="onboarding-screen" aria-labelledby="onboardingTitle"><div class="onboarding-card"><img src="' + u.escapeHtml(versionedAsset(icon)) + '" alt="" class="onboarding-icon"><span class="eyebrow">Private local family atlas</span><h1 id="onboardingTitle">Open McFamily</h1><p>Choose the cleaned McLineage CSV for the initial load, or a native McFamily CSV exported by this app. McFamily maps and validates people, relationships, source fields, and ancestry before storing a private copy in this browser.</p><div class="privacy-callout"><strong>This is not a login.</strong><span>The import gate controls first-run setup only. The static GitHub Pages app cannot authenticate users or revoke access.</span></div><button id="firstImportButton" type="button" class="button primary large-button">Choose family CSV</button><input id="onboardingImportInput" type="file" accept="text/csv,.csv" data-import-file-input hidden><small>No demo family, blank-family option, JSON/GEDCOM import, cloud sync, or bypass is available.</small></div></section>';
+    icons.mount($("#mainContent"));
+  }
+
+  function directoryPeople() {
+    const query = state().ui.directorySearch.trim().toLowerCase();
+    const filter = state().ui.livingFilter;
+    return state().workspace.people.filter(function (person) {
+      return (filter === "all" || person.livingStatus === filter) && (!query || model.personSearchText(person).includes(query));
+    }).sort(function (a, b) { return model.sortName(a).localeCompare(model.sortName(b)) || a.id.localeCompare(b.id); });
+  }
+
+  function renderDirectoryList() {
+    const container = $("#directoryList");
+    if (!container) return;
+    const people = directoryPeople();
+    $("#directoryCount").textContent = people.length + " of " + state().workspace.people.length;
+    let lastLetter = "";
+    container.innerHTML = people.length ? people.map(function (person) {
+      const letter = (person.names.family || person.names.birth || person.names.preferred || person.names.given || "#").slice(0, 1).toUpperCase();
+      const heading = letter !== lastLetter ? '<h3 class="directory-letter">' + u.escapeHtml(letter) + "</h3>" : "";
+      lastLetter = letter;
+      const address = person.addresses.find(function (item) { return item.current; }) || person.addresses[0];
+      return heading + '<button type="button" class="directory-person' + (state().ui.selectedPersonId === person.id ? " selected" : "") + '" data-select-person="' + u.escapeHtml(person.id) + '" aria-pressed="' + String(state().ui.selectedPersonId === person.id) + '"><span class="person-initials" aria-hidden="true">' + u.escapeHtml(initials(person)) + '</span><span><strong>' + u.escapeHtml(model.displayName(person)) + '</strong><small>' + u.escapeHtml(person.reference + " · " + family.lifespan(person)) + '</small>' + (address ? '<small>' + u.escapeHtml([address.city, address.region, address.country].filter(Boolean).join(", ")) + "</small>" : "") + "</span></button>";
+    }).join("") : '<div class="empty-state compact-empty"><h3>No people match</h3><p>Try another name, contact detail, or living-status filter.</p><button type="button" class="button" data-clear-directory>Clear directory filters</button></div>';
+  }
+
+  function initials(person) {
+    const names = person.names || {};
+    const first = (names.preferred || names.given || names.display || "?").trim().slice(0, 1);
+    const last = (names.family || names.birth || "").trim().slice(0, 1);
+    return (first + last).toUpperCase();
+  }
+
+  function formatEvent(label, event) {
+    if (!event) return "";
+    const date = model.formatFlexibleDate(event.date);
+    if (!date && !event.place) return "";
+    return '<div><dt>' + label + '</dt><dd>' + u.escapeHtml([date, event.place].filter(Boolean).join(" · ")) + "</dd></div>";
+  }
+
+  function relationshipLabel(relationship, personId, other) {
+    if (relationship.type === "parent-child") {
+      const type = config.parentKinds.find(function (item) { return item.id === relationship.kind; });
+      return personId === relationship.parentId ? "Child · " + (type ? type.label : "Parent") : (type ? type.label : "Parent");
+    }
+    const status = config.partnerStatuses.find(function (item) { return item.id === relationship.status; });
+    return status ? status.label : "Partners";
+  }
+
+  function relationshipMeta(relationship) {
+    const dates = [model.formatFlexibleDate(relationship.startDate), model.formatFlexibleDate(relationship.endDate)].filter(Boolean).join(" – ");
+    return [dates, relationship.place, relationship.notes].filter(Boolean).join(" · ");
+  }
+
+  function relationshipDescription(edge) {
+    const first = model.displayName(edge.from.person);
+    const second = model.displayName(edge.to.person);
+    if (edge.relationship.type === "parent-child") {
+      const kind = config.parentKinds.find(function (item) { return item.id === edge.relationship.kind; });
+      return first + " is " + (kind ? kind.label.toLowerCase() : "a parent") + " of " + second + (relationshipMeta(edge.relationship) ? ". " + relationshipMeta(edge.relationship) : "");
+    }
+    const status = config.partnerStatuses.find(function (item) { return item.id === edge.relationship.status; });
+    return first + " and " + second + ": " + (status ? status.label : "Partners") + (relationshipMeta(edge.relationship) ? ". " + relationshipMeta(edge.relationship) : "");
+  }
+
+  function relationshipRows(person) {
+    const graph = family.indexes(state());
+    const rows = [];
+    state().workspace.relationships.filter(function (relationship) {
+      return relationship.type === "parent-child" ? relationship.parentId === person.id || relationship.childId === person.id : relationship.person1Id === person.id || relationship.person2Id === person.id;
+    }).forEach(function (relationship) {
+      const otherId = relationship.type === "parent-child"
+        ? (relationship.parentId === person.id ? relationship.childId : relationship.parentId)
+        : (relationship.person1Id === person.id ? relationship.person2Id : relationship.person1Id);
+      const other = graph.peopleById.get(otherId);
+      if (!other) return;
+      rows.push('<div class="relationship-row"><button type="button" class="relationship-person" data-select-person="' + u.escapeHtml(other.id) + '"><strong>' + u.escapeHtml(model.displayName(other)) + '</strong><small>' + u.escapeHtml(relationshipLabel(relationship, person.id, other)) + '</small>' + (relationshipMeta(relationship) ? '<small>' + u.escapeHtml(relationshipMeta(relationship)) + "</small>" : "") + '</button><div class="relationship-actions"><button type="button" class="button small" data-edit-relationship="' + u.escapeHtml(relationship.id) + '">Edit</button><button type="button" class="button small danger-text" data-delete-relationship="' + u.escapeHtml(relationship.id) + '">Remove</button></div></div>');
+    });
+    return rows.length ? rows.join("") : '<p class="muted-copy">No relationships recorded yet.</p>';
+  }
+
+  function sourceEntries(source) {
+    return Object.entries(u.plainObject(source && source.fields)).filter(function (entry) { return String(entry[1] || "").trim(); });
+  }
+
+  function sourceLabel(key) {
+    return String(key || "").replace(/_/g, " ").replace(/\b\w/g, function (character) { return character.toUpperCase(); });
+  }
+
+  function profileSource(person) {
+    const entries = sourceEntries(person.source);
+    if (!entries.length) return "";
+    return '<section class="profile-section source-section"><details><summary>Imported source · ' + entries.length + ' populated fields</summary><p class="source-format">' + u.escapeHtml(person.source.format || "Imported CSV") + '</p><dl class="profile-list source-list">' + entries.map(function (entry) { return '<div><dt>' + u.escapeHtml(sourceLabel(entry[0])) + '</dt><dd>' + u.escapeHtml(entry[1]) + "</dd></div>"; }).join("") + "</dl></details></section>";
+  }
+
+  function printSource(person) {
+    const entries = sourceEntries(person.source);
+    if (!entries.length) return "";
+    return '<section class="print-wide print-source"><h3>Imported source fields</h3><p>' + u.escapeHtml(person.source.format || "Imported CSV") + '</p><dl>' + entries.map(function (entry) { return '<div><dt>' + u.escapeHtml(sourceLabel(entry[0])) + '</dt><dd>' + u.escapeHtml(entry[1]) + "</dd></div>"; }).join("") + "</dl></section>";
+  }
+
+  function renderProfile() {
+    const container = $("#profilePanelContent");
+    if (!container) return;
+    const person = state().workspace.people.find(function (item) { return item.id === state().ui.selectedPersonId; });
+    if (!person) {
+      container.innerHTML = '<div class="empty-state"><h2>No person selected</h2><p>Select someone in the directory or tree.</p><button type="button" class="button primary" data-add-person>Add person</button></div>';
+      return;
+    }
+    const isHome = state().workspace.family.homePersonId === person.id;
+    const lineage = family.lineageSummary(person.id, state());
+    const contactBlocks = [];
+    if (person.addresses.length) contactBlocks.push('<section class="profile-section"><h3>Addresses</h3>' + person.addresses.slice().sort(function (a, b) { return a.order - b.order; }).map(function (address) { return '<article class="contact-card"><header><strong>' + u.escapeHtml(address.label) + '</strong><span class="status-pill" data-kind="' + (address.current ? "success" : "neutral") + '">' + (address.current ? "Current" : "Former") + '</span></header><address>' + u.escapeHtml(model.formatAddress(address)).replace(/\n/g, "<br>") + '</address>' + ((model.formatFlexibleDate(address.startDate) || model.formatFlexibleDate(address.endDate)) ? '<small>' + u.escapeHtml([model.formatFlexibleDate(address.startDate), model.formatFlexibleDate(address.endDate)].filter(Boolean).join(" – ")) + "</small>" : "") + (address.notes ? "<p>" + u.escapeHtml(address.notes) + "</p>" : "") + "</article>"; }).join("") + "</section>");
+    if (person.phones.length || person.emails.length) contactBlocks.push('<section class="profile-section"><h3>Contact</h3><dl class="profile-list">' + person.phones.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + person.emails.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + "</dl></section>");
+    container.innerHTML = '<article class="person-profile"><header class="profile-header"><div class="profile-avatar" aria-hidden="true">' + u.escapeHtml(initials(person)) + '</div><div><span class="eyebrow">' + u.escapeHtml(person.reference + (isHome ? " · Home person" : "")) + '</span><h2>' + u.escapeHtml(model.displayName(person)) + '</h2><p>' + u.escapeHtml(family.lifespan(person)) + '</p></div></header><div class="profile-action-bar"><button type="button" class="button primary" data-edit-person="' + u.escapeHtml(person.id) + '">Edit person</button><button type="button" class="button" data-add-relative="' + u.escapeHtml(person.id) + '">Add relative</button><button type="button" class="button" data-add-relationship="' + u.escapeHtml(person.id) + '">Connect existing</button></div><dl class="profile-list identity-list">' + formatEvent("Born", person.birth) + formatEvent("Died", person.death) + (person.gender ? '<div><dt>Gender</dt><dd>' + u.escapeHtml(person.gender) + "</dd></div>" : "") + (person.pronouns ? '<div><dt>Pronouns</dt><dd>' + u.escapeHtml(person.pronouns) + "</dd></div>" : "") + '<div><dt>Status</dt><dd>' + u.escapeHtml(person.livingStatus) + '</dd></div><div><dt>Lineage</dt><dd>' + u.escapeHtml(lineage.label) + "</dd></div></dl>" + contactBlocks.join("") + (person.heritageNote ? '<section class="profile-section"><h3>Heritage / ancestry</h3><p class="preserve-lines">' + u.escapeHtml(person.heritageNote) + "</p></section>" : "") + (person.notes ? '<section class="profile-section"><h3>Notes</h3><p class="preserve-lines">' + u.escapeHtml(person.notes) + "</p></section>" : "") + profileSource(person) + '<section class="profile-section"><div class="form-section-heading"><h3>Relationships</h3><button type="button" class="button small" data-add-relationship="' + u.escapeHtml(person.id) + '">Add</button></div><div class="relationship-list">' + relationshipRows(person) + '</div></section><footer class="profile-footer">' + (isHome ? '<span class="status-pill" data-kind="success">Home person</span>' : '<button type="button" class="button" data-set-home="' + u.escapeHtml(person.id) + '">Set as home person</button>') + '<button type="button" class="button danger-text" data-delete-person="' + u.escapeHtml(person.id) + '">Delete person</button></footer></article>';
+    icons.mount(container);
+  }
+
+  function edgePath(edge) {
+    if (edge.relationship.type === "partner") {
+      const x1 = edge.from.x + edge.from.width / 2;
+      const y1 = edge.from.y + edge.from.height / 2;
+      const x2 = edge.to.x + edge.to.width / 2;
+      const y2 = edge.to.y + edge.to.height / 2;
+      return "M" + x1 + " " + y1 + " L" + x2 + " " + y2;
+    }
+    const x1 = edge.from.x + edge.from.width / 2;
+    const y1 = edge.from.y + edge.from.height;
+    const x2 = edge.to.x + edge.to.width / 2;
+    const y2 = edge.to.y;
+    const middle = (y1 + y2) / 2;
+    return "M" + x1 + " " + y1 + " C" + x1 + " " + middle + " " + x2 + " " + middle + " " + x2 + " " + y2;
+  }
+
+  function applyTreeTransform() {
+    const viewport = $("#treeViewport");
+    if (!viewport) return;
+    viewport.setAttribute("transform", "translate(" + treeTransform.x + " " + treeTransform.y + ") scale(" + treeTransform.scale + ")");
+    const label = $("#zoomValue");
+    if (label) label.textContent = Math.round(treeTransform.scale * 100) + "%";
+  }
+
+  function fitTree() {
+    const svg = $("#familyTreeSvg");
+    if (!svg || !currentTreeLayout) return;
+    const width = Math.max(320, svg.clientWidth || 800);
+    const height = Math.max(280, svg.clientHeight || 600);
+    const scale = Math.min((width - 44) / currentTreeLayout.width, (height - 44) / currentTreeLayout.height, 1.2);
+    treeTransform.scale = u.clamp(scale, 0.01, 2.5, 1);
+    treeTransform.x = (width - currentTreeLayout.width * treeTransform.scale) / 2;
+    treeTransform.y = (height - currentTreeLayout.height * treeTransform.scale) / 2;
+    applyTreeTransform();
+  }
+
+  function renderTree() {
+    const svg = $("#familyTreeSvg");
+    if (!svg) return;
+    const focusId = state().ui.treeFocusId || state().workspace.family.homePersonId || (state().workspace.people[0] && state().workspace.people[0].id);
+    currentTreeLayout = family.layout(state(), { mode: state().ui.treeMode, focusId: focusId, depth: state().ui.generationDepth });
+    if (!currentTreeLayout.nodes.length) {
+      svg.innerHTML = '<text class="tree-empty-text" x="50%" y="46%" text-anchor="middle">No people yet</text><text class="tree-empty-subtext" x="50%" y="54%" text-anchor="middle">Add a person to begin the family tree.</text>';
+      return;
+    }
+    const edges = currentTreeLayout.edges.map(function (edge) {
+      const relationship = edge.relationship;
+      const kind = relationship.type === "parent-child" ? relationship.kind : relationship.status;
+      const description = relationshipDescription(edge);
+      return '<path class="tree-edge ' + u.escapeHtml(relationship.type) + '" role="img" aria-label="' + u.escapeHtml(description) + '" data-kind="' + u.escapeHtml(kind) + '" d="' + edgePath(edge) + '"><title>' + u.escapeHtml(description) + "</title></path>";
+    }).join("");
+    const nodes = currentTreeLayout.nodes.map(function (node) {
+      const person = node.person;
+      const selected = state().ui.selectedPersonId === person.id;
+      const home = state().workspace.family.homePersonId === person.id;
+      const name = model.displayName(person);
+      const shortName = name.length > 25 ? name.slice(0, 24) + "…" : name;
+      return '<g class="tree-node' + (selected ? " selected" : "") + (home ? " home" : "") + '" tabindex="0" role="button" aria-label="' + u.escapeHtml(name + ", " + family.lifespan(person) + ". Select to focus.") + '" data-tree-person="' + u.escapeHtml(person.id) + '" transform="translate(' + node.x + " " + node.y + ')"><rect width="' + node.width + '" height="' + node.height + '" rx="12"></rect><circle cx="24" cy="26" r="15"></circle><text class="tree-initials" x="24" y="31" text-anchor="middle">' + u.escapeHtml(initials(person)) + '</text><text class="tree-name" x="48" y="25">' + u.escapeHtml(shortName) + '</text><text class="tree-life" x="48" y="47">' + u.escapeHtml(family.lifespan(person)) + '</text><text class="tree-reference" x="12" y="64">' + u.escapeHtml(person.reference + (home ? " · home" : "")) + "</text></g>";
+    }).join("");
+    svg.innerHTML = '<g id="treeViewport"><g class="tree-edges">' + edges + '</g><g class="tree-nodes">' + nodes + "</g></g>";
+    applyTreeTransform();
+    bindTreeInteractions(svg);
+    if (treeNeedsFit) {
+      treeNeedsFit = false;
+      requestAnimationFrame(fitTree);
+    }
+  }
+
+  function relativeForArrow(personId, key) {
+    const groups = family.relationGroups(personId, state());
+    if (key === "ArrowUp") return groups.parents[0] && groups.parents[0].person;
+    if (key === "ArrowDown") return groups.children[0] && groups.children[0].person;
+    if (key === "ArrowLeft") return (groups.partners[0] && groups.partners[0].person) || groups.siblings[0];
+    if (key === "ArrowRight") return groups.siblings[0] || (groups.partners[0] && groups.partners[0].person);
+    return null;
+  }
+
+  function bindTreeInteractions(svg) {
+    let drag = null;
+    let pinch = null;
+    const pointers = new Map();
+    svg.addEventListener("pointerdown", function (event) {
+      if (event.button !== 0 || event.target.closest("[data-tree-person]")) return;
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      svg.setPointerCapture(event.pointerId);
+      svg.classList.add("dragging");
+      if (pointers.size === 1) {
+        drag = { id: event.pointerId, x: event.clientX, y: event.clientY, startX: treeTransform.x, startY: treeTransform.y };
+        pinch = null;
+      } else if (pointers.size === 2) {
+        const values = Array.from(pointers.values());
+        const centerX = (values[0].x + values[1].x) / 2;
+        const centerY = (values[0].y + values[1].y) / 2;
+        pinch = {
+          distance: Math.hypot(values[1].x - values[0].x, values[1].y - values[0].y) || 1,
+          scale: treeTransform.scale,
+          worldX: (centerX - treeTransform.x) / treeTransform.scale,
+          worldY: (centerY - treeTransform.y) / treeTransform.scale
+        };
+        drag = null;
+      }
+    });
+    svg.addEventListener("pointermove", function (event) {
+      if (!pointers.has(event.pointerId)) return;
+      pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (pinch && pointers.size >= 2) {
+        const values = Array.from(pointers.values()).slice(0, 2);
+        const centerX = (values[0].x + values[1].x) / 2;
+        const centerY = (values[0].y + values[1].y) / 2;
+        const distance = Math.hypot(values[1].x - values[0].x, values[1].y - values[0].y) || 1;
+        treeTransform.scale = u.clamp(pinch.scale * distance / pinch.distance, 0.01, 2.5, pinch.scale);
+        treeTransform.x = centerX - pinch.worldX * treeTransform.scale;
+        treeTransform.y = centerY - pinch.worldY * treeTransform.scale;
+      } else if (drag && drag.id === event.pointerId) {
+        treeTransform.x = drag.startX + event.clientX - drag.x;
+        treeTransform.y = drag.startY + event.clientY - drag.y;
+      }
+      applyTreeTransform();
+    });
+    function endDrag(event) {
+      pointers.delete(event.pointerId);
+      pinch = null;
+      if (pointers.size === 1) {
+        const remaining = Array.from(pointers.entries())[0];
+        drag = { id: remaining[0], x: remaining[1].x, y: remaining[1].y, startX: treeTransform.x, startY: treeTransform.y };
+      } else {
+        drag = null;
+        svg.classList.remove("dragging");
+      }
+    }
+    svg.addEventListener("pointerup", endDrag);
+    svg.addEventListener("pointercancel", endDrag);
+    svg.addEventListener("wheel", function (event) {
+      event.preventDefault();
+      const rect = svg.getBoundingClientRect();
+      const cursorX = event.clientX - rect.left;
+      const cursorY = event.clientY - rect.top;
+      const oldScale = treeTransform.scale;
+      const nextScale = u.clamp(oldScale * (event.deltaY < 0 ? 1.12 : 0.89), 0.01, 2.5, oldScale);
+      treeTransform.x = cursorX - (cursorX - treeTransform.x) * (nextScale / oldScale);
+      treeTransform.y = cursorY - (cursorY - treeTransform.y) * (nextScale / oldScale);
+      treeTransform.scale = nextScale;
+      applyTreeTransform();
+    }, { passive: false });
+  }
+
+  function renderWorkspace() {
+    const peopleCount = state().workspace.people.length;
+    const relationshipCount = state().workspace.relationships.length;
+    $("#mainContent").innerHTML = '<section class="family-workspace" aria-labelledby="workspaceTitle"><header class="workspace-heading"><div><span class="eyebrow">Private local family</span><h1 id="workspaceTitle">' + u.escapeHtml(state().workspace.family.title) + '</h1><p>' + peopleCount + " people · " + relationshipCount + ' relationships</p></div><div class="workspace-heading-actions"><button type="button" class="button" data-add-person>Add person</button><button type="button" class="button primary" data-print-atlas>Print / Save PDF</button></div></header><nav class="mobile-workspace-tabs segmented" aria-label="Workspace views"><button type="button" data-mobile-view="directory" aria-pressed="' + String(state().ui.mobileView === "directory") + '">People</button><button type="button" data-mobile-view="tree" aria-pressed="' + String(state().ui.mobileView === "tree") + '">Tree</button><button type="button" data-mobile-view="profile" aria-pressed="' + String(state().ui.mobileView === "profile") + '">Profile</button></nav><div class="family-workspace-grid" data-mobile-view="' + u.escapeHtml(state().ui.mobileView) + '"><aside class="directory-panel workspace-card" aria-label="Family directory"><header class="panel-header"><div><span class="eyebrow">Directory</span><h2>People</h2></div><span id="directoryCount" class="count-pill"></span></header><div class="directory-controls"><label class="field"><span class="visually-hidden">Search family directory</span><input id="directorySearch" type="search" placeholder="Name, address, phone, email…" value="' + u.escapeHtml(state().ui.directorySearch) + '"></label><label class="field"><span class="visually-hidden">Filter living status</span><select id="livingFilter"><option value="all">All people</option><option value="living">Living</option><option value="deceased">Deceased</option><option value="unknown">Unknown status</option></select></label></div><div id="directoryList" class="directory-list"></div></aside><section class="tree-panel workspace-card" aria-labelledby="treeTitle"><header class="tree-toolbar"><div><span class="eyebrow">Interactive lineage</span><h2 id="treeTitle">Family tree</h2></div><div class="tree-view-controls"><div class="segmented" aria-label="Tree mode"><button type="button" data-tree-mode="focus" aria-pressed="' + String(state().ui.treeMode === "focus") + '">Focus</button><button type="button" data-tree-mode="overview" aria-pressed="' + String(state().ui.treeMode === "overview") + '">Overview</button></div><label class="depth-control"><span>Depth <strong id="depthValue">' + state().ui.generationDepth + '</strong></span><input id="generationDepth" type="range" min="1" max="4" step="1" value="' + state().ui.generationDepth + '" ' + (state().ui.treeMode === "overview" ? "disabled" : "") + '></label><div class="zoom-controls" aria-label="Tree zoom"><button type="button" class="button small" data-zoom="out">Zoom out</button><span id="zoomValue" aria-live="polite">100%</span><button type="button" class="button small" data-zoom="in">Zoom in</button><button type="button" class="button small" data-fit-tree>Fit</button></div></div></header><div class="tree-canvas"><svg id="familyTreeSvg" role="group" aria-label="Interactive family relationship tree. Drag to pan, use the zoom controls, and select a person to focus." tabindex="0"></svg></div></section><aside class="profile-panel workspace-card" aria-label="Selected person profile"><div id="profilePanelContent" class="profile-panel-content"></div></aside></div></section>';
+    $("#livingFilter").value = state().ui.livingFilter;
+    renderDirectoryList();
+    renderProfile();
+    renderTree();
+    icons.mount($("#mainContent"));
+  }
+
+  function renderMain() {
+    if (initialized()) renderWorkspace();
+    else renderOnboarding();
+  }
+
+  function selectPerson(id, options) {
+    if (!state().workspace.people.some(function (person) { return person.id === id; })) return;
+    const settings = Object.assign({ focus: true, mobileProfile: false }, options || {});
+    storage.mutate(function (next) {
+      next.ui.selectedPersonId = id;
+      if (settings.focus) next.ui.treeFocusId = id;
+      if (settings.mobileProfile) next.ui.mobileView = "profile";
+    }, { touch: false, reason: "select-person" });
+    treeNeedsFit = settings.focus;
+    renderWorkspace();
+    announce("Selected " + model.displayName(state().workspace.people.find(function (person) { return person.id === id; })) + ".");
+  }
+
+  function addressRow(address, index) {
+    return '<fieldset class="repeatable-card" data-address-index="' + index + '"><legend>Address ' + (index + 1) + '</legend><div class="repeatable-card-actions"><button type="button" class="button small danger-text" data-remove-address="' + index + '">Remove</button></div><div class="form-grid"><label class="field"><span>Label</span><input data-address-field="label" value="' + u.escapeHtml(address.label || "Home") + '"></label><label class="check-field"><input type="checkbox" data-address-field="current" ' + (address.current !== false ? "checked" : "") + '><span>Current address</span></label><label class="field full"><span>Address line 1</span><input data-address-field="line1" value="' + u.escapeHtml(address.line1 || "") + '"></label><label class="field full"><span>Address line 2</span><input data-address-field="line2" value="' + u.escapeHtml(address.line2 || "") + '"></label><label class="field"><span>City / locality</span><input data-address-field="city" value="' + u.escapeHtml(address.city || "") + '"></label><label class="field"><span>State / region</span><input data-address-field="region" value="' + u.escapeHtml(address.region || "") + '"></label><label class="field"><span>Postal code</span><input data-address-field="postalCode" value="' + u.escapeHtml(address.postalCode || "") + '"></label><label class="field"><span>Country</span><input data-address-field="country" value="' + u.escapeHtml(address.country || "") + '"></label><label class="field"><span>Start date</span><input data-address-field="startDate" placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" value="' + u.escapeHtml(address.startDate && address.startDate.value || "") + '"></label><label class="field"><span>End date</span><input data-address-field="endDate" placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" value="' + u.escapeHtml(address.endDate && address.endDate.value || "") + '"></label><label class="field full"><span>Address notes</span><textarea data-address-field="notes" rows="2">' + u.escapeHtml(address.notes || "") + "</textarea></label></div></fieldset>";
+  }
+
+  function contactRow(item, index, type) {
+    const inputType = type === "email" ? "email" : "tel";
+    return '<div class="repeatable-contact" data-contact-index="' + index + '" data-contact-type="' + type + '"><label class="field"><span>Label</span><input data-contact-field="label" value="' + u.escapeHtml(item.label || (type === "phone" ? "Mobile" : "Personal")) + '"></label><label class="field grow-control"><span>' + (type === "phone" ? "Number" : "Address") + '</span><input type="' + inputType + '" data-contact-field="value" value="' + u.escapeHtml(item.value || "") + '"></label><button type="button" class="button small danger-text" data-remove-contact="' + type + ':' + index + '">Remove</button></div>';
+  }
+
+  function renderPersonRepeatables() {
+    $("#addressEditor").innerHTML = personDraft.addresses.length ? personDraft.addresses.map(addressRow).join("") : '<p class="muted-copy">No addresses recorded.</p>';
+    $("#phoneEditor").innerHTML = personDraft.phones.length ? personDraft.phones.map(function (item, index) { return contactRow(item, index, "phone"); }).join("") : '<p class="muted-copy">No phone numbers recorded.</p>';
+    $("#emailEditor").innerHTML = personDraft.emails.length ? personDraft.emails.map(function (item, index) { return contactRow(item, index, "email"); }).join("") : '<p class="muted-copy">No email addresses recorded.</p>';
+  }
+
+  function syncPersonRepeatables() {
+    personDraft.addresses = $$("[data-address-index]", $("#addressEditor")).map(function (row, index) {
+      const value = function (name) { return row.querySelector('[data-address-field="' + name + '"]')?.value || ""; };
+      return {
+        id: personDraft.addresses[index] && personDraft.addresses[index].id || u.uid("address"),
+        label: value("label"), current: row.querySelector('[data-address-field="current"]')?.checked !== false,
+        line1: value("line1"), line2: value("line2"), city: value("city"), region: value("region"), postalCode: value("postalCode"), country: value("country"),
+        startDate: { value: value("startDate"), qualifier: "exact" }, endDate: { value: value("endDate"), qualifier: "exact" }, notes: value("notes"), order: index
+      };
+    });
+    ["phone", "email"].forEach(function (type) {
+      personDraft[type + "s"] = $$('.repeatable-contact[data-contact-type="' + type + '"]', $("#" + type + "Editor")).map(function (row, index) {
+        return { id: personDraft[type + "s"][index] && personDraft[type + "s"][index].id || u.uid(type), label: row.querySelector('[data-contact-field="label"]').value, value: row.querySelector('[data-contact-field="value"]').value, order: index };
+      });
+    });
+  }
+
+  function fillPersonForm(person) {
+    const values = {
+      personId: person && person.id,
+      givenName: person && person.names.given,
+      middleName: person && person.names.middle,
+      familyName: person && person.names.family,
+      birthSurname: person && person.names.birth,
+      preferredName: person && person.names.preferred,
+      nameSuffix: person && person.names.suffix,
+      displayName: person && person.names.display,
+      livingStatus: person && person.livingStatus || "living",
+      gender: person && person.gender,
+      pronouns: person && person.pronouns,
+      birthDate: person && person.birth.date.value,
+      birthQualifier: person && person.birth.date.qualifier || "exact",
+      birthPlace: person && person.birth.place,
+      deathDate: person && person.death.date.value,
+      deathQualifier: person && person.death.date.qualifier || "exact",
+      deathPlace: person && person.death.place,
+      heritageNote: person && person.heritageNote,
+      personNotes: person && person.notes
+    };
+    Object.keys(values).forEach(function (id) { const input = $("#" + id); if (input) input.value = values[id] || ""; });
+    personDraft = {
+      addresses: u.clone(person && person.addresses || []),
+      phones: u.clone(person && person.phones || []),
+      emails: u.clone(person && person.emails || [])
+    };
+    renderPersonRepeatables();
+    $("#personFormError").hidden = true;
+  }
+
+  function openPersonEditor(id, trigger) {
+    const person = id ? state().workspace.people.find(function (item) { return item.id === id; }) : null;
+    $("#personDialogTitle").textContent = person ? "Edit " + model.displayName(person) : pendingRelative ? "Add " + pendingRelative.role : "Add person";
+    fillPersonForm(person);
+    components.openDialog("#personDialog", { trigger: trigger, focus: "#givenName" });
+  }
+
+  function validDateInput(value) {
+    return !value || /^\d{4}(?:-(?:0[1-9]|1[0-2])(?:-(?:0[1-9]|[12]\d|3[01]))?)?$/.test(value);
+  }
+
+  function showPersonError(message) {
+    const error = $("#personFormError");
+    error.textContent = message;
+    error.hidden = false;
+    error.scrollIntoView({ block: "nearest" });
+  }
+
+  function collectPersonForm(existing) {
+    syncPersonRepeatables();
+    const now = u.isoNow();
+    return {
+      id: existing ? existing.id : u.uid("person"),
+      names: { given: $("#givenName").value, middle: $("#middleName").value, family: $("#familyName").value, birth: $("#birthSurname").value, preferred: $("#preferredName").value, suffix: $("#nameSuffix").value, display: $("#displayName").value },
+      livingStatus: $("#livingStatus").value,
+      gender: $("#gender").value,
+      pronouns: $("#pronouns").value,
+      birth: { date: { value: $("#birthDate").value.trim(), qualifier: $("#birthQualifier").value }, place: $("#birthPlace").value },
+      death: { date: { value: $("#deathDate").value.trim(), qualifier: $("#deathQualifier").value }, place: $("#deathPlace").value },
+      addresses: personDraft.addresses,
+      phones: personDraft.phones,
+      emails: personDraft.emails,
+      heritageNote: $("#heritageNote").value,
+      notes: $("#personNotes").value,
+      order: existing ? existing.order : state().workspace.people.length,
+      createdAt: existing ? existing.createdAt : now,
+      updatedAt: now
+    };
+  }
+
+  function savePerson(event) {
+    event.preventDefault();
+    const id = $("#personId").value;
+    const existing = id ? state().workspace.people.find(function (person) { return person.id === id; }) : null;
+    if (!$("#displayName").value.trim() && !$("#givenName").value.trim() && !$("#familyName").value.trim()) return showPersonError("Enter a display name, given name, or family name.");
+    const dateValues = [$("#birthDate").value.trim(), $("#deathDate").value.trim()];
+    syncPersonRepeatables();
+    personDraft.addresses.forEach(function (address) { dateValues.push(address.startDate.value, address.endDate.value); });
+    if (dateValues.some(function (value) { return !validDateInput(value); })) return showPersonError("Use YYYY, YYYY-MM, or YYYY-MM-DD for every date.");
+    const person = collectPersonForm(existing);
+    let relationshipError = "";
+    storage.mutate(function (next) {
+      if (existing) next.workspace.people[next.workspace.people.findIndex(function (item) { return item.id === existing.id; })] = person;
+      else next.workspace.people.push(person);
+      if (!next.workspace.family.homePersonId) next.workspace.family.homePersonId = person.id;
+      next.ui.selectedPersonId = person.id;
+      next.ui.treeFocusId = person.id;
+      if (pendingRelative) {
+        const sourceId = pendingRelative.sourceId;
+        let relationship;
+        if (pendingRelative.role === "parent") relationship = { id: u.uid("relationship"), type: "parent-child", parentId: person.id, childId: sourceId, kind: "unknown", startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, place: "", notes: "", createdAt: u.isoNow(), updatedAt: u.isoNow() };
+        else if (pendingRelative.role === "child") relationship = { id: u.uid("relationship"), type: "parent-child", parentId: sourceId, childId: person.id, kind: "unknown", startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, place: "", notes: "", createdAt: u.isoNow(), updatedAt: u.isoNow() };
+        else relationship = { id: u.uid("relationship"), type: "partner", person1Id: sourceId, person2Id: person.id, status: "unknown", startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, place: "", notes: "", createdAt: u.isoNow(), updatedAt: u.isoNow() };
+        relationshipError = family.validateRelationshipDraft(relationship, next);
+        if (!relationshipError) next.workspace.relationships.push(relationship);
+      }
+    }, { reason: existing ? "edit-person" : "add-person" });
+    const message = existing ? "Updated " + model.displayName(person) + "." : "Added " + model.displayName(person) + ".";
+    pendingRelative = null;
+    treeNeedsFit = true;
+    components.closeDialog("#personDialog", "saved");
+    renderAll();
+    components.toast(relationshipError ? message + " The relative link was not added: " + relationshipError : message, { title: existing ? "Person updated" : "Person added", kind: relationshipError ? "warning" : "success" });
+  }
+
+  function personOptions(selectedId) {
+    return state().workspace.people.slice().sort(function (a, b) { return model.sortName(a).localeCompare(model.sortName(b)); }).map(function (person) { return '<option value="' + u.escapeHtml(person.id) + '" ' + (person.id === selectedId ? "selected" : "") + '>' + u.escapeHtml(model.displayName(person) + " · " + person.reference) + "</option>"; }).join("");
+  }
+
+  function updateRelationshipFormType() {
+    const partner = $("#relationshipType").value === "partner";
+    $("#relationPerson1Label").textContent = partner ? "First partner" : "Parent";
+    $("#relationPerson2Label").textContent = partner ? "Second partner" : "Child";
+    $("#parentKindField").hidden = partner;
+    $("#partnerStatusField").hidden = !partner;
+  }
+
+  function openRelationshipEditor(id, personId, trigger) {
+    const relationship = id ? state().workspace.relationships.find(function (item) { return item.id === id; }) : null;
+    $("#relationshipDialogTitle").textContent = relationship ? "Edit relationship" : "Connect existing people";
+    $("#relationshipId").value = relationship ? relationship.id : "";
+    $("#relationshipType").value = relationship ? relationship.type : "parent-child";
+    const firstId = relationship ? (relationship.type === "parent-child" ? relationship.parentId : relationship.person1Id) : personId;
+    const secondId = relationship ? (relationship.type === "parent-child" ? relationship.childId : relationship.person2Id) : state().workspace.people.find(function (person) { return person.id !== firstId; })?.id;
+    $("#relationPerson1").innerHTML = personOptions(firstId);
+    $("#relationPerson2").innerHTML = personOptions(secondId);
+    $("#parentKind").innerHTML = config.parentKinds.map(function (item) { return '<option value="' + item.id + '">' + u.escapeHtml(item.label) + "</option>"; }).join("");
+    $("#partnerStatus").innerHTML = config.partnerStatuses.map(function (item) { return '<option value="' + item.id + '">' + u.escapeHtml(item.label) + "</option>"; }).join("");
+    $("#parentKind").value = relationship && relationship.kind || "unknown";
+    $("#partnerStatus").value = relationship && relationship.status || "unknown";
+    $("#relationshipStartDate").value = relationship && relationship.startDate.value || "";
+    $("#relationshipStartQualifier").value = relationship && relationship.startDate.qualifier || "exact";
+    $("#relationshipEndDate").value = relationship && relationship.endDate.value || "";
+    $("#relationshipEndQualifier").value = relationship && relationship.endDate.qualifier || "exact";
+    $("#relationshipPlace").value = relationship && relationship.place || "";
+    $("#relationshipNotes").value = relationship && relationship.notes || "";
+    $("#relationshipFormError").hidden = true;
+    updateRelationshipFormType();
+    components.openDialog("#relationshipDialog", { trigger: trigger, focus: "#relationshipType" });
+  }
+
+  function saveRelationship(event) {
+    event.preventDefault();
+    const id = $("#relationshipId").value;
+    const existing = id ? state().workspace.relationships.find(function (item) { return item.id === id; }) : null;
+    const type = $("#relationshipType").value;
+    const startDate = { value: $("#relationshipStartDate").value.trim(), qualifier: $("#relationshipStartQualifier").value };
+    const endDate = { value: $("#relationshipEndDate").value.trim(), qualifier: $("#relationshipEndQualifier").value };
+    if (!validDateInput(startDate.value) || !validDateInput(endDate.value)) {
+      $("#relationshipFormError").textContent = "Use YYYY, YYYY-MM, or YYYY-MM-DD for relationship dates.";
+      $("#relationshipFormError").hidden = false;
+      return;
+    }
+    const now = u.isoNow();
+    const relationship = {
+      id: existing ? existing.id : u.uid("relationship"), type: type,
+      startDate: startDate, endDate: endDate, place: $("#relationshipPlace").value, notes: $("#relationshipNotes").value,
+      order: existing ? existing.order : state().workspace.relationships.length, createdAt: existing ? existing.createdAt : now, updatedAt: now
+    };
+    if (type === "parent-child") Object.assign(relationship, { parentId: $("#relationPerson1").value, childId: $("#relationPerson2").value, kind: $("#parentKind").value });
+    else Object.assign(relationship, { person1Id: $("#relationPerson1").value, person2Id: $("#relationPerson2").value, status: $("#partnerStatus").value });
+    const error = family.validateRelationshipDraft(relationship, state(), existing && existing.id);
+    if (error) {
+      $("#relationshipFormError").textContent = error;
+      $("#relationshipFormError").hidden = false;
+      return;
+    }
+    storage.mutate(function (next) {
+      if (existing) next.workspace.relationships[next.workspace.relationships.findIndex(function (item) { return item.id === existing.id; })] = relationship;
+      else next.workspace.relationships.push(relationship);
+    }, { reason: existing ? "edit-relationship" : "add-relationship" });
+    treeNeedsFit = true;
+    components.closeDialog("#relationshipDialog", "saved");
+    renderAll();
+    components.toast(existing ? "The relationship was updated." : "The people are now connected.", { title: existing ? "Relationship updated" : "Relationship added", kind: "success" });
+  }
+
+  async function addRelative(personId, trigger) {
+    const choice = await components.choose({
+      title: "Add a new relative",
+      message: "Choose how the new person is related. You can refine the relationship details afterward.",
+      choices: [
+        { value: "parent", label: "Add parent", description: "Create a new person as a parent of the selected person.", kind: "primary" },
+        { value: "child", label: "Add child", description: "Create a new person as a child of the selected person." },
+        { value: "partner", label: "Add partner", description: "Create a new person as a partner of the selected person." }
+      ],
+      trigger: trigger
+    });
+    if (choice === "cancel") return;
+    pendingRelative = { sourceId: personId, role: choice };
+    openPersonEditor("", trigger);
+  }
+
+  async function deleteRelationship(id, trigger) {
+    const relationship = state().workspace.relationships.find(function (item) { return item.id === id; });
+    if (!relationship) return;
+    const accepted = await components.confirm({ title: "Remove this relationship?", message: "The people will remain in the directory, but this link and its relationship notes will be removed from the tree and atlas.", confirmLabel: "Remove relationship", cancelLabel: "Keep relationship", danger: true, trigger: trigger });
+    if (!accepted) return;
+    storage.saveRecovery("Before removing a relationship", state());
+    storage.mutate(function (next) { next.workspace.relationships = next.workspace.relationships.filter(function (item) { return item.id !== id; }); }, { reason: "delete-relationship" });
+    treeNeedsFit = true;
+    renderAll();
+    components.toast("The relationship was removed. A recovery copy is available in Developer Mode.", { title: "Relationship removed", kind: "success" });
+  }
+
+  async function deletePerson(id, trigger) {
+    const person = state().workspace.people.find(function (item) { return item.id === id; });
+    if (!person) return;
+    const linkCount = state().workspace.relationships.filter(function (relationship) { return relationship.type === "parent-child" ? relationship.parentId === id || relationship.childId === id : relationship.person1Id === id || relationship.person2Id === id; }).length;
+    const accepted = await components.confirm({ title: "Delete " + model.displayName(person) + "?", message: "This permanently removes the profile and " + linkCount + " relationship link" + (linkCount === 1 ? "" : "s") + " from the local family. A recovery copy will be saved first.", confirmLabel: "Delete person", cancelLabel: "Keep person", danger: true, trigger: trigger });
+    if (!accepted) return;
+    storage.saveRecovery("Before deleting " + model.displayName(person), state());
+    storage.mutate(function (next) {
+      next.workspace.people = next.workspace.people.filter(function (item) { return item.id !== id; });
+      next.workspace.relationships = next.workspace.relationships.filter(function (relationship) { return relationship.type === "parent-child" ? relationship.parentId !== id && relationship.childId !== id : relationship.person1Id !== id && relationship.person2Id !== id; });
+      const fallback = next.workspace.people[0] && next.workspace.people[0].id || "";
+      if (next.workspace.family.homePersonId === id) next.workspace.family.homePersonId = fallback;
+      next.ui.selectedPersonId = fallback;
+      next.ui.treeFocusId = fallback;
+    }, { reason: "delete-person" });
+    treeNeedsFit = true;
+    renderAll();
+    components.toast("The person and linked relationships were removed. A recovery copy is available in Developer Mode.", { title: "Person deleted", kind: "success", duration: 5000 });
+  }
+
+  function setHomePerson(id) {
+    storage.mutate(function (next) { next.workspace.family.homePersonId = id; next.ui.treeFocusId = id; }, { reason: "set-home-person" });
+    treeNeedsFit = true;
+    renderAll();
+    components.toast("The tree now opens around " + model.displayName(state().workspace.people.find(function (person) { return person.id === id; })) + ".", { title: "Home person updated", kind: "success" });
+  }
+
+  function printDate() {
+    return new Intl.DateTimeFormat(undefined, { year: "numeric", month: "long", day: "numeric" }).format(new Date());
+  }
+
+  function printRelationshipList(person, graph) {
+    const groups = family.relationGroups(person.id, state());
+    const section = function (label, entries) {
+      if (!entries.length) return "";
+      return '<div class="print-rel-group"><dt>' + label + "</dt><dd>" + entries.map(function (entry) {
+        const other = entry.person || entry;
+        const relationship = entry.relationship;
+        const meta = relationship ? relationshipLabel(relationship, person.id, other) + (relationshipMeta(relationship) ? " · " + relationshipMeta(relationship) : "") : "Sibling";
+        return u.escapeHtml(other.reference + " " + model.displayName(other) + " — " + meta);
+      }).join("<br>") + "</dd></div>";
+    };
+    return section("Parents", groups.parents) + section("Partners", groups.partners) + section("Children", groups.children) + section("Siblings", groups.siblings);
+  }
+
+  function buildPrintReport() {
+    const current = state();
+    const people = current.workspace.people.slice().sort(function (a, b) { return model.sortName(a).localeCompare(model.sortName(b)); });
+    const graph = family.indexes(current);
+    const componentsList = family.connectedComponents(current);
+    const familyUnits = family.familyUnits(current);
+    const addressCount = people.reduce(function (total, person) { return total + person.addresses.length; }, 0);
+    const notes = documentText(current.workspace.documents[0]);
+    const index = people.map(function (person) { return '<li><a href="#print-' + u.escapeHtml(person.id) + '"><span>' + u.escapeHtml(person.reference) + '</span><strong>' + u.escapeHtml(model.displayName(person)) + '</strong><small>' + u.escapeHtml(family.lifespan(person)) + "</small></a></li>"; }).join("");
+    const componentHtml = componentsList.map(function (ids, componentIndex) {
+      const componentPeople = ids.map(function (id) { return graph.peopleById.get(id); }).filter(Boolean);
+      const idSet = new Set(ids);
+      const componentRelationships = current.workspace.relationships.filter(function (relationship) { return relationship.type === "parent-child" ? idSet.has(relationship.parentId) && idSet.has(relationship.childId) : idSet.has(relationship.person1Id) && idSet.has(relationship.person2Id); });
+      const levels = family.generationMap(componentPeople, componentRelationships);
+      const groups = new Map();
+      componentPeople.forEach(function (person) { const level = levels.get(person.id) || 0; if (!groups.has(level)) groups.set(level, []); groups.get(level).push(person); });
+      return '<article class="print-component"><header><span class="print-reference">F' + String(componentIndex + 1).padStart(3, "0") + '</span><h3>Family component ' + (componentIndex + 1) + '</h3><p>' + componentPeople.length + " people</p></header>" + Array.from(groups.keys()).sort(function (a, b) { return a - b; }).map(function (level, index) { return '<section class="print-generation"><h4>Generation ' + (index + 1) + '</h4><div>' + groups.get(level).sort(function (a, b) { return model.sortName(a).localeCompare(model.sortName(b)); }).map(function (person) { return '<span><strong>' + u.escapeHtml(person.reference) + '</strong> ' + u.escapeHtml(model.displayName(person)) + '<small>' + u.escapeHtml(family.lifespan(person)) + "</small></span>"; }).join("") + "</div></section>"; }).join("") + "</article>";
+    }).join("");
+    const profiles = people.map(function (person) {
+      const addressHtml = person.addresses.length ? '<section><h3>Addresses</h3>' + person.addresses.map(function (address) { return '<div class="print-address"><strong>' + u.escapeHtml(address.label + (address.current ? " · current" : " · former")) + '</strong><address>' + u.escapeHtml(model.formatAddress(address)).replace(/\n/g, "<br>") + '</address>' + ((model.formatFlexibleDate(address.startDate) || model.formatFlexibleDate(address.endDate)) ? '<small>' + u.escapeHtml([model.formatFlexibleDate(address.startDate), model.formatFlexibleDate(address.endDate)].filter(Boolean).join(" – ")) + "</small>" : "") + (address.notes ? "<p>" + u.escapeHtml(address.notes) + "</p>" : "") + "</div>"; }).join("") + "</section>" : "";
+      const contactHtml = person.phones.length || person.emails.length ? '<section><h3>Contact</h3><dl>' + person.phones.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + person.emails.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + "</dl></section>" : "";
+      const lineage = family.lineageSummary(person.id, current);
+      return '<article id="print-' + u.escapeHtml(person.id) + '" class="print-person"><header><span class="print-reference">' + u.escapeHtml(person.reference) + '</span><div><h2>' + u.escapeHtml(model.displayName(person)) + '</h2><p>' + u.escapeHtml(family.lifespan(person) + (current.workspace.family.homePersonId === person.id ? " · home person" : "")) + '</p></div></header><div class="print-profile-grid"><section><h3>Life details</h3><dl>' + formatEvent("Born", person.birth) + formatEvent("Died", person.death) + '<div><dt>Status</dt><dd>' + u.escapeHtml(person.livingStatus) + "</dd></div>" + (person.gender ? '<div><dt>Gender</dt><dd>' + u.escapeHtml(person.gender) + "</dd></div>" : "") + (person.pronouns ? '<div><dt>Pronouns</dt><dd>' + u.escapeHtml(person.pronouns) + "</dd></div>" : "") + '<div><dt>Lineage</dt><dd>' + u.escapeHtml(lineage.label) + '</dd></div></dl></section><section><h3>Lineage references</h3><dl>' + printRelationshipList(person, graph) + "</dl></section>" + contactHtml + addressHtml + (person.heritageNote ? '<section class="print-wide"><h3>Heritage / ancestry</h3><p>' + u.escapeHtml(person.heritageNote).replace(/\n/g, "<br>") + "</p></section>" : "") + (person.notes ? '<section class="print-wide"><h3>Notes</h3><p>' + u.escapeHtml(person.notes).replace(/\n/g, "<br>") + "</p></section>" : "") + printSource(person) + "</div></article>";
+    }).join("");
+    $("#printReport").innerHTML = '<article class="print-cover"><span class="eyebrow">Private family atlas</span><h1>' + u.escapeHtml(current.workspace.family.title) + '</h1><p>Prepared by McFamily on ' + u.escapeHtml(printDate()) + '</p><dl><div><dt>People</dt><dd>' + people.length + '</dd></div><div><dt>Relationships</dt><dd>' + current.workspace.relationships.length + '</dd></div><div><dt>Family units</dt><dd>' + familyUnits.length + '</dd></div><div><dt>Addresses</dt><dd>' + addressCount + '</dd></div><div><dt>Family components</dt><dd>' + componentsList.length + '</dd></div></dl><aside><strong>Private document</strong><span>This atlas may contain home addresses, contact details, and family notes. Store and share it carefully.</span></aside></article><article class="print-legend"><h2>How to use this atlas</h2><p>Every person has a stable P-number. Family maps group connected people by generation; profiles repeat P-numbers beside parents, partners, children, and siblings for quick cross-reference.</p><div><span><strong>Parent links</strong> Biological, adoptive, step, foster, guardian, or unspecified</span><span><strong>Partner links</strong> Married, partnered, separated, divorced, widowed, former, or unspecified</span></div></article><article class="print-index"><h2>Alphabetical person index</h2><ol>' + index + '</ol></article><section class="print-atlas"><h2>Family maps</h2>' + componentHtml + '</section><section class="print-directory"><h1>Person directory</h1>' + profiles + "</section>" + (notes ? '<article class="print-family-notes"><h1>Family Notes</h1><p>' + u.escapeHtml(notes).replace(/\n/g, "<br>") + "</p></article>" : "");
+  }
+
+  function printAtlas() {
+    if (!initialized() || !state().workspace.people.length) {
+      components.message("Nothing to print", "Add at least one person before building the family atlas.");
+      return;
+    }
+    buildPrintReport();
+    $("#printReport").setAttribute("aria-hidden", "false");
+    document.body.classList.add("printing-atlas");
+    requestAnimationFrame(function () {
+      window.print();
+      document.body.classList.remove("printing-atlas");
+      $("#printReport").setAttribute("aria-hidden", "true");
+    });
+  }
+
+  function filteredRoadmap() {
     const moduleState = state().modules.roadmap;
-    const filters = Object.assign({ search: moduleState.search, state: moduleState.state, sortBy: moduleState.sortBy, sortDirection: moduleState.sortDirection }, overrides || {});
-    const query = String(filters.search || "").trim().toLowerCase();
-    const direction = filters.sortDirection === "desc" ? -1 : 1;
-    const priority = function (item) { return Number(item.priority) || 99; };
-    return config.roadmap.filter(function (item) {
-      return (filters.state === "all" || item.state === filters.state) && (!query || (item.title + " " + item.description + " " + item.target).toLowerCase().includes(query));
-    }).slice().sort(function (a, b) {
+    const query = String(moduleState.search || "").trim().toLowerCase();
+    const direction = moduleState.sortDirection === "desc" ? -1 : 1;
+    return config.roadmap.filter(function (item) { return (moduleState.state === "all" || item.state === moduleState.state) && (!query || (item.title + " " + item.description + " " + item.target).toLowerCase().includes(query)); }).slice().sort(function (a, b) {
       let compared = 0;
-      if (filters.sortBy === "priority") compared = priority(a) - priority(b);
-      else if (filters.sortBy === "effort") compared = a.effort - b.effort;
-      else if (filters.sortBy === "age") compared = Date.parse(a.createdAt) - Date.parse(b.createdAt);
-      else if (filters.sortBy === "target") compared = String(a.target).localeCompare(String(b.target), undefined, { numeric: true });
+      if (moduleState.sortBy === "priority") compared = a.priority - b.priority;
+      else if (moduleState.sortBy === "effort") compared = a.effort - b.effort;
+      else if (moduleState.sortBy === "age") compared = Date.parse(a.createdAt) - Date.parse(b.createdAt);
+      else if (moduleState.sortBy === "target") compared = String(a.target).localeCompare(String(b.target), undefined, { numeric: true });
       else compared = a.title.localeCompare(b.title);
       return compared * direction || a.title.localeCompare(b.title);
     });
@@ -193,53 +816,45 @@
     return '<article class="roadmap-card" data-roadmap-state="' + item.state + '"><header><span class="roadmap-state">' + u.escapeHtml(item.state) + '</span><span class="priority-chip">P' + item.priority + '</span></header><h3>' + u.escapeHtml(item.title) + '</h3><p>' + u.escapeHtml(item.description) + '</p><footer><span>Target ' + u.escapeHtml(item.target) + '</span><span>Effort ' + item.effort + '/4</span><span>Added ' + u.dateLabel(item.createdAt) + "</span></footer></article>";
   }
 
+  function emptyState(title, copy, label, action) {
+    return '<div class="empty-state"><h3>' + u.escapeHtml(title) + '</h3><p>' + u.escapeHtml(copy) + "</p>" + (label ? '<button type="button" class="button" data-action="' + action + '">' + u.escapeHtml(label) + "</button>" : "") + "</div>";
+  }
+
   function globalSearchMatches(query) {
     const needle = query.trim().toLowerCase();
     if (!needle) return [];
     const results = [];
+    state().workspace.people.forEach(function (person) {
+      if (model.personSearchText(person).includes(needle)) results.push({ type: "person", id: person.id, title: model.displayName(person), meta: "Person · " + person.reference });
+    });
     const notes = state().workspace.documents[0];
-    if (config.features.documents && notes && (`notes ${documentText(notes)}`).toLowerCase().includes(needle)) results.push({ type: "notes", id: notes.id, title: "Notes", meta: "Local notes" });
-    config.help.forEach(function (topic) {
-      if ((topic.title + " " + topic.keywords + " " + u.stripHtml(topic.html)).toLowerCase().includes(needle)) results.push({ type: "help", id: topic.id, title: topic.title, meta: "Help · " + topic.section });
-    });
-    if (config.features.roadmap) config.roadmap.forEach(function (item) {
-      if ((item.title + " " + item.description).toLowerCase().includes(needle)) results.push({ type: "roadmap", id: item.id, title: item.title, meta: "Roadmap · " + item.state });
-    });
-    config.releases.forEach(function (release) {
-      const releaseText = [release.version, release.title, release.summary].concat(release.features || [], release.improvements || [], release.fixes || [], release.knownIssues || []).join(" ");
-      if (releaseText.toLowerCase().includes(needle)) results.push({ type: "release", id: release.version, title: release.title, meta: "Release · v" + release.version });
-    });
-    return results.slice(0, 10);
+    if (notes && ("notes " + documentText(notes)).toLowerCase().includes(needle)) results.push({ type: "notes", id: notes.id, title: "Notes", meta: "Private family notes" });
+    config.help.forEach(function (topic) { if ((topic.title + " " + topic.keywords + " " + u.stripHtml(topic.html)).toLowerCase().includes(needle)) results.push({ type: "help", id: topic.id, title: topic.title, meta: "Help · " + topic.section }); });
+    config.roadmap.forEach(function (item) { if ((item.title + " " + item.description).toLowerCase().includes(needle)) results.push({ type: "roadmap", id: item.id, title: item.title, meta: "Roadmap · " + item.state }); });
+    config.releases.forEach(function (release) { const text = [release.version, release.title, release.summary].concat(release.features || [], release.improvements || [], release.fixes || [], release.knownIssues || []).join(" "); if (text.toLowerCase().includes(needle)) results.push({ type: "release", id: release.version, title: release.title, meta: "Release · v" + release.version }); });
+    return results.slice(0, 12);
   }
 
   function renderGlobalSearchResults() {
     const container = $("#globalSearchResults");
     const query = state().ui.search;
-    if (!query || document.activeElement !== $("#globalSearch")) { container.hidden = true; return; }
+    if (!initialized() || !query || document.activeElement !== $("#globalSearch")) { container.hidden = true; return; }
     const results = globalSearchMatches(query);
     container.hidden = false;
-    container.innerHTML = results.length ? results.map(function (result, index) {
-      return '<button type="button" role="option" id="global-result-' + index + '" data-search-type="' + result.type + '" data-search-id="' + u.escapeHtml(result.id) + '"><span><strong>' + u.escapeHtml(result.title) + '</strong><small>' + u.escapeHtml(result.meta) + "</small></span><span aria-hidden=\"true\">→</span></button>";
-    }).join("") : '<div class="search-empty">No matches across notes, help, releases, or roadmap.</div>';
+    container.innerHTML = results.length ? results.map(function (result, index) { return '<button type="button" role="option" id="global-result-' + index + '" data-search-type="' + result.type + '" data-search-id="' + u.escapeHtml(result.id) + '"><span><strong>' + u.escapeHtml(result.title) + '</strong><small>' + u.escapeHtml(result.meta) + "</small></span><span aria-hidden=\"true\">→</span></button>"; }).join("") : '<div class="search-empty">No matches across people, contacts, Notes, Help, releases, or Roadmap.</div>';
   }
 
   function activateGlobalSearchResult(type, id) {
-    if (type === "notes") openNotes($("#globalSearch"));
-    else if (type === "help") { openSupport("help"); setInputValue($("#helpSearch"), config.help.find(function (topic) { return topic.id === id; })?.title || ""); renderHelp(); }
-    else if (type === "roadmap") {
-      storage.mutate(function (next) { next.modules.roadmap.search = config.roadmap.find(function (item) { return item.id === id; })?.title || ""; }, { reason: "roadmap-search" });
-      openSupport("roadmap", $("#globalSearch"));
-    }
-    else if (type === "release") { versionView = "released"; openSupport("releases"); }
+    if (type === "person") selectPerson(id, { focus: true, mobileProfile: true });
+    else if (type === "notes") openNotes($("#globalSearch"));
+    else if (type === "help") { openSupport("help", $("#globalSearch")); setInputValue($("#helpSearch"), config.help.find(function (topic) { return topic.id === id; })?.title || ""); renderHelp(); }
+    else if (type === "roadmap") { storage.mutate(function (next) { next.modules.roadmap.search = config.roadmap.find(function (item) { return item.id === id; })?.title || ""; }, { touch: false, reason: "roadmap-search" }); openSupport("roadmap", $("#globalSearch")); }
+    else if (type === "release") { versionView = "released"; openSupport("releases", $("#globalSearch")); }
     $("#globalSearchResults").hidden = true;
   }
 
-  function switchModule(moduleId) {
-    if (!activeModuleEnabled(moduleId)) return;
-    if (moduleId === "roadmap") openSupport("roadmap");
-  }
-
   function openSupport(tab, trigger) {
+    if (!initialized()) return;
     const chosen = tab || state().ui.supportTab || "settings";
     switchSupportTab(chosen);
     components.openDialog("#supportDialog", { trigger: trigger, focus: "[data-support-tab='" + chosen + "']" });
@@ -249,11 +864,7 @@
   function switchSupportTab(tab) {
     if (tab === "developer" && !state().preferences.controls.developerMode) tab = "settings";
     storage.mutate(function (next) { next.ui.supportTab = tab; }, { touch: false, reason: "support-tab" });
-    $$('[data-support-tab]').forEach(function (button) {
-      const selected = button.dataset.supportTab === tab;
-      button.setAttribute("aria-selected", String(selected));
-      button.tabIndex = selected ? 0 : -1;
-    });
+    $$('[data-support-tab]').forEach(function (button) { const selected = button.dataset.supportTab === tab; button.setAttribute("aria-selected", String(selected)); button.tabIndex = selected ? 0 : -1; });
     $$('[data-support-panel]').forEach(function (panel) { panel.hidden = panel.dataset.supportPanel !== tab; });
     if (tab === "help") renderHelp();
     else if (tab === "releases") renderReleases();
@@ -261,21 +872,14 @@
     else if (tab === "roadmap") renderSupportRoadmap();
     else if (tab === "developer") renderDeveloper();
     else renderSettings();
-    $(".support-panels")?.scrollTo({ top: 0, behavior: "auto" });
   }
 
   function renderSettings() {
     const preferences = state().preferences;
     const appearance = preferences.appearance;
     $$('[data-theme-mode]').forEach(function (button) { button.setAttribute("aria-pressed", String(button.dataset.themeMode === appearance.mode)); });
-    $("#themePresets").innerHTML = config.themes.map(function (theme) {
-      const selected = appearance.preset === theme.id;
-      return '<button type="button" class="theme-preset" data-theme-preset="' + theme.id + '" aria-pressed="' + selected + '"><span class="theme-swatches" aria-hidden="true"><i style="--swatch:' + theme.accent + '"></i><i style="--swatch:' + theme.accent2 + '"></i><i style="--swatch:' + theme.success + '"></i><i style="--swatch:' + theme.warning + '"></i></span><strong>' + u.escapeHtml(theme.label) + "</strong></button>";
-    }).join("");
-    ["accent", "accent2", "success", "warning", "danger"].forEach(function (key) {
-      setInputValue($("[data-color-setting='" + key + "']"), appearance[key]);
-      setInputValue($("[data-color-text='" + key + "']"), appearance[key]);
-    });
+    $("#themePresets").innerHTML = config.themes.map(function (theme) { const selected = appearance.preset === theme.id; return '<button type="button" class="theme-preset" data-theme-preset="' + theme.id + '" aria-pressed="' + selected + '"><span class="theme-swatches" aria-hidden="true"><i style="--swatch:' + theme.accent + '"></i><i style="--swatch:' + theme.accent2 + '"></i><i style="--swatch:' + theme.success + '"></i><i style="--swatch:' + theme.warning + '"></i></span><strong>' + u.escapeHtml(theme.label) + "</strong></button>"; }).join("");
+    ["accent", "accent2", "success", "warning", "danger"].forEach(function (key) { setInputValue($("[data-color-setting='" + key + "']"), appearance[key]); setInputValue($("[data-color-text='" + key + "']"), appearance[key]); });
     setInputValue($("#appTextScale"), Math.round(appearance.textScale * 100));
     $("#appTextScaleValue").textContent = Math.round(appearance.textScale * 100) + "%";
     setInputValue($("#readingTextScale"), Math.round(appearance.readingScale * 100));
@@ -284,75 +888,42 @@
     $("#motionPreference").value = appearance.reducedMotion;
     $("#hintsToggle").setAttribute("aria-pressed", String(preferences.hints.enabled));
     $("#hintsToggle").textContent = preferences.hints.enabled ? "On" : "Off";
-    renderSyncSettings();
-  }
-
-  function renderSyncSettings() {
+    setInputValue($("#familyTitle"), state().workspace.family.title);
     const localAvailable = storage.isPersistent();
     $("#localStorageSettingsState").textContent = localAvailable ? "Saved locally" : "Unavailable";
     $("#localStorageSettingsState").dataset.kind = localAvailable ? "success" : "danger";
-    $("#localStorageSettingsSummary").innerHTML = '<span aria-hidden="true">' + icons.markup(localAvailable ? "check" : "close") + '</span><span><strong>' + (localAvailable ? "Browser storage is working" : "Browser storage is unavailable") + '</strong><small>' + (localAvailable ? "Notes, preferences, and sync metadata save automatically on this device." : "Changes may not survive a reload. Export a backup before continuing.") + "</small></span>";
-    if (!config.features.cloudSync) { $("#cloudSyncSettings").hidden = true; return; }
-    const cloud = state().modules.cloudSync;
-    const info = sync.getInfo();
-    $("#cloudSyncSettings").hidden = false;
-    $("#syncSettingsState").textContent = info.title;
-    $("#syncSettingsState").dataset.kind = info.kind;
-    $("#syncSettingsSummary").innerHTML = '<span aria-hidden="true">' + icons.markup(info.kind === "danger" ? "close" : info.kind === "success" ? "check" : "sync") + '</span><span><strong>' + u.escapeHtml(info.title) + '</strong><small>' + u.escapeHtml(info.message) + (info.checkedAt ? " Checked " + u.relativeTime(info.checkedAt) + "." : "") + "</small></span>";
-    setInputValue($("#syncOwner"), cloud.owner);
-    setInputValue($("#syncRepo"), cloud.repo);
-    setInputValue($("#syncBranch"), cloud.branch);
-    setInputValue($("#syncPath"), cloud.path);
-    $("#syncRememberToken").checked = cloud.rememberToken;
-    $("#storedTokenLabel").textContent = storage.hasSecret() ? "A token is stored; enter a value only to replace it." : "Required";
-    $("#syncToken").value = "";
-    $("#syncAdvancedFields").open = cloud.advancedOpen || !sync.configured();
-    $("#syncNowSettingsButton").disabled = info.busy || info.state === "offline";
-    $("#syncNowSettingsButton").textContent = info.action;
-    $("#forgetSyncButton").disabled = !sync.configured() && !cloud.owner;
+    $("#localStorageSettingsSummary").innerHTML = '<span aria-hidden="true">' + icons.markup(localAvailable ? "check" : "close") + '</span><span><strong>' + (localAvailable ? "Browser storage is working" : "Browser storage is unavailable") + '</strong><small>' + (localAvailable ? state().workspace.people.length + " people and " + state().workspace.relationships.length + " relationships save automatically on this browser." : "Changes may not survive a reload. Export a private CSV before continuing.") + "</small></span>";
   }
 
   function renderHelp() {
     const query = String($("#helpSearch")?.value || "").trim().toLowerCase();
-    const topics = config.help.filter(function (topic) {
-      return !query || (topic.title + " " + topic.section + " " + topic.keywords + " " + u.stripHtml(topic.html)).toLowerCase().includes(query);
-    });
+    const topics = config.help.filter(function (topic) { return !query || (topic.title + " " + topic.section + " " + topic.keywords + " " + u.stripHtml(topic.html)).toLowerCase().includes(query); });
     $("#helpResultCount").textContent = topics.length + " topic" + (topics.length === 1 ? "" : "s");
     const groups = {};
     topics.forEach(function (topic) { (groups[topic.section] = groups[topic.section] || []).push(topic); });
-    $("#helpContent").innerHTML = topics.length ? Object.keys(groups).map(function (section) {
-      return '<section class="help-section"><h3>' + u.escapeHtml(section) + '</h3>' + groups[section].map(function (topic) { return '<article id="help-' + topic.id + '"><h4>' + u.escapeHtml(topic.title) + "</h4>" + topic.html + "</article>"; }).join("") + "</section>";
-    }).join("") + renderSupportLinks() : emptyState("No help matches", "Try a shorter or broader search.", "Clear help search", "clear-help-search");
+    $("#helpContent").innerHTML = topics.length ? Object.keys(groups).map(function (section) { return '<section class="help-section"><h3>' + u.escapeHtml(section) + "</h3>" + groups[section].map(function (topic) { return '<article><h4>' + u.escapeHtml(topic.title) + "</h4>" + topic.html + "</article>"; }).join("") + "</section>"; }).join("") + renderSupportLinks() : emptyState("No help matches", "Try a shorter or broader search.", "Clear help search", "clear-help-search");
   }
 
   function renderSupportLinks() {
     const links = [config.identity.repository].concat(config.identity.support || []).filter(function (item) { return u.safeUrl(item.url); });
-    if (!links.length) return "";
-    return '<section class="help-section"><h3>Support links</h3><div class="support-links">' + links.map(function (item) { return '<button type="button" class="safe-link-button" data-open-url="' + u.escapeHtml(u.safeUrl(item.url)) + '">' + u.escapeHtml(item.label) + ' <span aria-hidden="true">↗</span></button>'; }).join("") + "</div></section>";
+    return links.length ? '<section class="help-section"><h3>Support links</h3><div class="support-links">' + links.map(function (item) { return '<button type="button" class="safe-link-button" data-open-url="' + u.escapeHtml(u.safeUrl(item.url)) + '">' + u.escapeHtml(item.label) + ' <span aria-hidden="true">↗</span></button>'; }).join("") + "</div></section>" : "";
   }
 
   function releaseCard(release) {
-    const section = function (title, values) {
-      return values && values.length ? '<div class="release-section"><h5>' + title + "</h5><ul>" + values.map(function (value) { return "<li>" + u.escapeHtml(value) + "</li>"; }).join("") + "</ul></div>" : "";
-    };
+    const section = function (title, values) { return values && values.length ? '<div class="release-section"><h5>' + title + "</h5><ul>" + values.map(function (value) { return "<li>" + u.escapeHtml(value) + "</li>"; }).join("") + "</ul></div>" : ""; };
     return '<article class="release-card"><header><div class="release-version-line"><span class="version-pill">v' + u.escapeHtml(release.version) + '</span><time datetime="' + u.escapeHtml(release.date) + '">' + u.dateLabel(release.date) + '</time></div><h4>' + u.escapeHtml(release.title) + '</h4></header><p>' + u.escapeHtml(release.summary) + '</p><div class="release-sections">' + section("Features", release.features) + section("Improvements", release.improvements) + section("Fixes", release.fixes) + section("Known issues", release.knownIssues) + "</div></article>";
   }
 
   function renderReleases() {
     $$('[data-version-view]').forEach(function (button) { button.setAttribute("aria-pressed", String(button.dataset.versionView === versionView)); });
     if (versionView === "released") $("#releaseContent").innerHTML = config.releases.map(releaseCard).join("");
-    else {
-      const items = config.roadmap.filter(function (item) { return item.state === versionView; });
-      $("#releaseContent").innerHTML = items.length ? items.map(roadmapCard).join("") : emptyState("Nothing here", "This demonstration view has no matching entries.");
-    }
+    else { const items = config.roadmap.filter(function (item) { return item.state === versionView; }); $("#releaseContent").innerHTML = items.length ? items.map(roadmapCard).join("") : emptyState("Nothing here", "No matching roadmap entries."); }
   }
 
   function renderShortcuts() {
     const groups = {};
     SHORTCUTS.forEach(function (shortcut) { (groups[shortcut.group] = groups[shortcut.group] || []).push(shortcut); });
-    $("#shortcutContent").innerHTML = '<p class="section-intro">Listed shortcuts also work while Shift, Control, or Option is held. Command-key combinations remain available to the browser.</p>' + Object.keys(groups).map(function (group) {
-      return '<section><h3>' + group + "</h3>" + groups[group].map(function (shortcut) { return '<div class="shortcut-row"><kbd>' + u.escapeHtml(shortcut.keys) + '</kbd><span>' + u.escapeHtml(shortcut.label) + "</span></div>"; }).join("") + "</section>";
-    }).join("");
+    $("#shortcutContent").innerHTML = '<p class="section-intro">Listed shortcuts also work while Shift, Control, or Option is held. Command-key combinations remain available to the browser.</p>' + Object.keys(groups).map(function (group) { return '<section><h3>' + group + "</h3>" + groups[group].map(function (shortcut) { return '<div class="shortcut-row"><kbd>' + u.escapeHtml(shortcut.keys) + '</kbd><span>' + u.escapeHtml(shortcut.label) + "</span></div>"; }).join("") + "</section>"; }).join("");
   }
 
   function renderSupportRoadmap() {
@@ -367,23 +938,15 @@
   async function renderDeveloper() {
     if (!state().preferences.controls.developerMode) return;
     const usage = await storage.usage();
-    const info = sync.getInfo();
     const device = pwa.detectDevice();
-    const breakpoint = window.innerWidth < 700 ? "Mobile" : window.innerWidth < 960 ? "Tablet" : "Desktop";
     const recovery = storage.recoveryInfo();
     const diagnostics = [
-      ["State model", "v" + state().schemaVersion],
-      ["Application", "v" + config.identity.version + " · build " + config.identity.buildId],
-      ["Device", device.label],
-      ["Layout", breakpoint + " · " + window.innerWidth + "×" + window.innerHeight],
-      ["State size", u.formatBytes(usage.stateBytes)],
-      ["Browser storage", usage.quota ? u.formatBytes(usage.usage) + " of " + u.formatBytes(usage.quota) : (usage.persistentStorageAvailable ? "Available" : "Unavailable")],
-      ["Modules", Object.keys(config.features).filter(function (key) { return config.features[key]; }).join(", ")],
-      ["Theme", document.documentElement.dataset.theme + " · " + state().preferences.appearance.preset],
-      ["Sync", info.title + (info.checkedAt ? " · checked " + u.relativeTime(info.checkedAt) : "")],
-      ["Recovery", recovery ? u.dateLabel(recovery.createdAt) + " · " + recovery.reason : "None"]
+      ["State model", "v" + state().schemaVersion], ["Application", "v" + config.identity.version + " · build " + config.identity.buildId],
+      ["People", String(state().workspace.people.length)], ["Relationships", String(state().workspace.relationships.length)], ["Addresses", String(state().workspace.people.reduce(function (sum, person) { return sum + person.addresses.length; }, 0))],
+      ["Device", device.label], ["Layout", (window.innerWidth < 700 ? "Mobile" : window.innerWidth < 960 ? "Tablet" : "Desktop") + " · " + window.innerWidth + "×" + window.innerHeight],
+      ["State size", u.formatBytes(usage.stateBytes)], ["Browser storage", usage.quota ? u.formatBytes(usage.usage) + " of " + u.formatBytes(usage.quota) : (usage.persistentStorageAvailable ? "Available" : "Unavailable")],
+      ["Theme", document.documentElement.dataset.theme + " · " + state().preferences.appearance.preset], ["Recovery", recovery ? u.dateLabel(recovery.createdAt) + " · " + recovery.reason : "None"]
     ];
-    diagnostics.splice(2, 0, ["Notes", documentText(state().workspace.documents[0]).length + " characters"]);
     $("#developerDiagnostics").innerHTML = diagnostics.map(function (row) { return '<div><dt>' + u.escapeHtml(row[0]) + '</dt><dd>' + u.escapeHtml(row[1]) + "</dd></div>"; }).join("");
     $("#developerState").textContent = JSON.stringify(model.exportEnvelope(state()), null, 2);
     $("#restoreRecoveryButton").disabled = !recovery;
@@ -394,98 +957,51 @@
     switchSupportTab(state().ui.supportTab);
   }
 
-  function clearRoadmapFilters() {
-    storage.mutate(function (next) { next.modules.roadmap.search = ""; next.modules.roadmap.state = "all"; next.modules.roadmap.sortBy = "priority"; }, { reason: "clear-roadmap-filters" });
-    renderSupportRoadmap();
-  }
-
   async function resetPreferences() {
-    const accepted = await components.confirm({ title: "Reset preferences?", message: "Appearance, filters, panel layout, view state, and dismissed hints will return to defaults. Notes will be preserved.", confirmLabel: "Reset preferences", danger: true });
+    const accepted = await components.confirm({ title: "Reset preferences?", message: "Appearance, family view settings, filters, and dismissed hints will return to defaults. People, relationships, contacts, and Notes will stay.", confirmLabel: "Reset preferences", danger: true });
     if (!accepted) return;
     storage.replace(model.resetPreferences(state()), { recoveryReason: "Before resetting preferences", reason: "reset-preferences", touch: false });
+    treeNeedsFit = true;
     renderAll();
-    components.toast("Preferences were reset; notes were preserved.", { title: "Preferences reset", kind: "success" });
+    components.toast("Preferences were reset; family data was preserved.", { title: "Preferences reset", kind: "success" });
   }
 
   async function eraseAllData() {
-    const accepted = await components.confirm({ title: "Erase all application data?", message: "This permanently removes notes, preferences, sync settings, the stored token, and recovery data from this browser. Export a backup first if anything should be kept.", confirmLabel: "Erase everything", cancelLabel: "Keep my data", danger: true });
+    const accepted = await components.confirm({ title: "Erase all local McFamily data?", message: "This permanently removes every person, address, relationship, Note, preference, and recovery copy from this browser and returns to the strict import screen. Export a private CSV first.", confirmLabel: "Erase everything", cancelLabel: "Keep my family", danger: true });
     if (!accepted) return;
     storage.clearAll();
-    renderAll();
     components.closeDialog("#supportDialog", "erased");
-    $("#assertiveStatus").textContent = "All application data was erased.";
-    components.toast("All application data was erased from this browser.", { title: "Data erased", kind: "info", duration: 5000 });
-  }
-
-  async function forgetSync() {
-    const accepted = await components.confirm({ title: "Forget GitHub on this device?", message: "Repository settings, sync history, and the stored token will be removed. Local notes will stay here.", confirmLabel: "Forget GitHub", danger: true });
-    if (!accepted) return;
-    await sync.forget();
-    renderSyncSettings(); renderSyncStatus();
-    components.toast("GitHub settings and token were removed from this device.", { title: "Sync disconnected", kind: "success" });
-  }
-
-  function syncFormValues() {
-    return {
-      owner: $("#syncOwner").value,
-      repo: $("#syncRepo").value,
-      branch: $("#syncBranch").value,
-      path: $("#syncPath").value,
-      token: $("#syncToken").value,
-      rememberToken: $("#syncRememberToken").checked
-    };
-  }
-
-  async function saveSyncSettings() {
-    try {
-      sync.saveConfiguration(syncFormValues());
-      $("#syncToken").value = "";
-      storage.mutate(function (next) { next.modules.cloudSync.advancedOpen = false; }, { touch: false, reason: "sync-settings-view" });
-      renderSyncSettings(); renderSyncStatus();
-      components.toast("The GitHub connection settings were saved.", { title: "Sync configured", kind: "success" });
-      sync.check(true);
-    } catch (error) {
-      components.message("Settings not saved", error.message || "Check the GitHub settings and try again.", { trigger: $("#saveSyncButton") });
-    }
-  }
-
-  async function testSyncSettings() {
-    try {
-      components.setLoading(true, "Testing GitHub…");
-      const result = await sync.testConnection(syncFormValues());
-      if (result) components.message("Connection succeeded", result.message, { trigger: $("#testSyncButton") });
-    } catch (error) {
-      components.message("Connection failed", error.message || "GitHub could not be reached with these settings.", { trigger: $("#testSyncButton") });
-    } finally {
-      components.setLoading(false);
-      renderSyncSettings(); renderSyncStatus();
-    }
+    treeNeedsFit = true;
+    renderAll();
+    announce("All local McFamily data was erased.", true);
+    components.toast("All McFamily data was erased from this browser.", { title: "Local data erased", kind: "info", duration: 5000 });
   }
 
   async function restoreRecovery() {
     const info = storage.recoveryInfo();
     if (!info) return;
-    const accepted = await components.confirm({ title: "Restore recovery copy?", message: "Restore the copy saved " + u.relativeTime(info.createdAt) + " (“" + info.reason + "”). Current data will be replaced.", confirmLabel: "Restore recovery", danger: true });
+    const accepted = await components.confirm({ title: "Restore recovery copy?", message: "Restore the copy saved " + u.relativeTime(info.createdAt) + " (“" + info.reason + "”). Current local data will be replaced.", confirmLabel: "Restore recovery", danger: true });
     if (!accepted) return;
-    storage.restoreRecovery(); renderAll();
+    storage.restoreRecovery();
+    treeNeedsFit = true;
+    renderAll();
     components.toast("The recovery copy was restored.", { title: "Recovery complete", kind: "success" });
   }
 
   function saveRecoveryCopy() {
-    const saved = storage.saveRecovery("Manual recovery copy", state());
-    if (saved) {
+    if (storage.saveRecovery("Manual recovery copy", state())) {
       renderDeveloper();
       components.toast("A recoverable local copy was saved.", { title: "Recovery copy saved", kind: "success" });
     }
   }
 
   function toggleDeveloperMode(force, options) {
-    if (!config.features.developerTools) return;
+    if (!config.features.developerTools || !initialized()) return;
     storage.mutate(function (next) { next.preferences.controls.developerMode = typeof force === "boolean" ? force : !next.preferences.controls.developerMode; }, { reason: "developer-mode" });
     $("#developerTab").hidden = !state().preferences.controls.developerMode;
     renderHeader();
     if (state().preferences.controls.developerMode) {
-      components.toast("Developer Mode is available in Settings & Help.", { title: "Developer Mode on", kind: "info" });
+      components.toast("Developer Mode is available in Settings.", { title: "Developer Mode on", kind: "info" });
       if (options && options.openPanel) openSupport("developer");
     } else {
       if (state().ui.supportTab === "developer") switchSupportTab("settings");
@@ -505,45 +1021,42 @@
     const button = $("#appIconButton");
     let startX = 0;
     let startY = 0;
-
-    function cancelHold() {
-      window.clearTimeout(appIconHoldTimer);
-      appIconHoldTimer = 0;
-      delete button.dataset.holdActive;
-    }
-
-    button.addEventListener("pointerdown", function (event) {
-      if (event.button !== 0) return;
-      cancelHold();
-      appIconHoldHandled = false;
-      startX = event.clientX;
-      startY = event.clientY;
-      button.dataset.holdActive = "true";
-      appIconHoldTimer = window.setTimeout(function () {
-        appIconHoldTimer = 0;
-        appIconHoldHandled = true;
-        delete button.dataset.holdActive;
-        toggleDeveloperMode();
-        window.setTimeout(function () { appIconHoldHandled = false; }, 900);
-      }, 620);
-    });
-    button.addEventListener("pointermove", function (event) {
-      if (Math.abs(event.clientX - startX) > 10 || Math.abs(event.clientY - startY) > 10) cancelHold();
-    });
+    function cancelHold() { window.clearTimeout(appIconHoldTimer); appIconHoldTimer = 0; delete button.dataset.holdActive; }
+    button.addEventListener("pointerdown", function (event) { if (event.button !== 0) return; cancelHold(); appIconHoldHandled = false; startX = event.clientX; startY = event.clientY; button.dataset.holdActive = "true"; appIconHoldTimer = window.setTimeout(function () { appIconHoldTimer = 0; appIconHoldHandled = true; delete button.dataset.holdActive; toggleDeveloperMode(); window.setTimeout(function () { appIconHoldHandled = false; }, 900); }, 620); });
+    button.addEventListener("pointermove", function (event) { if (Math.abs(event.clientX - startX) > 10 || Math.abs(event.clientY - startY) > 10) cancelHold(); });
     ["pointerup", "pointercancel", "pointerleave"].forEach(function (name) { button.addEventListener(name, cancelHold); });
-    button.addEventListener("click", function (event) {
-      if (appIconHoldHandled) {
-        event.preventDefault();
-        appIconHoldHandled = false;
-        return;
-      }
-      toggleThemeFromAppIcon();
-    });
+    button.addEventListener("click", function (event) { if (appIconHoldHandled) { event.preventDefault(); appIconHoldHandled = false; return; } toggleThemeFromAppIcon(); });
   }
 
-  function handleAction(action, trigger) {
-    if (action === "clear-roadmap-filters") clearRoadmapFilters();
-    else if (action === "clear-help-search") { $("#helpSearch").value = ""; renderHelp(); }
+  function handleMainClick(event) {
+    const target = event.target;
+    if (target.closest("#firstImportButton")) { $("#onboardingImportInput").click(); return; }
+    const select = target.closest("[data-select-person], [data-tree-person]");
+    if (select) { selectPerson(select.dataset.selectPerson || select.dataset.treePerson, { focus: true, mobileProfile: Boolean(select.dataset.selectPerson) }); return; }
+    if (target.closest("[data-add-person]")) { pendingRelative = null; openPersonEditor("", target.closest("[data-add-person]")); return; }
+    const editPerson = target.closest("[data-edit-person]");
+    if (editPerson) { pendingRelative = null; openPersonEditor(editPerson.dataset.editPerson, editPerson); return; }
+    const addRelativeButton = target.closest("[data-add-relative]");
+    if (addRelativeButton) { addRelative(addRelativeButton.dataset.addRelative, addRelativeButton); return; }
+    const addRelationshipButton = target.closest("[data-add-relationship]");
+    if (addRelationshipButton) { openRelationshipEditor("", addRelationshipButton.dataset.addRelationship, addRelationshipButton); return; }
+    const editRelationshipButton = target.closest("[data-edit-relationship]");
+    if (editRelationshipButton) { openRelationshipEditor(editRelationshipButton.dataset.editRelationship, "", editRelationshipButton); return; }
+    const deleteRelationshipButton = target.closest("[data-delete-relationship]");
+    if (deleteRelationshipButton) { deleteRelationship(deleteRelationshipButton.dataset.deleteRelationship, deleteRelationshipButton); return; }
+    const deletePersonButton = target.closest("[data-delete-person]");
+    if (deletePersonButton) { deletePerson(deletePersonButton.dataset.deletePerson, deletePersonButton); return; }
+    const setHomeButton = target.closest("[data-set-home]");
+    if (setHomeButton) { setHomePerson(setHomeButton.dataset.setHome); return; }
+    const mobileButton = target.closest("button[data-mobile-view]");
+    if (mobileButton) { storage.mutate(function (next) { next.ui.mobileView = mobileButton.dataset.mobileView; }, { touch: false, reason: "mobile-view" }); renderWorkspace(); return; }
+    const modeButton = target.closest("[data-tree-mode]");
+    if (modeButton) { storage.mutate(function (next) { next.ui.treeMode = modeButton.dataset.treeMode; }, { touch: false, reason: "tree-mode" }); treeNeedsFit = true; renderWorkspace(); return; }
+    const zoomButton = target.closest("[data-zoom]");
+    if (zoomButton) { treeTransform.scale = u.clamp(treeTransform.scale * (zoomButton.dataset.zoom === "in" ? 1.2 : 0.833), 0.01, 2.5, treeTransform.scale); applyTreeTransform(); return; }
+    if (target.closest("[data-fit-tree]")) { fitTree(); return; }
+    if (target.closest("[data-clear-directory]")) { storage.mutate(function (next) { next.ui.directorySearch = ""; next.ui.livingFilter = "all"; }, { touch: false, reason: "directory-filter" }); renderWorkspace(); return; }
+    if (target.closest("[data-print-atlas]")) printAtlas();
   }
 
   function bindSupportEvents() {
@@ -552,70 +1065,33 @@
       const tab = event.target.closest("[data-support-tab]");
       if (tab) { switchSupportTab(tab.dataset.supportTab); return; }
       const mode = event.target.closest("[data-theme-mode]");
-      if (mode) {
-        storage.mutate(function (next) { next.preferences.appearance.mode = mode.dataset.themeMode; }, { reason: "appearance" }); applyAppearance(); renderSettings(); return;
-      }
+      if (mode) { storage.mutate(function (next) { next.preferences.appearance.mode = mode.dataset.themeMode; }, { reason: "appearance" }); applyAppearance(); renderSettings(); return; }
       const presetButton = event.target.closest("[data-theme-preset]");
-      if (presetButton) {
-        const theme = config.themes.find(function (item) { return item.id === presetButton.dataset.themePreset; });
-        if (theme) storage.mutate(function (next) { Object.assign(next.preferences.appearance, { preset: theme.id, accent: theme.accent, accent2: theme.accent2, success: theme.success, warning: theme.warning, danger: theme.danger }); }, { reason: "appearance" });
-        applyAppearance(); renderSettings(); return;
-      }
+      if (presetButton) { const theme = config.themes.find(function (item) { return item.id === presetButton.dataset.themePreset; }); if (theme) storage.mutate(function (next) { Object.assign(next.preferences.appearance, { preset: theme.id, accent: theme.accent, accent2: theme.accent2, success: theme.success, warning: theme.warning, danger: theme.danger }); }, { reason: "appearance" }); applyAppearance(); renderSettings(); return; }
       const style = event.target.closest("[data-button-style]");
       if (style) { storage.mutate(function (next) { next.preferences.controls.buttonStyle = style.dataset.buttonStyle; }, { reason: "button-style" }); applyAppearance(); renderSettings(); return; }
       const versionButton = event.target.closest("[data-version-view]");
-      if (versionButton) { versionView = versionButton.dataset.versionView; renderReleases(); return; }
+      if (versionButton) { versionView = versionButton.dataset.versionView; renderReleases(); }
     });
-    dialog.addEventListener("keydown", function (event) {
-      const tab = event.target.closest("[role='tab']");
-      if (!tab || !["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
-      event.preventDefault();
-      const tabs = $$('[data-support-tab]:not([hidden])');
-      const index = tabs.indexOf(tab);
-      const target = event.key === "Home" ? tabs[0] : event.key === "End" ? tabs[tabs.length - 1] : tabs[(index + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length];
-      target.focus(); switchSupportTab(target.dataset.supportTab);
-    });
+    dialog.addEventListener("keydown", function (event) { const tab = event.target.closest("[role='tab']"); if (!tab || !["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return; event.preventDefault(); const tabs = $$('[data-support-tab]:not([hidden])'); const index = tabs.indexOf(tab); const destination = event.key === "Home" ? tabs[0] : event.key === "End" ? tabs[tabs.length - 1] : tabs[(index + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length]; destination.focus(); switchSupportTab(destination.dataset.supportTab); });
     dialog.addEventListener("change", function (event) {
-      if (event.target.matches("[data-color-setting]")) {
-        const key = event.target.dataset.colorSetting;
-        storage.mutate(function (next) { next.preferences.appearance[key] = u.normalizeColor(event.target.value, next.preferences.appearance[key]); }, { reason: "appearance" }); applyAppearance(); renderSettings();
-      }
+      if (event.target.matches("[data-color-setting]")) { const key = event.target.dataset.colorSetting; storage.mutate(function (next) { next.preferences.appearance[key] = u.normalizeColor(event.target.value, next.preferences.appearance[key]); }, { reason: "appearance" }); applyAppearance(); renderSettings(); }
+      if (event.target.id === "familyTitle") { storage.mutate(function (next) { next.workspace.family.title = u.cleanLine(event.target.value, 120) || "McFamily"; }, { reason: "family-title" }); renderMain(); }
     });
-    dialog.addEventListener("blur", function (event) {
-      if (!event.target.matches("[data-color-text]")) return;
-      const key = event.target.dataset.colorText;
-      const previous = state().preferences.appearance[key];
-      const normalized = u.normalizeColor(event.target.value, "");
-      if (!normalized) { event.target.value = previous; components.toast("Use a six-digit hex value such as #315f73.", { title: "Color not changed", kind: "warning" }); return; }
-      storage.mutate(function (next) { next.preferences.appearance[key] = normalized; }, { reason: "appearance" }); applyAppearance(); renderSettings();
-    }, true);
+    dialog.addEventListener("blur", function (event) { if (!event.target.matches("[data-color-text]")) return; const key = event.target.dataset.colorText; const previous = state().preferences.appearance[key]; const normalized = u.normalizeColor(event.target.value, ""); if (!normalized) { event.target.value = previous; components.toast("Use a six-digit hex value such as #315f73.", { title: "Color not changed", kind: "warning" }); return; } storage.mutate(function (next) { next.preferences.appearance[key] = normalized; }, { reason: "appearance" }); applyAppearance(); renderSettings(); }, true);
     $("#appTextScale").addEventListener("input", function (event) { storage.mutate(function (next) { next.preferences.appearance.textScale = Number(event.target.value) / 100; }, { reason: "appearance" }); applyAppearance(); $("#appTextScaleValue").textContent = event.target.value + "%"; });
     $("#readingTextScale").addEventListener("input", function (event) { storage.mutate(function (next) { next.preferences.appearance.readingScale = Number(event.target.value) / 100; }, { reason: "appearance" }); applyAppearance(); $("#readingTextScaleValue").textContent = event.target.value + "%"; });
     $("#motionPreference").addEventListener("change", function (event) { storage.mutate(function (next) { next.preferences.appearance.reducedMotion = event.target.value; }, { reason: "appearance" }); applyAppearance(); });
     $("#hintsToggle").addEventListener("click", function () { storage.mutate(function (next) { next.preferences.hints.enabled = !next.preferences.hints.enabled; }, { reason: "hints" }); renderHeader(); renderSettings(); });
     $("#restoreHintsButton").addEventListener("click", function () { storage.mutate(function (next) { next.preferences.hints.dismissed = []; next.ui.dismissedHints = []; }, { reason: "hints" }); renderHeader(); renderSettings(); components.toast("All contextual hints are available again.", { title: "Hints restored", kind: "success" }); });
-    $("#syncAdvancedFields").addEventListener("toggle", function () { storage.mutate(function (next) { next.modules.cloudSync.advancedOpen = $("#syncAdvancedFields").open; }, { touch: false, reason: "sync-settings-view" }); });
-    $("#saveSyncButton").addEventListener("click", saveSyncSettings);
-    $("#testSyncButton").addEventListener("click", testSyncSettings);
-    $("#forgetSyncButton").addEventListener("click", forgetSync);
-    $("#syncNowSettingsButton").addEventListener("click", function (event) { sync.syncNow(event.currentTarget); });
-    $("#exportButton").addEventListener("click", portability.exportJson);
+    $("#exportButton").addEventListener("click", portability.exportCsv);
     $("#importButton").addEventListener("click", function () { $("#importFileInput").click(); });
     $("#resetPreferencesButton").addEventListener("click", resetPreferences);
     $("#eraseAllButton").addEventListener("click", eraseAllData);
     $("#helpSearch").addEventListener("input", renderHelp);
-    $("#supportRoadmapSearch").addEventListener("input", function (event) {
-      storage.mutate(function (next) { next.modules.roadmap.search = u.cleanLine(event.target.value, 200); }, { reason: "roadmap-filter" });
-      renderSupportRoadmap();
-    });
-    $("#supportRoadmapState").addEventListener("change", function (event) {
-      storage.mutate(function (next) { next.modules.roadmap.state = event.target.value; }, { reason: "roadmap-filter" });
-      renderSupportRoadmap();
-    });
-    $("#supportRoadmapSort").addEventListener("change", function (event) {
-      storage.mutate(function (next) { next.modules.roadmap.sortBy = event.target.value; }, { reason: "roadmap-sort" });
-      renderSupportRoadmap();
-    });
+    $("#supportRoadmapSearch").addEventListener("input", function (event) { storage.mutate(function (next) { next.modules.roadmap.search = u.cleanLine(event.target.value, 200); }, { touch: false, reason: "roadmap-filter" }); renderSupportRoadmap(); });
+    $("#supportRoadmapState").addEventListener("change", function (event) { storage.mutate(function (next) { next.modules.roadmap.state = event.target.value; }, { touch: false, reason: "roadmap-filter" }); renderSupportRoadmap(); });
+    $("#supportRoadmapSort").addEventListener("change", function (event) { storage.mutate(function (next) { next.modules.roadmap.sortBy = event.target.value; }, { touch: false, reason: "roadmap-sort" }); renderSupportRoadmap(); });
     $("#restoreRecoveryButton").addEventListener("click", restoreRecovery);
     $("#saveRecoveryButton").addEventListener("click", saveRecoveryCopy);
     $("#disableDeveloperButton").addEventListener("click", function () { toggleDeveloperMode(false); });
@@ -635,24 +1111,22 @@
 
   function handleGlobalKeydown(event) {
     updateShortcutHints(event, false);
-    if (event.key === "Escape") {
-      $("#globalSearchResults").hidden = true;
-      return;
-    }
-    if (u.isEditableTarget(event.target)) return;
-    if (event.metaKey) return;
-    if (event.code === "Slash") {
+    const treeNode = event.target.closest && event.target.closest("[data-tree-person]");
+    if (treeNode && ["Enter", " ", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
       event.preventDefault();
-      if (event.shiftKey) openSupport("help", event.target);
-      else { $("#globalSearch").focus(); $("#globalSearch").select(); }
+      if (event.key === "Enter" || event.key === " ") selectPerson(treeNode.dataset.treePerson, { focus: true });
+      else { const relative = relativeForArrow(treeNode.dataset.treePerson, event.key); if (relative) selectPerson(relative.id, { focus: true }); }
       return;
     }
-    if (event.repeat) return;
-    if (event.code === "Digit2" && activeModuleEnabled("roadmap")) { event.preventDefault(); openSupport("roadmap", event.target); }
+    if (event.key === "Escape") { $("#globalSearchResults").hidden = true; return; }
+    if (u.isEditableTarget(event.target) || event.metaKey) return;
+    if (event.code === "Slash") { event.preventDefault(); if (event.shiftKey) openSupport("help", event.target); else if (initialized()) { $("#globalSearch").focus(); $("#globalSearch").select(); } return; }
+    if (event.repeat || !initialized()) return;
+    if (event.code === "KeyA") { event.preventDefault(); pendingRelative = null; openPersonEditor("", event.target); }
+    else if (event.code === "KeyP") { event.preventDefault(); printAtlas(); }
     else if (event.code === "KeyN") { event.preventDefault(); openNotes(event.target); }
     else if (event.code === "KeyV") { event.preventDefault(); openSupport("releases", event.target); }
-    else if (event.code === "KeyS") { event.preventDefault(); sync.syncNow(event.target); }
-    else if (event.code === "KeyE") { event.preventDefault(); portability.exportJson(); }
+    else if (event.code === "KeyE") { event.preventDefault(); portability.exportCsv(); }
     else if (event.code === "KeyT") { event.preventDefault(); toggleThemeFromAppIcon(); }
     else if (event.code === "KeyD") { event.preventDefault(); toggleDeveloperMode(undefined, { openPanel: true }); }
   }
@@ -662,18 +1136,32 @@
     $("#versionButton").addEventListener("click", function (event) { openSupport("releases", event.currentTarget); });
     $("#supportButton").addEventListener("click", function (event) { openSupport(state().ui.supportTab, event.currentTarget); });
     $("#notesButton").addEventListener("click", function (event) { openNotes(event.currentTarget); });
+    $("#addPersonButton").addEventListener("click", function (event) { pendingRelative = null; openPersonEditor("", event.currentTarget); });
+    $("#printButton").addEventListener("click", printAtlas);
     $("#notesTextarea").addEventListener("input", function (event) { saveNotes(event.target.value); });
-    $("#floatingStatusButton").addEventListener("click", function (event) {
-      const info = sync.getInfo();
-      if (sync.configured() && info.state !== "offline") sync.syncNow(event.currentTarget);
-      else {
-        openSupport("settings", event.currentTarget);
-        requestAnimationFrame(function () { $("#storageSyncSettings").scrollIntoView({ block: "start" }); });
-      }
+    $("#floatingStatusButton").addEventListener("click", function (event) { openSupport("settings", event.currentTarget); requestAnimationFrame(function () { $("#storageSettings").scrollIntoView({ block: "start" }); }); });
+    $("#mainContent").addEventListener("click", handleMainClick);
+    $("#mainContent").addEventListener("change", function (event) {
+      if (event.target.id === "onboardingImportInput") { portability.previewFile(event.target.files && event.target.files[0], $("#firstImportButton")); event.target.value = ""; }
+      else if (event.target.id === "livingFilter") { storage.mutate(function (next) { next.ui.livingFilter = event.target.value; }, { touch: false, reason: "directory-filter" }); renderDirectoryList(); }
+      else if (event.target.id === "generationDepth") { storage.mutate(function (next) { next.ui.generationDepth = Number(event.target.value); }, { touch: false, reason: "tree-depth" }); treeNeedsFit = true; $("#depthValue").textContent = event.target.value; renderTree(); }
+    });
+    $("#mainContent").addEventListener("input", function (event) { if (event.target.id === "directorySearch") { storage.mutate(function (next) { next.ui.directorySearch = u.cleanLine(event.target.value, 200); }, { touch: false, reason: "directory-filter" }); renderDirectoryList(); } });
+    $("#personForm").addEventListener("submit", savePerson);
+    $("#relationshipForm").addEventListener("submit", saveRelationship);
+    $("#relationshipType").addEventListener("change", updateRelationshipFormType);
+    $("#personDialog").addEventListener("click", function (event) {
+      if (event.target.closest("[data-add-address]")) { syncPersonRepeatables(); personDraft.addresses.push({ id: u.uid("address"), label: "Home", current: true, startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, order: personDraft.addresses.length }); renderPersonRepeatables(); }
+      if (event.target.closest("[data-add-phone]")) { syncPersonRepeatables(); personDraft.phones.push({ id: u.uid("phone"), label: "Mobile", value: "", order: personDraft.phones.length }); renderPersonRepeatables(); }
+      if (event.target.closest("[data-add-email]")) { syncPersonRepeatables(); personDraft.emails.push({ id: u.uid("email"), label: "Personal", value: "", order: personDraft.emails.length }); renderPersonRepeatables(); }
+      const removeAddress = event.target.closest("[data-remove-address]");
+      if (removeAddress) { syncPersonRepeatables(); personDraft.addresses.splice(Number(removeAddress.dataset.removeAddress), 1); renderPersonRepeatables(); }
+      const removeContact = event.target.closest("[data-remove-contact]");
+      if (removeContact) { syncPersonRepeatables(); const parts = removeContact.dataset.removeContact.split(":"); personDraft[parts[0] + "s"].splice(Number(parts[1]), 1); renderPersonRepeatables(); }
     });
     document.addEventListener("click", function (event) {
       const action = event.target.closest("[data-action]");
-      if (action) handleAction(action.dataset.action, action);
+      if (action && action.dataset.action === "clear-help-search") { $("#helpSearch").value = ""; renderHelp(); }
       const dismissHint = event.target.closest("[data-dismiss-hint]");
       if (dismissHint) { storage.mutate(function (next) { next.preferences.hints.dismissed = Array.from(new Set(next.preferences.hints.dismissed.concat(dismissHint.dataset.dismissHint))); }, { reason: "dismiss-hint" }); renderHeader(); }
       if (event.target.closest("[data-dismiss-release]")) { storage.mutate(function (next) { next.ui.seenReleaseVersion = config.releases[0].version; }, { reason: "release-seen" }); renderHeader(); }
@@ -681,78 +1169,42 @@
       const safeLink = event.target.closest("[data-open-url]");
       if (safeLink && !u.safeExternalOpen(safeLink.dataset.openUrl)) components.toast("That external address is not allowed.", { title: "Link unavailable", kind: "warning" });
     });
-    $("#globalSearch").addEventListener("input", function (event) {
-      storage.mutate(function (next) { next.ui.search = u.cleanLine(event.target.value, 200); }, { reason: "global-search" });
-      renderGlobalSearchResults();
-    });
+    $("#globalSearch").addEventListener("input", function (event) { storage.mutate(function (next) { next.ui.search = u.cleanLine(event.target.value, 200); }, { touch: false, reason: "global-search" }); renderGlobalSearchResults(); });
     $("#globalSearch").addEventListener("focus", renderGlobalSearchResults);
-    $("#globalSearch").addEventListener("keydown", function (event) {
-      const results = $$("button[role='option']", $("#globalSearchResults"));
-      if (event.key === "ArrowDown" && results.length) { event.preventDefault(); results[0].focus(); }
-      if (event.key === "Escape") { $("#globalSearchResults").hidden = true; event.target.select(); }
-    });
+    $("#globalSearch").addEventListener("keydown", function (event) { const results = $$("button[role='option']", $("#globalSearchResults")); if (event.key === "ArrowDown" && results.length) { event.preventDefault(); results[0].focus(); } if (event.key === "Escape") { $("#globalSearchResults").hidden = true; event.target.select(); } });
     $("#globalSearchResults").addEventListener("click", function (event) { const result = event.target.closest("[data-search-type]"); if (result) activateGlobalSearchResult(result.dataset.searchType, result.dataset.searchId); });
-    $("#globalSearchResults").addEventListener("keydown", function (event) {
-      const button = event.target.closest("[data-search-type]"); if (!button) return;
-      const buttons = $$("[data-search-type]", event.currentTarget); const index = buttons.indexOf(button);
-      if (event.key === "ArrowDown" || event.key === "ArrowUp") { event.preventDefault(); buttons[(index + (event.key === "ArrowDown" ? 1 : -1) + buttons.length) % buttons.length]?.focus(); }
-      else if (event.key === "Escape") { event.preventDefault(); $("#globalSearch").focus(); $("#globalSearchResults").hidden = true; }
-    });
+    $("#globalSearchResults").addEventListener("keydown", function (event) { const button = event.target.closest("[data-search-type]"); if (!button) return; const buttons = $$("[data-search-type]", event.currentTarget); const index = buttons.indexOf(button); if (event.key === "ArrowDown" || event.key === "ArrowUp") { event.preventDefault(); buttons[(index + (event.key === "ArrowDown" ? 1 : -1) + buttons.length) % buttons.length]?.focus(); } else if (event.key === "Escape") { event.preventDefault(); $("#globalSearch").focus(); $("#globalSearchResults").hidden = true; } });
     document.addEventListener("focusin", function (event) { if (!event.target.closest(".global-search-wrap")) $("#globalSearchResults").hidden = true; });
-
     bindSupportEvents();
     document.addEventListener("keydown", handleGlobalKeydown);
     document.addEventListener("keyup", function (event) { updateShortcutHints(event, false); });
     window.addEventListener("blur", function () { updateShortcutHints({ altKey: false, shiftKey: false, ctrlKey: false }, true); });
+    window.addEventListener("afterprint", function () { document.body.classList.remove("printing-atlas"); $("#printReport").setAttribute("aria-hidden", "true"); });
   }
 
   function renderAll() {
     applyAppearance();
     renderHeader();
     renderNotesEditor();
+    renderMain();
     renderGlobalSearchResults();
-    if ($("#supportDialog").open) renderSupport();
+    if ($("#supportDialog").open && initialized()) renderSupport();
   }
 
   function bindRuntimeEvents() {
-    window.addEventListener("app:syncchange", function () {
-      renderSyncStatus();
-      if ($("#supportDialog").open && state().ui.supportTab === "settings") renderSyncSettings();
-      if ($("#supportDialog").open && state().ui.supportTab === "developer") renderDeveloper();
-    });
-    window.addEventListener("app:opensyncsettings", function (event) {
-      openSupport("settings", event.detail && event.detail.trigger);
-      $("#syncAdvancedFields").open = true;
-      requestAnimationFrame(function () { $("#storageSyncSettings").scrollIntoView({ block: "start" }); $("#syncOwner").focus(); });
-    });
-    window.addEventListener("app:storageerror", function (event) {
-      components.toast(event.detail.message, { title: event.detail.title, kind: "danger", duration: 0, actionLabel: "Export", onAction: portability.exportJson });
-      renderSyncStatus();
-    });
-    window.addEventListener("app:statesaved", renderSyncStatus);
-    window.addEventListener("app:networkchange", function () { document.documentElement.classList.toggle("offline", navigator.onLine === false); renderSyncStatus(); });
+    window.addEventListener("app:storageerror", function (event) { components.toast(event.detail.message, { title: event.detail.title, kind: "danger", duration: 0, actionLabel: initialized() ? "Export" : "", onAction: initialized() ? portability.exportCsv : null }); renderLocalStatus(); });
+    window.addEventListener("app:statesaved", renderLocalStatus);
     window.addEventListener("app:pwaerror", function (event) { components.toast(event.detail.message, { title: "Offline support unavailable", kind: "warning", duration: 5000 }); });
-    window.addEventListener("app:statechange", function (event) {
-      const reasons = new Set(["import", "sync-download", "sync-merge", "recovery", "erase-all", "reset-preferences", "restore-demo"]);
-      if (reasons.has(event.detail.reason)) renderAll();
-    });
-    window.addEventListener("resize", function () { if ($("#developerPanel") && !$("#developerPanel").hidden) renderDeveloper(); });
-    ["(prefers-color-scheme: dark)", "(prefers-reduced-motion: reduce)"].forEach(function (query) {
-      const media = window.matchMedia(query);
-      if (typeof media.addEventListener === "function") media.addEventListener("change", applyAppearance);
-      else if (typeof media.addListener === "function") media.addListener(applyAppearance);
-    });
+    window.addEventListener("app:statechange", function (event) { if (["import", "recovery", "erase-all", "reset-preferences"].includes(event.detail.reason)) { treeNeedsFit = true; renderAll(); } });
+    window.addEventListener("resize", u.debounce(function () { if (initialized() && currentTreeLayout) fitTree(); if ($("#developerPanel") && !$("#developerPanel").hidden) renderDeveloper(); }, 120));
+    ["(prefers-color-scheme: dark)", "(prefers-reduced-motion: reduce)"].forEach(function (query) { const media = window.matchMedia(query); if (typeof media.addEventListener === "function") media.addEventListener("change", applyAppearance); else if (typeof media.addListener === "function") media.addListener(applyAppearance); });
   }
 
   function showLoadReport() {
     const report = storage.getLoadReport();
-    if (report.recovered) {
-      components.toast("The saved state was unusable, so the last valid recovery copy was loaded.", { title: "Recovery copy restored", kind: "warning", duration: 6000 });
-    } else if (report.error && report.source === "default") {
-      components.toast("Saved data could not be read. A fresh default workspace was created without overwriting any imported file.", { title: "Fresh workspace loaded", kind: "warning", duration: 6000 });
-    } else if (report.migrations.length) {
-      components.toast("Saved data was upgraded through " + report.migrations.join(", ") + ".", { title: "State upgraded", kind: "success" });
-    }
+    if (report.recovered) components.toast("The saved state was unusable, so the last valid recovery copy was loaded.", { title: "Recovery copy restored", kind: "warning", duration: 6000 });
+    else if (report.error && report.source === "default") components.toast("Saved data could not be read. McFamily returned to the private import screen.", { title: "Import required", kind: "warning", duration: 6000 });
+    else if (report.migrations.length) components.toast("Saved data was upgraded through " + report.migrations.join(", ") + ".", { title: "State upgraded", kind: "success" });
   }
 
   function init() {
@@ -763,21 +1215,12 @@
     bindGeneralEvents();
     bindRuntimeEvents();
     pwa.init();
-    sync.init();
     renderAll();
-    document.documentElement.classList.toggle("offline", navigator.onLine === false);
     requestAnimationFrame(function () { document.documentElement.classList.add("app-ready"); });
     showLoadReport();
   }
 
-  App.application = {
-    render: renderAll,
-    switchModule: switchModule,
-    openSupport: openSupport,
-    openNotes: openNotes,
-    shortcuts: SHORTCUTS
-  };
-
+  App.application = { render: renderAll, openSupport: openSupport, openNotes: openNotes, printAtlas: printAtlas, shortcuts: SHORTCUTS };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true });
   else init();
 })();
