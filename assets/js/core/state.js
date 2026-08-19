@@ -72,7 +72,7 @@
         profilePanelWidth: 300,
         directorySearch: "",
         directorySort: "first",
-        livingFilter: "all",
+        directoryFilters: [],
         mobileView: "tree",
         search: "",
         favoritePersonIds: [],
@@ -469,6 +469,9 @@
     const theme = config.themes.find(function (item) { return item.id === sourceAppearance.preset; }) || defaultTheme();
     const homePersonId = personIds.has(sourceFamily.homePersonId) ? sourceFamily.homePersonId : (people[0] ? people[0].id : "");
     const selectedPersonId = sourceUi.selectedPersonId === "" ? "" : (personIds.has(sourceUi.selectedPersonId) ? sourceUi.selectedPersonId : homePersonId);
+    const validDirectoryFilters = new Set(config.directoryFilters.map(function (filter) { return filter.id; }));
+    const legacyDirectoryFilter = ["living", "deceased", "unknown"].includes(sourceUi.livingFilter) ? [sourceUi.livingFilter] : [];
+    const directoryFilters = Array.from(new Set((Array.isArray(sourceUi.directoryFilters) ? sourceUi.directoryFilters : legacyDirectoryFilter).map(function (filter) { return u.cleanLine(filter, 40); }).filter(function (filter) { return validDirectoryFilters.has(filter); })));
     const sourceTombstones = u.plainObject(sourceMeta.tombstones);
     const state = {
       schemaVersion: config.schemaVersion,
@@ -535,7 +538,7 @@
         profilePanelWidth: Math.round(u.clamp(sourceUi.profilePanelWidth, 240, 600, 300)),
         directorySearch: u.cleanLine(sourceUi.directorySearch, 200),
         directorySort: sourceUi.directorySort === "last" ? "last" : "first",
-        livingFilter: ["all", "living", "deceased", "unknown"].includes(sourceUi.livingFilter) ? sourceUi.livingFilter : "all",
+        directoryFilters: directoryFilters,
         mobileView: ["tree", "directory", "profile"].includes(sourceUi.mobileView) ? sourceUi.mobileView : "tree",
         search: u.cleanLine(sourceUi.search, 200),
         favoritePersonIds: Array.from(new Set((Array.isArray(sourceUi.favoritePersonIds) ? sourceUi.favoritePersonIds : []).map(function (id) { return u.cleanLine(id, 100); }).filter(function (id) { return personIds.has(id); }))).slice(0, config.controls.maxPeople),
@@ -677,7 +680,7 @@
     next.ui.profileCollapsed = defaults.ui.profileCollapsed;
     next.ui.directorySearch = "";
     next.ui.directorySort = defaults.ui.directorySort;
-    next.ui.livingFilter = "all";
+    next.ui.directoryFilters = [];
     next.ui.mobileView = "tree";
     next.ui.search = "";
     next.ui.dismissedHints = [];
