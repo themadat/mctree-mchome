@@ -770,26 +770,26 @@ body[data-onboarding="true"] main { min-height: 100svh; padding: max(1rem, var(-
   .print-cover dt { color: #555; font: 700 8pt Helvetica, Arial, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
   .print-cover dd { margin: .05in 0 0; font-size: 20pt; font-weight: 700; }
   .print-cover aside { display: grid; gap: .05in; padding: .18in; border: 2px solid #7b4e16; text-align: left; }
-  .print-legend, .print-index { break-after: page; }
+  .print-legend { break-after: page; }
   .print-legend > div { display: grid; grid-template-columns: 1fr 1fr; gap: .16in; }
   .print-legend > div > span { padding: .16in; border: 1px solid #aaa; }
-  .print-index ol { columns: 2; column-gap: .35in; padding: 0; list-style: none; }
-  .print-index li { break-inside: avoid; border-bottom: 1px dotted #aaa; }
-  .print-index a { display: grid; grid-template-columns: .45in minmax(0, 1fr) auto; gap: .08in; padding: .06in 0; }
-  .print-index small { color: #555; }
   .print-atlas > h2, .print-directory > h1, .print-family-notes > h1 { break-before: page; }
-  .print-component { margin: .18in 0; padding: .14in; border: 1px solid #888; break-inside: avoid-page; }
-  .print-component > header { display: flex; align-items: baseline; gap: .1in; border-bottom: 2px solid #333; }
-  .print-component > header h3 { flex: 1; margin: 0; }
-  .print-component > header p { margin: 0; color: #555; }
+  .print-component { margin: .12in 0; padding: .09in; border: 1px solid #888; break-inside: auto; }
+  .print-component > header { display: flex; align-items: flex-end; justify-content: space-between; gap: .1in; padding-bottom: .04in; border-bottom: 2px solid #333; break-after: avoid; }
+  .print-component > header > div { display: grid; }
+  .print-component > header span { color: #555; font: 700 6.5pt Helvetica, Arial, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+  .print-component > header h3 { margin: 0; font-size: 13pt; }
+  .print-component > header p { margin: 0; color: #555; font-size: 8pt; }
   .print-reference { display: inline-block; padding: .03in .07in; border: 1px solid #333; border-radius: .04in; font: 800 8pt Helvetica, Arial, sans-serif; }
-  .print-generation { display: grid; grid-template-columns: 1in minmax(0, 1fr); gap: .12in; padding: .1in 0; border-top: 1px solid #bbb; }
+  .print-generation { display: block; padding: .055in 0; border-top: 1px solid #bbb; break-inside: avoid-page; }
   .print-generation:first-of-type { border-top: 0; }
-  .print-generation h4 { margin: 0; }
-  .print-generation > div { display: grid; grid-template-columns: repeat(3, 1fr); gap: .06in; }
-  .print-generation span { display: grid; padding: .06in; border: 1px solid #bbb; break-inside: avoid; }
-  .print-generation small { color: #555; }
+  .print-generation h4 { margin: 0 0 .035in; font: 800 7pt Helvetica, Arial, sans-serif; letter-spacing: .04em; text-transform: uppercase; }
+  .print-generation > div { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .035in; }
+  .print-generation span { display: grid; min-width: 0; padding: .035in .045in; border: 1px solid #bbb; font-size: 8pt; line-height: 1.15; break-inside: avoid; }
+  .print-generation strong { overflow-wrap: anywhere; }
+  .print-generation small { color: #555; font: 7pt Helvetica, Arial, sans-serif; }
   .print-person { break-before: page; }
+  .print-directory .print-person:first-of-type { break-before: auto; }
   .print-person > header { display: flex; align-items: flex-start; gap: .15in; padding-bottom: .1in; border-bottom: 3px solid #222; }
   .print-person > header h2 { margin: 0; font-size: 20pt; }
   .print-person > header p { margin: .02in 0; color: #555; }
