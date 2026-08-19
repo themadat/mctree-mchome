@@ -80,7 +80,7 @@ Samanttha is daughter- Anniv 6/16/1990",2007-03-06,BMAC,
 78,P077,02.01.01.02.03,P075,Faye McMillen,Denise,Rosenberry,1960-08-31,day,,,,,,Denise,James,SF,,,,,,,,,,,Scott,James,,,,,1983-03-26,day,,,,,,,,James,,,1999-09-15,Lauerb,
 79,P078,03.01.01.02.03,P075,Faye McMillen,Diane Lyn,Rosenberry,1963-03-20,day,,,Richard,Thomas,,Diane L.,Thomas,M,,Richard,Thomas,,,,,,,,,,,,,,,,,,,,,,,Thomas,,Ryan/Nathan non-descendants,1999-07-21,Lauerb,
 80,P079,04.01.01.02.03,P075,Faye McMillen,Robin Leroy,Rosenberry,1964-08-17,day,,,Robin L.,Rosenberry,,Candace,Rosenberry,M,,Candace,Hershey,,,,,,1988-06-18,day,,,,,,,,,,,,,,,,Rosenberry,,,1999-09-14,Lauerb,
-81,P080,02.01.02.03,P074,Loy McMillen,Fern,McMillen,1931-03-30,day,98-04-14,ambiguous_year,James,Bistline,,Fern,Bistline d.,SM,,James,Bistline,true,1932-06-16,day,2018-04-14,day,1953-12-18,day,,,,,,,,,,,,,,,,Bistline,,Faye and Fern are twins,2018-08-03,Melanie,"descendant_death date has a two-digit year: ""4/14/98"""
+81,P080,02.01.02.03,P074,Loy McMillen,Fern,McMillen,1931-03-30,day,1998-04-14,day,James,Bistline,,Fern,Bistline d.,SM,,James,Bistline,true,1932-06-16,day,2018-04-14,day,1953-12-18,day,,,,,,,,,,,,,,,,Bistline,,Faye and Fern are twins,2018-08-03,Melanie,"descendant_death date has a two-digit year: ""4/14/98""; Adam fixed ambiguous death year on 2026-08-19"
 82,P081,02.02.01.02.03,P080,Fern McMillen,Barbara Lee,Bistline,1958-03-09,day,,,David M.,Crawford,,Barbara,Crawford,M,,David M.,Crawford,,,,,,,,,,,,,,,,,,,,,,,Crawford,,,1999-07-21,Lauerb,
 83,P082,01.02.01.02.03,P080,Fern McMillen,Kandy Ann,Bistline,1955-02-27,day,,,Thomas,Klacik,,Kandy,Klacik,M,,Thomas Joseph,Klacik,,,,,,1984-03-31,day,,,,,,,,,,,,,,,,Klacik,,Adam and Bryan are twins.,1999-09-14,Lauerb,
 84,P083,02.02.03,P035,Byard McMillen,George,McMillen,1907-01-05,day,1976-07-10,day,George,McMillen,,Sara,Alleman,D,,Sara,Rice,,1910-12-05,day,1995-02-28,day,1927-04-27,day,,,,,,,,,,,,,,,,McMillen,,2nd Husband Russell Alleman (- 7/28/1993),1999-09-14,Lauerb,
@@ -129,7 +129,7 @@ Returned 2018",2018-08-22,Melanie,
 124,P123,02.02.04.02.03,P122,Roger McMillen Hench,Brian Keith,Hench,1962-05-16,day,,,Brian,Hench,,Stephanie,Hench,M,,Stephanie,Simpson,,,,,,1985-05-12,day,,,,,,,,,,,,,,,,Hench,,,1999-09-14,Lauerb,
 125,P124,03.02.04.02.03,P122,Roger McMillen Hench,Thomas,Hench,1965-02-13,day,,,Thomas,Hench,,Lori,Hench,M,,Lori,Maiden Name,,,,,,1987-08-29,day,,,,,,,,,,,,,,,,Hench,,,1999-09-14,Lauerb,
 126,P125,04.04.02.03,P116,Ruby McMillen,Edwin Cloyd,Hench,1945-06-17,day,,,Edwin,Hench,,Maureen,Hench,M,,Maureen,Beam,,1936-04-03,day,,,1965-01-23,day,,,,,,,,,,,,,,,,Hench,,send e-mail,2009-07-07,BMAC,
-127,P126,01.04.04.02.03,P125,Edwin Cloyd Hench,Adam William,Hench,1965-07-17,day,13-06-06,ambiguous_year,Adam,Hench,true,Tammy Jo,Hench,SF,,Tammy Jo,Cramer,,,,,,1985-01-26,day,,,,,,,,,,,,,,,,Hench,,,2013-07-31,Melanie,"descendant_death date has a two-digit year: ""06/06/13"""
+127,P126,01.04.04.02.03,P125,Edwin Cloyd Hench,Adam William,Hench,1965-07-17,day,2013-06-06,day,Adam,Hench,true,Tammy Jo,Hench,SF,,Tammy Jo,Cramer,,,,,,1985-01-26,day,,,,,,,,,,,,,,,,Hench,,,2013-07-31,Melanie,"descendant_death date has a two-digit year: ""06/06/13""; Adam fixed ambiguous death year on 2026-08-19"
 128,P127,05.02.03,P035,Byard McMillen,Lena Mae,McMillen,1912-12-25,day,1994-02-19,day,Harold,Ickes,,Mae,Ickes,D,,Harold Ritter,Ickes,,1910-03-25,day,1995-09-22,day,,,,,,,,,,,,,,,,,,Ickes,,,1999-07-29,Lauerb,
 129,P128,02.05.02.03,P127,Lena Mae McMillen,Mary Haroldeen,Ickes,1943-05-31,day,,,,,,Mary,Ickes,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Ickes,,,2007-03-06,BMAC,
 130,P129,01.05.02.03,P127,Lena Mae McMillen,Lucinda Mae,Ickes,1940-10-21,day,,,Arthur,Dum Jr.,,Lucinda,Dum,M,,Arthur Elwood,"Dum, Jr.",,1939-11-27,day,,,1961-08-18,day,,,,,,,,,,,,,,,,Dum Jr.,,,1999-09-14,Lauerb,
@@ -169,7 +169,7 @@ Returned 2018",2018-08-22,Melanie,
 164,P163,03.03.07,P157,Vera E. McMillen,Kenneth Mac,Barclay,1919-10-15,day,2011-03-06,day,Kenneth,Barclay,true,Thelma,Barclay,SF,,Thelma,Stahl,,1924-09-25,day,,,1946-06-09,day,,,,,,,,,,,,,,,,Barclay,,,2011-04-30,Melanie Lauer,
 165,P164,01.03.03.07,P163,Kenneth Mac Barclay,Nancy Elaine,Barclay,1948-04-17,day,,,Thomas,VanFleet,,Nancy,VanFleet,M,,Thomas,VanFleet,,,,,,,,,,,,,,,,,,,,,,,VanFleet,,,1999-08-08,Laptop,
 166,P165,03.03.03.07,P163,Kenneth Mac Barclay,Carey Alan,Barclay,1954-05-29,day,,,Carey,Barclay,,Deborah,Barclay,M,,Deborah,Maiden Name,,,,,,,,,,,,,,,,,,,,,,,Barclay,,,1999-09-11,Lauerb,
-167,P166,02.03.07,P157,Vera E. McMillen,Vera Joyce,Barclay,1917-12-09,day,02-11-26,ambiguous_year,,,,V. Joyce,Barclay,D,,,,,,,,,,,,,,,,,,,,,,,,,,Barclay,,,2003-07-20,BMAC,"descendant_death date has a two-digit year: ""11/26/02"""
+167,P166,02.03.07,P157,Vera E. McMillen,Vera Joyce,Barclay,1917-12-09,day,2002-11-26,day,,,,V. Joyce,Barclay,D,,,,,,,,,,,,,,,,,,,,,,,,,,Barclay,,,2003-07-20,BMAC,"descendant_death date has a two-digit year: ""11/26/02""; Adam fixed ambiguous death year on 2026-08-19"
 168,P167,04.03.07,P157,Vera E. McMillen,Lois Grace,Barclay d.,1926-06-19,day,2012-05-13,day,Jewell,Gantz,true,Lois,Gantz,D,,Jewell A.,Gantz,,1921-10-18,day,1996-02-24,day,1947-10-18,day,,,,,,,,,,,,,,,,Gantz,,,2015-08-10,Melanie,
 169,P168,01.04.03.07,P167,Lois Grace Barclay d.,Wayne Edward,Gantz,1954-11-17,day,,,Wayne,Gantz,,Shelia,Gantz,M,,Shelia,Lott,,1954-09-21,day,,,5/xx/xxxx,invalid,,,,,,,,,,,,,,,,Gantz,,,1999-09-14,Lauerb,"spouse_1_marriage date is not parseable: ""5/xx/xxxx"""
 170,P169,02.04.03.07,P167,Lois Grace Barclay d.,Larry Stephen,Gantz,1956-05-02,day,,,Larry,Gantz,,Francene,Gantz,M,,Francene,Beamer,,1/1/xxxx,invalid,,,1986-05-31,day,,,,,,,,,,,,,,,,Gantz,,send email,2018-08-20,Melanie,"spouse_1_birth date is not parseable: ""1/1/xxxx"""
@@ -424,7 +424,7 @@ noted 7/19/03; Cheyenne's last name is Hartzell. Need 2nd child's name",2007-07-
 415,P414,01.04.01.06.07,P188,Carolyn McMillen,Jill,Neely,1980-08-21,day,,,Josh,Burkepile,,Jill,Burkepile,M,,Josh Allen,Burkepile,,1979-12-12,day,,,2000-05-22,day,,,,,,,,,,,,,,,,Burkepile,,,2000-11-25,Lauerb,
 416,P415,02.04.01.06.07,P188,Carolyn McMillen,Jill Helen,Neely,1982-07-15,day,,,,,,Jill,Neely,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Neely,,,2007-07-24,BMAC,
 417,P416,03.04.01.06.07,P188,Carolyn McMillen,Ryan Scot,Neely,1987-01-03,day,,,Ryan,Neely,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Neely,,,1999-09-01,Lauerb,
-418,P417,01.03.01.06.07,P187,John E. McMillen,Jonathon,McMillen,79-09-23,ambiguous_year,,,Jonathon,McMillen,,Amonlat,McMillen,M,,Amonlat,Lounsavang,,,,,,,,,,,,,,,,,,,,,,,McMillen,,,2011-08-19,Melanie Lauer,"descendant_birth date has a two-digit year: ""9/23/79"""
+418,P417,01.03.01.06.07,P187,John E. McMillen,Jonathon,McMillen,1979-09-23,day,,,Jonathon,McMillen,,Amonlat,McMillen,M,,Amonlat,Lounsavang,,,,,,,,,,,,,,,,,,,,,,,McMillen,,,2011-08-19,Melanie Lauer,"descendant_birth date has a two-digit year: ""9/23/79""; Adam fixed ambiguous birth year on 2026-08-19"
 419,P418,02.03.01.06.07,P187,John E. McMillen,Jordan Dwight,McMillen,1984-06-05,day,,,Jordan,McMillen,,Randi,McMillen,M,,Randi,Oxendine,,,,,,,,,,,,,,,,,,,,,,,McMillen,,,2011-08-19,Melanie Lauer,
 420,P419,01.02.01.06.07,P186,Larry McMillen,Adam,McMillen,1975-06-11,day,,,Adam,McMillen,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,,1999-09-01,Lauerb,
 421,P420,02.02.01.06.07,P186,Larry McMillen,Lindsay,McMillen,1980-08-26,day,,,,,,Lindsay,McMillen,SF,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,,1999-09-15,Lauerb,
@@ -446,7 +446,7 @@ Lisa's Mother is Sheila Kretzing",2014-07-28,Melanie,
 436,P435,02.01.02.04.07,P177,Yvonne Frantz,Nils Anton,Besvold,1992-09-16,day,,,Nils,Besvold,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Besvold,,,1999-08-11,Laptop,
 437,P436,01.04.01.04.07,P175,Thomas Haas,Shannon Leigh,Haas,1980-11-21,day,,,Brian,Sheaffer,,Shannon,Sheaffer,M,,Brian,Sheaffer,,1985-09-24,day,,,2008-06-07,day,,,,,,,,,,,,,,,,Sheaffer,,Shannan's mother is Kathy,2018-08-01,Melanie,
 438,P437,02.04.01.04.07,P175,Thomas Haas,Seth,Haas,1983-03-26,day,,,Seth,Haas,,Jenilee,Haas,M,,Jenilee,Maiden Name,,1985-04-10,day,,,2007-12-02,day,,,,,,,,,,,,,,,,Haas,,,2018-08-01,Melanie,
-439,P438,01.03.01.04.07,P174,Donald Daniel Haas,Dustin,Haas,82-06-03,ambiguous_year,,,Dustin,Haas,,Brooke,Haas,M,,Brooke,Binger,,1985-03-01,day,,,2011-06-04,day,,,,,,,,,,,,,,,,Haas,,,2018-08-01,Melanie,"descendant_birth date has a two-digit year: ""06/03/82"""
+439,P438,01.03.01.04.07,P174,Donald Daniel Haas,Dustin,Haas,1982-06-03,day,,,Dustin,Haas,,Brooke,Haas,M,,Brooke,Binger,,1985-03-01,day,,,2011-06-04,day,,,,,,,,,,,,,,,,Haas,,,2018-08-01,Melanie,"descendant_birth date has a two-digit year: ""06/03/82""; Adam fixed ambiguous birth year on 2026-08-19"
 440,P439,02.03.01.04.07,P174,Donald Daniel Haas,Danielle,Haas,1986-10-27,day,,,David,Hull,,Danielle,Hall,M,,David,Hull,,1980-01-30,day,,,2015-09-06,day,,,,,,,,,,,,,,,,Hall,,,2018-08-01,Melanie,
 441,P440,01.02.01.04.07,P173,Dale Gene Haas,David,Haas,Birth Date,invalid,died,invalid,David,Haas,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Haas,,Date of death unknown,2007-03-06,BMAC,"descendant_birth date is not parseable: ""Birth Date""; descendant_death date is not parseable: ""died"""
 442,P441,02.02.01.04.07,P173,Dale Gene Haas,Jason,Haas,1976-02-03,day,,,Jason,Haas,,Salina,Haas,M,,Salina,Rushton,,,,,,2003-05-17,day,,,,,,,,,,,,,,,,Haas,,,2018-08-01,Melanie,
@@ -531,7 +531,7 @@ Lisa's Mother is Sheila Kretzing",2014-07-28,Melanie,
 521,P520,02.01.02.04.03.07,P466,Frank Albert Gantz,Trenton,Gantz,2002,year,,,,,,Trenton,Gantz,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Gantz,,,2007-03-06,BMAC,
 522,P521,02.04.01.02.03.03,P063,Leda Suzan Fenton,Matthew,Hager,1999,year,,,Matthew,Hager,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Hager,,,2007-03-06,BMAC,
 523,P522,01.01.04.01.04.02.03,P329,Koni Steven Hench,Alexis,,1985-06-26,day,,,,Hench,,Alexis,Hench,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,,,2007-03-06,BMAC,missing descendant last name
-524,P523,02.01.01.01.04.07,P443,Liza Haas,Julie Rebecca,Loy,06-02-26,ambiguous_year,,,,,,Julie,Loy,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Loy,,,2007-03-06,BMAC,"descendant_birth date has a two-digit year: ""2/26/06"""
+524,P523,02.01.01.01.04.07,P443,Liza Haas,Julie Rebecca,Loy,2006-02-26,day,,,,,,Julie,Loy,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Loy,,,2007-03-06,BMAC,"descendant_birth date has a two-digit year: ""2/26/06""; Adam fixed ambiguous birth year on 2026-08-19"
 525,P524,01.01.02.01.01.03,P255,Laura Conklin,Trey,Howard,2002-04-05,day,,,Trey,Howard,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Howard,,,2007-07-24,BMAC,
 526,P525,02.03.04.04.07,P216,Vance Reed Kretzing,Hannah Alexis,,2003-04-04,day,,,,Kretzing,,Hannah,Kretzing,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Kretzing,,,2007-07-24,BMAC,missing descendant last name
 527,P526,01.03.04.04.07,P216,Vance Reed Kretzing,Sarah Elizabetn,,2002-06-22,day,,,,Kretzing,,Sarah,Kretzing,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Kretzing,,Adopted,2008-09-03,BMAC,missing descendant last name
@@ -554,7 +554,7 @@ Lisa's Mother is Sheila Kretzing",2014-07-28,Melanie,
 544,P543,01.01.01.02.02.02.03,P283,Sherri Murphy,Marissa Renee,,2008-03-02,day,,,,Betarie,,Marissa,Betarie,SF,,,,,,,,,04-09-18,ambiguous_year,,,,,,,,,,,,,,,,Betarie,,,2008-09-03,BMAC,"missing descendant last name; spouse_1_marriage date has a two-digit year: ""9/18/04"""
 545,P544,01.01.04.01.02.02.03,P279,Jaime Nicole Snare,Mckenna Axie,Hobe,2007-09,month,,,,,,McKenna,Hobe,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Hobe,,,2008-10-03,BMAC,
 546,P545,02.02.02.04.02.02.03,P289,Karen Sue Wright,Danielle,Crabb,,,,,,,,Danielle,Crabb,SF,,,,,,,,,2004-12,month,,,,,,,,,,,,,,,,Crabb,,,2008-10-03,BMAC,
-547,P546,02.02.02.06.07,P191,"William C. Dovey, Jr.",William,Dovey,06-01-08,ambiguous_year,,,William,Dovey,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Dovey,,Born to second wife,2008-10-03,BMAC,"descendant_birth date has a two-digit year: ""1/8/06"""
+547,P546,02.02.02.06.07,P191,"William C. Dovey, Jr.",William,Dovey,2006-01-08,day,,,William,Dovey,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Dovey,,Born to second wife,2008-10-03,BMAC,"descendant_birth date has a two-digit year: ""1/8/06""; Adam fixed ambiguous birth year on 2026-08-19"
 548,P547,01.01.02.01.02.02.03,P275,Kristin McMillen,Matthew Sailor,Koultun,2007-09-20,day,,,Sailor,Koultun,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Koultun,,,2017-09-02,Melanie,
 549,P548,02.01.02.01.01.03,P255,Laura Conklin,Madeline,Howard,2006-08-26,day,,,,,,Madeline,Howard,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Howard,,,2008-10-03,BMAC,
 550,P549,01.03.03.02.02.02.03,P095,Melanie Schnure,Taylor David Lee,Kelchner,2002-09-27,day,,,Taylor,Kelchner,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Kelchner,,,2008-10-03,BMAC,
