@@ -4,7 +4,7 @@ McFamily is a private, local-first family atlas that runs as a static GitHub Pag
 
 There is no backend, account, cloud database, or runtime dependency. Family data stays in browser storage and moves only through an explicit CSV import or export. The published repository must never contain a real family CSV or private family data.
 
-Current version: `0.0.1.27` (`major.minor.patch.build`).
+Current version: `0.0.1.28` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -12,8 +12,8 @@ Current version: `0.0.1.27` (`major.minor.patch.build`).
 - Shows a focus tree around a home person and a whole-family overview of connected and isolated people.
 - Supports two-axis scrolling, pan, directly editable zoom and depth numbers, fit, keyboard selection, touch, and accessible relationship descriptions.
 - Orders each Family Tree generation by numeric lineage ID; past partners appear chronologically to the left of the lineage person and exactly one current spouse appears to the right.
-- Can reveal likely other-parent branches as lighter, display-only lines without changing relationship records.
-- Provides a header-toggled directory with first/last-name sorting, A–Z quick jumps, lifespan and lineage context, and broad search across names, contact details, places, heritage, and notes.
+- Can reveal likely affinal-parent branches through the Affinal Lines control without changing relationship records.
+- Provides a header-toggled directory with title-bar search and result count, visible Filter By and Sort By controls, combinable status and consanguineal/affinal checkbox filters, A–Z quick jumps, lifespan and lineage context, and broad search across names, contact details, places, heritage, and notes.
 - Lets people be starred directly in search, pins favorites above other matches, and provides a Favorites-only search control beside the search field.
 - Supports partial/fuzzy matches that return the tree to Focus, collapsible side panels, a resizable desktop tree/profile split, and narrow tree cards that stack each name word on its own line.
 - Keeps portrait placeholders and internal person references out of the ordinary workspace; Developer Mode reveals references for troubleshooting.

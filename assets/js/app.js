@@ -206,12 +206,46 @@
   }
 
   function directoryPeople() {
+    const current = state();
     const query = state().ui.directorySearch.trim();
-    const filter = state().ui.livingFilter;
-    const sortMode = state().ui.directorySort;
-    return state().workspace.people.filter(function (person) {
-      return (filter === "all" || person.livingStatus === filter) && model.fuzzySearchMatch(query, model.personSearchText(person));
+    const activeFilters = new Set(current.ui.directoryFilters);
+    const statusFilters = config.directoryFilters.filter(function (filter) { return filter.group === "status" && activeFilters.has(filter.id); }).map(function (filter) { return filter.id; });
+    const kinshipFilters = config.directoryFilters.filter(function (filter) { return filter.group === "kinship" && activeFilters.has(filter.id); }).map(function (filter) { return filter.id; });
+    const graph = family.indexes(current);
+    const sortMode = current.ui.directorySort;
+    return current.workspace.people.filter(function (person) {
+      const kinship = directoryKinship(person, graph, current.workspace.family.homePersonId);
+      const statusMatches = !statusFilters.length || statusFilters.includes(person.livingStatus);
+      const kinshipMatches = !kinshipFilters.length || kinshipFilters.some(function (filter) { return kinship[filter]; });
+      return statusMatches && kinshipMatches && model.fuzzySearchMatch(query, model.personSearchText(person));
     }).sort(function (a, b) { return directorySortName(a, sortMode).localeCompare(directorySortName(b, sortMode)) || a.id.localeCompare(b.id); });
+  }
+
+  function directoryKinship(person, graph, homePersonId) {
+    const fields = u.plainObject(person && person.source && person.source.fields);
+    const importedMcLineage = String(person && person.source && person.source.format || "").startsWith("mclineage-cleaned");
+    if (importedMcLineage && Object.prototype.hasOwnProperty.call(fields, "lineage_id")) {
+      const consanguineal = Boolean(u.cleanLine(fields.lineage_id, 200));
+      return { consanguineal: consanguineal, affinal: !consanguineal };
+    }
+    return {
+      consanguineal: person.id === homePersonId || Boolean((graph.parents.get(person.id) || []).length || (graph.children.get(person.id) || []).length),
+      affinal: Boolean((graph.partners.get(person.id) || []).length)
+    };
+  }
+
+  function directoryFilterSummary() {
+    const active = new Set(state().ui.directoryFilters);
+    const labels = config.directoryFilters.filter(function (filter) { return active.has(filter.id); }).map(function (filter) { return filter.label; });
+    if (!labels.length) return "All people";
+    return labels.length === 1 ? labels[0] : labels.length + " selected";
+  }
+
+  function directoryFilterOptionsHtml() {
+    const active = new Set(state().ui.directoryFilters);
+    return config.directoryFilters.map(function (filter) {
+      return '<label class="directory-filter-option"><input type="checkbox" name="directoryFilter" value="' + u.escapeHtml(filter.id) + '"' + (active.has(filter.id) ? " checked" : "") + '><span>' + u.escapeHtml(filter.label) + "</span></label>";
+    }).join("");
   }
 
   function directorySortName(person, mode) {
@@ -244,6 +278,8 @@
     if (!container) return;
     const people = directoryPeople();
     $("#directoryCount").textContent = people.length + " of " + state().workspace.people.length;
+    const filterSummary = $("#directoryFilterSummary");
+    if (filterSummary) filterSummary.textContent = directoryFilterSummary();
     const availableLetters = new Set(people.map(directoryLetter));
     const rail = $("#directoryAlphaRail");
     if (rail) rail.innerHTML = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map(function (letter) { return '<button type="button" data-directory-letter="' + letter + '" aria-label="Jump to ' + letter + '" title="Jump to ' + letter + '" ' + (availableLetters.has(letter) ? "" : "disabled") + '><span>' + letter + "</span></button>"; }).join("");
@@ -254,7 +290,7 @@
       lastLetter = letter;
       const address = person.addresses.find(function (item) { return item.current; }) || person.addresses[0];
       return heading + '<button type="button" class="directory-person' + (state().ui.selectedPersonId === person.id ? " selected" : "") + '" data-select-person="' + u.escapeHtml(person.id) + '" aria-pressed="' + String(state().ui.selectedPersonId === person.id) + '"><span><strong>' + u.escapeHtml(model.displayName(person)) + '</strong><small>' + u.escapeHtml(directoryPersonMeta(person)) + '</small>' + (address ? '<small>' + u.escapeHtml([address.city, address.region, address.country].filter(Boolean).join(", ")) + "</small>" : "") + "</span></button>";
-    }).join("") : '<div class="empty-state compact-empty"><h3>No people match</h3><p>Try another name, contact detail, or living-status filter.</p><button type="button" class="button" data-clear-directory>Clear directory filters</button></div>';
+    }).join("") : '<div class="empty-state compact-empty"><h3>No people match</h3><p>Try another search or filter combination.</p><button type="button" class="button" data-clear-directory>Clear directory filters</button></div>';
   }
 
   function formatEvent(label, event) {
@@ -941,12 +977,13 @@
     const profileCollapsed = state().ui.profileCollapsed;
     const overviewDisabled = state().ui.treeMode === "overview" ? "disabled" : "";
     const personTabDisabled = state().ui.selectedPersonId ? "" : " disabled";
-    $("#mainContent").innerHTML = '<section class="family-workspace" aria-label="Family workspace"><nav class="mobile-workspace-tabs segmented" aria-label="Workspace views"><button type="button" data-mobile-view="directory" aria-pressed="' + String(state().ui.mobileView === "directory") + '">Directory</button><button type="button" data-mobile-view="tree" aria-pressed="' + String(state().ui.mobileView === "tree") + '">Family Tree</button><button type="button" data-mobile-view="profile" aria-pressed="' + String(state().ui.mobileView === "profile") + '"' + personTabDisabled + '>Person</button></nav><div class="family-workspace-grid" data-mobile-view="' + u.escapeHtml(state().ui.mobileView) + '" data-directory-collapsed="' + String(directoryCollapsed) + '" data-profile-collapsed="' + String(profileCollapsed) + '"><aside id="directoryPanel" class="directory-panel workspace-card' + (directoryCollapsed ? " is-collapsed" : "") + '" aria-label="Family directory"><header class="directory-module-bar"><span id="directoryCount" class="count-pill"></span><button type="button" class="icon-button" data-toggle-pane="directory" aria-controls="directoryPanel" aria-expanded="true" aria-label="Close directory" title="Close directory"><span data-symbol="close" aria-hidden="true"></span></button></header><div class="directory-controls"><label class="field full"><span class="visually-hidden">Search family directory</span><input id="directorySearch" type="search" placeholder="Name, address, phone, email…" value="' + u.escapeHtml(state().ui.directorySearch) + '"></label><div class="directory-filter-row"><label class="field"><span class="visually-hidden">Filter living status</span><select id="livingFilter"><option value="all">All people</option><option value="living">Living</option><option value="deceased">Deceased</option><option value="unknown">Unknown status</option></select></label><label class="field"><span class="visually-hidden">Sort directory</span><select id="directorySort"><option value="first">First name</option><option value="last">Last name</option></select></label></div></div><div class="directory-body"><div id="directoryList" class="directory-list"></div><nav id="directoryAlphaRail" class="directory-alpha-rail" aria-label="Jump to directory letter"></nav></div></aside><section class="tree-panel workspace-card" aria-label="Family Tree"><header class="tree-toolbar"><div class="tree-view-controls"><div class="segmented" aria-label="Tree mode"><button type="button" data-tree-mode="focus" aria-pressed="' + String(state().ui.treeMode === "focus") + '">Focus</button><button type="button" data-tree-mode="overview" aria-pressed="' + String(state().ui.treeMode === "overview") + '">Overview</button></div><div class="segmented" aria-label="Person card detail"><button type="button" data-tree-node-view="condensed" aria-pressed="' + String(state().ui.treeNodeView === "condensed") + '">Condensed</button><button type="button" data-tree-node-view="detailed" aria-pressed="' + String(state().ui.treeNodeView === "detailed") + '">Detailed</button></div><label class="depth-control"><span>Ancestors</span><input id="ancestorDepth" type="number" min="0" max="4" step="1" value="' + state().ui.ancestorDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><label class="depth-control"><span>Descendants</span><input id="descendantDepth" type="number" min="0" max="4" step="1" value="' + state().ui.descendantDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><div class="zoom-controls" role="group" aria-label="Tree zoom controls"><button type="button" class="zoom-action" data-zoom="out" aria-label="Zoom out" title="Zoom out"><span class="zoom-action-icon" data-symbol="zoomOut" aria-hidden="true"></span><span>Out</span></button><label class="zoom-value-control"><span>Zoom %</span><input id="zoomValue" type="number" min="1" max="250" step="1" value="100" inputmode="numeric"></label><button type="button" class="zoom-action" data-zoom="in" aria-label="Zoom in" title="Zoom in"><span class="zoom-action-icon" data-symbol="zoomIn" aria-hidden="true"></span><span>In</span></button><button type="button" class="zoom-action" data-fit-tree aria-label="Fit tree" title="Fit tree"><span class="zoom-action-icon" data-symbol="fit" aria-hidden="true"></span><span>Fit</span></button><span id="zoomStatus" class="visually-hidden" aria-live="polite">100% zoom</span></div></div></header><div class="tree-canvas"><svg id="familyTreeSvg" role="group" aria-label="Interactive Family Tree. Scroll horizontally or vertically, drag to pan, use the zoom controls, and select a person to focus." tabindex="0"></svg></div></section><aside id="profilePanel" class="profile-panel workspace-card' + (profileCollapsed ? " is-collapsed" : "") + '" aria-label="Selected person profile"><div id="profilePanelContent" class="profile-panel-content"></div></aside></div></section>';
+    const directoryHeader = '<header class="directory-module-bar"><label class="directory-search-field"><span class="visually-hidden">Search family directory</span><input id="directorySearch" type="search" aria-label="Search family directory" placeholder="Search directory…" value="' + u.escapeHtml(state().ui.directorySearch) + '"><span id="directoryCount" class="count-pill" role="status" aria-live="polite"></span></label><button type="button" class="icon-button" data-toggle-pane="directory" aria-controls="directoryPanel" aria-expanded="true" aria-label="Close directory" title="Close directory"><span data-symbol="close" aria-hidden="true"></span></button></header>';
+    const directoryControls = '<div class="directory-controls"><div class="directory-filter-row"><div class="field directory-filter-control"><span id="directoryFilterLabel">Filter By</span><details class="directory-filter-menu"><summary aria-labelledby="directoryFilterLabel directoryFilterSummary"><span id="directoryFilterSummary">' + u.escapeHtml(directoryFilterSummary()) + '</span></summary><div class="directory-filter-options" role="group" aria-label="Filter directory by">' + directoryFilterOptionsHtml() + '</div></details></div><label class="field"><span>Sort By</span><select id="directorySort"><option value="first">First name</option><option value="last">Last name</option></select></label></div></div>';
+    $("#mainContent").innerHTML = '<section class="family-workspace" aria-label="Family workspace"><nav class="mobile-workspace-tabs segmented" aria-label="Workspace views"><button type="button" data-mobile-view="directory" aria-pressed="' + String(state().ui.mobileView === "directory") + '">Directory</button><button type="button" data-mobile-view="tree" aria-pressed="' + String(state().ui.mobileView === "tree") + '">Family Tree</button><button type="button" data-mobile-view="profile" aria-pressed="' + String(state().ui.mobileView === "profile") + '"' + personTabDisabled + '>Person</button></nav><div class="family-workspace-grid" data-mobile-view="' + u.escapeHtml(state().ui.mobileView) + '" data-directory-collapsed="' + String(directoryCollapsed) + '" data-profile-collapsed="' + String(profileCollapsed) + '"><aside id="directoryPanel" class="directory-panel workspace-card' + (directoryCollapsed ? " is-collapsed" : "") + '" aria-label="Family directory">' + directoryHeader + directoryControls + '<div class="directory-body"><div id="directoryList" class="directory-list"></div><nav id="directoryAlphaRail" class="directory-alpha-rail" aria-label="Jump to directory letter"></nav></div></aside><section class="tree-panel workspace-card" aria-label="Family Tree"><header class="tree-toolbar"><div class="tree-view-controls"><div class="segmented" aria-label="Tree mode"><button type="button" data-tree-mode="focus" aria-pressed="' + String(state().ui.treeMode === "focus") + '">Focus</button><button type="button" data-tree-mode="overview" aria-pressed="' + String(state().ui.treeMode === "overview") + '">Overview</button></div><div class="segmented" aria-label="Person card detail"><button type="button" data-tree-node-view="condensed" aria-pressed="' + String(state().ui.treeNodeView === "condensed") + '">Condensed</button><button type="button" data-tree-node-view="detailed" aria-pressed="' + String(state().ui.treeNodeView === "detailed") + '">Detailed</button></div><label class="depth-control"><span>Ancestors</span><input id="ancestorDepth" type="number" min="0" max="4" step="1" value="' + state().ui.ancestorDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><label class="depth-control"><span>Descendants</span><input id="descendantDepth" type="number" min="0" max="4" step="1" value="' + state().ui.descendantDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><div class="zoom-controls" role="group" aria-label="Tree zoom controls"><button type="button" class="zoom-action" data-zoom="out" aria-label="Zoom out" title="Zoom out"><span class="zoom-action-icon" data-symbol="zoomOut" aria-hidden="true"></span><span>Out</span></button><label class="zoom-value-control"><span>Zoom %</span><input id="zoomValue" type="number" min="1" max="250" step="1" value="100" inputmode="numeric"></label><button type="button" class="zoom-action" data-zoom="in" aria-label="Zoom in" title="Zoom in"><span class="zoom-action-icon" data-symbol="zoomIn" aria-hidden="true"></span><span>In</span></button><button type="button" class="zoom-action" data-fit-tree aria-label="Fit tree" title="Fit tree"><span class="zoom-action-icon" data-symbol="fit" aria-hidden="true"></span><span>Fit</span></button><span id="zoomStatus" class="visually-hidden" aria-live="polite">100% zoom</span></div></div></header><div class="tree-canvas"><svg id="familyTreeSvg" role="group" aria-label="Interactive Family Tree. Scroll horizontally or vertically, drag to pan, use the zoom controls, and select a person to focus." tabindex="0"></svg></div></section><aside id="profilePanel" class="profile-panel workspace-card' + (profileCollapsed ? " is-collapsed" : "") + '" aria-label="Selected person profile"><div id="profilePanelContent" class="profile-panel-content"></div></aside></div></section>';
     const workspaceGrid = $(".family-workspace-grid", $("#mainContent"));
     workspaceGrid.style.setProperty("--profile-panel-width", state().ui.profilePanelWidth + "px");
-    $(".tree-view-controls", workspaceGrid).insertAdjacentHTML("beforeend", '<label class="tree-line-toggle check-field"><input id="inferredParentLinesToggle" type="checkbox"' + (state().ui.showInferredParentLines ? " checked" : "") + '><span>Other parent lines</span></label>');
+    $(".tree-view-controls", workspaceGrid).insertAdjacentHTML("beforeend", '<label class="tree-line-toggle check-field"><input id="inferredParentLinesToggle" type="checkbox"' + (state().ui.showInferredParentLines ? " checked" : "") + '><span>Affinal Lines</span></label>');
     $(".tree-panel", workspaceGrid).insertAdjacentHTML("afterend", '<button id="treeProfileDivider" class="family-resize-handle" type="button" role="separator" aria-orientation="vertical" aria-label="Resize Family Tree and selected person" aria-valuemin="240" aria-valuemax="600" aria-valuenow="' + state().ui.profilePanelWidth + '"' + (profileCollapsed ? " hidden" : "") + '><span aria-hidden="true"></span></button>');
-    $("#livingFilter").value = state().ui.livingFilter;
     $("#directorySort").value = state().ui.directorySort;
     renderDirectoryList();
     renderProfile();
@@ -1605,6 +1642,8 @@
 
   function handleMainClick(event) {
     const target = event.target;
+    const openDirectoryFilter = $(".directory-filter-menu[open]");
+    if (openDirectoryFilter && !target.closest(".directory-filter-menu")) openDirectoryFilter.removeAttribute("open");
     if (target.closest("#firstImportButton")) { $("#onboardingImportInput").click(); return; }
     if (target.closest("[data-close-profile]")) {
       const previousId = state().ui.selectedPersonId;
@@ -1686,7 +1725,7 @@
     const zoomButton = target.closest("[data-zoom]");
     if (zoomButton) { treeSurfaceMode = "natural"; treeTransform.scale = u.clamp(treeTransform.scale * (zoomButton.dataset.zoom === "in" ? 1.2 : 0.833), 0.01, 2.5, treeTransform.scale); applyTreeTransform(); return; }
     if (target.closest("[data-fit-tree]")) { fitTree(); return; }
-    if (target.closest("[data-clear-directory]")) { storage.mutate(function (next) { next.ui.directorySearch = ""; next.ui.livingFilter = "all"; }, { touch: false, reason: "directory-filter" }); renderWorkspace(); return; }
+    if (target.closest("[data-clear-directory]")) { storage.mutate(function (next) { next.ui.directorySearch = ""; next.ui.directoryFilters = []; }, { touch: false, reason: "directory-filter" }); renderWorkspace(); return; }
     if (target.closest("[data-print-atlas]")) printAtlas();
   }
 
@@ -1749,7 +1788,12 @@
       else { const relative = relativeForArrow(treeNode.dataset.treePerson, event.key); if (relative) selectPerson(relative.id, { focus: true, mobileProfile: true }); }
       return;
     }
-    if (event.key === "Escape") { $("#globalSearchResults").hidden = true; return; }
+    if (event.key === "Escape") {
+      const directoryFilter = $(".directory-filter-menu[open]");
+      if (directoryFilter) { directoryFilter.removeAttribute("open"); directoryFilter.querySelector("summary")?.focus(); return; }
+      $("#globalSearchResults").hidden = true;
+      return;
+    }
     if (u.isEditableTarget(event.target) || event.metaKey) return;
     if (event.code === "Slash") { event.preventDefault(); if (event.shiftKey) openSupport("help", event.target); else if (initialized()) { $("#globalSearch").focus(); $("#globalSearch").select(); } return; }
     if (event.repeat || !initialized()) return;
@@ -1799,7 +1843,11 @@
     $("#mainContent").addEventListener("click", handleMainClick);
     $("#mainContent").addEventListener("change", function (event) {
       if (event.target.id === "onboardingImportInput") { portability.previewFile(event.target.files && event.target.files[0], $("#firstImportButton")); event.target.value = ""; }
-      else if (event.target.id === "livingFilter") { storage.mutate(function (next) { next.ui.livingFilter = event.target.value; }, { touch: false, reason: "directory-filter" }); renderDirectoryList(); }
+      else if (event.target.name === "directoryFilter") {
+        const selectedFilters = $$("input[name='directoryFilter']:checked").map(function (input) { return input.value; });
+        storage.mutate(function (next) { next.ui.directoryFilters = selectedFilters; }, { touch: false, reason: "directory-filter" });
+        renderDirectoryList();
+      }
       else if (event.target.id === "directorySort") { storage.mutate(function (next) { next.ui.directorySort = event.target.value; }, { touch: false, reason: "directory-sort" }); renderDirectoryList(); }
       else if (event.target.id === "inferredParentLinesToggle") {
         storage.mutate(function (next) { next.ui.showInferredParentLines = event.target.checked; }, { touch: false, reason: "tree-parent-lines" });

@@ -618,9 +618,22 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .tree-heading { display: grid; align-content: start; gap: .15rem; }
 .pane-reopen-controls:empty { display: none; }
 .directory-panel, .tree-panel, .profile-panel { display: flex; flex-direction: column; }
-.directory-module-bar { display: flex; flex: 0 0 auto; align-items: center; justify-content: flex-end; gap: .35rem; min-height: 46px; padding: .35rem .45rem; border-bottom: 1px solid var(--line); }
+.directory-module-bar { display: flex; flex: 0 0 auto; align-items: center; gap: .35rem; min-height: 46px; padding: .35rem .45rem; border-bottom: 1px solid var(--line); }
+.directory-search-field { position: relative; flex: 1 1 auto; min-width: 0; }
+.directory-search-field input { width: 100%; padding-right: 4.85rem; }
+.directory-search-field input[type="search"]::-webkit-search-cancel-button { margin-right: 4.1rem; }
+.directory-search-field .count-pill { position: absolute; top: 50%; right: .3rem; min-height: 22px; padding: .12rem .42rem; pointer-events: none; transform: translateY(-50%); }
 .directory-controls { display: grid; gap: .45rem; padding: .55rem; border-bottom: 1px solid var(--line); background: var(--surface-2); }
 .directory-filter-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .35rem; }
+.directory-filter-control { position: relative; }
+.directory-filter-menu { position: relative; margin: 0; color: var(--text); font-weight: 650; }
+.directory-filter-menu > summary { display: flex; align-items: center; width: 100%; min-height: var(--control-height); padding: .45rem .58rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--text); font-weight: 650; }
+.directory-filter-menu > summary:focus-visible { border-color: var(--accent); outline: 0; box-shadow: 0 0 0 3px var(--accent-soft); }
+.directory-filter-menu > summary span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.directory-filter-options { position: absolute; z-index: 20; top: calc(100% + .28rem); left: 0; display: grid; width: max(240px, 100%); padding: .3rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); box-shadow: var(--shadow); }
+.directory-filter-option { display: flex; align-items: center; gap: .5rem; min-height: 40px; padding: .35rem .42rem; border-radius: 7px; color: var(--text); font-size: .72rem; font-weight: 650; cursor: pointer; }
+.directory-filter-option:hover, .directory-filter-option:focus-within { background: var(--accent-soft); }
+.directory-filter-option input { flex: 0 0 auto; min-height: 18px; }
 .directory-body { display: grid; grid-template-columns: minmax(0, 1fr) 24px; flex: 1 1 auto; min-height: 0; overflow: hidden; }
 .directory-list { min-height: 0; overflow-y: auto; padding: .35rem; scroll-behavior: smooth; }
 .directory-letter { position: sticky; z-index: 2; top: -.35rem; margin: 0; padding: .45rem .45rem .25rem; background: var(--surface); color: var(--muted); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; }
