@@ -664,9 +664,9 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .tree-node { cursor: pointer; outline: none; }
 .tree-node rect { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.5; vector-effect: non-scaling-stroke; filter: drop-shadow(0 3px 5px rgba(20, 28, 25, .12)); }
 .tree-node text { fill: var(--text); font-family: Helvetica, Arial, sans-serif; pointer-events: none; }
-.tree-node .tree-name { font-size: 12px; font-weight: 800; }
+.tree-node .tree-name-line { font-size: 11px; font-weight: 800; }
 .tree-node .tree-life, .tree-node .tree-reference { fill: var(--muted); font-size: 9px; }
-.tree-node[data-view="condensed"] .tree-given, .tree-node[data-view="condensed"] .tree-family { font-size: 12px; font-weight: 800; }
+.tree-node[data-view="condensed"] .tree-name-line { font-size: 12px; }
 .tree-node[data-view="condensed"] .tree-family { fill: var(--accent-strong); }
 .tree-node[data-view="condensed"] .tree-life { font-size: 9px; }
 .tree-node.selected rect { stroke: var(--accent); stroke-width: 3; }

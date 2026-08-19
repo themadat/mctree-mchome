@@ -220,11 +220,6 @@
         if (value && descriptor !== expected) throw new Error("A McLineage person date descriptor does not match its value.");
         if (!value && !["UNKNOWN", ""].includes(descriptor)) throw new Error("A McLineage person date without a value must be UNKNOWN or blank.");
       });
-      const lineage = u.cleanLine(row.lineage_id, 100);
-      const generation = lineage && lineage !== "99" ? lineage.split(".").length - 1 : null;
-      if (generation !== null && generation <= 4 && !u.cleanLine(personDateValue(row, "death"), 40) && personDateDescriptor(row, "death") !== "UNKNOWN") {
-        throw new Error("McLineage G0-G4 people without a death date must use the UNKNOWN death descriptor.");
-      }
     });
     return true;
   }
@@ -330,16 +325,15 @@
     const birthDescriptor = u.cleanLine(personDateDescriptor(row, "birth"), 40);
     const deathRaw = u.cleanLine(personDateValue(row, "death"), 40);
     const deathDescriptor = u.cleanLine(personDateDescriptor(row, "death"), 40);
-    const currentDateSchema = sourceHasField(row, "person_date_death_descriptor") || sourceHasField(row, "descendant_date_death_descriptor");
     const ancestry = ["root_ancestor_01_name", "root_ancestor_02_name", "root_ancestor_03_name", "lineage_level_01_name", "lineage_level_02_name", "lineage_level_03_name", "lineage_level_04_name", "lineage_level_05_name", "lineage_level_06_name"].map(function (key) { return u.cleanLine(row[key], 200); }).filter(Boolean);
     const notes = [];
     if (u.cleanText(row.notes, 4000).trim()) notes.push(u.cleanText(row.notes, 4000).trim());
     if (u.cleanText(row.data_quality_notes, 4000).trim()) notes.push("Data quality: " + u.cleanText(row.data_quality_notes, 4000).trim());
-    return {
+    const person = {
       id: sourcePersonId(row, index),
       givenName: sourceHasField(row, "person_first_names") ? row.person_first_names : row.descendant_first_names,
       familyName: sourceHasField(row, "person_last_name") ? row.person_last_name : row.descendant_last_name,
-      livingStatus: currentDateSchema ? (deathRaw || deathDescriptor === "UNKNOWN" ? "deceased" : "living") : (deathRaw ? "deceased" : "unknown"),
+      livingStatus: deathRaw ? "deceased" : "unknown",
       birth: { date: sourceDate(birthRaw, birthDescriptor, counters), place: "" },
       death: { date: sourceDate(deathRaw, deathDescriptor, counters), place: "" },
       addresses: [], phones: [], emails: [],
@@ -349,6 +343,8 @@
       order: index,
       updatedAt: /^\d{4}-\d{2}-\d{2}$/.test(row.source_last_modified_date || "") ? row.source_last_modified_date + "T00:00:00.000Z" : ""
     };
+    person.livingStatus = model.mcLineageLivingStatus(person, person.livingStatus);
+    return person;
   }
 
   function sourceSpouse(row, slot, primaryId, index, counters) {

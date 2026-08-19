@@ -17,16 +17,16 @@ McFamily is an ordered-script static page with no module loader or runtime packa
 
 All modules attach to `window.LocalApp`. Application runtime has no family-data network path.
 
-## Schema v7
+## Schema v8
 
 The durable state is normalized into this shape:
 
 ```json
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "meta": {
-    "appVersion": "0.0.1.24",
-    "buildId": "0.0.1.24",
+    "appVersion": "0.0.1.25",
+    "buildId": "0.0.1.25",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -61,11 +61,11 @@ The compatibility `records`, `documents`, tombstone, UI, and module fields remai
 
 A fresh default has no `initializedAt` value and no people. `app.js` renders only the introduction and file input in that state. `portability.js` accepts the documented cleaned McLineage columns or native `mcfamily-csv-v1` rows and requires at least one valid person before the first local state is stored.
 
-Current cleaned McLineage rows represent every primary person and spouse as a stable P-referenced row. Lineage people use complete root-to-person paths that extend each direct parent's path by one two-digit segment; spouse rows intentionally leave lineage fields blank and are connected through explicit spouse-record references. Known and question-mark partial source date values share the `person_*` identity/date columns. A blank death descriptor imports as living, while `UNKNOWN` imports as deceased without a normalized death date. Partial source dates remain in source details because the editable/native date model accepts only normalized known values. Older embedded-spouse, person-to-root lineage, and descendant-date sources remain compatible.
+Current cleaned McLineage rows represent every primary person and spouse as a stable P-referenced row. Lineage people use complete root-to-person paths that extend each direct parent's path by one two-digit segment; spouse rows intentionally leave lineage fields blank and are connected through explicit spouse-record references. Known and question-mark partial source date values share the `person_*` identity/date columns. A known death value imports as deceased, and G0-G4 lineage people without one are automatically deceased. Beyond G4, a blank descriptor imports as living and `UNKNOWN` imports as unknown status instead of asserting a death. Partial source dates remain in source details because the editable/native date model accepts only normalized known values. Older embedded-spouse, person-to-root lineage, and descendant-date sources remain compatible.
 
 After initialization, deleting the last person does not clear `initializedAt`; the workspace remains open and offers Add Person. Subsequent imports may contain an initialized empty family, but replacement always shows a summary, asks for confirmation, and writes the current state to recovery first.
 
-Startup checks the schema-v7 storage key and known legacy keys. Candidates pass through wrapper unwrapping, sequential migration, normalization, sanitization, and validation. A corrupt current copy falls back to recovery or to the uninitialized gate. Ordinary mutations update metadata and are saved locally with a short debounce.
+Startup checks the schema-v8 storage key and known legacy keys. Candidates pass through wrapper unwrapping, sequential migration, normalization, sanitization, and validation. The v7-to-v8 migration corrects saved cleaned-source statuses using the generation-limited deceased rule. A corrupt current copy falls back to recovery or to the uninitialized gate. Ordinary mutations update metadata and are saved locally with a short debounce.
 
 Person deletion also writes recovery before removing that person's relationship records. Recovery is a single last-known snapshot, not a history or merge log.
 
@@ -79,7 +79,7 @@ The family workspace has three coordinated surfaces:
 
 The SVG contains semantic relationship labels in addition to visual lines. Pan and zoom use a view transform, touch uses pointer events, Fit calculates the graph bounds, and keyboard arrows move between rendered people. Reduced-motion settings suppress nonessential transitions.
 
-The layout is deterministic and dependency-free. People in the same generation are reordered around an imported lineage person: historical partners occupy the left and at most one current partner occupies the right. Partner status controls married, divorced, and other line treatments. The optional co-parent overlay adds a lighter branch from a plausible recorded partner to the existing recorded parent-child path and never creates data. The layout favors readable generations and connected components rather than guaranteeing a traditional two-parent pedigree diagram in every pathological graph.
+The layout is deterministic and dependency-free. Narrow cards stack each whitespace-separated name part on its own line, and generation rows expand vertically to the tallest card. People in the same generation are reordered around an imported lineage person: historical partners occupy the left and at most one current partner occupies the right. Partner status controls married, divorced, and other line treatments. The optional co-parent overlay adds a lighter branch from a plausible recorded partner to the existing recorded parent-child path and never creates data. The layout favors readable generations and connected components rather than guaranteeing a traditional two-parent pedigree diagram in every pathological graph.
 
 ## Print atlas
 
