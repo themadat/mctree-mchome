@@ -4,3 +4,6 @@
 4. give the zoom out in and fit buttons symbols above their text. visual group this control set. let me explicitly set the zoom number. have the text just be OUt, in, Fit
 
 do we care about non-descendent lines? if so need algo for marriage vs birth dates
+
+Data Cleanup:
+take care of 99 lineage

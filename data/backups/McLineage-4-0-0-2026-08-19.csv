@@ -1,0 +1,618 @@
+source_row_number,record_id,lineage_id,legacy_page_reference,lineage_parent_id,lineage_parent_name_full,descendant_first_names,descendant_last_name,descendant_date_birth_value,descendant_date_birth_descriptor,descendant_date_death_value,descendant_date_death_descriptor,legacy_male_display_first_names,legacy_male_display_last_name,legacy_male_display_deceased,legacy_female_display_first_names,legacy_female_display_last_name,legacy_relationship_status_code,retain_maiden_name,spouse_1_first_names,spouse_1_last_name,spouse_1_deceased,spouse_1_birth_date_value,spouse_1_birth_date_precision,spouse_1_death_date_value,spouse_1_death_date_precision,spouse_1_marriage_date_value,spouse_1_marriage_date_precision,spouse_2_first_names,spouse_2_last_name,spouse_2_birth_date_value,spouse_2_birth_date_precision,spouse_2_death_date_value,spouse_2_death_date_precision,spouse_2_marriage_date_value,spouse_2_marriage_date_precision,ex1_parent_flag,spouse_3_first_names,spouse_3_last_name,spouse_3_birth_date_value,spouse_3_birth_date_precision,spouse_3_death_date_value,spouse_3_death_date_precision,legacy_sort_name,notes,source_last_modified_date,source_last_modified_by,data_quality_notes
+2,P001,02.02.05.03,,P013,Perry Lesh McMillen,Pauline Lois,McMillen,1951-10-31,day,,UNKNOWN,Gary,Eby,,Polly,Eby,M,,Gary Robert,Eby,,1951-01-08,day,,,1972-05-06,day,,,,,,,,,,,,,,,,Eby,send email,2018-08-20,Melanie,
+3,P002,02.05.05.03,,P005,Max Beaver McMillen,Melinda Kay,McMillen,1952-07-27,day,,UNKNOWN,G. Allen,Huffman,,Melinda,Huffman,M,,George Allen,Huffman,,1953-03-02,day,,,1984-01-20,day,,,,,,,,,,,,,,,,Huffman,,1999-09-14,Lauerb,
+4,P003,03.05.03,,P033,Preston Alexander McMillen,Lois Pauline,McMillen,1916-11-13,day,2001-01,month,George A.,"Leukel, Jr.",,Lois,Leukel,D,,George Allen,"Leukel, Jr.",,1915-01-07,day,1994-10-13,day,1941-09-06,day,,,,,,,,,,,,,,,,"Leukel, Jr.",,2003-07-20,BMAC,
+5,P004,01.05.05.03,,P005,Max Beaver McMillen,Myleen Elizabeth,McMillen,1950-08-02,day,,UNKNOWN,Phillip,McCollum,,Myleen,McCollum,M,,Dennis Phillip,McCollum,,1950-06-02,day,,,1972-12-02,day,,,,,,,,,,,,,,,,McCollum,send e-mail,2009-07-07,BMAC,
+6,P005,05.05.03,,P033,Preston Alexander McMillen,Max Beaver,McMillen,1924-05-09,day,2007-01-27,day,Max B.,McMillen,true,Martha W.,McMillen,SF,,Martha Jane,Wickard,,1927-07-04,day,,,1949-08-06,day,,,,,,,,,,,,,,,,McMillen,,2007-07-24,BMAC,
+7,P006,04.05.05.03,,P005,Max Beaver McMillen,Mark Edward,McMillen,1957-07-02,day,,UNKNOWN,Mark,McMillen,,Charlotte,McMillen,M,,Charlotte Rose,Courtwright,,1957-04-22,day,,,1977-12-22,day,,,,,,,,,,,,,,,,McMillen,send email,2009-07-07,BMAC,
+8,P007,02.06.05.03,,P019,John Clyde McMillen,Clyde Strock,McMillen,1961-04-25,day,,UNKNOWN,Clyde S.,McMillen,,Dana,McMillen,M,,Dana Michelle,Naugle,,1964-05-05,day,,,1986-10-04,day,,,,,,,,,,,,,,,,McMillen,send email,2018-08-20,Melanie,
+9,P008,01.06.05.03,,P019,John Clyde McMillen,Nancy Jane,McMillen,1958-12-13,day,,UNKNOWN,N,,,Nancy Jane,McMillen,SF,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2007-08-17,BMAC,
+10,P009,03.05.05.03,,P005,Max Beaver McMillen,Marcia Elaine,McMillen,1954-11-11,day,,UNKNOWN,Richard,Sonneborn,,Marcia,Sonneborn,M,,Richard,Sonneborn,,19XX-06-02,partial,,,1977-10-15,day,,,,,,,,,,,,,,,,Sonneborn,send email,2009-07-07,BMAC,
+11,P010,05.05.05.03,,P005,Max Beaver McMillen,Melanie Ann,McMillen,1961-08-17,day,,UNKNOWN,Bernard,Lauer,,Melanie M.,Lauer,M,,Bernard Joseph,Lauer,,1960-05-11,day,,,1986-09-27,day,,,,,,,,,,,,,,,,Lauer,send email,2018-08-20,Melanie,
+12,P011,02.03.05.03,,P003,Lois Pauline McMillen,George Allen,Leukel III,,UNKNOWN,,UNKNOWN,George A.,Leukel III,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Leukel III,,1999-08-13,Laptop,"descendant_birth date is not parseable: ""Birth Date"""
+13,P012,01.01.05.05.03,,P004,Myleen Elizabeth McMillen,Seann Phillip,McCollum,1973-11-01,day,,UNKNOWN,Seann,McCollum,,,,SM,,,,,,,,,,,Tina,Magri,,,,,1997-09-06,day,true,,,,,,,McCollum,send email,2018-08-20,Melanie,
+14,P013,02.05.03,,P033,Preston Alexander McMillen,Perry Lesh,McMillen,1915-01-21,day,1994-01-29,day,Perry L.,McMillen,true,Ruth,McMillen d.,SF,,Ruth Marguerite,Cox,,1926-03-04,day,2019-01-25,day,1948-01-17,day,,,,,,,,,,,,,,,,McMillen,,1999-09-15,Lauerb,
+15,P014,01.02.05.03,,P013,Perry Lesh McMillen,Christine Perrietta,McMillen,1949-10-20,day,,UNKNOWN,Ray,Shanaman,,Perrietta,Shanaman,M,,Ray,Shanaman,,1935-12-09,day,,,1981-08-15,day,Howard David,Weiss,1945-02-02,day,,,1969-01-22,day,,,,,,,,Shanaman,send email,2018-08-20,Melanie,
+16,P015,02.01.02.05.03,,P014,Christine Perrietta McMillen,Honie Rochelle,Weiss,1972-12-16,day,,UNKNOWN,H,,,Honie,Smith,SF,,,,,,,,,,,Robert,Smith,,,,,1994-02-19,day,,,,,,,,Smith,send email,2018-08-20,Melanie,
+17,P016,01.01.02.05.03,,P014,Christine Perrietta McMillen,Ginger Lynelle,Weiss,1971-11-16,day,,UNKNOWN,,,,Ginger,Parker,SF,,,,,,,,,1997-10-24,day,Ryan George,Parker III,,,,,1993-09-11,day,true,,,,,,,Parker,send email,2018-08-20,Melanie,
+18,P017,03.02.05.03,,P013,Perry Lesh McMillen,Pamela Rebecca,McMillen,1954-07-20,day,,UNKNOWN,Mark,Early,,Pamela,Early,M,,Mark,Early,,,,,,,,,,,,,,,,,,,,,,,Early,send email,2018-08-20,Melanie,
+19,P018,04.02.05.03,,P013,Perry Lesh McMillen,Phyllis Ruth,McMillen,1956-04-11,day,,UNKNOWN,Randall,Rittel,,Phyllis,Rittel,M,,Randall Lee,Rittel,,,,,,1977-05-07,day,,,,,,,,,,,,,,,,Rittel,send email,2018-08-20,Melanie,
+20,P019,06.05.03,,P033,Preston Alexander McMillen,John Clyde,McMillen,1929-05-16,day,2018-05-01,day,J. Clyde,McMillen,true,Martha,McMillen d.,M,,Martha Jane,Strock,,1933-02-21,day,2011-10-31,day,1957-11-16,day,,,,,,,,,,,,,,,,McMillen,,2018-08-03,Melanie,
+21,P020,03.06.05.03,,P019,John Clyde McMillen,Clee Lesh,McMillen,1962-12-23,day,,UNKNOWN,Clee,McMillen,,Caroline,McMillen,M,,Caroline Sue,Kauffman,,1969-10-04,day,,,1990-03-10,day,,,,,,,,,,,,,,,,McMillen,send email,2018-08-20,Melanie,
+22,P021,04.06.05.03,,P019,John Clyde McMillen,Aileen Kay,McMillen,1964-05-26,day,2007-07-29,day,William,Stahl,,Aileen,Stahl d.,SM,,William Lorne,Stahl,,1965-09-23,day,,,1993-07-24,day,,,,,,,,,,,,,,,,Stahl,,2007-07-31,BMAC,
+23,P022,07.05.03,,P033,Preston Alexander McMillen,Clair Eugene,McMillen,1934-05-19,day,,UNKNOWN,Clair,McMillen,,Sara,McMillen,M,,Sara,Iobst,,1941-11-22,day,,,1967-11-18,day,,,,,,,,,,,,,,,,McMillen,,1999-09-14,Lauerb,
+24,P023,01.07.05.03,,P022,Clair Eugene McMillen,Brenda Jean,McMillen,1968-08-27,day,,UNKNOWN,Michael,Mull,,Brenda,Mull,M,,Michael,Mull,,,,,,2001-05-19,day,,,,,,,,,,,,,,,,Mull,,2001-07-09,Lauerb,
+25,P024,02.07.05.03,,P022,Clair Eugene McMillen,Kay Elaine,McMillen,1972-02-12,day,,UNKNOWN,K,,,Kay,McMillen,SF,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2007-08-17,BMAC,
+26,P025,01.05.03,,P033,Preston Alexander McMillen,Meade Jones,McMillen,1913-05-30,day,1975-03-09,day,Meade,McMillen,,Joan,McMillen,D,,Joan R.,Richardson,,1927-02-13,day,,,,,Helen,Leonard,,,,,,,,,,,,,,McMillen,,1999-09-14,Lauerb,
+27,P026,01.01.05.03,,P025,Meade Jones McMillen,Patricia Kay,McMillen,1941-11-02,day,,UNKNOWN,,,,Patricia,Carter,SF,,,,,,,,,,,Seaton B.,Fulghum,,,,,1961,year,,Arthur Bell,"Carter, Jr.",1922-09-27,day,,,Carter,,1999-09-15,Lauerb,
+28,P027,01.01.01.05.03,,P026,Patricia Kay McMillen,Mark Alan,Fulghum,1962-09-15,day,,UNKNOWN,Mark A.,Fulghum,,Cheryl,Fulghum,M,,Cheryl,Southall,,,,,,1991-09-21,day,,,,,,,,,,,,,,,,Fulghum,,1999-09-14,Lauerb,
+29,P028,02.01.01.05.03,,P026,Patricia Kay McMillen,Andrew Scott,Fulghum,1964-06-25,day,,UNKNOWN,Andrew,Fulghum,,Sandy,Fulghum,M,,Sandy,Fulghum,,,,,,2001-07-20,day,Kealy Rene,Steele,,,,,1987-05-01,day,true,,,,,,,Fulghum,,2001-08-16,Lauerb,
+30,P029,03.01.01.05.03,,P026,Patricia Kay McMillen,Carey Meade,Carter,1970-12-22,day,,UNKNOWN,Carey,Carter,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Carter,Carey & Charles - Twins of Patricia & A.B.,1999-07-30,Lauerb,
+31,P030,04.01.01.05.03,,P026,Patricia Kay McMillen,Charles Walter,Carter,1970-12-22,day,,UNKNOWN,Charles,Carter,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Carter,Carey & Charles - Twins of Patricia & A.B.,1999-07-30,Lauerb,
+32,P031,02.01.05.03,,P025,Meade Jones McMillen,Gail Eileen,McMillen,1944-06-16,day,,UNKNOWN,Martin,Morris,,Gail,Morris,M,,Martin M.,Morris,,1943-08-XX,partial,,,,,,,,,,,,,,,,,,,,Morris,,1999-07-30,Lauerb,
+33,P032,03.01.05.03,,P025,Meade Jones McMillen,Susan Jane,McMillen,1948-05-09,day,2008-11-01,day,S,,,Susan,McMillen,D,,,,,,,,,,,Ernest Paul,Pontell,,,,,1987-09-25,day,false,,,,,,,McMillen,,2015-08-18,Melanie,
+34,P033,05.03,1.01010305,P227,Albon McMillen,Preston Alexander,McMillen,1890-11-28,day,1984-12-24,day,(P. A.),McMillen,,Eva,McMillen,D,,Eva Pauline,Lesh,,1893-03-09,day,1979-12-XX,partial,1912-11-27,day,,,,,,,,,,,,,,,,McMillen,,2001-09-12,Lauerb,
+35,P034,01.03,1.01010301,P227,Albon McMillen,Homer,McMillen,1883-02-24,day,1965-09-15,day,Homer,McMillen,,Della,McMillen,D,,Della,Welsh,,1880-08-31,day,,,1909-06-10,day,,,,,,,,,,,,,,,,McMillen,,2001-09-12,Lauerb,
+36,P035,02.03,1.01010302,P227,Albon McMillen,Byard,McMillen,1884-12-07,day,1964-12-15,day,Byard,McMillen,,Lucinda,McMillen,D,,Lucinda Mae,Rice,,1880-04-01,day,1943-06-17,day,,,,,,,,,,,,,,,,,,McMillen,,2001-09-12,Lauerb,
+37,P036,03.03,1.01010303,P227,Albon McMillen,Annie Eliza,McMillen,1887-01-21,day,1951-09-26,day,Norman,Stambaugh,,Annie,Stambaugh,D,,Norman Franklin,Stambaugh,,1888-03-28,day,1985-04-02,day,1908-12-31,day,,,,,,,,,,,,,,,,Stambaugh,,2001-09-12,Lauerb,
+38,P037,06.03,1.01010306,P227,Albon McMillen,Mary Rodgers,McMillen,1896-04-26,day,1994-08-04,day,Earl Emanuel,Stambaugh,,Mary,Stambaugh,D,,Earl,Stambaugh,,1898-10-05,day,,,1919-08-20,day,,,,,,,,,,,,,,,,Stambaugh,,2001-09-12,Lauerb,
+39,P038,07.03,1.01010307,P227,Albon McMillen,Rillie Thompson,McMillen,1897-12-04,day,1974-12-03,day,Ralph,Beaver,,Rillie,Beaver,D,,Ralph Gayman,Beaver,,1895-09-09,day,1975-01-13,day,1920-06-24,day,,,,,,,,,,,,,,,,Beaver,,2001-09-12,Lauerb,
+40,P039,01.01.03,,P034,Homer McMillen,Donald,McMillen,1911-06-29,day,1999-12-14,day,Donald,McMillen,,,,D,,,,,,,,,,,Martha,Reline,1913-12-13,day,,,1936-10-24,day,false,,,,,,,McMillen,,2000-02-21,Lauerb,
+41,P040,01.01.01.03,,P039,Donald McMillen,Margaret Ann,McMillen,1938-03-30,day,,UNKNOWN,Ronald,Potteiger,,Ann,Potteiger,M,,Ronald,Potteiger,,,,,,1973-05-01,day,Charles,Colbert,,,,,1960-06-XX,partial,true,,,,,,,Potteiger,"Charles Colbert -
+2 children (Scott & Debrah)",2003-07-19,BMAC,
+42,P041,02.01.01.03,,P039,Donald McMillen,Lois Kay,McMillen,1945-09-12,day,,UNKNOWN,Stephen,Saluan,,Lois,Saluan,M,,Stephen,Saluan,,,,,,03-06-30,ambiguous_year,,,,,,,,,,,,,,,,Saluan,,2005-07-18,BMAC,"spouse_1_marriage date has a two-digit year: ""6/30/03"""
+43,P042,02.01.01.01.03,,P040,Margaret Ann McMillen,Deborah,Colbert,1963-03-30,day,,UNKNOWN,Robert,Meissner,,Deborah,Edwards Meissner,M,,Robert,Meissner,,,,,,1999-06-11,day,Jason,Edwards,,,,,,,true,,,,,,,Meissner,Brandon and Taylor are Jason Edwards children,2003-07-28,BMAC,
+44,P043,01.01.01.01.03,,P040,Margaret Ann McMillen,Scott,Colbert,1961-05-17,day,,UNKNOWN,Scott,Colbert,,Tina,Colbert,M,,Mary Martina,Cucinotta,,,,,,1990-02-03,day,,,,,,,,,,,,,,,,Colbert,,1999-09-14,Lauerb,
+45,P044,00,1,,,George,McMillen,1745,year,1823,year,George,McMillen,,Susan,McMillen,D,,Susan,Crane,,,,,,1768,year,,,,,,,,,,,,,,,,McMillen,,2001-09-12,Lauerb,duplicate lineage_id in source
+46,P045,01.06.03,,P037,Mary Rodgers McMillen,Glenn Albon,Stambaugh,1921-04-20,day,2014-03-02,day,Glenn A.,Stambaugh,true,Jean,Stambaugh d.,D,,Jean Marguerite,Weidner,,1921-11-17,day,2008-11-18,day,1947-12-14,day,,,,,,,,,,,,,,,,Stambaugh,,2015-08-03,Melanie,
+47,P046,01.01.06.03,,P045,Glenn Albon Stambaugh,Glenn Eugene,Stambaugh,1948-09-24,day,,UNKNOWN,Glenn E.,Stambaugh,,,,SM,true,,,,,,,,,,Helen,Bing Hue Wu,,,,,1993-01-04,day,,,,,,,,Stambaugh,,2015-08-03,Melanie,
+48,P047,02.01.06.03,,P045,Glenn Albon Stambaugh,Nancy Janette,Stambaugh,1950-10-15,day,,UNKNOWN,Edwin Lynn,Freeman,,Nancy,Freeman,M,,Edwin L.,Freeman,,1947-04-10,day,,,1974-08-10,day,,,,,,,,,,,,,,,,Freeman,send email,2018-08-20,Melanie,
+49,P048,01.03.03,,P036,Annie Eliza McMillen,Mack Thompson,Stambaugh,1909-11-03,day,1975-03-24,day,Mack,Stambaugh,,Dorothy,Stambaugh,D,,Dorothy E.,Gates,,1912-11-25,day,1961-06-11,day,1932-04-30,day,,,,,,,,,,,,,,,,Stambaugh,,1999-09-14,Lauerb,
+50,P049,01.01.03.03,,P048,Mack Thompson Stambaugh,Robert Edwin,Stambaugh,1933-05-19,day,,UNKNOWN,Robert,Stambaugh,,Frances,Stambaugh,M,,Frances Blanche,Mitten,,1940-09-18,day,,,1957-02-15,day,,,,,,,,,,,,,,,,Stambaugh,,1999-09-14,Lauerb,
+51,P050,01.01.01.03.03,,P049,Robert Edwin Stambaugh,Tonya Dorothy,Stambaugh,1958-09-02,day,,UNKNOWN,Gary,Thumma,,Tonya S.,Thumma,M,,Gary,Thumma,,,,,,,,,,,,,,,,,,,,,,,Thumma,,1999-07-26,Lauerb,
+52,P051,02.01.01.03.03,,P049,Robert Edwin Stambaugh,Lisa Patrice,Stambaugh,1961-09-29,day,,UNKNOWN,Perry,Hartzell,,Lisa S.,Hartzell,M,,Perry,Hartzell,,,,,,,,,,,,,,,,,,,,,,,Hartzell,,1999-07-26,Lauerb,
+53,P052,03.01.03.03,,P048,Mack Thompson Stambaugh,Roger Gates,Stambaugh,1935-12-29,day,,UNKNOWN,Roger,Stambaugh,,Maxine,Stambaugh,M,,Elinore Maxine,Warner,,1937-07-16,day,,,1960-07-09,day,,,,,,,,,,,,,,,,Stambaugh,,1999-09-14,Lauerb,
+54,P053,01.03.01.03.03,,P052,Roger Gates Stambaugh,Vicki Arlene,Stambaugh,1965-02-19,day,,UNKNOWN,Larry,Mullins,,Vicki,Mullins,M,,Larry,Mullins,,,,,,1986-05-17,day,,,,,,,,,,,,,,,,Mullins,,1999-09-14,Lauerb,
+55,P054,04.01.03.03,,P048,Mack Thompson Stambaugh,Joan Irene,Stambaugh,1943-08-26,day,,UNKNOWN,Harry,Sheriff,,Joan,Sheriff,M,,Harry Elmer,Sheriff,,1946-10-14,day,,,1965-11-06,day,,,,,,,,,,,,,,,,Sheriff,,1999-09-14,Lauerb,
+56,P055,02.01.03.03,,P048,Mack Thompson Stambaugh,Lois Ann,Stambaugh,1934-11-05,day,,UNKNOWN,Richard,Kelley,,Lois Ann,Kelley,M,,Richard Eugene,Kelley,,1935-07-01,day,,,1956-07-01,day,,,,,,,,,,,,,,,,Kelley,,1999-09-14,Lauerb,
+57,P056,01.02.01.03.03,,P055,Lois Ann Stambaugh,Richard Eugene,"Kelley, Jr.",1957-09-25,day,,UNKNOWN,Richard E.,"Kelley, Jr",,Babetta,Kelley,M,,Babetta,Maiden Name,,,,,,,,,,,,,,,,,,,,,,,"Kelley, Jr",,1999-08-09,Laptop,
+58,P057,02.02.01.03.03,,P055,Lois Ann Stambaugh,Wayne Lee,Kelley,1958-11-25,day,1958-11-26,day,Wayne,Kelley,,,,D,,,,,,,,,,,,,,,,,,,,,,,,,,Kelley,,1999-08-09,Laptop,
+59,P058,02.03.03,,P036,Annie Eliza McMillen,Harold Rhea,Stambaugh,1913-11-18,day,1994-11-10,day,Harold,Stambaugh,,Margaret,Stambaugh,D,,Margaret,Moore,,1914-02-02,day,1999-11-26,day,1936-09-24,day,,,,,,,,,,,,,,,,Stambaugh,,2000-09-02,Lauerb,
+60,P059,01.02.03.03,,P058,Harold Rhea Stambaugh,Delores Arlene,Stambaugh,1937-11-21,day,,UNKNOWN,Roland,Fenton,,Delores,Fenton,M,,Roland Dwight,Fenton,,1937-05-04,day,,,1960-06-11,day,,,,,,,,,,,,,,,,Fenton,,2018-08-20,Melanie,
+61,P060,01.01.02.03.03,,P059,Delores Arlene Stambaugh,Kathy Ann,Fenton,1961-09-01,day,,UNKNOWN,Charles,Middleton,,Kathy F.,Middleton,M,,Charles,Middleton,,,,,,,,,,,,,,,,,,,,,,,Middleton,"First Maariage to Jack Chubb
+Samanttha is daughter- Anniv 6/16/1990",2007-03-06,BMAC,
+62,P061,02.01.02.03.03,,P059,Delores Arlene Stambaugh,Roland Dwight,"Fenton, Jr.",1963-10-11,day,,UNKNOWN,Roland,"Fenton, Jr.",,Anne Marie,Fenton,M,,Anne Marie,Kelley,,,,,,1994-12-10,day,,,,,,,,,,,,,,,,"Fenton, Jr.",Major,1999-09-14,Lauerb,
+63,P062,03.01.02.03.03,,P059,Delores Arlene Stambaugh,Michael Rhea,Fenton,1965-01-08,day,,UNKNOWN,Michael R.,Fenton,,Christine,Fenton,M,,Christine,Halfpenny,,,,,,1995-11-18,day,,,,,,,,,,,,,,,,Fenton,,1999-09-14,Lauerb,
+64,P063,04.01.02.03.03,,P059,Delores Arlene Stambaugh,Leda Suzan,Fenton,1968-01-02,day,,UNKNOWN,Scott,Hager,,Leda,Hager,M,,Scott,Hager,,,,,,1994-10-29,day,,,,,,,,,,,,,,,,Hager,,1999-09-14,Lauerb,
+65,P064,03.03.03,,P036,Annie Eliza McMillen,Martha Jane,Stambaugh,1920-12-01,day,,UNKNOWN,Clarence,Kepner,,Martha Jane,Kepner,D,,Clarence C.,Kepner,,1915-10-26,day,1993-05-16,day,1939-05-30,day,,,,,,,,,,,,,,,,Kepner,,1999-09-14,Lauerb,"descendant_death date is not parseable: ""Date Deceased"""
+66,P065,01.03.03.03,,P064,Martha Jane Stambaugh,Carole Lea,Kepner,1942-04-30,day,,UNKNOWN,Darwin,Reich,,Carole,Reich,M,,Darwin Leroy,Reich,,1940-02-19,day,,,1963-01-11,day,,,,,,,,,,,,,,,,Reich,,1999-09-14,Lauerb,
+67,P066,01.01.03.03.03,,P065,Carole Lea Kepner,Linda Ann,Reich,1963-08-18,day,,UNKNOWN,David,Farren,,Linda R.,Farren,M,,David,Farren,,,,,,1991-08-10,day,Keith E.,Meyer,,,,,1985-06-22,day,,,,,,,,Farren,,1999-09-14,Lauerb,
+68,P067,02.03.03.03,,P064,Martha Jane Stambaugh,Dennis Franklin,Reich,1945-12-08,day,,UNKNOWN,Dennis,Kepner,,,,SM,,,,,,,,,,,Bonnie,,,,,,,,true,,,,,,,Kepner,1st Spouse - Bonnie,2000-02-21,Lauerb,
+69,P068,03.03.03.03,,P064,Martha Jane Stambaugh,Janice Anne,Kepner,1951-07-19,day,,UNKNOWN,Carl,Fraker,,Janice,Fraker,M,,Carl Leslie,Fraker,,1952-05-25,day,,,1970-07-12,day,,,,,,,,,,,,,,,,Fraker,,1999-09-14,Lauerb,
+70,P069,05.03.03.03,,P064,Martha Jane Stambaugh,Michael Creedon,Kepner,1956-01-24,day,,UNKNOWN,Michael,Kepner,,Rosemarie,Kepner,M,,Rosemarie,Miller,,1957-03-18,day,,,1975-10-03,day,,,,,,,,,,,,,,,,Kepner,,1999-09-14,Lauerb,
+71,P070,04.03.03,,P036,Annie Eliza McMillen,Janet,Stambaugh,1924-05-25,day,2000-02-16,day,William,Strobel,,Janet,Strobel,D,,William,Strobel,,,,1993-01-08,day,,,Robert,Nickle,,,,,1946-11-24,day,true,,,,,,,Strobel,,2000-09-02,Lauerb,
+72,P071,01.04.03.03,,P070,Janet Stambaugh,Robert Stanton,Strobel,1948-08-05,day,,UNKNOWN,Robert,Strobel,,Sharon,Strobel,M,,Sharon,Maiden Name,,,,,,,,,,,,,,,,,,,,,,,Strobel,,1999-07-29,Lauerb,
+73,P072,02.04.03.03,,P070,Janet Stambaugh,Sandra Kay,Strobel,1950-03-02,day,,UNKNOWN,John,"Willis, Jr.",,Sandra,Willis,M,,John,"Willis, Jr.",,,,,,,,,,,,,,,,,,,,,,,Willis,,2009-07-31,BMAC,
+74,P073,03.04.03.03,,P070,Janet Stambaugh,Norman Arthur,Strobel,1951-06-04,day,,UNKNOWN,Norman,Strobel,,Donna,Strobel,M,,Donna,Maiden Name,,,,,,,,,,,,,,,,,,,,,,,Strobel,,1999-07-29,Lauerb,
+75,P074,01.02.03,,P035,Byard McMillen,Loy,McMillen,1905-04-18,day,1974-04-02,day,Loy,McMillen,,Ernestine,McMillen,D,,Ernestine,Clouse,,1905-05-07,day,1991-10-08,day,,,Helen,Adair,1906,year,1931,year,,,true,,,,,,,McMillen,Helen had twins,1999-09-14,Lauerb,
+76,P075,01.01.02.03,,P074,Loy McMillen,Faye,McMillen,1931-03-30,day,,UNKNOWN,James L.,Rosenberry,true,Faye,Rosenberry,SF,,James L.,Rosenberry,,1929-01-12,day,1993-06-02,day,1953-06-06,day,,,,,,,,,,,,,,,,Rosenberry,Faye and Fern are twins,1999-09-15,Lauerb,
+77,P076,01.01.01.02.03,,P075,Faye McMillen,Debra,Rosenberry,1956-09-19,day,,UNKNOWN,Bryan,McKee,,Debra,McKee,M,,Bryan,McKee,,,,,,1988-07-02,day,,,,,,,,,,,,,,,,McKee,,1999-09-14,Lauerb,
+78,P077,02.01.01.02.03,,P075,Faye McMillen,Denise,Rosenberry,1960-08-31,day,,UNKNOWN,,,,Denise,James,SF,,,,,,,,,,,Scott,James,,,,,1983-03-26,day,,,,,,,,James,,1999-09-15,Lauerb,
+79,P078,03.01.01.02.03,,P075,Faye McMillen,Diane Lyn,Rosenberry,1963-03-20,day,,UNKNOWN,Richard,Thomas,,Diane L.,Thomas,M,,Richard,Thomas,,,,,,,,,,,,,,,,,,,,,,,Thomas,Ryan/Nathan non-descendants,1999-07-21,Lauerb,
+80,P079,04.01.01.02.03,,P075,Faye McMillen,Robin Leroy,Rosenberry,1964-08-17,day,,UNKNOWN,Robin L.,Rosenberry,,Candace,Rosenberry,M,,Candace,Hershey,,,,,,1988-06-18,day,,,,,,,,,,,,,,,,Rosenberry,,1999-09-14,Lauerb,
+81,P080,02.01.02.03,,P074,Loy McMillen,Fern,McMillen,1931-03-30,day,1998-04-14,day,James,Bistline,,Fern,Bistline d.,SM,,James,Bistline,true,1932-06-16,day,2018-04-14,day,1953-12-18,day,,,,,,,,,,,,,,,,Bistline,Faye and Fern are twins,2018-08-03,Melanie,"descendant_death date has a two-digit year: ""4/14/98""; Adam fixed ambiguous death year on 2026-08-19"
+82,P081,02.02.01.02.03,,P080,Fern McMillen,Barbara Lee,Bistline,1958-03-09,day,,UNKNOWN,David M.,Crawford,,Barbara,Crawford,M,,David M.,Crawford,,,,,,,,,,,,,,,,,,,,,,,Crawford,,1999-07-21,Lauerb,
+83,P082,01.02.01.02.03,,P080,Fern McMillen,Kandy Ann,Bistline,1955-02-27,day,,UNKNOWN,Thomas,Klacik,,Kandy,Klacik,M,,Thomas Joseph,Klacik,,,,,,1984-03-31,day,,,,,,,,,,,,,,,,Klacik,Adam and Bryan are twins.,1999-09-14,Lauerb,
+84,P083,02.02.03,,P035,Byard McMillen,George,McMillen,1907-01-05,day,1976-07-10,day,George,McMillen,,Sara,Alleman,D,,Sara,Rice,,1910-12-05,day,1995-02-28,day,1927-04-27,day,,,,,,,,,,,,,,,,McMillen,2nd Husband Russell Alleman (- 7/28/1993),1999-09-14,Lauerb,
+85,P084,01.02.02.03,,P083,George McMillen,Robert,McMillen,1928-11-19,day,,UNKNOWN,Robert,McMillen,,Fae,McMillen,M,,Fae,Stum,,1930-08-26,day,,,1950-08-27,day,,,,,,,,,,,,,,,,McMillen,,2006-12-16,BMAC,
+86,P085,00.01.01.02.02.03,,P084,Robert McMillen,Marsha JoAnn,McMillen,1951-07-05,day,,UNKNOWN,Fred,Fraker,true,Marsha,Fraker,SF,,Charles Fred,Fraker,true,1948-09-07,day,2008-07-16,day,1972-07-16,day,,,,,,,,,,,,,,,,Fraker,,2017-09-02,Melanie,
+87,P086,02.01.02.02.03,,P084,Robert McMillen,Robert Allen,McMillen,1954-01-23,day,,UNKNOWN,R. Allen,McMillen,,Isabel,McMillen,M,,Isabel,Lee,,1954-10-01,day,,,1974-12-11,day,,,,,,,,,,,,,,,,McMillen,,1999-09-14,Lauerb,
+88,P087,03.01.02.02.03,,P084,Robert McMillen,Linda Jeanette,McMillen,1956-08-05,day,,UNKNOWN,,,,Linda,Darhower,SF,,,,,,,,,,,G. Edward,Darhower,,,,,,,,,,,,,,Darhower,e-mail rejected,2010-07-16,BMAC,
+89,P088,04.01.02.02.03,,P084,Robert McMillen,Brenda Kay,McMillen,1962-06-15,day,,UNKNOWN,Terre J.,Snare,,Brenda,Snare,M,,Terre Jay,Snare,,,,,,1981-10-10,day,,,,,,,,,,,,,,,,Snare,send e-mail,2009-07-07,BMAC,
+90,P089,02.02.02.03,,P083,George McMillen,Sara Eloise,McMillen d.,1930-06-07,day,2003-02-09,day,William,Murphy,,Eloise,Murphy d.,SM,,William,Murphy,,1928-11-05,day,,,1949-06-18,day,,,,,,,,,,,,,,,,Murphy,,2003-07-28,BMAC,
+91,P090,01.02.02.02.03,,P089,Sara Eloise McMillen d.,William Dee,Murphy,,UNKNOWN,,UNKNOWN,William D.,Murphy,,Connie,Murphy,M,,Connie,Maiden Name,,,,,,,,,,,,,,,,,,,,,,,Murphy,,1999-07-25,Lauerb,"descendant_birth date is not parseable: ""Birthdate"""
+92,P091,02.02.02.02.03,,P089,Sara Eloise McMillen d.,Connie E.,Murphy,1951-07-31,day,,UNKNOWN,Harold E.,Smith,,Connie E.,Smith,M,,Harold E.,Smith,,,,,,,,,,,,,,,,,,,,,,,Smith,,2003-07-28,BMAC,
+93,P092,03.02.02.02.03,,P089,Sara Eloise McMillen d.,Julia A.,Murphy,1956-03-29,day,,UNKNOWN,S. William,"Dobler, Jr.",,Julia A.,Dobler,M,,S. William,"Dobler, Jr.",,,,,,1993-06-25,day,,Schnure,,,,,,,true,,,,,,,Dobler,Returned 2018,2018-10-24,Melanie,
+94,P093,01.03.02.02.02.03,,P092,Julia A. Murphy,Megan,Schnure,,UNKNOWN,,,Geffrey,Douglas,,Megan,Douglas,M,,Geffrey,Douglas,,,,,,1998-06-20,day,,,,,,,,,,,,,,,,Douglas,PC returned 2018,2018-08-10,Melanie,"descendant_birth date is not parseable: ""Birthdate"""
+95,P094,02.03.02.02.02.03,,P092,Julia A. Murphy,Monica,Schnure,,UNKNOWN,,,Nathan Robert,Hilton,,Monica,Hilton,M,,Rev. Nathan,Hilton,,,,,,1997-11-01,day,,,,,,,,,,,,,,,,Hilton,,2000-09-02,Lauerb,"descendant_birth date is not parseable: ""Birthdate"""
+96,P095,03.03.02.02.02.03,,P092,Julia A. Murphy,Melanie,Schnure,,UNKNOWN,,,Justin,Kelchner,,Melanie,Kelchner,M,,Justin,Kelchner,,,,,,2001-04-28,day,,,,,,,,,,,,,,,,Kelchner,,2005-09-05,BMAC,"descendant_birth date is not parseable: ""Birthdate"""
+97,P096,04.02.02.03,,P083,George McMillen,Beulah Elizabeth,McMillen d.,1932-12-10,day,2012-01-02,day,Carl,Brown,true,Beulah,Brown d.,D,,Carl,Brown,,,,1996-11-21,day,,,,,,,,,,,,,,,,,,Brown,,2012-07-21,Melanie Lauer,
+98,P097,01.04.02.02.03,,P096,Beulah Elizabeth McMillen d.,Dennis,McMillen,1951-05-19,day,,UNKNOWN,Dennis,McMillen,,Bernie,McMillen,M,,Bernie,Smith,,,,,,1996-06-14,day,Cathy,Lightner,1954-03-04,day,1995-08-05,day,,,,,,,,,,McMillen,"Dennis born out of wedlock, kept McMillen name.",1999-09-14,Lauerb,
+99,P098,01.01.04.02.02.03,,P097,Dennis McMillen,Jenny,McMIllen,,UNKNOWN,,,,,,Jenny,Nailor,SF,,,,,,,,,,,Steve,Roth,,,,,,,,Wayne,Nailor,,,,,Nailor,Jenny was adopted by Dennis McMillen.,2001-08-16,Lauerb,"descendant_birth date is not parseable: ""Birthdate"""
+100,P099,02.04.02.02.03,,P096,Beulah Elizabeth McMillen d.,Sue,Brown,1954-02-21,day,,UNKNOWN,Edgar,Wright,,Sue,Wright,M,,Edgar,Wright,,1953-01-27,day,,,,,,,,,,,,,,,,,,,,Wright,"Mother is Beulah Brown, born when she was married to Carl Brown.",1999-07-17,Lauerb,
+101,P100,03.04.02.02.03,,P096,Beulah Elizabeth McMillen d.,Carol,Brown,1955-03-23,day,,UNKNOWN,Daniel,Cisney,,Carol,Cisney,M,,Daniel,Cisney,,1943-06-25,day,,,,,,,,,,,,,,,,,,,,Cisney,"Mother is Beulah Brown, born when she was married to Carl Brown.",2000-08-17,Lauerb,
+102,P101,05.04.02.02.03,,P096,Beulah Elizabeth McMillen d.,Debra,Brown,1958-11-28,day,,UNKNOWN,Richard,Cutchall,,Debra,Cutchall,M,,Richard,Cutshall,,,,,,1985-08-04,day,,,,,,,,,,,,,,,,Cutchall,"Mother is Beulah Brown, born when she was married to Carl Brown.",2001-07-09,Lauerb,
+103,P102,04.04.02.02.03,,P096,Beulah Elizabeth McMillen d.,Eddie,Brown,1957-08-21,day,,UNKNOWN,Eddie,Brown,,,,SM,,,,,,,,,1993-06-25,day,Tracey,Peterson,,,,,,,true,,,,,,,Brown,,2017-08-08,Melanie,
+104,P103,05.02.02.03,,P083,George McMillen,Cletus,McMillen,1935-01-30,day,1991-11-09,day,Cletus,McMillen,,Joanne,McMillen,D,,Joanne,Stouffer,,1937-08-20,day,1997-03-30,day,1955-11-20,day,,,,,,,,,,,,,,,,McMillen,,1999-09-14,Lauerb,
+105,P104,06.05.02.02.03,,P103,Cletus McMillen,Tracey R.,McMillen,1964-10-16,day,,UNKNOWN,T,,,Tracey R.,McMillen,SF,,,,,,,,,,,Joseph,Bolognese,,,,,1997-02-14,day,,,,,,,,McMillen,,2007-08-17,BMAC,
+106,P105,01.05.02.02.03,,P103,Cletus McMillen,Cynthia,McMillen,1957-03-03,day,,UNKNOWN,C,,,Cynthia,McMillen,SF,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2007-08-17,BMAC,
+107,P106,02.05.02.02.03,,P103,Cletus McMillen,C. George,McMillen,1958-04-02,day,,UNKNOWN,C. George,McMillen,,Judy,McMillen,M,,Judy,Maiden Name,,,,,,1976-07-09,day,,,,,,,,,,,,,,,,McMillen,,1999-09-14,Lauerb,
+108,P107,04.05.02.02.03,,P103,Cletus McMillen,Lori,McMillen,1961-04-28,day,,UNKNOWN,Daniel L.,Hoffman,,Lori,Hoffman,M,,Daniel L.,Hoffman,,,,,,1982-03-09,day,,,,,,,,,,,,,,,,Hoffman,,1999-09-14,Lauerb,
+109,P108,06.02.02.03,,P083,George McMillen,Lucinda Ann,McMillen,1936-03-31,day,,UNKNOWN,Dale,Rohm,,Lucinda Ann,Rohm,M,,Dale,Rohm,,,,,,,,,,,,,,,,,,,,,,,Rohm,,1999-07-25,Lauerb,
+110,P109,01.06.02.02.03,,P108,Lucinda Ann McMillen,Robby,Rohm,1954-04-22,day,,UNKNOWN,Robby,Rohm,,Debbie,Rohm,M,,Debbie,Maiden Name,,,,,,,,,,,,,,,,,,,,,,,Rohm,,1999-07-25,Lauerb,
+111,P110,02.06.02.02.03,,P108,Lucinda Ann McMillen,Terry,Rohm,1955-05-09,day,,UNKNOWN,Terry,Rohm,,Wanda,Rohm,M,,Wanda Lori,Yohn,,,,,,1985-06-22,day,,,,,,,,,,,,,,,,Rohm,,1999-09-14,Lauerb,
+112,P111,03.06.02.02.03,,P108,Lucinda Ann McMillen,Kirby,Rohm,1957-01-01,day,,UNKNOWN,Kirby,Rohm,,Rita,Rohm,M,,Rita,Maiden Name,,,,,,,,,,,,,,,,,,,,,,,Rohm,,1999-07-25,Lauerb,
+113,P112,04.06.02.02.03,,P108,Lucinda Ann McMillen,Jody,Rohm,1960-01-27,day,,UNKNOWN,Jody,Rohm,,Tammy,Rohm,M,,Tammy Lynn,Smith,,,,,,1983,year,,,,,,,,,,,,,,,,Rohm,,1999-09-14,Lauerb,
+114,P113,07.02.02.03,,P083,George McMillen,Henry Richard,McMillen,1941-03-09,day,1998-12-20,day,Richard,McMillen,true,Bonnie,McMillen,SF,,Bonnie,Kepner,,1946-04-23,day,,,,,,,,,,,,,,,,,,,,McMillen,Returned 2017,2017-09-02,Melanie,
+115,P114,01.07.02.02.03,,P113,Henry Richard McMillen,Richard L.,McMillen,1964-07-11,day,1991-12-02,day,Richie,McMillen,,,,D,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,1999-08-14,Laptop,
+116,P115,08.02.02.03,,P083,George McMillen,Kenneth Gene,McMillen,1943-02-15,day,,UNKNOWN,Kenneth,McMillen,true,Ruth Ann,McMillen,SF,,Ruth Ann,Hostetter,,1948-08-13,day,2001-06-22,day,,,,,,,,,,,,,,,,,,McMillen,,2001-07-09,Lauerb,
+117,P116,04.02.03,,P035,Byard McMillen,Ruby,McMillen,1911-02-11,day,1999-09-01,day,Donald,Hench,,Ruby,Hench,D,,Donald,Hench,,1910-10-10,day,1974-09-20,day,1932-02-20,day,,,,,,,,,,,,,,,,Hench,,2000-09-02,Lauerb,
+118,P117,01.04.02.03,,P116,Ruby McMillen,Ronald,Hench,1933-07-06,day,1987-01-01,day,Ronald,Hench,true,Nancy,Hench /Rider d.,M,,Nancy,Yetter,,1933-09-02,day,2016-10-01,day,1955-09-02,day,,,,,,,,,,,,,,,,Hench,"2nd Spouse - Eugene Rider (5/28/1994 - )
+Eugene died Aug 6, 2013",2018-08-22,Melanie,
+119,P118,01.01.04.02.03,,P117,Ronald Hench,Ronetta,Hench,1956-04-10,day,,UNKNOWN,Steven,Trimmer,,Ronetta,Trimmer,M,,Steven,Trimmer,,1954-02-06,day,,,1977-09-17,day,,,,,,,,,,,,,,,,Trimmer,"Mother is: Nancy Hench/Rider
+send email",2018-08-20,Melanie,
+120,P119,03.01.04.02.03,,P117,Ronald Hench,Douglas Wade,Hench,1960-09-22,day,2015-08-31,day,Douglas,Hench,,,,SM,,,,,,,,,,,Gena,,,,,,,,,,,,,,,Hench,Returned 2018,2018-08-22,Melanie,
+121,P120,02.01.04.02.03,,P117,Ronald Hench,David Allen,Hench,1958-01-28,day,,UNKNOWN,David,Hench,,,,SM,,,,,,,,,,,Susanne,Madzrakowski,,,,,,,true,,,,,,,Hench,,1999-09-14,Lauerb,
+122,P121,04.01.04.02.03,,P117,Ronald Hench,Daryl Mac,Hench,1963-07-28,day,,UNKNOWN,Daryl Mac,Hench,,,,SM,,,,,,,,,,,Amy,,,,,,1984-07-11,day,,,,,,,,Hench,"Divorced from Amy ; info from Ronetta 7/08
+Returned 2018",2018-08-22,Melanie,
+123,P122,02.04.02.03,,P116,Ruby McMillen,Roger McMillen,Hench,1937-04-03,day,2011-12-15,day,Roger,Hench,true,Sue,Hench,SF,,Sue,Small,,1936-08-25,day,,,1956-04-28,day,,,,,,,,,,,,,,,,Hench,,2012-07-31,Melanie Lauer,
+124,P123,02.02.04.02.03,,P122,Roger McMillen Hench,Brian Keith,Hench,1962-05-16,day,,UNKNOWN,Brian,Hench,,Stephanie,Hench,M,,Stephanie,Simpson,,,,,,1985-05-12,day,,,,,,,,,,,,,,,,Hench,,1999-09-14,Lauerb,
+125,P124,03.02.04.02.03,,P122,Roger McMillen Hench,Thomas,Hench,1965-02-13,day,,UNKNOWN,Thomas,Hench,,Lori,Hench,M,,Lori,Maiden Name,,,,,,1987-08-29,day,,,,,,,,,,,,,,,,Hench,,1999-09-14,Lauerb,
+126,P125,04.04.02.03,,P116,Ruby McMillen,Edwin Cloyd,Hench,1945-06-17,day,,UNKNOWN,Edwin,Hench,,Maureen,Hench,M,,Maureen,Beam,,1936-04-03,day,,,1965-01-23,day,,,,,,,,,,,,,,,,Hench,send e-mail,2009-07-07,BMAC,
+127,P126,01.04.04.02.03,,P125,Edwin Cloyd Hench,Adam William,Hench,1965-07-17,day,2013-06-06,day,Adam,Hench,true,Tammy Jo,Hench,SF,,Tammy Jo,Cramer,,,,,,1985-01-26,day,,,,,,,,,,,,,,,,Hench,,2013-07-31,Melanie,"descendant_death date has a two-digit year: ""06/06/13""; Adam fixed ambiguous death year on 2026-08-19"
+128,P127,05.02.03,,P035,Byard McMillen,Lena Mae,McMillen,1912-12-25,day,1994-02-19,day,Harold,Ickes,,Mae,Ickes,D,,Harold Ritter,Ickes,,1910-03-25,day,1995-09-22,day,,,,,,,,,,,,,,,,,,Ickes,,1999-07-29,Lauerb,
+129,P128,02.05.02.03,,P127,Lena Mae McMillen,Mary Haroldeen,Ickes,1943-05-31,day,,UNKNOWN,,,,Mary,Ickes,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Ickes,,2007-03-06,BMAC,
+130,P129,01.05.02.03,,P127,Lena Mae McMillen,Lucinda Mae,Ickes,1940-10-21,day,,UNKNOWN,Arthur,Dum Jr.,,Lucinda,Dum,M,,Arthur Elwood,"Dum, Jr.",,1939-11-27,day,,,1961-08-18,day,,,,,,,,,,,,,,,,Dum Jr.,,1999-09-14,Lauerb,
+131,P130,01.01.05.02.03,,P129,Lucinda Mae Ickes,Laurie Jean,Dum,1962-04-15,day,,UNKNOWN,Raymond,Kirkpatrick Jr.,,Laurie,Kirkpatrick,M,,Raymond,Kirkpatrick Jr.,,1969-04-24,day,,,1999-06-29,day,James,Fulton,,,,,1992-06-20,day,,,,,,,,Kirkpatrick,e-mail rejected,2011-08-19,Melanie Lauer,
+132,P131,03.05.02.03,,P127,Lena Mae McMillen,Ruby Rosalie,Ickes,1944-06-21,day,,UNKNOWN,Larry R.,Hommas,,Ruby,Hommas,M,,Larry Richard,Hommas,,1945-04-19,day,,,1966-12-09,day,,,,,,,,,,,,,,,,Hommas,send emial,2009-07-07,BMAC,
+133,P132,06,1.010106,P229,George McMillen,Newton,McMillen,1854,year,1909,year,Newton,McMillen,,Jennie,McMillen,D,,Jennie,Culbertson,,1859,year,1903,year,,,,,,,,,,,,,,,,,,McMillen,,2001-09-12,Lauerb,
+134,P133,01.06,1.01010601,P132,Newton McMillen,Earl Peoples,McMillen,1889-01-04,day,1956-04-13,day,Earl,McMillen,,Mabel,McMillen,D,,Mabel,Simenton,,1893,year,1973-06-14,day,,,,,,,,,,,,,,,,,,McMillen,,2001-09-12,Lauerb,
+135,P134,01.01.06,,P133,Earl Peoples McMillen,Louise E.,McMillen,1914-07-31,day,1984-03-26,day,Herman,Bradley,,Louise,Bradley,D,,Herman O.,Bradley,,1898-07-19,day,1985-07-05,day,1950-12-31,day,Duncan,,,,,,,,,,,,,,,Bradley,,1999-09-14,Lauerb,
+136,P135,01.01.01.06,,P134,Louise E. McMillen,Darla Mae,Bradley,1938-12-12,day,,UNKNOWN,Harold,Page,,Darla May,Page,SF,,Harold,Page,true,1936-10-16,day,2017-06-17,day,1981-07-01,day,,,,,,,,,,,,,,,,Page,Father is Duncan.,2017-08-12,Melanie,
+137,P136,02.01.01.06,,P134,Louise E. McMillen,Dixie Ann,Bradley,1953-07-07,day,,UNKNOWN,Gregory,Gordon,,Dixie,Gordon,M,,Gregory,Gordon,,,,,,,,,,,,,,,,,,,,,,,Gordon,,2015-07-27,Melanie,
+138,P137,02.06,1.01010602,P132,Newton McMillen,Ruth Eleanor,McMillen,1893-02-08,day,1971-07-21,day,Ralph,Swartz,,Ruth,Swartz,D,,Ralph Emerson,Swartz,,1886-07-27,day,1932-05-19,day,,,,,,,,,,,,,,,,,,Swartz,,2001-09-12,Lauerb,
+139,P138,01.02.06,,P137,Ruth Eleanor McMillen,Lester Kenneth,Swartz,1912-04-04,day,1979,year,Kenneth,Swartz,true,Margaret,Swartz d.,SF,,Margaret Elizabeth,Mohler,,1916-05-21,day,2014-04-12,day,,,,,,,,,,,,,,,,,,Swartz,,2017-08-08,Melanie,
+140,P139,01.01.02.06,,P138,Lester Kenneth Swartz,Robert Emerson,Swartz,1934-10-11,day,,UNKNOWN,Robert,Swartz,,Shirley,Swartz d.,SM,,Shirley Mae,Wagner,,1934-07-08,day,2012-10-19,day,,,,,,,,,,,,,,,,,,Swartz,,2017-08-08,Melanie,
+141,P140,01.01.01.02.06,,P139,Robert Emerson Swartz,Fred Kenneth,Swartz,1962-06-27,day,,UNKNOWN,Kenneth,Swartz,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Swartz,,1999-08-02,Lauerb,
+142,P141,02.01.01.02.06,,P139,Robert Emerson Swartz,Sue Ann,Swartz,1964-01-31,day,,UNKNOWN,Adam,Yost,,Sue,Yost,M,,Adam,Yost,,,,,,Anniv,invalid,John,Costello,,,,,,,true,,,,,,,Yost,,2003-07-19,BMAC,"spouse_1_marriage date is not parseable: ""Anniv"""
+143,P142,03.01.01.02.06,,P139,Robert Emerson Swartz,Robert Scott,Swartz,1967-02-09,day,,UNKNOWN,Scott,Swartz,,Ann Marie,Swartz,M,,Ann Marie,Weiss,,,,,,,,,,,,,,,,,,,,,,,Swartz,,2017-08-08,Melanie,
+144,P143,07,1.010107,P229,George McMillen,Lucian Rodgers,McMillen,1858-09-22,day,1935-07-27,day,Lucian,McMillen,,Carrie,McMillen,D,,Carrie Rice,Milligan,,1864-05-16,day,1936-01-16,day,,,,,,,,,,,,,,,,,,McMillen,,2001-09-12,Lauerb,
+145,P144,02.07,1.01010702,P143,Lucian Rodgers McMillen,Lynn John,McMillen,1888-08-30,day,1944-07-03,day,Lynn,McMillen,,Ida,McMillen,M,,Ida,Bower,,1890-04-04,day,1975-01-25,day,,,,,,,,,,,,,,,,,,McMillen,,2018-07-28,Melanie,
+146,P145,01.01.02.07,,P500,Carrie Elizabeth McMillen,John McMillen,Long,1942-02-27,day,,UNKNOWN,John M.,Long,,Suzanne,Long,M,,Suzanne,Haynes,,1944-12-13,day,,,1965,year,,,,,,,,,,,,,,,,Long,Col.,2005-02-21,BMAC,
+147,P146,01.01.01.02.07,,P145,John McMillen Long,Elizabeth Ann,Long,1966-03-27,day,,UNKNOWN,Gerald W.,D'Angelo,,Elizabeth,Long D'Angelo,M,true,Gerald Wayne,D'Angelo,,,,,,1992-05-09,day,,,,,,,,,,,,,,,,D'Angelo,,1999-09-14,Lauerb,
+148,P147,02.01.02.07,,P500,Carrie Elizabeth McMillen,James Edward,Long,1943-12-26,day,,UNKNOWN,James E.,Long,,Shobba,Long,M,,Shobba,Maiden Name,,,,,,,,,,,,,,,,,,,,,,,Long,,2017-08-05,Melanie,
+149,P148,03.02.07,,P144,Lynn John McMillen,Neil Bower,McMillen,1916-04-21,day,1994-05-08,day,Neil,McMillen,true,Jane,McMillen d.,D,,Jane Walker,Watts,,1918-04-27,day,2004-12-12,day,1940-10-12,day,,,,,,,,,,,,,,,,McMillen,,2005-02-21,BMAC,
+150,P149,01.03.02.07,,P148,Neil Bower McMillen,Thompson Bower,McMillen,1943-07-09,day,,UNKNOWN,Thompson B.,McMillen,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,1999-08-08,Laptop,
+151,P150,02.03.02.07,,P148,Neil Bower McMillen,Helen Jane,McMillen,1945-07-31,day,,UNKNOWN,Steve,Sauve,,Helen,Sauve,M,,Steve,Sauve,,,,,,,,Jonathon P.,Gilbert,,,,,1975-08-23,day,,,,,,,,Sauve,,1999-09-14,Lauerb,
+152,P151,03.03.02.07,,P148,Neil Bower McMillen,Hugh Bistline,McMillen,1951-05-18,day,,UNKNOWN,Hugh,McMillen,,Diane,McMillen,M,,Diane,Lyons,,,,,,,,,,,,,,,,,,,,,,,McMillen,send email,2018-08-20,Melanie,
+153,P152,04.02.07,,P144,Lynn John McMillen,Lynn Dean,McMillen,1924-02-18,day,1994-04-29,day,Dean,McMillen,true,Mary Louise d.,McMillen,,,Mary Louise,Reapsome,,1928-05-04,day,2005-09-20,day,1947-08-02,day,,,,,,,,,,,,,,,,McMillen,,2009-08-01,BMAC,
+154,P153,01.04.02.07,,P152,Lynn Dean McMillen,Lynn Dean,"McMillen, II",1952-06-09,day,,UNKNOWN,Lynn D.,McMillen,,Joyce,McMillen,M,,Joyce,Robertson,,,,,,1984-08-04,day,Cynthia Kay,Roff,1953-09-06,day,,,1974-08-24,day,,,,,,,,McMillen,send email,2018-08-20,Melanie,
+155,P154,02.04.02.07,,P152,Lynn Dean McMillen,David Max,McMillen,1955-01-17,day,,UNKNOWN,David M.,McMillen,,Beverly,McMillen,M,,Beverly,Rice,,,,,,,,,,,,,,,,,,,,,,,McMillen,send email,2018-08-20,Melanie,
+156,P155,03.04.02.07,,P152,Lynn Dean McMillen,Eric Joe,McMillen,1958-04-03,day,,UNKNOWN,Eric J.,McMillen,,Barbara Jo,McMillen,M,,Barbara Jo,Crozier,,,,,,1987-10-17,day,,,,,,,,,,,,,,,,McMillen,,1999-09-14,Lauerb,
+157,P156,04.04.02.07,,P152,Lynn Dean McMillen,Lisa Jayne,McMillen,1962-07-19,day,,UNKNOWN,L,,,Lisa M.,Coslett,SF,,,,,,,,,,,Jeffrey,Coslett,,,,,1985-08-03,day,,,,,,,,Coslett,Father of the children is Zubair Husam,2015-08-18,Melanie,
+158,P157,03.07,1.01010703,P143,Lucian Rodgers McMillen,Vera E.,McMillen,1891-08-19,day,,UNKNOWN,Seibert,Barclay,,Vera,Barclay,D,,J. Seibert,Barclay,,1887-01-20,day,1964-08-18,day,1914-12-24,day,,,,,,,,,,,,,,,,Barclay,,2001-09-12,Lauerb,"descendant_death date is not parseable: ""Date Deceased"""
+159,P158,01.03.07,,P157,Vera E. McMillen,Arly Lorena,Barclay,1916-02-14,day,1997-10-03,day,William,Reisinger,,Arly,Reisinger,D,,William Peter,Reisinger,,1915-09-29,day,1992-08-18,day,1942-05-06,day,,,,,,,,,,,,,,,,Reisinger,,1999-09-14,Lauerb,
+160,P159,01.01.03.07,,P158,Arly Lorena Barclay,Keith A.,Reisinger,1943-06-09,day,1964-10-29,day,Keith,Reisinger,,Karen,Reisinger,D,,Karen Ann,Bubb,,1945-10-12,day,,,1962-11-XX,partial,,,,,,,,,,,,,,,,Reisinger,,1999-09-14,Lauerb,
+161,P160,99,,,,Karen,,,UNKNOWN,,,K.A.,Harriman,,Karen,Harriman,M,,Karen,Harriman,,,,,,,,Keith,Reisinger,,,,,,,true,,,,,,,Harriman,1st spouse - Keith Reisinger d. (7.03.01.01) child-Traci Mitten (7.03.01.01.01),1999-09-14,Lauerb,"missing descendant last name; duplicate lineage_id in source; descendant_birth date is not parseable: ""Birth Date"""
+162,P161,01.01.01.03.07,,P159,Keith A. Reisinger,Traci,Reisinger,1963-12-30,day,,UNKNOWN,John,Bowen,,Traci R.,Bowen,M,,John,Bowen,,,,,,1998-07-10,day,Harry,Mitten,,,,,,,,,,,,,,Bowen,,2009-07-16,BMAC,
+163,P162,02.01.03.07,,P158,Arly Lorena Barclay,Karen Lee,Reisinger,1948-10-28,day,,UNKNOWN,,,,Karen Lee,Wilson,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Wilson,,1999-09-15,Lauerb,
+164,P163,03.03.07,,P157,Vera E. McMillen,Kenneth Mac,Barclay,1919-10-15,day,2011-03-06,day,Kenneth,Barclay,true,Thelma,Barclay,SF,,Thelma,Stahl,,1924-09-25,day,,,1946-06-09,day,,,,,,,,,,,,,,,,Barclay,,2011-04-30,Melanie Lauer,
+165,P164,01.03.03.07,,P163,Kenneth Mac Barclay,Nancy Elaine,Barclay,1948-04-17,day,,UNKNOWN,Thomas,VanFleet,,Nancy,VanFleet,M,,Thomas,VanFleet,,,,,,,,,,,,,,,,,,,,,,,VanFleet,,1999-08-08,Laptop,
+166,P165,03.03.03.07,,P163,Kenneth Mac Barclay,Carey Alan,Barclay,1954-05-29,day,,UNKNOWN,Carey,Barclay,,Deborah,Barclay,M,,Deborah,Maiden Name,,,,,,,,,,,,,,,,,,,,,,,Barclay,,1999-09-11,Lauerb,
+167,P166,02.03.07,,P157,Vera E. McMillen,Vera Joyce,Barclay,1917-12-09,day,2002-11-26,day,,,,V. Joyce,Barclay,D,,,,,,,,,,,,,,,,,,,,,,,,,,Barclay,,2003-07-20,BMAC,"descendant_death date has a two-digit year: ""11/26/02""; Adam fixed ambiguous death year on 2026-08-19"
+168,P167,04.03.07,,P157,Vera E. McMillen,Lois Grace,Barclay d.,1926-06-19,day,2012-05-13,day,Jewell,Gantz,true,Lois,Gantz,D,,Jewell A.,Gantz,,1921-10-18,day,1996-02-24,day,1947-10-18,day,,,,,,,,,,,,,,,,Gantz,,2015-08-10,Melanie,
+169,P168,01.04.03.07,,P167,Lois Grace Barclay d.,Wayne Edward,Gantz,1954-11-17,day,,UNKNOWN,Wayne,Gantz,,Shelia,Gantz,M,,Shelia,Lott,,1954-09-21,day,,,5/xx/xxxx,invalid,,,,,,,,,,,,,,,,Gantz,,1999-09-14,Lauerb,"spouse_1_marriage date is not parseable: ""5/xx/xxxx"""
+170,P169,02.04.03.07,,P167,Lois Grace Barclay d.,Larry Stephen,Gantz,1956-05-02,day,,UNKNOWN,Larry,Gantz,,Francene,Gantz,M,,Francene,Beamer,,1/1/xxxx,invalid,,,1986-05-31,day,,,,,,,,,,,,,,,,Gantz,send email,2018-08-20,Melanie,"spouse_1_birth date is not parseable: ""1/1/xxxx"""
+171,P170,04.07,1.01010704,P143,Lucian Rodgers McMillen,Reed,McMillen,1893-02-22,day,1975-05-29,day,Reed,McMillen,,Nellie,McMillen,D,,Nellie,Hench,,1906-10-11,day,1975-04-27,day,1927-11-23,day,,,,,,,,,,,,,,,,McMillen,,2001-09-12,Lauerb,
+172,P171,01.04.07,,P170,Reed McMillen,Lorene Isabel,McMillen,1929-05-29,day,,UNKNOWN,Dale E.,Haas,,Lorene,Haas,M,,Dale E.,Haas,,1926-10-06,day,,,1950-06-17,day,,,,,,,,,,,,,,,,Haas,,1999-09-14,Lauerb,
+173,P172,01.01.04.07,,P171,Lorene Isabel McMillen,Gary Henry,Haas,1951-05-31,day,,UNKNOWN,Gary H.,Haas,,Lucinda,Haas,M,,Lucinda Rae,Beaston,,1956-07-09,day,,,1974-10-26,day,,,,,,,,,,,,,,,,Haas,,2018-08-01,Melanie,
+174,P173,02.01.04.07,,P171,Lorene Isabel McMillen,Dale Gene,Haas,1952-05-22,day,,UNKNOWN,D. Gene,Haas,,Sally,Haas,M,,Sally,Maiden Name,,1947-11-17,day,,,1980-03-28,day,Donna Lou,Stone,,,,,1974-05-18,day,,,,,,,,Haas,,2018-08-01,Melanie,
+175,P174,03.01.04.07,,P171,Lorene Isabel McMillen,Donald Daniel,Haas,1953-12-06,day,,UNKNOWN,Daniel,Haas,,Rhonda,Haas,M,,Rhonda,Maiden Name,,1955-04-14,day,,,1979-09-15,day,,,,,,,,,,,,,,,,Haas,,2018-08-01,Melanie,
+176,P175,04.01.04.07,,P171,Lorene Isabel McMillen,Thomas,Haas,1956-02-09,day,,UNKNOWN,Thomas,Haas,,Sue,Haas,M,,Sue,Christian,,1963-08-05,day,,,2007-04-14,day,Kathy,,,,,,,,,,,,,,,Haas,,2018-08-01,Melanie,
+177,P176,02.04.07,,P170,Reed McMillen,Miriam Cecil,McMillen,1931-08-08,day,,UNKNOWN,H. R.,Frantz,true,Miriam M.,Frantz,SF,,Harry Richard,Frantz,,1934-05-20,day,2017-07-30,day,1958-01-26,day,,,,,,,,,,,,,,,,Frantz,Lt. Col.,2017-08-05,Melanie,
+178,P177,01.02.04.07,,P176,Miriam Cecil McMillen,Yvonne,Frantz,1960-01-31,day,,UNKNOWN,Chris,Besvold,,Yvonne,Besvold,M,,Chris,Besvold,,,,,,1988-03-19,day,,,,,,,,,,,,,,,,Besvold,,1999-09-14,Lauerb,
+179,P178,03.04.07,,P170,Reed McMillen,Carilu Ruth,McMillen d.,1934-08-10,day,2016-01-25,day,Melvin,Lehman,true,Carilu,Lehman d.,SF,,Melvin Murr,Lehman,true,1936-06-01,day,2007-08-01,day,11/23/195x,invalid,,,,,,,,,,,,,,,,Lehman,,2016-02-01,Melanie,"spouse_1_marriage date is not parseable: ""11/23/195x"""
+180,P179,01.03.04.07,,P178,Carilu Ruth McMillen d.,Todd Dennis,Lehman,1961-08-23,day,,UNKNOWN,Todd,Lehman,,Julia,Lehman,M,,Julia,Creveling,,,,,,1989-09-09,day,,,,,,,,,,,,,,,,Lehman,,1999-09-14,Lauerb,
+181,P180,02.03.04.07,,P178,Carilu Ruth McMillen d.,Kirk Nelson,Lehman,1964-10-24,day,,UNKNOWN,Kirk,Lehman,,Marian,Lehman,M,,Marian,Dent,,,,,,1988-06-18,day,,,,,,,,,,,,,,,,Lehman,,1999-09-14,Lauerb,
+182,P181,04.04.07,,P170,Reed McMillen,Pauline Adelaide,McMillen,1938-02-01,day,,UNKNOWN,Perry,Kretzing,true,Adelaide,Kretzing,SF,,Perry Mead,Kretzing,,1935-05-14,day,2016-11-15,day,1958-02-23,day,,,,,,,,,,,,,,,,Kretzing,,2016-11-24,Melanie,
+183,P182,02.04.04.07,,P181,Pauline Adelaide McMillen,Debbie Kay,Kretzing,1963-03-15,day,,UNKNOWN,Steven H.,Meldrum,,Debbie,Meldrum,M,,Steven Howard,Meldrum,,1960-02-13,day,,,1985-03-16,day,,,,,,,,,,,,,,,,Meldrum,,1999-09-14,Lauerb,
+184,P183,06.07,1.01010706,P143,Lucian Rodgers McMillen,Dwight,McMillen,1899-02-08,day,1959-06-13,day,Dwight,McMillen,,Ruth,McMillen,D,,Ruth,McConnell,,1899-02-22,day,,,,,,,,,,,,,,,,,,,,McMillen,,2001-09-12,Lauerb,
+185,P184,01.06.07,,P183,Dwight McMillen,Ray,McMillen,1928-03-17,day,,UNKNOWN,Ray,McMillen,,Barbara,McMillen,M,,Barbara Ann,Gamble,,1941-09-21,day,,,1982-06-10,day,Helen,Lyons,1927-01-01,day,1981-XX-XX,partial,1948-06-23,day,true,,,,,,,McMillen,,2014-09-08,Melanie,
+186,P185,01.01.06.07,,P184,Ray McMillen,Edward E.,McMillen,1950-02-19,day,,UNKNOWN,Edward,McMillen,,Wilma,McMillen,M,,Wilma,Fisher,,1957-10-15,day,,,1978-04-15,day,,,,,,,,,,,,,,,,McMillen,,1999-09-14,Lauerb,
+187,P186,02.01.06.07,,P184,Ray McMillen,Larry,McMillen,1952-05-16,day,,UNKNOWN,Larry,McMillen,,Donna,McMillen,M,,Donna,Knisley,,,,,,1979-09-08,day,,,,,,,,,,,,,,,,McMillen,,1999-09-14,Lauerb,
+188,P187,03.01.06.07,,P184,Ray McMillen,John E.,McMillen,1954-04-02,day,,UNKNOWN,John E.,McMillen,,Joanne,McMillen,M,,Joanne,McNaughton,,56-12-11,ambiguous_year,,,1978-06-03,day,,,,,,,,,,,,,,,,McMillen,send email,2018-08-20,Melanie,"spouse_1_birth date has a two-digit year: ""12/11/56"""
+189,P188,04.01.06.07,,P184,Ray McMillen,Carolyn,McMillen,1957-09-29,day,,UNKNOWN,Scot,Neely,,Carolyn,Neely,M,,Scot,Neely,,1957-08-15,day,,,1979-09-29,day,,,,,,,,,,,,,,,,Neely,,2000-11-25,Lauerb,
+190,P189,02.06.07,,P183,Dwight McMillen,Bernice,McMillen,1930-07-02,day,1991-11-25,day,William,Dovey,,Bernice,Dovey,,,William C.,Dovey,,,,1986-01-20,day,,,,,,,,,,,,,,,,,,Dovey,,2008-10-03,BMAC,
+191,P190,01.02.06.07,,P189,Bernice McMillen,Barbara Jean,Dovey,1953-07-12,day,,UNKNOWN,Richard,Hartman,,Barbara,Hartman,M,,Richard,Hartman,,,,,,,,,,,,,,,,,,,,,,,Hartman,,1999-08-08,Laptop,
+192,P191,02.02.06.07,,P189,Bernice McMillen,William C.,"Dovey, Jr.",1955-02-25,day,,UNKNOWN,William,Dovey,,Joy,Dovey,SM,,Joy,Elsy,,,,,,,,Melissa,Garlock,,,,,1984-03-31,day,true,,,,,,,Dovey,Second marriage for William.,2008-10-03,BMAC,
+193,P192,03.02.06.07,,P189,Bernice McMillen,Richard Dwight,Dovey,1958-09-08,day,,UNKNOWN,Richard,Dovey,,,,SM,,,,,,,,,1985-05-04,day,,,,,,,,,,,,,,,,Dovey,Separated from Wanda Lehman Dovey (notes 8/08),2008-10-03,BMAC,
+194,P193,04.02.06.07,,P189,Bernice McMillen,Ruth Elizabeth,Dovey,1960-02-09,day,,UNKNOWN,Ronald,Angle,,Ruth,Angle,M,,Ronald,Angle,,,,,,1981-06-06,day,,,,,,,,,,,,,,,,Angle,,1999-09-14,Lauerb,
+195,P194,05.02.06.07,,P189,Bernice McMillen,Dean Timothy,Dovey,1962-11-14,day,,UNKNOWN,Dean,Dovey,,Elizabeth,Dovey,M,,Elizabeth Ann,Thomas,,,,,,1986-01-04,day,,,,,,,,,,,,,,,,Dovey,,1999-09-14,Lauerb,
+196,P195,03.06.07,,P183,Dwight McMillen,Lucille,McMillen,1931-08-29,day,,UNKNOWN,Robert,Snyder,true,Lucille,Snyder,SF,,Robert J.,Snyder,true,,,2001-11-09,day,1956-12-29,day,,,,,,,,,,,,,,,,Snyder,,2003-07-28,BMAC,
+197,P196,04.06.07,,P183,Dwight McMillen,Janice Elaine,McMillen,1935-07-11,day,,UNKNOWN,Lloyd,Hench,,Janice,Hench,M,,Lloyd D.,Hench,,1935-08-06,day,,,1958-05-31,day,,,,,,,,,,,,,,,,Hench,,1999-09-14,Lauerb,
+198,P197,01.04.06.07,,P196,Janice Elaine McMillen,Sharon Louise,Hench,1963-04-04,day,,UNKNOWN,S,,,Sharon,Potteiger,SF,false,,,,,,,,,,Kenneth,Potteiger,,,,,1991-05-25,day,,,,,,,,Potteiger,,2007-08-17,BMAC,
+199,P198,05.06.07,,P183,Dwight McMillen,Wanda Ruth,McMillen,1938-02-24,day,,UNKNOWN,Lee,Harris,true,Wanda,Harris,SF,,Lee,Harris,,10/24/xxxx,invalid,,,,,,,,,,,,,,,,,,,,Harris,,2018-08-20,Melanie,"spouse_1_birth date is not parseable: ""10/24/xxxx"""
+200,P199,01.05.06.07,,P198,Wanda Ruth McMillen,Beth Ann,Harris,1969-09-08,day,,UNKNOWN,,,,Beth Ann,Harris,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Harris,,1999-09-15,Lauerb,
+201,P200,06.06.07,,P183,Dwight McMillen,Carl,McMillen,1941-08-26,day,,UNKNOWN,Carl,McMillen,,,,SM,,,,,,,,,,,Wanda,Roush,19XX-09-29,partial,,,5/9/xxxx,invalid,,,,,,,,McMillen,,1999-09-14,Lauerb,"spouse_2_marriage date is not parseable: ""5/9/xxxx"""
+202,P201,01.06.06.07,,P200,Carl McMillen,Kendra Yvonne,McMillen,1962-08-01,day,,UNKNOWN,Kenneth,Ballinger,,Kendra,Ballinger,M,,Kenneth Eugene,Ballinger,,,,,,1987-09-26,day,,,,,,,,,,,,,,,,Ballinger,Kendra and Kimbra are twins,1999-09-14,Lauerb,
+203,P202,02.06.06.07,,P200,Carl McMillen,Kimbra Yvetta,McMillen,1962-08-01,day,,UNKNOWN,K,,,Kimbra,McMillen,SF,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,Kendra and Kimbra are twins,2007-08-17,BMAC,
+204,P203,03.06.06.07,,P200,Carl McMillen,Brent,McMillen,1966-01-28,day,,UNKNOWN,Brent,McMillen,,,,SM,,,,,,,,,,,Melinda,Sheaffer,,,,,1990-09-22,day,,,,,,,,McMillen,Separated from Melinda Sheaffer 3/07,2015-08-18,Melanie,
+205,P204,07.07,1.01010707,P143,Lucian Rodgers McMillen,Grace,McMillen,1902-06-19,day,1987-02-19,day,Edward,Krah,,Grace,Krah,D,,William Edward,Krah,,1888-04-05,day,1973-01-23,day,1925-08-12,day,,,,,,,,,,,,,,,,Krah,,2001-09-12,Lauerb,
+206,P205,01.07.07,,P204,Grace McMillen,William Edward,"Krah, Jr.",1927-09-02,day,,UNKNOWN,W. Edward,Krah,,Marilyn,Krah,M,,Marilyn Jean,Faye,,1930-03-12,day,,,1950-12-16,day,,,,,,,,,,,,,,,,Krah,send email,2018-08-20,Melanie,
+207,P206,01.01.07.07,,P205,"William Edward Krah, Jr.",William Dean,Krah,1954-08-01,day,,UNKNOWN,William Dean,Krah,,Donna,Krah,M,,Donna,Maiden Name,,,,,,,,Cynthia,Downs,1959-11-21,day,,,1987-03-05,day,,,,,,,,Krah,,1999-09-14,Lauerb,
+208,P207,02.01.07.07,,P205,"William Edward Krah, Jr.",Robert Wayne,Krah,1956-05-15,day,,UNKNOWN,Robert Wayne,Krah,,Aprille,Krah,M,,Aprille,Yates,,,,,,1985-05-27,day,,,,,,,,,,,,,,,,Krah,,1999-09-14,Lauerb,
+209,P208,03.01.07.07,,P205,"William Edward Krah, Jr.",Bruce Edward,Krah,1963-01-28,day,,UNKNOWN,Bruce,Krah,,,,SM,,,,,,,,,,,Denise,,,,,,,,,,,,,,,Krah,Not sure what happened to Denise. Just got an email with a new address.,2014-08-14,Melanie,
+210,P209,03.02.04.07,,P176,Miriam Cecil McMillen,Brenda Sue,Frantz,1967-07-08,day,,UNKNOWN,Lee,Simril,,Brenda,Frantz-Simril,M,true,Lee,Simril,,,,,,1995-05-11,day,,,,,,,,,,,,,,,,Simril,,1999-09-15,Lauerb,
+211,P210,99,,,,Nancy,,,UNKNOWN,2016-10-01,day,Eugene,Rider,,Nancy,Rider,SM,,Nancy,Rider,true,,,,,,,Ronald,Hench,,,,,1994-05-28,day,,,,,,,,Rider,1st Spouse - Ronald Hench d. (3.02.04.01),2017-08-06,Melanie,"missing descendant last name; duplicate lineage_id in source; descendant_birth date is not parseable: ""Birth Date"""
+212,P211,01.01.01.01.03.07,,P161,Traci Reisinger,Karen Ann,Mitten,,UNKNOWN,,,Joshua,Miller,,Karen Ann,Miller,M,,Joshua Todd,Miller,,,,,,2001-04-28,day,,,,,,,,,,,,,,,,Mitten,Living with Mother - Traci Bowen.,2001-07-09,Lauerb,"descendant_birth date is not parseable: ""Birth Date"""
+213,P212,02.01.01.01.03.07,,P161,Traci Reisinger,Nathan Lee,Mitten,1981-09-17,day,,,Nathan,Mitten,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Mitten,Father is Harry Mitten.,2008-10-03,BMAC,
+214,P213,99,,,,Allison,,,UNKNOWN,,,Jason,Hilbolt,,Alison,Hilbolt,M,,Alison,Hilbolt,,,,,,1993-07-03,day,,,,,,,,,,,,,,,,Hilbolt,"D. Gene Haas's (7.04.01.02)
+step daughter",1999-09-14,Lauerb,"missing descendant last name; duplicate lineage_id in source; descendant_birth date is not parseable: ""Birth Date"""
+215,P214,01.04.04.07,,P181,Pauline Adelaide McMillen,Allen Perry,Kretzing,1961-04-30,day,,UNKNOWN,Allen,Kretzing,,Sheila S.,Kretzing,M,,Sheila Marie,Schroder,,1967-08-11,day,,,1995-07-15,day,,,,,,,,,,,,,,,,Kretzing,send email,2018-08-20,Melanie,
+216,P215,02.01.03.03.03,,P065,Carole Lea Kepner,Alan Lee,Reich,1960-01-29,day,,UNKNOWN,Alan,Reich,,Tracy,Reich,M,,Tracy Rene,Robinson,,,,,,1994-11-12,day,,,,,,,,,,,,,,,,Reich,,1999-09-14,Lauerb,
+217,P216,03.04.04.07,,P181,Pauline Adelaide McMillen,Vance Reed,Kretzing,1967-07-19,day,,UNKNOWN,Vance,Kretzing,,Amy,Kretzing,M,,Amy Lynn,Boose,,1972-01-13,day,,,1996-09-21,day,,,,,,,,,,,,,,,,Kretzing,send email,2018-08-20,Melanie,
+218,P217,01.01.03.03.07,,P164,Nancy Elaine Barclay,Tammy,Van Fleet,1967-09-08,day,,UNKNOWN,Eric,Mientus,,Tammy,Mientus,M,,Eric,Mientus,,,,,,1997-07-04,day,,,,,,,,,,,,,,,,Mientus,,1999-09-14,Lauerb,
+219,P218,02.02.04.07,,P176,Miriam Cecil McMillen,Jeannine,Frantz,1962-06-22,day,,UNKNOWN,Brian,Sabel,,Jeannine,Sabel,M,,Brian,Sabel,,,,,,1995-11-11,day,,,,,,,,,,,,,,,,Sabel,,1999-09-14,Lauerb,
+220,P219,04.06.06.07,,P200,Carl McMillen,Kristen Joy,McMillen,1971-04-01,day,,UNKNOWN,Joseph,Prowell,,Kristi Joy,Prowell,M,,Joseph Clayton,Prowell,,,,,,1996-05-11,day,,,,,,,,,,,,,,,,Prowell,,1999-09-14,Lauerb,
+221,P220,03.05.02.02.03,,P103,Cletus McMillen,Kimberly,McMillen,1959-11-27,day,,UNKNOWN,K,,,Kimberly,McMillen,SF,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2007-08-17,BMAC,
+222,P221,05.05.02.02.03,,P103,Cletus McMillen,Nancy L.,McMillen,1962-08-04,day,,UNKNOWN,N,,,Nancy,McMillen,SF,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2007-08-17,BMAC,
+223,P222,04.07.02.02.03,,P113,Henry Richard McMillen,Jill L.,McMillen,1968-11-13,day,,UNKNOWN,Terry,Reigle,,Jill,Reigle,M,,Terry,Reigle,,,,,,,,,Potter,,,,,,,,,,,,,,Reigle,,1999-09-14,Lauerb,
+224,P223,01.03.05.02.03,,P131,Ruby Rosalie Ickes,Stephanie Christine,Hommas,1970-12-27,day,,UNKNOWN,Douglas,Meckley,,Stephanie,Meckley,M,,Douglas,Meckley,,1974-01-20,day,,,1997-05-17,day,,,,,,,,,,,,,,,,Meckley,,2013-07-30,Melanie,
+225,P224,02.01.03,,P034,Homer McMillen,Ina Margaret,McMillen,1913-04-09,day,1990-01-26,day,,,,Margaret,McMillen,D,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2000-09-02,Lauerb,
+226,P225,02.07.02.02.03,,P113,Henry Richard McMillen,Bonnie Sue,McMillen,1965-09-05,day,,UNKNOWN,Tony J.,Nesbit,,Bonnie,Nesbit,M,,Tony J.,Nesbit,,,,,,,,,,,,,,,,,,,,,,,Nesbit,,1999-07-25,Lauerb,
+227,P226,03.07.02.02.03,,P113,Henry Richard McMillen,Thomas,McMillen,1968-01-16,day,,UNKNOWN,Thomas,McMillen,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,1999-07-25,Lauerb,
+228,P227,03,1.010103,P229,George McMillen,Albon,McMillen,1849-12-06,day,1930-05-27,day,Albon,McMillen,,Martha,McMillen,D,,Martha Jane,Milligan,,1856-08-20,day,1933-12-08,day,1881-10-06,day,,,,,,,,,,,,,,,,McMillen,,2001-09-12,Lauerb,
+229,P228,00,1.01,P044,George McMillen,James,McMillen,1782,year,1837,year,James,McMillen,,Anna,McMIllen,D,,Anna,Peoples,,1786,year,1862,year,,,,,,,,,,,,,,,,,,McMillen,,2001-09-12,Lauerb,duplicate lineage_id in source
+230,P229,00,1.0101,P228,James McMillen,George,McMillen,1818,year,1902,year,George,McMillen,,Eliza,McMillen,D,,Eliza,Rodgers,,1818,year,1898,year,,,,,,,,,,,,,,,,,,McMillen,,2001-09-12,Lauerb,duplicate lineage_id in source
+231,P230,00,1.0102,P228,James McMillen,Alex,McMillen,1821,year,1909,year,Alex,McMillen,,,,D,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2001-09-12,Lauerb,duplicate lineage_id in source
+232,P231,00,1.0103,P228,James McMillen,Susannah,McMillen,,UNKNOWN,,UNKNOWN,Parkinson,Hench,,Susannah,Hench,D,,Parkinson,Hench,,,,,,,,,,,,,,,,,,,,,,,Hench,,2001-09-12,Lauerb,"duplicate lineage_id in source; descendant_birth date is not parseable: ""Birth Date""; descendant_death date is not parseable: ""Date Deceased"""
+233,P232,00,1.0104,P228,James McMillen,Mary,McMillen,,UNKNOWN,,UNKNOWN,,Reed,,Mary,Reed,D,,,Reed,,,,,,,,,,,,,,,,,,,,,,,Reed,,2001-09-12,Lauerb,"duplicate lineage_id in source; descendant_birth date is not parseable: ""Birth Date""; descendant_death date is not parseable: ""Date Deceased"""
+234,P233,00,1.0105,P228,James McMillen,Jane,McMillen,1824-12,month,1901-07-12,day,William S.,Irvine,,Jane,Irvine,D,,William S.,Irvine,,1827-02-21,day,1889-03-17,day,,,,,,,,,,,,,,,,,,Irvine,,2001-09-12,Lauerb,duplicate lineage_id in source
+235,P234,01,1.010101,P229,George McMillen,Silas,McMillen,1845-03-14,day,1845-05-17,day,Silas,McMillen,,,,D,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2001-09-12,Lauerb,
+236,P235,02,1.010102,P229,George McMillen,Theophilus,McMillen,1847,year,1868,year,Theophilus,McMillen,,,,D,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2001-09-12,Lauerb,
+237,P236,04,1.010104,P229,George McMillen,Lizzie,McMillen,1852,year,1852,year,Lizzie,McMillen,,,,D,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2001-09-12,Lauerb,
+238,P237,05,1.010105,P229,George McMillen,Anna,McMillen,1852,year,1868,year,Anna,McMillen,,,,D,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2001-09-12,Lauerb,
+239,P238,02.01.05.02.03,,P129,Lucinda Mae Ickes,Jonathon Scott,Dum,1964-09-18,day,,UNKNOWN,Jonathon,Dum,,Beth,Wilson,M,true,Elizabeth A.,Wilson,,1962-04-13,day,,,1997-08-16,day,,,,,,,,,,,,,,,,Dum,,1999-09-14,Lauerb,
+240,P239,01.03.01.01.02.03,,P078,Diane Lyn Rosenberry,Dylan James,Thomas,1995-01-08,day,,,Dylan,Thomas,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Thomas,Who is father?,1999-09-14,Lauerb,
+241,P240,01.01.01.02.03.03,,P060,Kathy Ann Fenton,Samantha Morgan,Chubb,1995-10-03,day,,,,,,Samantha,Chubb,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Chubb,,1999-09-15,Lauerb,
+242,P241,01.02.01.02.03.03,,P061,"Roland Dwight Fenton, Jr.",Colleen Amber Nicole,Fenton,1996-09-10,day,,,,,,Colleen,Fenton,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Fenton,,1999-09-15,Lauerb,
+243,P242,01.03.01.02.03.03,,P062,Michael Rhea Fenton,Chase Michael,Fenton,1997-08-20,day,,,Chase,Fenton,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Fenton,,2005-07-18,BMAC,
+244,P243,01.04.01.02.03.03,,P063,Leda Suzan Fenton,Emma Catlyn,Hager,1996-09-11,day,,,,,,Emma,Hager,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Hager,,1999-09-15,Lauerb,
+245,P244,01.01.01.05.05.03,,P012,Seann Phillip McCollum,Julia Anne,McCollum,1993-11-17,day,,,,,,Julia,McCullum,SF,,,,,,,,,,,,,,,,,,,,,,,,,,McCullom,"Born out of wedlock. Has taken McCollum as last name.
+Mother is Heather Munz",1999-09-15,Lauerb,
+246,P245,04.04.04.07,,P181,Pauline Adelaide McMillen,Colleen Mae,Kretzing,1974-12-21,day,,UNKNOWN,Steve,Innerst,,Colleen,Innerst,M,,Steve,Innerst,,1972-09-17,day,,,1998-06-06,day,,,,,,,,,,,,,,,,Innerst,send email,2018-08-20,Melanie,
+247,P246,01.03.01.01.02.06,,P142,Robert Scott Swartz,Kyle Scott,Swartz,1995-03-10,day,,,Kyle,Swartz,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Swartz,,1999-08-13,Laptop,
+248,P247,01.02.01.05.03,,P031,Gail Eileen McMillen,Bryan McMillen,Morris,1971-08-21,day,,UNKNOWN,Bryan,Morris,,Andrea,Morris,M,,Andrea,Goodno,,1974-09-12,day,,,1998-02-21,day,,,,,,,,,,,,,,,,Morris,,2001-08-16,Lauerb,
+249,P248,02.04.04.02.03,,P125,Edwin Cloyd Hench,Rebecca Jo,Hench,1968-07-22,day,,UNKNOWN,Jonathon,Brown,,Rebecca,Brown,M,,Jonathon,Brown,,,,,,1998-05-16,day,,,,,,,,,,,,,,,,Brown,,2000-02-21,Lauerb,
+250,P249,02.04.07.02.02.03,,P222,Jill L. McMillen,Amber Marie,Potter,,UNKNOWN,,,,,,Amber,Potter,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Potter,"Amber is Jill's child from previous marriage, is part of lineage. What is lineage name??",1999-09-15,Lauerb,"descendant_birth date is not parseable: ""Birthdate"""
+251,P250,01.04.07.02.02.03,,P222,Jill L. McMillen,Tammy L.,McMillen,,UNKNOWN,,,T,,,Tammy L.,McMillen,SF,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,"Born out of wedlock.
+Returned 2017",2017-09-02,Melanie,"descendant_birth date is not parseable: ""Birthdate"""
+252,P251,03.02.02.03,,P083,George McMillen,Anna,McMillen,1931-08-18,day,1931-08-24,day,,,,Anna,McMillen,D,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2000-09-02,Lauerb,
+253,P252,03.04.04.02.03,,P125,Edwin Cloyd Hench,Sara Elizabeth,Hench,1971-06-18,day,,UNKNOWN,Todd,Kling,,Sara,Kling,M,,Todd,Kling,,,,,,1998-11-XX,partial,,,,,,,,,,,,,,,,Kling,,2000-09-02,Lauerb,
+254,P253,03.04.02.03,,P116,Ruby McMillen,R. Keith,Hench,1939-06-08,day,1945-10-17,day,R. Keith,Hench,,,,D,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,,1999-07-17,Lauerb,
+255,P254,03.02.03,,P035,Byard McMillen,Anna Rice,McMillen,1909,year,1910,year,,,,Anna Rice,McMillen,D,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2000-09-02,Lauerb,
+256,P255,01.02.01.01.03,,P041,Lois Kay McMillen,Laura,Conklin,1971-07-03,day,,UNKNOWN,Leron,Howard,,Laura,Conklin Howard,M,,Leron,Howard,,,,,,1997-05-XX,partial,,,,,,,,,,,,,,,,Howard,2017 Not deliverable,2017-08-15,Melanie,
+257,P256,01.02.04.02.03,,P122,Roger McMillen Hench,Susan,Hench,1961-03-06,day,1961-03-07,day,,,,Susan,Hench,D,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2000-09-02,Lauerb,
+258,P257,02.03.05.02.03,,P131,Ruby Rosalie Ickes,Steven Christopher,Hommas,1971-09-22,day,,UNKNOWN,Steven,Hommas,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Hommas,,1999-07-26,Lauerb,
+259,P258,01.01.01.01.01.03,,P043,Scott Colbert,Riann McMillen,Colbert,1994-06-21,day,,,,,,Riann,Colbert,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Colbert,,1999-09-15,Lauerb,
+260,P259,01.02.01.01.01.03,,P042,Deborah Colbert,Brandon Neil,Edwards,1990-01-16,day,,,Brandon,Edwards,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Edwards,,1999-08-11,Laptop,
+261,P260,02.02.01.01.01.03,,P042,Deborah Colbert,Taylor Ann,Edwards,1992-11-23,day,,,,,,Taylor Ann,Edwards,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Edwards,,1999-09-15,Lauerb,
+262,P261,02.02.01.01.03,,P041,Lois Kay McMillen,Matthew Allen,Conklin,,UNKNOWN,,UNKNOWN,Matthew,Conklin,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Conklin,,1999-07-25,Lauerb,"descendant_birth date is not parseable: ""Birthdate"""
+263,P262,01.02.01.01.02.03,,P077,Denise Rosenberry,Ryan Scott,James,1984-09-30,day,,,Ryan,James,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,James,,1999-09-05,Lauerb,
+264,P263,02.02.01.01.02.03,,P077,Denise Rosenberry,Brandon,James,1986-09-05,day,,,Brandon,James,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,James,,1999-07-21,Lauerb,
+265,P264,03.02.01.01.02.03,,P077,Denise Rosenberry,Kacey,James,1988-07-22,day,,,,,,Kacey,James,SF,,,,,,,,,,,,,,,,,,,,,,,,,,James,,1999-09-15,Lauerb,
+266,P265,02.04.01.01.02.03,,P079,Robin Leroy Rosenberry,Keegan James,Rosenberry,1993-12-10,day,,,Keegan,Rosenberry,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Rosenberry,,1999-08-11,Laptop,
+267,P266,01.04.01.01.02.03,,P079,Robin Leroy Rosenberry,Kilee Robin,Rosenberry,1990-02-16,day,,,Eric,Rowitz,,Kilee,Rowitz,M,,Eric,Rowitz,,,,,,2013-06-15,day,,,,,,,,,,,,,,,,Rowitz,,2013-08-24,Melanie,
+268,P267,03.04.01.01.02.03,,P079,Robin Leroy Rosenberry,Kaylor,Rosenberry,1997-01-29,day,,,,,,Kaylor,Rosenberry,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Rosenberry,,1999-09-15,Lauerb,
+269,P268,01.01.02.01.02.03,,P082,Kandy Ann Bistline,Paula,Klacik,1988-02-28,day,,,,,,Paula,Klacik,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Klacik,,1999-09-15,Lauerb,
+270,P269,02.01.02.01.02.03,,P082,Kandy Ann Bistline,Adam James,Klacik,1992-12-10,day,,,Adam,Klacik,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Klacik,Adam and Bryan are twins,1999-08-13,Laptop,
+271,P270,03.01.02.01.02.03,,P082,Kandy Ann Bistline,Bryan James,Klacik,1992-12-10,day,,,Bryan,Klacik,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Klacik,Adam and Bryan are twins,1999-08-13,Laptop,
+272,P271,01.02.02.01.02.03,,P081,Barbara Lee Bistline,Lauren Elizabeth,Crawford,1989-05-10,day,,,,,,Lauren,Crawford,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Crawford,,1999-09-15,Lauerb,
+273,P272,02.02.02.01.02.03,,P081,Barbara Lee Bistline,Shane,Crawford,,UNKNOWN,,,Shane,Crawford,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Crawford,,1999-07-25,Lauerb,"descendant_birth date is not parseable: ""Birthdate"""
+274,P273,01.01.01.02.02.03,,P085,Marsha JoAnn McMillen,Jennifer Lynn,Fraker,1974-11-21,day,,,Jared,Donmoyer,,Jennifer,Donmoyer,M,,Jared,Donmoyer,,,,,,2009-10-09,day,,,,,,,,,,,,,,,,Donmoyer,Returned card 2017,2017-08-17,Melanie,
+275,P274,02.01.01.02.02.03,,P085,Marsha JoAnn McMillen,Christopher Erin,Fraker,1981-06-03,day,,,Christopher,Fraker,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Fraker,,1999-07-24,Lauerb,
+276,P275,01.02.01.02.02.03,,P086,Robert Allen McMillen,Kristin,McMillen,1977-12-26,day,,,Peter,Koultun,,Kristin,Koltun,M,,Peter,Koltun,,,,,,2006-05-27,day,,,,,,,,,,,,,,,,Koltun,,2017-09-02,Melanie,
+277,P276,02.02.01.02.02.03,,P086,Robert Allen McMillen,Robert James,McMillen,1981-08-04,day,,,Robert,McMillen,,Kerri,McMillen,M,,Kerri Lynn,Longo,,,,,,07/14/20212,invalid,,,,,,,,,,,,,,,,McMillen,,2012-08-19,Melanie Lauer,"duplicate lineage_id in source; spouse_1_marriage date is not parseable: ""07/14/20212"""
+278,P277,01.03.01.02.02.03,,P087,Linda Jeanette McMillen,Caitlin Elizabeth,Darhower,1991-08-26,day,,,,,,Caitlin,Darhower,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Darhower,,1999-09-15,Lauerb,
+279,P278,02.03.01.02.02.03,,P087,Linda Jeanette McMillen,Dylan Edward,Darhower,1992-09-26,day,,,Dylan,Darhower,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Darhower,,1999-08-13,Laptop,
+280,P279,01.04.01.02.02.03,,P088,Brenda Kay McMillen,Jaime Nicole,Snare,1982-06-28,day,,,Todd,Hobe,,Jaime,Hobe,M,,Todd,Hobe,,,,,,05-09-17,ambiguous_year,,,,,,,,,,,,,,,,Hobe,,2007-08-20,BMAC,"spouse_1_marriage date has a two-digit year: ""9/17/05"""
+281,P280,02.04.01.02.02.03,,P088,Brenda Kay McMillen,Jenna Kay,Snare,1988-04-25,day,,,,,,Jenna,Snare,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Snare,,1999-09-15,Lauerb,
+282,P281,02.01.02.02.02.03,,P090,William Dee Murphy,Christopher,Murphy,,UNKNOWN,,,Christopher,Murphy,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Murphy,,1999-07-25,Lauerb,"descendant_birth date is not parseable: ""Birthdate"""
+283,P282,03.01.02.02.02.03,,P090,William Dee Murphy,Dee Marie,Murphy,1981-05-07,day,,,Mark,Goodhart,,Dee,Goodhart,M,,Mark,Goodhart,,,,,,05-05-21,ambiguous_year,,,,,,,,,,,,,,,,Goodhart,,2006-08-24,BMAC,"spouse_1_marriage date has a two-digit year: ""5/21/05"""
+284,P283,01.01.02.02.02.03,,P090,William Dee Murphy,Sherri,Murphy,,UNKNOWN,,,John,Betarie,,Sherri,Betarie,M,,John,Betarie,,,,,,04-09-18,ambiguous_year,,,,,,,,,,,,,,,,Betarie,,2006-08-24,BMAC,"descendant_birth date is not parseable: ""Birthdate""; spouse_1_marriage date has a two-digit year: ""9/18/04"""
+285,P284,01.02.02.02.02.03,,P091,Connie E. Murphy,Christina,Smith,,UNKNOWN,,,Stephen Andrew,Straub,,Christina,Straub,M,,Stephen,Straub,,,,,,2000-03-04,day,,,,,,,,,,,,,,,,Straub,,2000-09-02,Lauerb,"descendant_birth date is not parseable: ""Birthdate"""
+286,P285,02.02.02.02.02.03,,P091,Connie E. Murphy,Daniel Buck,Smith,,UNKNOWN,,,,,,Daniel,Smith,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Smith,,2008-07-07,BMAC,"descendant_birth date is not parseable: ""Birthdate"""
+287,P286,03.02.02.02.02.03,,P091,Connie E. Murphy,Janelle,Smith,,UNKNOWN,,,Bryan,Archey,,Janelle,Archey,M,,Bryan,Archey,,,,,,2002-06-01,day,,,,,,,,,,,,,,,,Archey,,2005-09-05,BMAC,"descendant_birth date is not parseable: ""Birthdate"""
+288,P287,04.03.02.02.02.03,,P092,Julia A. Murphy,Trae William,Dobler,1993-03-21,day,,,Trae,Dobler,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Dobler,,1999-08-14,Laptop,
+289,P288,01.02.04.02.02.03,,P099,Sue Brown,Peggy Sue,Wright,,UNKNOWN,,,Trevor,Luker,,Peggy,Wright,M,,Trevor Elliott,Luker,,,,,,2000-04-22,day,,,,,,,,,,,,,,,,Luker,Peggy kept maiden name,2005-07-17,BMAC,"descendant_birth date is not parseable: ""Birthdate"""
+290,P289,02.02.04.02.02.03,,P099,Sue Brown,Karen Sue,Wright,1981-07-21,day,,,Cameron,Crabb,,Karen,Crabb,M,,Cameron,Crabb,,,,,,2004-12,month,,,,,,,,,,,,,,,,Crabb,,2005-09-05,BMAC,
+291,P290,01.03.04.02.02.03,,P100,Carol Brown,Chad,Cisney,,UNKNOWN,,,Chad,Cisney,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Cisney,,1999-07-25,Lauerb,"descendant_birth date is not parseable: ""Birthdate"""
+292,P291,02.03.04.02.02.03,,P100,Carol Brown,Emily,Cisney,,UNKNOWN,,,,,,Emily,Cisney,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Cisney,,2007-08-20,BMAC,"descendant_birth date is not parseable: ""Birthdate"""
+293,P292,03.03.04.02.02.03,,P100,Carol Brown,Lori,Cisney,1981-12-06,day,,,,,,Lori,Cisney,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Cisney,,1999-09-15,Lauerb,
+294,P293,01.04.04.02.02.03,,P102,Eddie Brown,Tyler M.,Brown,1989-06-09,day,,,Tyler,Brown,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Brown,Mother is Tracey Peterson-Brown,2001-07-09,Lauerb,
+295,P294,02.04.04.02.02.03,,P102,Eddie Brown,Kayla,Brown,1993-05-18,day,,,,,,Kayla,Brown,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Brown,Mother is Tracey Peterson-Brown,2001-07-09,Lauerb,
+296,P295,99.04.04.02.02.03,,P102,Eddie Brown,Kinsey,Peterson,,UNKNOWN,,,,,,Kinsey,Peterson,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Peterson,"From Tracey Brown-Peterson 1st marriage, Eddie is not father, not part of lineage",1999-09-15,Lauerb,"descendant_birth date is not parseable: ""Birthdate"""
+297,P296,01.05.04.02.02.03,,P101,Debra Brown,Tyla,Cutchall,,UNKNOWN,,,,,,Tyla,Cutchall,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Cutchall,,1999-09-15,Lauerb,"descendant_birth date is not parseable: ""Birthdate"""
+298,P297,02.05.04.02.02.03,,P101,Debra Brown,Ashton Marie,Cutchall,1986-07-26,day,,,,,,Ashton,Cutchall,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Cutchall,,1999-09-15,Lauerb,
+299,P298,03.05.04.02.02.03,,P101,Debra Brown,Kinsey,Cutchall,1993-07-29,day,,,,,,Kinsey,Cutchall,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Cutchall,,1999-09-15,Lauerb,
+300,P299,01.01.05.02.02.03,,P105,Cynthia McMillen,Jason Lee,McMillen,1976-10-30,day,,,Jason,McMillen,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,1999-07-24,Lauerb,
+301,P300,01.02.05.02.02.03,,P106,C. George McMillen,Christopher,McMillen,,UNKNOWN,,,Christopher,McMillen,,Melody,McMillen,M,,Melody,Maiden Name,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2000-02-21,Lauerb,"descendant_birth date is not parseable: ""Birthdate"""
+302,P301,02.02.05.02.02.03,,P106,C. George McMillen,Corey Cletus,McMillen,1979-09-05,day,,,Corey Cletus,McMillen,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,1999-07-24,Lauerb,
+303,P302,03.02.05.02.02.03,,P106,C. George McMillen,Erin Marie,McMillen,1986-02-05,day,,,,,,Erin,McMillen,SF,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,1999-09-15,Lauerb,
+304,P303,01.04.05.02.02.03,,P107,Lori McMillen,Joanne,Hoffman,1982-09-17,day,,,,,,Joanne,Hoffman,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Hoffman,,1999-09-15,Lauerb,
+305,P304,02.04.05.02.02.03,,P107,Lori McMillen,Heather Lynn,Hoffman,1987-07-21,day,,,,,,Heather,Hoffman,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Hoffman,,1999-09-15,Lauerb,
+306,P305,01.06.05.02.02.03,,P104,Tracey R. McMillen,Breya De Ann,McMillen,1987-04-10,day,,,,,,Breya,McMillen,SF,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,"Born out of Wedlock, keep McMillen name.",1999-09-15,Lauerb,
+307,P306,01.01.06.02.02.03,,P109,Robby Rohm,Rory,Rohm,,UNKNOWN,,,,,,Rory,Rohm,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Rohm,,1999-09-15,Lauerb,"descendant_birth date is not parseable: ""Birthdate"""
+308,P307,02.01.06.02.02.03,,P109,Robby Rohm,Kari Anne,Rohm,1986-06-30,day,,,,,,Kari,Rohm,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Rohm,,1999-09-15,Lauerb,
+309,P308,01.02.06.02.02.03,,P110,Terry Rohm,Tessa Ann,Rohm,1986-06-03,day,,,,,,Tessa,Rohm,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Rohm,,1999-09-15,Lauerb,
+310,P309,01.03.06.02.02.03,,P111,Kirby Rohm,Bri-enne,Rohm,1981-10-27,day,,,,,,Bri-enne,Rohm,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Rohm,,1999-09-15,Lauerb,
+311,P310,02.04.06.02.02.03,,P112,Jody Rohm,Cody,Rohm,,UNKNOWN,,,Cody,Rohm,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Rohm,,1999-07-25,Lauerb,"descendant_birth date is not parseable: ""Birthdate"""
+312,P311,01.04.06.02.02.03,,P112,Jody Rohm,Chase Jody,Rohm,1986-01-10,day,,,Chase,Rohm,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Rohm,,1999-07-25,Lauerb,
+313,P312,01.02.07.02.02.03,,P225,Bonnie Sue McMillen,Brady Lee,Nesbit,,UNKNOWN,,,Brady,Nesbit,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Nesbit,,1999-08-13,Laptop,"descendant_birth date is not parseable: ""Birthdate"""
+314,P313,02.02.07.02.02.03,,P225,Bonnie Sue McMillen,Brandy,Nesbit,,UNKNOWN,,,,,,Brandy,Nesbit,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Nesbit,,1999-09-15,Lauerb,"descendant_birth date is not parseable: ""Birthdate"""
+315,P314,01.01.01.04.02.03,,P118,Ronetta Hench,Curran Steven,Trimmer,1978-07-18,day,,,Curran,Trimmer,,Mary,Trimmer,M,,Mary,Richard,,,,,,2009-03-21,day,,,,,,,,,,,,,,,,Trimmer,Mary has 2 children-Cayden Richard and Destinee Richard,2011-08-01,Melanie Lauer,
+316,P315,02.01.01.04.02.03,,P118,Ronetta Hench,Corbin Steven,Trimmer,1979-04-30,day,,,Corbin,Trimmer,,Sara,Trimmer,M,,Sara,Gamble,,,,,,03-03-21,ambiguous_year,,,,,,,,,,,,,,,,Trimmer,,2003-07-20,BMAC,"spouse_1_marriage date has a two-digit year: ""3/21/03"""
+317,P316,03.01.01.04.02.03,,P118,Ronetta Hench,Brandon Steven,Trimmer,1983-04-26,day,2012-06-24,day,Brandon,Trimmer,true,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Trimmer,,2013-08-01,Melanie,
+318,P317,04.01.01.04.02.03,,P118,Ronetta Hench,Aaron Steven,Trimmer,1984-10-28,day,,,Aaron,Trimmer,,,,SM,,,,,,,,,2007-06-02,day,Regina,McCune,,,,,2007-06-02,day,true,,,,,,,Trimmer,Scarlet and Charles mother is Regina McCune,2011-08-01,Melanie Lauer,
+319,P318,05.01.01.04.02.03,,P118,Ronetta Hench,Ashley Michelle,Trimmer,1986-05-17,day,,,,,,Ashley,Trimmer,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Trimmer,,1999-09-15,Lauerb,
+320,P319,06.01.01.04.02.03,,P118,Ronetta Hench,Brianna Michelle,Trimmer,1988-11-25,day,,,Kent,Weigle,,Brianna,Weigle,M,,Kent,Weigle,,,,,,2011-08-20,day,,,,,,,,,,,,,,,,Weigle,,2014-08-14,Melanie,
+321,P320,07.01.01.04.02.03,,P118,Ronetta Hench,Nathan Steven,Trimmer,1992-03-13,day,,,Nathan,Trimmer,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Trimmer,,1999-07-29,Lauerb,
+322,P321,01.02.01.04.02.03,,P120,David Allen Hench,Joshua Wade,Hench,1986-12-15,day,,,Joshua,Hench,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,,1999-07-29,Lauerb,
+323,P322,02.02.01.04.02.03,,P120,David Allen Hench,Jennifer,Hench,1987-08-17,day,,,,,,Jennifer,Hench,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,Expecting a third child (info 7/08),2008-07-30,BMAC,
+324,P323,04.02.01.04.02.03,,P120,David Allen Hench,Jeffrey,Hench,1990-03,month,,,Jeffrey,Hench,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,,1999-08-13,Laptop,
+325,P324,03.02.01.04.02.03,,P120,David Allen Hench,Jeremy Gerald,Hench,1988-11-07,day,,,Jeremy,Hench,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,,1999-07-29,Lauerb,
+326,P325,05.02.01.04.02.03,,P120,David Allen Hench,Justice,Hench,1994-12,month,,,Justice,Hench,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,,1999-07-29,Lauerb,
+327,P326,01.03.01.04.02.03,,P119,Douglas Wade Hench,Jessica Renee,Hench,1981-06-28,day,,,,,,Jessica,Hench,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,"Alienated from family
+noted 7/19/03; Cheyenne's last name is Hartzell. Need 2nd child's name",2007-07-31,BMAC,
+328,P327,02.03.01.04.02.03,,P119,Douglas Wade Hench,Donald Wade,Hench,1983-12,month,,,Donald,Hench,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,,1999-09-05,Lauerb,
+329,P328,03.03.01.04.02.03,,P119,Douglas Wade Hench,Matthew Wade,Hench,1986-02-11,day,,,Matthew,Hench,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,,1999-09-05,Lauerb,
+330,P329,01.04.01.04.02.03,,P121,Daryl Mac Hench,Koni Steven,Hench,1985-06-26,day,,,Koni,Hench,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,unmarried,2007-03-06,BMAC,
+331,P330,02.04.01.04.02.03,,P121,Daryl Mac Hench,Kendra,Hench,1987-08-27,day,,,,,,Kendra,Hench,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,,1999-09-15,Lauerb,
+332,P331,01.02.02.04.02.03,,P123,Brian Keith Hench,Christopher Brian,Hench,1987-11-22,day,,,Christopher,Hench,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,,1999-07-29,Lauerb,
+333,P332,02.02.02.04.02.03,,P123,Brian Keith Hench,Daniel Stephen,Hench,1991-01-25,day,,,Daniel,Hench,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,,1999-07-29,Lauerb,
+334,P333,01.03.02.04.02.03,,P124,Thomas Hench,Kyle,Hench,1990-12,month,,,Kyle,Hench,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,,1999-07-29,Lauerb,
+335,P334,02.03.02.04.02.03,,P124,Thomas Hench,Eric Matthew,Hench,1993-10-26,day,,,Eric,Hench,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,,1999-07-29,Lauerb,
+336,P335,01.01.04.04.02.03,,P126,Adam William Hench,Seth Adam,Hench,1985-07-08,day,,,Seth,Hench,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,,1999-07-29,Lauerb,
+337,P336,03.01.04.04.02.03,,P126,Adam William Hench,Hannah Grace,Hench,1995-10-01,day,,,,,,Hannah,Hench,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,,1999-09-15,Lauerb,
+338,P337,02.01.04.04.02.03,,P126,Adam William Hench,Laura Beth,Hench,1987-06-09,day,,,,,,Laura,Hench,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,,1999-09-15,Lauerb,
+339,P338,03.01.01.03.03,,P049,Robert Edwin Stambaugh,Jeffrey Mac,Stambaugh,1964-11-20,day,,UNKNOWN,Jeffrey,Stambaugh,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Stambaugh,,1999-07-26,Lauerb,
+340,P339,01.01.01.01.03.03,,P050,Tonya Dorothy Stambaugh,Justine,Thumma,1986-08,month,,,,,,Justine,Thumma,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Thumma,,1999-09-15,Lauerb,
+341,P340,01.02.01.01.03.03,,P051,Lisa Patrice Stambaugh,Cassidy,Hartzell,1989-12-19,day,,,,,,Cassidy,Hartzell,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Hartzell,,1999-09-15,Lauerb,
+342,P341,02.02.01.01.03.03,,P051,Lisa Patrice Stambaugh,William,Hartzell,1991-10-27,day,,,William,Hartzell,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Hartzell,,1999-07-29,Lauerb,
+343,P342,03.02.01.03.03,,P055,Lois Ann Stambaugh,David Lynn,Kelley,1961-07-11,day,,UNKNOWN,David L.,Kelley,,,,SM,,,,,,,,,,,Lisa Ann,Force,,,,,1986-02-15,day,,,,,,,,Kelley,,2017-08-07,Melanie,
+344,P343,01.04.01.03.03,,P054,Joan Irene Stambaugh,Michelle Elizabeth,Sheriff,1971-06-17,day,,UNKNOWN,,,,Michelle,Sheriff,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Sheriff,,1999-09-15,Lauerb,
+345,P344,01.01.03.01.03.03,,P053,Vicki Arlene Stambaugh,Kile Larry,Mullins,1989-10-31,day,,,Kile,Mullins,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Mullins,,1999-07-29,Lauerb,
+346,P345,02.01.03.01.03.03,,P053,Vicki Arlene Stambaugh,Nicole Arlene,Mullins,1992-05-25,day,,,,,,Arlene,Mullins,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Mullins,,1999-09-15,Lauerb,
+347,P346,02.02.03.03,,P058,Harold Rhea Stambaugh,Ronald Rhea,Stambaugh,1942-02-27,day,1962-10-05,day,,,,Ronald,Stambaugh,D,,,,,,,,,,,,,,,,,,,,,,,,,,Stambaugh,,2000-09-02,Lauerb,
+348,P347,01.02.03.03.03,,P067,Dennis Franklin Reich,Justin,Kepner,,UNKNOWN,,UNKNOWN,Justin,Kepner,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Kepner,,2007-08-13,BMAC,"descendant_birth date is not parseable: ""Birth Date"""
+349,P348,02.02.03.03.03,,P067,Dennis Franklin Reich,Gina,Kepner,1983-11-06,day,,UNKNOWN,,,,Gina,Kepner,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Kepner,,2007-08-13,BMAC,
+350,P349,01.03.03.03.03,,P068,Janice Anne Kepner,David,Fraker,1971-10-15,day,,UNKNOWN,David,Fraker,,,,M,,,,,,,,,1999-XX-XX,partial,,,,,,,,,,,,,,,,Fraker,SPOUSE??,1999-09-14,Lauerb,
+351,P350,02.03.03.03.03,,P068,Janice Anne Kepner,Thomas Carl,Fraker,1978-06-22,day,,UNKNOWN,Thomas,Fraker,,,,M,,,,,,,,,1998-09-XX,partial,,,,,,,,,,,,,,,,Fraker,SPOUSE??,1999-09-14,Lauerb,
+352,P351,01.05.03.03.03,,P069,Michael Creedon Kepner,Wesley James,Kepner,1978-05-31,day,,UNKNOWN,Wesley,Kepner,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Kepner,,1999-07-29,Lauerb,
+353,P352,04.03.03.03,,P064,Martha Jane Stambaugh,Patricia Lynn,Kepner,1951-06-09,day,1984-12-12,day,Samual,Glunt,,Patricia,Glunt d.,SM,,Samuel Lane,Glunt,,1956-01-24,day,,,1972-07-16,day,,,,,,,,,,,,,,,,Glunt,,1999-09-14,Lauerb,
+354,P353,01.01.04.03.03,,P071,Robert Stanton Strobel,Dawn,Strobel,,UNKNOWN,,UNKNOWN,,,,Dawn,Strobel,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Strobel,,1999-09-15,Lauerb,"descendant_birth date is not parseable: ""Birth Date"""
+355,P354,02.01.04.03.03,,P071,Robert Stanton Strobel,Kenneth,Strobel,,UNKNOWN,,UNKNOWN,Kenneth,Strobel,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Strobel,,1999-08-13,Laptop,"descendant_birth date is not parseable: ""Birth Date"""
+356,P355,03.01.04.03.03,,P071,Robert Stanton Strobel,Rebecca,Strobel,,UNKNOWN,,UNKNOWN,,,,Rebecca,Strobel,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Strobel,,1999-09-15,Lauerb,"descendant_birth date is not parseable: ""Birth Date"""
+357,P356,01.02.04.03.03,,P072,Sandra Kay Strobel,Anthony,Willis,,UNKNOWN,,UNKNOWN,Anthony,Willis,,Tonota,Willis,M,,Tonota,Willis,,,,,,,,,,,,,,,,,,,,,,,Willis,,2000-08-17,Lauerb,"descendant_birth date is not parseable: ""Birth Date"""
+358,P357,02.02.04.03.03,,P072,Sandra Kay Strobel,Janet,Willis,,UNKNOWN,,UNKNOWN,Joseph,Nathe,,Janet,Nathe,M,,Joseph,Nathe,,,,,,,,,,,,,,,,,,,,,,,Nathe,,2003-07-28,BMAC,"descendant_birth date is not parseable: ""Birth Date"""
+359,P358,01.03.04.03.03,,P073,Norman Arthur Strobel,Janet,Strobel,,UNKNOWN,,UNKNOWN,Owen,Worthington,,Janet,Worthington,M,,Owen,Worthington,,,,,,5/9/19992,invalid,,,,,,,,,,,,,,,,Worthington,,2003-07-28,BMAC,"descendant_birth date is not parseable: ""Birth Date""; spouse_1_marriage date is not parseable: ""5/9/19992"""
+360,P359,02.03.04.03.03,,P073,Norman Arthur Strobel,Shawn,Strobel,,UNKNOWN,,UNKNOWN,Shawn,Strobel,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Strobel,,1999-08-13,Laptop,"descendant_birth date is not parseable: ""Birth Date"""
+361,P360,03.03.04.03.03,,P073,Norman Arthur Strobel,Michelle,Strobel,,UNKNOWN,,UNKNOWN,,,,Michelle,Strobel,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Strobel,,1999-09-15,Lauerb,"descendant_birth date is not parseable: ""Birth Date"""
+362,P361,01.03.05.03,,P003,Lois Pauline McMillen,Marian Katherine,Leukel,1943-04-25,day,1947-12-06,day,Marian,Leukel,,,,D,,,,,,,,,,,,,,,,,,,,,,,,,,Leukel,,1999-07-29,Lauerb,
+363,P362,04.05.03,,P033,Preston Alexander McMillen,Clee Earnest,McMillen,1921-05-06,day,1922-01-04,day,Clee,McMillen,,,,D,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,1999-07-29,Lauerb,
+364,P363,04.03,1.01010304,P227,Albon McMillen,May Milligan,McMillen,1888,year,1890,year,,,,May,McMillen,D,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2001-09-12,Lauerb,
+365,P364,02.02.01.05.03,,P031,Gail Eileen McMillen,Cynthia Meade,Morris,,UNKNOWN,,UNKNOWN,Cale,Conley,,Meade,Conley,M,,Cale Howard,Conley,,1969-09-02,day,,,2000-07-29,day,,,,,,,,,,,,,,,,Conley,,2005-07-17,BMAC,"descendant_birth date is not parseable: ""Birth Date"""
+366,P365,01.01.01.01.05.03,,P027,Mark Alan Fulghum,Rachael Grace,Fulghum,1994-08-03,day,,,,,,Rachael,Fulghum,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Fulghum,,1999-09-15,Lauerb,
+367,P366,01.02.01.01.05.03,,P028,Andrew Scott Fulghum,Nicklas Cameron,Fulghum,1994-03-16,day,,,Nicklas,Fulghum,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Fulghum,Mother is Kealy Rene Steele,2001-08-16,Lauerb,
+368,P367,03.01.02.05.03,,P014,Christine Perrietta McMillen,Howard Dustin,Weiss,1978-01-16,day,,UNKNOWN,Dustin,Weiss,,Bridgette,Weiss,M,,Bridgette,Maiden Name,,,,,,,,,,,,,,,,,,,,,,,Weiss,send email,2018-08-20,Melanie,
+369,P368,01.01.01.02.05.03,,P016,Ginger Lynelle Weiss,Whitney Rae,Yeingst,1990-03-10,day,,,,,,Whitney,Yeingst,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Yeingst,send email,2018-08-20,Melanie,
+370,P369,02.01.01.02.05.03,,P016,Ginger Lynelle Weiss,Halie Ann,Parker,1994-11-11,day,,,,,,Halie,Parker,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Parker,Father was Ginger's 1st spouse,1999-09-15,Lauerb,
+371,P370,03.01.01.02.05.03,,P016,Ginger Lynelle Weiss,Sydnie Ryan,Parker,1996-05-14,day,,,,,,Sydnie,Savich,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Parker,Father was Ginger's 1st spouse,1999-09-15,Lauerb,
+372,P371,01.02.01.02.05.03,,P015,Honie Rochelle Weiss,Colt Dallas,Smith,1993-05-09,day,,,Colt,Smith,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Smith,Father was Honie's 1st spouse,1999-09-05,Lauerb,
+373,P372,01.02.02.05.03,,P001,Pauline Lois McMillen,Joseph Perry,Eby,1981-10-13,day,,UNKNOWN,Joseph,Eby,,Crissy,Eby,M,,Crissy,Mealy,,,,,,2013-08-02,day,,,,,,,,,,,,,,,,Eby,send email,2018-08-20,Melanie,
+374,P373,02.02.02.05.03,,P001,Pauline Lois McMillen,Mitchell Clark,Eby,1985-04-20,day,,UNKNOWN,Mitchell,Eby,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Eby,send email,2018-08-20,Melanie,
+375,P374,01.03.02.05.03,,P017,Pamela Rebecca McMillen,Alexis,Early,,UNKNOWN,,UNKNOWN,,,,Alexis,Early,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Early,send email,2018-08-20,Melanie,"descendant_birth date is not parseable: ""Birth Date"""
+376,P375,01.04.02.05.03,,P018,Phyllis Ruth McMillen,Angela Elizabeth,Rittel,1982-03-29,day,,UNKNOWN,Steve,Bradwhaw,,Angela,Bradshaw,M,,Steve,Bradshaw,,,,,,,,,,,,,,,,,,,,,,,Bradshaw,send email,2018-08-20,Melanie,
+377,P376,02.04.02.05.03,,P018,Phyllis Ruth McMillen,Robert David,Rittel,1992-02-13,day,,UNKNOWN,Robert,Rittel,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Rittel,,1999-08-08,Laptop,
+378,P377,01.03.05.05.03,,P009,Marcia Elaine McMillen,Mikayla Lorene,Sonneborn,1994-03-25,day,,UNKNOWN,M,,,Mikayla,Sonneborn,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Sonneborn,send email,2018-08-10,Melanie,
+379,P378,01.04.05.05.03,,P006,Mark Edward McMillen,Christy Sue,McMillen,1978-07-05,day,,UNKNOWN,Barry,Barbe,,Christy,Barbe,M,,Barry,Barbe,,1961-03-15,day,,,2010-09-25,day,,,,,,,,,,,,,,,,Barbe,send email,2018-08-20,Melanie,
+380,P379,02.04.05.05.03,,P006,Mark Edward McMillen,Eric Paul,McMillen,1981-06-03,day,1983-03-04,day,Eric,McMillen,,,,D,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2016-08-18,Melanie,
+381,P380,03.04.05.05.03,,P006,Mark Edward McMillen,Joel Curtis,McMillen,1982-06-20,day,,UNKNOWN,Joel,McMillen,,Kelly,McMillen,M,,Kelly,Proger,,1979-06-29,day,,,2012-11-17,day,,,,,,,,,,,,,,,,McMillen,send email,2018-08-20,Melanie,
+382,P381,04.04.05.05.03,,P006,Mark Edward McMillen,Sylvia Dawn,McMillen,1984-08-12,day,,UNKNOWN,Barry,"Cline, Jr",,Sylvia,Cline,M,,Barry,"Cline, Jr",,1986-11-14,day,,,2006-06-10,day,,,,,,,,,,,,,,,,Cline,send email,2018-08-20,Melanie,
+383,P382,05.04.05.05.03,,P006,Mark Edward McMillen,Daniel Paul,McMillen,1986-02-08,day,,UNKNOWN,Daniel,McMillen,,Joanna,McMillen,M,,Joanna,Eck,,1985-12-27,day,,,2008-05-17,day,,,,,,,,,,,,,,,,McMillen,send email,2018-08-20,Melanie,
+384,P383,01.05.05.05.03,,P010,Melanie Ann McMillen,Adam Bernard,Lauer,1991-09-19,day,,UNKNOWN,Adam,Lauer,,Amy,Lauer,M,,Amy,Schultz,,1992-07-28,day,,,2017-04-22,day,,,,,,,,,,,,,,,,Lauer,send email,2018-08-20,Melanie,
+385,P384,02.05.05.05.03,,P010,Melanie Ann McMillen,Seth Jacob,Lauer,1994-09-06,day,,UNKNOWN,Seth,Lauer,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Lauer,send email,2018-08-20,Melanie,
+386,P385,03.05.05.05.03,,P010,Melanie Ann McMillen,Jared Vincent,Lauer,1997-01-28,day,,UNKNOWN,Jared,Lauer,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Lauer,,1999-08-13,Laptop,
+387,P386,01.02.06.05.03,,P007,Clyde Strock McMillen,Joshua Paul,McMillen,1989-04-02,day,,UNKNOWN,Joshua,McMillen,,Laura,McMillen,M,,Laura Marie,Snyder,,1989-06-22,day,,,2012-07-28,day,,,,,,,,,,,,,,,,McMillen,,2012-08-16,Melanie Lauer,
+388,P387,02.02.06.05.03,,P007,Clyde Strock McMillen,Alyssa Marie,McMillen,1991-11-15,day,,UNKNOWN,Daylin (Rusty),Knaub,,Alyssa,Knaub,M,,Rusty,Knaub,,,,,,2012-09-15,day,,,,,,,,,,,,,,,,Knaub,,2017-08-05,Melanie,
+389,P388,03.02.06.05.03,,P007,Clyde Strock McMillen,Abbey Lynn,McMillen,1994-06-06,day,,UNKNOWN,,,,Abbey,McMillen,SF,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,1999-09-15,Lauerb,
+390,P389,01.03.06.05.03,,P020,Clee Lesh McMillen,Cassie Sue,McMillen,1991-10-16,day,,UNKNOWN,Ben,Seppanen,,Cassie,Seppanen,M,,Ben,Seppanen,,,,,,2012-08,month,,,,,,,,,,,,,,,,Seppanen,,2015-07-27,Melanie,
+391,P390,02.03.06.05.03,,P020,Clee Lesh McMillen,Chloe Danae,McMillen,1993-06-30,day,,UNKNOWN,Matthew,Skethway,,Chloe,Skethway,M,,Matthew,Skethway,,,,,,2015-10-17,day,,,,,,,,,,,,,,,,Skethway,,2018-08-18,Melanie,
+392,P391,03.03.06.05.03,,P020,Clee Lesh McMillen,Charity Rose,McMillen,1996-09-14,day,,UNKNOWN,,,,Charity,McMillen,SF,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,1999-09-15,Lauerb,
+393,P392,04.03.06.05.03,,P020,Clee Lesh McMillen,Colby James,McMillen,1999-06-04,day,,UNKNOWN,Colby,McMillen,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,1999-09-05,Lauerb,
+394,P393,01.04.06.05.03,,P021,Aileen Kay McMillen,Christopher William,Stahl,1996-02-28,day,,UNKNOWN,Christopher,Stahl,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Stahl,,1999-08-13,Laptop,
+395,P394,02.04.06.05.03,,P021,Aileen Kay McMillen,Andrew Clyde,Stahl,1999-04-12,day,,UNKNOWN,Andrew,Stahl,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Stahl,,1999-09-05,Lauerb,
+396,P395,01.02.01.01.06,,P136,Dixie Ann Bradley,Bradley Eugene,Gordon,1981-09-13,day,,UNKNOWN,Bradley,Gordon,,Jaime,Grodon,M,,Jaime,Zeiders,,,,,,2006-12-06,day,,,,,,,,,,,,,,,,Gordon,,2008-10-03,BMAC,
+397,P396,01.02.01.01.02.06,,P141,Sue Ann Swartz,Victoria Lynn,Costello,1987-10-01,day,,,Thomas,Cooney,,Victoria,Cooney,M,,Thomas,Cooney,,,,,,,,,,,,,,,,,,,,,,,Cooney,,2017-08-08,Melanie,
+398,P397,02.02.01.01.02.06,,P141,Sue Ann Swartz,Anthony John,Costello,1989-10-31,day,,,Anthony,Costello,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Costello,,1999-08-11,Laptop,
+399,P398,02.01.02.06,,P138,Lester Kenneth Swartz,Ruth Marie,Swartz,1940-12-29,day,,UNKNOWN,George,Seighman,,Ruth,Seighman,M,,George Authur,Seighman,,1940-05-07,day,,,,,,,,,,,,,,,,,,,,Seighman,Returned card 2017,2017-08-17,Melanie,
+400,P399,02.02.06,,P137,Ruth Eleanor McMillen,Mary Virginia,Swartz,1916-02-23,day,1965-01-06,day,Randolph,Wentz,true,Mary,Wentz,D,,Randoph Yale,Wentz,,1911-07-28,day,1987-08-XX,partial,,,,,,,,,,,,,,,,,,Wentz,,2000-09-02,Lauerb,
+401,P400,01.01.01.07.07,,P206,William Dean Krah,Austin,Krah,,UNKNOWN,,UNKNOWN,Austin,Krah,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Krah,,2001-09-12,Lauerb,"descendant_birth date is not parseable: ""Birth Date"""
+402,P401,01.02.01.07.07,,P207,Robert Wayne Krah,Amber Jean,Krah,1985-08-25,day,,UNKNOWN,,,,Amber,Krah,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Krah,,1999-09-15,Lauerb,
+403,P402,02.02.01.07.07,,P207,Robert Wayne Krah,Brett Edward,Krah,1987-12-29,day,,UNKNOWN,Brett,Krah,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Krah,,1999-08-11,Laptop,
+404,P403,02.03.06.06.07,,P203,Brent McMillen,Ryan,McMillen,1994-10-24,day,,UNKNOWN,Ryan,McMillen,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,1999-09-11,Lauerb,
+405,P404,01.01.06.06.07,,P201,Kendra Yvonne McMillen,Michael James,Ballinger,1991-09-16,day,,UNKNOWN,Michael,Ballinger,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Ballinger,,1999-08-13,Laptop,
+406,P405,02.01.06.06.07,,P201,Kendra Yvonne McMillen,David,Ballinger,1994-06,month,,UNKNOWN,David,Ballinger,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Ballinger,,1999-08-13,Laptop,
+407,P406,01.05.02.06.07,,P194,Dean Timothy Dovey,Lauren Elizabeth,Dovey,1989-02-24,day,,UNKNOWN,,,,Lauren,Dovey,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Dovey,,1999-09-15,Lauerb,
+408,P407,02.05.02.06.07,,P194,Dean Timothy Dovey,Jacob,Dovey,,UNKNOWN,,UNKNOWN,Jacob,Dovey,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Dovey,,1999-08-08,Laptop,"descendant_birth date is not parseable: ""Birth Date"""
+409,P408,01.04.02.06.07,,P193,Ruth Elizabeth Dovey,Tonya Nichole,Angle,1983-07-27,day,,UNKNOWN,,,,Toni,Angle,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Angle,,1999-09-15,Lauerb,
+410,P409,02.04.02.06.07,,P193,Ruth Elizabeth Dovey,Michael Allen,Angle,1986-03-15,day,,UNKNOWN,Michael,Angle,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Angle,,1999-08-09,Laptop,
+411,P410,03.04.02.06.07,,P193,Ruth Elizabeth Dovey,Steven Cresswell,Angle,1988-09-20,day,,UNKNOWN,Steven,Angle,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Angle,,1999-08-11,Laptop,
+412,P411,01.03.02.06.07,,P192,Richard Dwight Dovey,Katelyn,Dovey,,UNKNOWN,,UNKNOWN,,,,Katelyn,Dovey,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Dovey,,1999-09-15,Lauerb,"descendant_birth date is not parseable: ""Birth Date"""
+413,P412,02.03.02.06.07,,P192,Richard Dwight Dovey,Ryan,Dovey,,UNKNOWN,,UNKNOWN,Ryan,Dovey,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Dovey,,1999-08-08,Laptop,"descendant_birth date is not parseable: ""Birth Date"""
+414,P413,01.02.02.06.07,,P191,"William C. Dovey, Jr.",Jessica Lowell,Dovey,1986-05-16,day,,UNKNOWN,,,,Jessica,Dovey,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Dovey,Born to first wife,2008-10-03,BMAC,
+415,P414,01.04.01.06.07,,P188,Carolyn McMillen,Jill,Neely,1980-08-21,day,,UNKNOWN,Josh,Burkepile,,Jill,Burkepile,M,,Josh Allen,Burkepile,,1979-12-12,day,,,2000-05-22,day,,,,,,,,,,,,,,,,Burkepile,,2000-11-25,Lauerb,
+416,P415,02.04.01.06.07,,P188,Carolyn McMillen,Jill Helen,Neely,1982-07-15,day,,UNKNOWN,,,,Jill,Neely,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Neely,,2007-07-24,BMAC,
+417,P416,03.04.01.06.07,,P188,Carolyn McMillen,Ryan Scot,Neely,1987-01-03,day,,UNKNOWN,Ryan,Neely,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Neely,,1999-09-01,Lauerb,
+418,P417,01.03.01.06.07,,P187,John E. McMillen,Jonathon,McMillen,1979-09-23,day,,UNKNOWN,Jonathon,McMillen,,Amonlat,McMillen,M,,Amonlat,Lounsavang,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2011-08-19,Melanie Lauer,"descendant_birth date has a two-digit year: ""9/23/79""; Adam fixed ambiguous birth year on 2026-08-19"
+419,P418,02.03.01.06.07,,P187,John E. McMillen,Jordan Dwight,McMillen,1984-06-05,day,,UNKNOWN,Jordan,McMillen,,Randi,McMillen,M,,Randi,Oxendine,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2011-08-19,Melanie Lauer,
+420,P419,01.02.01.06.07,,P186,Larry McMillen,Adam,McMillen,1975-06-11,day,,UNKNOWN,Adam,McMillen,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,1999-09-01,Lauerb,
+421,P420,02.02.01.06.07,,P186,Larry McMillen,Lindsay,McMillen,1980-08-26,day,,UNKNOWN,,,,Lindsay,McMillen,SF,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,1999-09-15,Lauerb,
+422,P421,01.01.01.06.07,,P185,Edward E. McMillen,Chad,McMillen,1980-05-21,day,,UNKNOWN,Chad,McMillen,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,1999-09-11,Lauerb,
+423,P422,02.01.01.06.07,,P185,Edward E. McMillen,Laura Helen,McMillen,1982-03-15,day,,UNKNOWN,,,,Laura,McMillen,SF,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,1999-09-15,Lauerb,
+424,P423,03.01.01.06.07,,P185,Edward E. McMillen,Katie Louise,McMillen,1985-05-14,day,,UNKNOWN,,,,Katie,McMillen,SF,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,1999-09-15,Lauerb,
+425,P424,05.07,1.01010705,P143,Lucian Rodgers McMillen,Nora,McMillen,1896,year,1899,year,,,,Nora,McMillen,D,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2001-09-12,Lauerb,
+426,P425,01.02.04.04.07,,P182,Debbie Kay Kretzing,Anika Shaalyn,Meldrum,1995-06-07,day,,UNKNOWN,,,,Anika,Meldrum,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Meldrum,,1999-09-15,Lauerb,
+427,P426,02.02.04.04.07,,P182,Debbie Kay Kretzing,Janel,Meldrum,1997-10-03,day,,UNKNOWN,,,,Janel,Meldrum,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Meldrum,,2000-09-02,Lauerb,
+428,P427,98.01.04.04.07,,P214,Allen Perry Kretzing,Lisa Marie,Schroeder,1988-01-11,day,,UNKNOWN,Juan,Palmas,,Lisa,Palmas,M,,Juan,Palmas,,,,,,,,,,,,,,,,,,,,,,,Palmas,"From mother's 1st Marriage.
+Lisa's Mother is Sheila Kretzing",2014-07-28,Melanie,
+429,P428,99.01.04.04.07,,P214,Allen Perry Kretzing,Rebecca Anne,Schroeder,1989-03-19,day,,UNKNOWN,Jon,Couts,,Rebecca,Couts,SF,,Jon,Couts,,Birthdate,invalid,,,,,,,,,,,,,,,,,,,,Couts,Rebecca is Allen's step daughter.,2018-08-20,Melanie,"duplicate lineage_id in source; spouse_1_birth date is not parseable: ""Birthdate"""
+430,P429,01.01.04.04.07,,P214,Allen Perry Kretzing,Christa Lynn,Kretzing,1997-02-09,day,,UNKNOWN,,,,Christa,Kretzing,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Kretzing,,1999-09-15,Lauerb,
+431,P430,01.02.03.04.07,,P180,Kirk Nelson Lehman,Jessica Marian,Lehman,1990-12-26,day,,UNKNOWN,,,,Jessica,Lehman,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Lehman,,1999-09-15,Lauerb,
+432,P431,02.02.03.04.07,,P180,Kirk Nelson Lehman,Danielle Mae,Lehman,1992-03-15,day,,UNKNOWN,,,,Danielle,Lehman,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Lehman,,2018-08-01,Melanie,
+433,P432,01.01.03.04.07,,P179,Todd Dennis Lehman,Ross,Lehman,,UNKNOWN,,UNKNOWN,Ross,Lehman,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Lehman,,1999-08-08,Laptop,"descendant_birth date is not parseable: ""Birth Date"""
+434,P433,02.01.03.04.07,,P179,Todd Dennis Lehman,Reed Pierce,Lehman,1995-12-06,day,,UNKNOWN,Reed,Lehman,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Lehman,,1999-08-13,Laptop,
+435,P434,01.01.02.04.07,,P177,Yvonne Frantz,Elke Nichole,Besvold,1990-03-02,day,,UNKNOWN,,,,Elke,Besvold,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Besvold,,1999-09-15,Lauerb,
+436,P435,02.01.02.04.07,,P177,Yvonne Frantz,Nils Anton,Besvold,1992-09-16,day,,UNKNOWN,Nils,Besvold,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Besvold,,1999-08-11,Laptop,
+437,P436,01.04.01.04.07,,P175,Thomas Haas,Shannon Leigh,Haas,1980-11-21,day,,UNKNOWN,Brian,Sheaffer,,Shannon,Sheaffer,M,,Brian,Sheaffer,,1985-09-24,day,,,2008-06-07,day,,,,,,,,,,,,,,,,Sheaffer,Shannan's mother is Kathy,2018-08-01,Melanie,
+438,P437,02.04.01.04.07,,P175,Thomas Haas,Seth,Haas,1983-03-26,day,,UNKNOWN,Seth,Haas,,Jenilee,Haas,M,,Jenilee,Maiden Name,,1985-04-10,day,,,2007-12-02,day,,,,,,,,,,,,,,,,Haas,,2018-08-01,Melanie,
+439,P438,01.03.01.04.07,,P174,Donald Daniel Haas,Dustin,Haas,1982-06-03,day,,UNKNOWN,Dustin,Haas,,Brooke,Haas,M,,Brooke,Binger,,1985-03-01,day,,,2011-06-04,day,,,,,,,,,,,,,,,,Haas,,2018-08-01,Melanie,"descendant_birth date has a two-digit year: ""06/03/82""; Adam fixed ambiguous birth year on 2026-08-19"
+440,P439,02.03.01.04.07,,P174,Donald Daniel Haas,Danielle,Haas,1986-10-27,day,,UNKNOWN,David,Hull,,Danielle,Hall,M,,David,Hull,,1980-01-30,day,,,2015-09-06,day,,,,,,,,,,,,,,,,Hall,,2018-08-01,Melanie,
+441,P440,01.02.01.04.07,,P173,Dale Gene Haas,David,Haas,,UNKNOWN,,UNKNOWN,David,Haas,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Haas,Date of death unknown,2007-03-06,BMAC,"descendant_birth date is not parseable: ""Birth Date""; descendant_death date is not parseable: ""died"""
+442,P441,02.02.01.04.07,,P173,Dale Gene Haas,Jason,Haas,1976-02-03,day,,UNKNOWN,Jason,Haas,,Salina,Haas,M,,Salina,Rushton,,,,,,2003-05-17,day,,,,,,,,,,,,,,,,Haas,,2018-08-01,Melanie,
+443,P442,03.02.01.04.07,,P173,Dale Gene Haas,Gena,Haas,1982-11-03,day,,UNKNOWN,Derek,Crane,,Gena,Crane,M,,Derek,Crane,,1982-06-01,day,,,2008-09-07,day,,,,,,,,,,,,,,,,Crane,,2018-08-01,Melanie,
+444,P443,01.01.01.04.07,,P172,Gary Henry Haas,Liza,Haas,1976-10-09,day,,UNKNOWN,Joshua,Loy,,Liza,Loy,M,,Joshua,Loy,,1978-05-02,day,,,2001-06-02,day,,,,,,,,,,,,,,,,Loy,,2018-08-01,Melanie,
+445,P444,02.01.01.04.07,,P172,Gary Henry Haas,Trisha,Haas,1978-10-08,day,,UNKNOWN,Keith,Comp,,Trisha,Comp,M,,Keith,Comp,,1970-04-05,day,,,,,,,,,,,,,,,,,,,,Comp,,2018-08-01,Melanie,
+446,P445,03.01.01.04.07,,P172,Gary Henry Haas,Joseph,Haas,,UNKNOWN,,UNKNOWN,Joseph,Haas,,Sheena,Haas,M,,Sheena,Heinz,,,,,,,,,,,,,,,,,,,,,,,Haas,,2018-08-01,Melanie,"descendant_birth date is not parseable: ""Birth Date"""
+447,P446,04.01.01.04.07,,P172,Gary Henry Haas,Gretchen Marie,Haas,1989-06-19,day,,UNKNOWN,Alex,Fry,,Gretchen,Fry,M,,Alex,Fry,,1986-07-26,day,,,2011-09-17,day,,,,,,,,,,,,,,,,Fry,,2018-08-01,Melanie,
+448,P447,01.07,1.01010701,P143,Lucian Rodgers McMillen,George,McMillen,1887,year,1889,year,George,McMillen,,,,D,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2001-09-12,Lauerb,
+449,P448,01.04.04.02.07,,P156,Lisa Jayne McMillen,Khadija,Husam,1989-03-10,day,,UNKNOWN,Khadija,Husam,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Husam,,1999-08-11,Laptop,
+450,P449,02.04.04.02.07,,P156,Lisa Jayne McMillen,Hadiyah,Husam,1992-03-11,day,,UNKNOWN,Hadiyah,Husam,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Husam,,1999-08-11,Laptop,
+451,P450,03.04.04.02.07,,P156,Lisa Jayne McMillen,Abdul Latif,Husam,1993-08-16,day,,UNKNOWN,Abdul,Husam,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Husam,,1999-08-11,Laptop,
+452,P451,01.03.04.02.07,,P155,Eric Joe McMillen,Todd Eric,McMillen,1990-12-08,day,,UNKNOWN,Todd,McMillen,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,1999-08-11,Laptop,
+453,P452,02.03.04.02.07,,P155,Eric Joe McMillen,Molly Grace,McMillen,1994-03-06,day,,UNKNOWN,,,,Molly,McMillen,SF,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,1999-09-15,Lauerb,
+454,P453,03.03.04.02.07,,P155,Eric Joe McMillen,Deana Jolene,McMillen,1996-06-03,day,,UNKNOWN,,,,Deana,McMillen,SF,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,1999-09-15,Lauerb,
+455,P454,01.02.04.02.07,,P154,David Max McMillen,Andrew David,McMillen,,UNKNOWN,,UNKNOWN,Andrew,McMillen,,Katelyn,McMillen,M,,Katelyn,Lapp,,,,,,2011-10-01,day,,,,,,,,,,,,,,,,McMillen,,2014-08-01,Melanie,"descendant_birth date is not parseable: ""Birth Date"""
+456,P455,02.02.04.02.07,,P154,David Max McMillen,Emily,McMillen,1983-10-28,day,,UNKNOWN,Justin,Osborn,,Emily,Osborn,M,,Justin,Osborn,,,,,,2007-07-07,day,,,,,,,,,,,,,,,,Osborn,Returned 2018,2018-08-17,Melanie,
+457,P456,03.02.04.02.07,,P154,David Max McMillen,Mark Daniel,McMillen,1986-06-17,day,,UNKNOWN,Mark,McMillen,,Rebecca,McMillen,M,,Rebecca,Plowman,,,,,,2009-06-13,day,,,,,,,,,,,,,,,,McMillen,,2014-08-01,Melanie,
+458,P457,04.02.04.02.07,,P154,David Max McMillen,David,McMillen,,UNKNOWN,,UNKNOWN,David,McMillen,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,1999-08-08,Laptop,"descendant_birth date is not parseable: ""Birth Date"""
+459,P458,01.03.03.02.07,,P151,Hugh Bistline McMillen,Matthew Lyons,McMillen,,UNKNOWN,,UNKNOWN,Matthew,McMillen,,Ashley,McMillen,M,,Ashley,Britcher,,Birth Date,invalid,,,2010-07-10,day,,,,,,,,,,,,,,,,McMillen,,2015-08-05,Melanie,"descendant_birth date is not parseable: ""Birth Date""; spouse_1_birth date is not parseable: ""Birth Date"""
+460,P459,02.03.03.02.07,,P151,Hugh Bistline McMillen,Aimee Elizabeth,McMillen,1984-05-23,day,,UNKNOWN,Daniel,Caufman,,Aimee,Cauffman,M,,Daniel,Caufman,,Birth date,invalid,,,2010-06-05,day,,,,,,,,,,,,,,,,Cauffman,,2015-08-05,Melanie,"spouse_1_birth date is not parseable: ""Birth date"""
+461,P460,01.02.03.02.07,,P150,Helen Jane McMillen,Steve,"Sauve, Jr.",,UNKNOWN,,UNKNOWN,Steve,Sauve,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Sauve,,1999-08-08,Laptop,"descendant_birth date is not parseable: ""Birth Date"""
+462,P461,02.02.03.02.07,,P150,Helen Jane McMillen,Eric,Sauve,,UNKNOWN,,UNKNOWN,Eric,Sauve,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Sauve,,1999-08-08,Laptop,"descendant_birth date is not parseable: ""Birth Date"""
+463,P462,02.02.07,,P144,Lynn John McMillen,Helen Lynn,McMillen,1915-01-05,day,1915-09-26,day,,,,Helen,McMillen,D,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2000-09-02,Lauerb,
+464,P463,03.01.02.07,,P500,Carrie Elizabeth McMillen,Frank Lynn,Long,1950-07-11,day,1950-07-12,day,Frank,Long,,,,D,,,,,,,,,,,,,,,,,,,,,,,,,,Long,,1999-08-08,Laptop,
+465,P464,01.01.01.01.02.07,,P146,Elizabeth Ann Long,Carrie Elizabeth,D'Angelo,1996-08-27,day,,,,,,Carrie,D'Angelo,SF,,,,,,,,,,,,,,,,,,,,,,,,,,D'Angelo,,1999-09-15,Lauerb,
+466,P465,02.01.01.02.07,,P145,John McMillen Long,Edward Hynes,Long,1969-01-14,day,,UNKNOWN,Edward,Long,,Julie,Long,M,,Julie,Maiden Name,,,,,,,,,,,,,,,,,,,,,,,Long,,2005-02-21,BMAC,
+467,P466,01.02.04.03.07,,P169,Larry Stephen Gantz,Frank Albert,Gantz,1982-08,month,,UNKNOWN,Frank,Gantz,,Melissa,Gantz,M,,Melissa,Ritone,,,,,,,,,,,,,,,,,,,,,,,Gantz,"Adopted by Larry, part of lineage",2003-07-28,BMAC,
+468,P467,02.02.04.03.07,,P169,Larry Stephen Gantz,Adam David,Gantz d.,1986-12-12,day,2005-01,month,Adam,Gantz,,,,D,,,,,,,,,,,,,,,,,,,,,,,,,,Gantz,Committed suicide Jan 2005,2015-08-10,Melanie,
+469,P468,01.01.04.03.07,,P168,Wayne Edward Gantz,Mary Alicia,Gantz,1984-10-09,day,,UNKNOWN,,,,Mary,Gantz,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Gantz,,1999-09-15,Lauerb,
+470,P469,02.01.04.03.07,,P168,Wayne Edward Gantz,Jacob Everett,Gantz,1988-05-14,day,,UNKNOWN,Jacob,Gantz,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Gantz,,1999-08-11,Laptop,
+471,P470,03.01.04.03.07,,P168,Wayne Edward Gantz,Ivy Marie,Gantz,1993-04-23,day,,UNKNOWN,,,,Ivy,Gantz,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Gantz,,1999-09-15,Lauerb,
+472,P471,01.03.03.03.07,,P165,Carey Alan Barclay,Shelley Marie,Barclay,1981-01-16,day,,UNKNOWN,,,,Shelley,Barclay,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Barclay,,1999-09-15,Lauerb,
+473,P472,02.03.03.03.07,,P165,Carey Alan Barclay,Matthew Kenneth,Barclay,1982-02-13,day,,UNKNOWN,Matthew,Barclay,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Barclay,,1999-08-09,Laptop,
+474,P473,99.03.03.03.07,,P165,Carey Alan Barclay,Christine,Last Name,,UNKNOWN,,UNKNOWN,,,,Christine,Last Name,SF,,,,,,,,,,,,,,,,,,,,,,,,,,,Debi's daughter before marriage to Carey. Not part of Lineage,1999-09-11,Lauerb,"descendant_birth date is not parseable: ""Birth Date"""
+475,P474,02.03.03.07,,P163,Kenneth Mac Barclay,Jeffrey Lynn,Barclay,1951-02-07,day,,UNKNOWN,Jeffrey,Barclay,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Barclay,,1999-08-08,Laptop,
+476,P475,01.01.02.01.03.03,,P056,"Richard Eugene Kelley, Jr.",Shawn,Kelley,1981-10-06,day,,,Shawn,Kelley,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Kelley,,1999-08-09,Laptop,
+477,P476,02.01.02.01.03.03,,P056,"Richard Eugene Kelley, Jr.",Erin,Kelley,,UNKNOWN,,,,,,Erin,Kelley,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Kelley,,1999-09-15,Lauerb,"descendant_birth date is not parseable: ""Birth Date"""
+478,P477,05.02.04.02.07,,P154,David Max McMillen,Nathan Dean,McMillen,1988-10-16,day,,UNKNOWN,Nathan,McMillen,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,1999-08-11,Laptop,
+479,P478,01.03.06.06.07,,P203,Brent McMillen,Tyler,McMillen,1993-04,month,1993-04-15,day,Tyler,McMillen,,,,D,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,1999-09-11,Lauerb,
+480,P479,99,,,,Kennedy Lea,Hilbolt,1993-11-22,day,,,Kennedy,Hilbolt,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Hilbolt,D. Gene and SallyHaas G'Parents,2018-08-01,Melanie,duplicate lineage_id in source
+481,P480,99,,,,Jacob,Hilbolt,1993-11-22,day,,,Jacob,Hilbolt,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Hilbolt,D. Gene and Sally Haas G'Parents,2018-08-01,Melanie,duplicate lineage_id in source
+482,P481,03.04.05.02.02.03,,P107,Lori McMillen,Danille,Hoffman,1987-07-21,day,,,,,,Danille,Hoffman,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Hoffman,,1999-09-15,Lauerb,
+483,P482,01.02.02.04.07,,P218,Jeannine Frantz,Paola D'Huez,Sabel,1999-05-17,day,,UNKNOWN,,,,Paola,Sabel,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Sabel,,1999-09-15,Lauerb,
+484,P483,01.01.01.01.01.03.07,,P211,Karen Ann Mitten,Gabrielle Alecia,Mitten,,UNKNOWN,,,,,,Gabrielle,Mitten,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Mitten,,1999-09-15,Lauerb,"descendant_birth date is not parseable: ""Birth Date"""
+485,P484,01.02.04.04.02.03,,P248,Rebecca Jo Hench,Jake Wade,Brown,1999-05-10,day,,,Jake,Brown,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Brown,,1999-09-05,Lauerb,
+486,P485,01.03.04.04.02.03,,P252,Sara Elizabeth Hench,Brandon Todd,Kling,1999-08-18,day,,,Todd,Kling,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Kling,,2000-09-02,Lauerb,
+487,P486,01.04.06.06.07,,P219,Kristen Joy McMillen,Megan Alise,Prowell,1999-07-30,day,,UNKNOWN,,,,Megan,Prowell,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Prowell,,1999-09-15,Lauerb,
+488,P487,01.02.01.03.03.03,,P215,Alan Lee Reich,Morgan Renee,Reich,1997-03-12,day,,,,,,Morgan,Reich,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Reich,,1999-09-15,Lauerb,
+489,P488,01.02.03.03.03.03,,P350,Thomas Carl Fraker,,Fraker,1999-05,month,,,,Fraker,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,Fraker,"Name, Gender??",1999-09-11,Lauerb,missing descendant first name
+490,P489,02.01.01.05.05.03,,P012,Seann Phillip McCollum,Hannah Elizabeth,McCollum,2000-08-14,day,,,,,,Hannah,McCullum,SF,,,,,,,,,,,,,,,,,,,,,,,,,,McCullom,,2000-08-17,Lauerb,
+491,P490,02.01.01.01.05.03,,P027,Mark Alan Fulghum,Carter Henderson,Fulghum,1997-08-20,day,,,Carter,Fulghum,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Fulghum,,2001-07-09,Lauerb,
+492,P491,03.01.01.01.05.03,,P027,Mark Alan Fulghum,Jessica Erin,Fulghum,1999-10-14,day,,,,,,Jessica,Fulghum,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Fulghum,,2003-07-28,BMAC,
+493,P492,02.01.04.04.07,,P214,Allen Perry Kretzing,Tanya,Kretzing,,UNKNOWN,,UNKNOWN,,,,Tanya,Kretzing,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Kretzing,,2001-07-09,Lauerb,
+494,P493,01.01.02.05.02.02.03,,P300,Christopher McMillen,Christopher Jr.,McMillen,,UNKNOWN,,,Christopher Jr.,McMillen,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2001-07-09,Lauerb,"descendant_birth date is not parseable: ""Birthdate"""
+495,P494,02.02.06.02.02.03,,P110,Terry Rohm,Jared,Rohm,,UNKNOWN,,,Jared,Rohm,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Rohm,,2001-07-09,Lauerb,"descendant_birth date is not parseable: ""Birthdate"""
+496,P495,01.02.03.02.02.02.03,,P094,Monica Schnure,Chloe Oddessa Renee,Hilton,,UNKNOWN,,,,,,Chloe,Hilton,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Hilton,,2001-08-16,Lauerb,"descendant_birth date is not parseable: ""Birthdate"""
+497,P496,02.02.03.02.02.02.03,,P094,Monica Schnure,Judah Nathan Robert,Hilton,2001-07-26,day,,,Judah,Hilton,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Hilton,,2001-08-16,Lauerb,
+498,P497,01.01.02.04.03.07,,P466,Frank Albert Gantz,Brianna Renee,Gantz,,UNKNOWN,,,,,,Brianna,Gantz,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Gantz,,2001-08-16,Lauerb,
+499,P498,03.02.04.04.07,,P182,Debbie Kay Kretzing,William Howard,Meldrum,2001-06-02,day,,UNKNOWN,William,Meldrum,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Meldrum,,2001-08-16,Lauerb,
+500,P499,01.01.02.01.05.03,,P247,Bryan McMillen Morris,Nicholas Alexander,Morris,2001-08-02,day,,,Cole,Morris,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Morris,,2001-08-16,Lauerb,
+501,P500,01.02.07,,P144,Lynn John McMillen,Carrie Elizabeth,McMillen,1913-01-17,day,2003-04-20,day,John,Long,,Carrie,Long,SF,,John M.,Long,,1908-08-01,day,1988-04-18,day,1939-06-17,day,,,,,,,,,,,,,,,,Long,,2017-08-05,Melanie,
+502,P501,01.01.02.04.02.02.03,,P288,Peggy Sue Wright,Israel,Luker,,UNKNOWN,1999,year,Israel,Luker,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Luker,,2003-07-28,BMAC,"descendant_birth date is not parseable: ""Birthdate"""
+503,P502,01.01.03.02.02.02.03,,P093,Megan Schnure,Lily Sophia Ranee,Douglas,2002-05-03,day,,,,,,Lily,Douglas,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Douglas,,2003-07-28,BMAC,
+504,P503,01.02.02.04.02.02.03,,P289,Karen Sue Wright,Casey Robert,Wright,2001-10-10,day,,,,,,Casey,Wright,M,,,,,,,,,,,,,,,,,,,,,,,,,,Wright,,2008-10-03,BMAC,
+505,P504,02.01.01.01.02.07,,P146,Elizabeth Ann Long,Henry,D'Angelo,,UNKNOWN,,,Henry,D'Angelo,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,D'Angelo,,2005-02-21,BMAC,
+506,P505,02.03.01.02.03.03,,P062,Michael Rhea Fenton,Hunter,Fenton,1999-09-29,day,,,Hunter,Fenton,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Fenton,,2005-07-18,BMAC,
+507,P506,03.03.01.02.03.03,,P062,Michael Rhea Fenton,Blake Christopher,Fenton,2004-06-16,day,,,Blake,Fenton,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Fenton,,2005-07-18,BMAC,
+508,P507,01.01.01.01.04.07,,P443,Liza Haas,Zachary Joshua,Loy,2004-03-10,day,,,Zachary,Loy,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Loy,,2005-07-18,BMAC,
+509,P508,01.02.02.01.05.03,,P364,Cynthia Meade Morris,Josephine Bonceille,Conley,2004-06-13,day,,,,,,Josephine,Conley,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Conley,,2005-07-18,BMAC,
+510,P509,02.01.02.01.05.03,,P247,Bryan McMillen Morris,Harrison Meade,Morris,2004-06,month,,,Harrison,Morris,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Morris,,2005-07-18,BMAC,
+511,P510,03.01.04.04.07,,P214,Allen Perry Kretzing,Dylan Colby,Kretzing,2004-07-20,day,2010-12-21,day,Dylan,Kretzing,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Kretzing,,2010-12-24,Melanie Lauer,
+512,P511,01.01.02.02.02.02.03,,P284,Christina Smith,Luke,Straub,,UNKNOWN,,,Luke,Straub,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Straub,,2005-07-18,BMAC,
+513,P512,02.01.03.02.02.02.03,,P093,Megan Schnure,Elle,Douglas,2004-09-07,day,,,,,,Elle,Douglas,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Douglas,,2005-09-05,BMAC,
+514,P513,01.03.02.02.02.02.03,,P286,Janelle Smith,Brynn Katherine,Archey,2005-01-11,day,,,,,,Brynn,Archey,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Archey,,2007-08-13,BMAC,
+515,P514,03.03.04.04.07,,P216,Vance Reed Kretzing,Benjamin Reed,Kretzing,2005-04-30,day,,UNKNOWN,Benjamin,Kretzing,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Kretzing,,2007-07-24,BMAC,
+516,P515,02.03.03.02.02.02.03,,P095,Melanie Schnure,Nadia Desiree Belle,,2005-06-04,day,,,,Kelchner,,Nadia,Kelchner,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Kelchner,,2008-10-03,BMAC,missing descendant last name
+517,P516,01.04.04.04.07,,P245,Colleen Mae Kretzing,Vera Kretzing,Innerst,2005-09-22,day,,UNKNOWN,,,,Vera,Innerst,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Innerst,,2007-08-20,BMAC,
+518,P517,01.01.03.01.04.02.03,,P326,Jessica Renee Hench,Hannah,Hench,2005-09-08,day,,,,,,Hannah,Hench,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,,2007-07-31,BMAC,
+519,P518,01.03.01.02.05.03,,P367,Howard Dustin Weiss,Hayden Andrew,Weiss,2006-05-25,day,,,Hayden,Weiss,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Weiss,,2006-12-16,BMAC,
+520,P519,02.02.01.02.03.03,,P061,"Roland Dwight Fenton, Jr.",Caitlin,Fenton,1998-12-13,day,,,,,,Caitlin,Fenton,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Fenton,,2007-08-20,BMAC,
+521,P520,02.01.02.04.03.07,,P466,Frank Albert Gantz,Trenton,Gantz,2002,year,,,,,,Trenton,Gantz,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Gantz,,2007-03-06,BMAC,
+522,P521,02.04.01.02.03.03,,P063,Leda Suzan Fenton,Matthew,Hager,1999,year,,,Matthew,Hager,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Hager,,2007-03-06,BMAC,
+523,P522,01.01.04.01.04.02.03,,P329,Koni Steven Hench,Alexis,,1985-06-26,day,,,,Hench,,Alexis,Hench,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,,2007-03-06,BMAC,missing descendant last name
+524,P523,02.01.01.01.04.07,,P443,Liza Haas,Julie Rebecca,Loy,2006-02-26,day,,,,,,Julie,Loy,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Loy,,2007-03-06,BMAC,"descendant_birth date has a two-digit year: ""2/26/06""; Adam fixed ambiguous birth year on 2026-08-19"
+525,P524,01.01.02.01.01.03,,P255,Laura Conklin,Trey,Howard,2002-04-05,day,,,Trey,Howard,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Howard,,2007-07-24,BMAC,
+526,P525,02.03.04.04.07,,P216,Vance Reed Kretzing,Hannah Alexis,,2003-04-04,day,,UNKNOWN,,Kretzing,,Hannah,Kretzing,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Kretzing,,2007-07-24,BMAC,missing descendant last name
+527,P526,01.03.04.04.07,,P216,Vance Reed Kretzing,Sarah Elizabetn,,2002-06-22,day,,UNKNOWN,,Kretzing,,Sarah,Kretzing,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Kretzing,Adopted,2008-09-03,BMAC,missing descendant last name
+528,P527,03.02.01.01.01.03,,P042,Deborah Colbert,Morgan Marie,Meissner,2001-08-07,day,,,,,,Morgan,Meissner,SF,,,,,,,,,,,Jason,Edwards,,,,,,,true,,,,,,,Meissner,,2007-07-24,BMAC,
+529,P528,01.01.07.05.03,,P023,Brenda Jean McMillen,Samantha,Mull,2005-12-08,day,,UNKNOWN,,,,Samantha,Mull,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Mull,,2007-07-24,BMAC,
+530,P529,01.02.01.01.04.02.03,,P315,Corbin Steven Trimmer,Aiden Bryce,Trimmer,2007-06-12,day,,,Aiden,Trimmer,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Trimmer,,2013-07-31,Melanie,
+531,P530,03.01.03.01.04.02.03,,P326,Jessica Renee Hench,Cheyenne,Hartzell,2007-02-04,day,,,,,,Cheyenne,Hartzell,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Hartzell,3rd child of Jessica. Need 2nd child,2007-07-31,BMAC,
+532,P531,02.03.02.02.02.02.03,,P286,Janelle Smith,Jocelyn Rose,Archey,2007-06-26,day,,,,,,Jocelyn,Archey,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Archey,,2007-08-20,BMAC,
+533,P532,01.03.01.02.02.02.03,,P282,Dee Marie Murphy,Cole Aiden,Goodhart,2007-05-08,day,,,Cole,Goodhart,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Goodhart,,2007-08-13,BMAC,
+534,P533,03.02.01.02.03.03,,P061,"Roland Dwight Fenton, Jr.",Megan,Fenton,2007-04-21,day,,,,,,Megan,Fenton,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Fenton,,2007-08-20,BMAC,
+535,P534,02.04.04.04.07,,P245,Colleen Mae Kretzing,Sadie Mae,Innerst,2007-07-13,day,,UNKNOWN,,,,Sadie,Innerst,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Innerst,,2007-08-20,BMAC,
+536,P535,01.01.03.05.02.03,,P223,Stephanie Christine Hommas,Amberle,,2006-09-28,day,,,,Meckley,,Amberle,Meckley,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Meckley,,2007-08-20,BMAC,missing descendant last name
+537,P536,01.04.01.01.04.02.03,,P317,Aaron Steven Trimmer,Scarlett Anne,Trimmer,2008-07-29,day,,,,,,Scarlett,Trimmer,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Trimmer,,2008-07-30,BMAC,
+538,P537,01.02.02.01.04.02.03,,P322,Jennifer Hench,Tristan,Hench,,UNKNOWN,,,Tristan,Hench,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,,2008-07-30,BMAC,"descendant_birth date is not parseable: ""Birth date"""
+539,P538,02.02.02.01.04.02.03,,P322,Jennifer Hench,Willow,Hench,,UNKNOWN,,,,,,Willow,Hench,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,,2008-07-30,BMAC,"descendant_birth date is not parseable: ""Birthdate"""
+540,P539,03.01.02.01.05.03,,P247,Bryan McMillen Morris,Logan McMillen,Morris,2006-02,month,,,Logan,Morris,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Morris,,2008-09-03,BMAC,
+541,P540,04.03.04.04.07,,P216,Vance Reed Kretzing,Lila Naomi,,2007-12-12,day,,UNKNOWN,,Kretzing,,Lila,Kretzing,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Kretzing,Twin to Lucian,2008-09-03,BMAC,missing descendant last name
+542,P541,05.03.04.04.07,,P216,Vance Reed Kretzing,Lucian Lynn,Kretzing,2007-12-12,day,,UNKNOWN,Luc,Kretzing,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Kretzing,Twin to Lila,2012-07-21,Melanie Lauer,
+543,P542,03.03.03.02.02.02.03,,P095,Melanie Schnure,Giola K.,,2008-02-12,day,,,,Kelchner,,Giola,Kelchner,,,,,,,,,,,,,,,,,,,,,,,,,,,Kelchner,Boy or gilr?,2008-10-03,BMAC,missing descendant last name
+544,P543,01.01.01.02.02.02.03,,P283,Sherri Murphy,Marissa Renee,,2008-03-02,day,,,,Betarie,,Marissa,Betarie,SF,,,,,,,,,04-09-18,ambiguous_year,,,,,,,,,,,,,,,,Betarie,,2008-09-03,BMAC,"missing descendant last name; spouse_1_marriage date has a two-digit year: ""9/18/04"""
+545,P544,01.01.04.01.02.02.03,,P279,Jaime Nicole Snare,Mckenna Axie,Hobe,2007-09,month,,,,,,McKenna,Hobe,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Hobe,,2008-10-03,BMAC,
+546,P545,02.02.02.04.02.02.03,,P289,Karen Sue Wright,Danielle,Crabb,,UNKNOWN,,,,,,Danielle,Crabb,SF,,,,,,,,,2004-12,month,,,,,,,,,,,,,,,,Crabb,,2008-10-03,BMAC,
+547,P546,02.02.02.06.07,,P191,"William C. Dovey, Jr.",William,Dovey,2006-01-08,day,,UNKNOWN,William,Dovey,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Dovey,Born to second wife,2008-10-03,BMAC,"descendant_birth date has a two-digit year: ""1/8/06""; Adam fixed ambiguous birth year on 2026-08-19"
+548,P547,01.01.02.01.02.02.03,,P275,Kristin McMillen,Matthew Sailor,Koultun,2007-09-20,day,,,Sailor,Koultun,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Koultun,,2017-09-02,Melanie,
+549,P548,02.01.02.01.01.03,,P255,Laura Conklin,Madeline,Howard,2006-08-26,day,,,,,,Madeline,Howard,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Howard,,2008-10-03,BMAC,
+550,P549,01.03.03.02.02.02.03,,P095,Melanie Schnure,Taylor David Lee,Kelchner,2002-09-27,day,,,Taylor,Kelchner,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Kelchner,,2008-10-03,BMAC,
+551,P550,01.01.02.01.01.06,,P395,Bradley Eugene Gordon,Xander Alan,Gordon,2009-04-29,day,,,Xander,Gordon,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Gordon,,2009-07-15,BMAC,
+552,P551,06.03.04.04.07,,P216,Vance Reed Kretzing,Vanessa Rose,,2009-12-31,day,,UNKNOWN,,Kretzing,,Vanessa,Kretzing,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Kretzing,,2012-07-21,Melanie Lauer,missing descendant last name
+553,P552,02.01.04.01.02.02.03,,P279,Jaime Nicole Snare,Miles Alexander,Hobe,2010-07-17,day,,,Miles,Hobe,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Hobe,,2010-07-31,BMAC,
+554,P553,01.03.01.01.04.07,,P445,Joseph Haas,Wyatt Joseph,Haas,2009-08-08,day,,,Wyatt,Haas,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Haas,,2010-09-02,Melanie Lauer,
+555,P554,01.01.04.01.04.07,,P436,Shannon Leigh Haas,Titus Levaine,Sheaffer,2010-08-03,day,,,Titus,Sheaffer,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Sheaffer,,2018-08-01,Melanie,
+556,P555,01.01.01.01.04.02.03,,P314,Curran Steven Trimmer,Gabriel Steven,Trimmer,2009-09-10,day,,,Gabriel,Trimmer,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Trimmer,,2012-07-31,Melanie Lauer,
+557,P556,02.04.01.01.04.02.03,,P317,Aaron Steven Trimmer,Charles Antony,Trimmer,2011-11-26,day,,,Charles,Trimmer,,,Trimmer,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Trimmer,,2012-08-19,Melanie Lauer,
+559,P557,01.02.03.01.06.07,,P418,Jordan Dwight McMillen,Riley,McMillen,2009-09-11,day,,,,,,Riley,McMillen,SF,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2011-08-19,Melanie Lauer,
+560,P558,01.02.02.04.02.07,,P455,Emily McMillen,Peter Jeffrey,Osborn,2009-08-06,day,,,Peter,Osborn,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Osborn,,2011-08-19,Melanie Lauer,
+561,P559,02.02.02.04.02.07,,P455,Emily McMillen,Joel David,Osborn,2011-01-01,day,,,Joel,Osborn,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Osborn,twin with Daniel,2011-08-19,Melanie Lauer,
+562,P560,03.02.02.04.02.07,,P455,Emily McMillen,Daniel James,Osborn,2011-01-01,day,,,Danile,Osborn,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Osborn,twin with Joel,2011-08-19,Melanie Lauer,
+563,P561,07.03.04.04.07,,P216,Vance Reed Kretzing,Jonathan Perry,Kretzing,2012-01-17,day,,UNKNOWN,Jonathan,Kretzing,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Kretzing,,2012-07-21,Melanie Lauer,
+564,P562,01.04.04.05.05.03,,P381,Sylvia Dawn McMillen,Willow James,Cline,2012-06-11,day,,,,,,Willow,Cline,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Cline,,2012-07-27,Melanie Lauer,
+565,P563,02.01.02.01.01.06,,P395,Bradley Eugene Gordon,Xaiden Bradley,Gordon,2011-10-06,day,,,Xaiden,Gordon,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Gordon,,2012-07-27,Melanie Lauer,
+566,P564,02.01.01.01.04.02.03,,P314,Curran Steven Trimmer,Blake Christopher,Trimmer,2011-09-18,day,,,Blake,Trimmer,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Trimmer,,2012-07-31,Melanie Lauer,
+567,P565,04.01.03.01.04.02.03,,P326,Jessica Renee Hench,Kylie,Hench,2011-08,month,,,,,,Kylie,Hench,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Hartzell,4th child of Jessica. Not sure of last name,2012-08-19,Melanie Lauer,
+568,P566,01.02.04.01.04.02.03,,P330,Kendra Hench,Carson,Rott,2012-07-17,day,,,Carson,Rott,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,,2012-07-31,Melanie Lauer,
+569,P567,01.98.01.04.04.07,,P427,Lisa Marie Schroeder,Ariana,Palmas-Schroeder,2008-06-25,day,,,,,,Ariana,Palmas-Schroeder,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Palmas-Schroeder,Lisa is Allen's Step-daughter,2018-08-20,Melanie,
+570,P568,02.03.01.02.05.03,,P367,Howard Dustin Weiss,Carter Jacob,Weiss,2013-05-08,day,,,Carter,Weiss,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Weiss,,2013-07-26,Melanie,
+571,P569,01.03.04.05.05.03,,P380,Joel Curtis McMillen,Evan Mathew,McMillen,2009-01-07,day,,,Evan,McMillen,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,Joel adopted Evan Shanks. Kelly is Evan's mother,2015-07-27,Melanie,
+572,P570,03.02.01.01.04.02.03,,P315,Corbin Steven Trimmer,Logan Rhys,Trimmer,2013-07-25,day,,,Logan,Trimmer,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Trimmer,,2013-08-01,Melanie,
+573,P571,02.02.01.01.04.02.03,,P315,Corbin Steven Trimmer,Gavin Chase,Trimmer,2009-05-29,day,,,Gavin,Trimmer,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Trimmerrider,,2017-08-06,Melanie,
+574,P572,03.03.01.02.05.03,,P367,Howard Dustin Weiss,Brynlee Maye,Weiss,2014-05-20,day,,,,,,Brynlee,Weiss,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Weiss,,2014-07-28,Melanie,
+575,P573,01.01.01.01.02.05.03,,P368,Whitney Rae Yeingst,Jayce Michael,Capello,2013-09-13,day,,,Jayce,Capello,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Yeingst,James Capello is Dad,2017-08-08,Melanie,
+576,P574,02.98.01.04.04.07,,P427,Lisa Marie Schroeder,Antonio,Palmas-Schroeder,2010-06-08,day,,,Antonio,Palmas-Schroeder,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Palmas-Schroeder,Lisa is Allen's Step-daughter,2018-08-20,Melanie,
+577,P575,01.01.02.04.02.07,,P454,Andrew David McMillen,Luke Andrew,McMillen,2014-03-27,day,,,Luke,McMillen,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2014-08-01,Melanie,
+578,P576,04.02.02.04.02.07,,P455,Emily McMillen,Thomas Elam,Osborn,2014-05-17,day,,,Thomas,Osborn,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Osborn,,2014-08-01,Melanie,
+579,P577,01.03.02.04.02.07,,P456,Mark Daniel McMillen,Dean Elliott,McMillen,2012-03-01,day,,,Dean,McMillen,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2014-08-01,Melanie,
+580,P578,03.01.01.01.04.02.03,,P314,Curran Steven Trimmer,Austin James,Trimmer,2014-03-12,day,,,Austin,Trimmer,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Trimmer,,2014-08-14,Melanie,
+581,P579,01.06.01.01.04.02.03,,P319,Brianna Michelle Trimmer,Sophie Lynn,Weigle,2013-09-30,day,,,,,,Sophie,Weigle,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Weigle,,2014-08-14,Melanie,
+582,P580,02.03.04.05.05.03,,P380,Joel Curtis McMillen,Avery Alise,McMillen,2014-05-30,day,,,,,,,,SF,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2015-07-27,Melanie,
+583,P581,01.01.03.03.02.07,,P458,Matthew Lyons McMillen,Andi Lynn,McMillen,2015-04-10,day,,,,,,Andi,McMillen,SF,,,,,Birth Date,invalid,,,,,,,,,,,,,,,,,,,,McMillen,,2015-08-05,Melanie,"spouse_1_birth date is not parseable: ""Birth Date"""
+584,P582,01.02.03.03.02.07,,P459,Aimee Elizabeth McMillen,Quinn Elana,Cauffman,2015-02-08,day,,,,,,Quinn,Cauffman,SF,,,,,Birth date,invalid,,,,,,,,,,,,,,,,,,,,Cauffman,,2018-08-09,Melanie,"spouse_1_birth date is not parseable: ""Birth date"""
+585,P583,02.02.01.02.02.03,,P086,Robert Allen McMillen,Ella Grace,McMillen,2015-08-05,day,,,,,,Ella,McMillen,SF,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2015-08-18,Melanie,duplicate lineage_id in source
+586,P584,01.02.01.02.07,,P147,James Edward Long,Alexander Sanjay,Long,1985-03-04,day,,UNKNOWN,Alexander,Long,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Long,,2017-08-05,Melanie,
+587,P585,02.04.04.05.05.03,,P381,Sylvia Dawn McMillen,Selah Beau,Cline,2015-10-26,day,,,,,,Selah,Cline,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Cline,,2017-08-05,Melanie,
+588,P586,02.02.04.01.04.02.03,,P330,Kendra Hench,Abygail Marie,Hench,2016-08-18,day,2018-03-11,day,,,,Abygail,Hench,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,,2018-07-29,Melanie,
+589,P587,02.01.01.01.02.02.03,,P273,Jennifer Lynn Fraker,Griffin Lee,Donmoyer,2013-11-27,day,,,Griffin,Donmoyer,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Donmoyer,,2017-08-08,Melanie,
+590,P588,02.01.02.01.02.02.03,,P275,Kristin McMillen,William Reed,Koultun,2011-05-23,day,,,Reed,Koultun,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Koultun,,2017-09-02,Melanie,
+591,P589,01.01.01.01.02.02.03,,P273,Jennifer Lynn Fraker,Parker Frederick,Donmoyer,2011-08-18,day,,,Parker,Donmoyer,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Donmoyer,,2017-08-08,Melanie,
+592,P590,01.04.01.01.04.07,,P446,Gretchen Marie Haas,Stella Marie,Fry,2016-10-09,day,,,,,,Stella,Fry,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Fry,,2017-08-22,Melanie,
+593,P591,03.98.01.04.04.07,,P427,Lisa Marie Schroeder,Javier Santiago,Palmas-Schroeder,2014-06-26,day,2016-09-24,day,Javier,Palmas-Schroeder,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Palmas-Schroeder,Lisa is Allen's Step-daughter,2017-08-22,Melanie,
+594,P592,03.01.01.01.04.07,,P443,Liza Haas,Gregory,Loy,2009-01-21,day,,,Gregory,,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Loy,,2018-08-01,Melanie,
+595,P593,02.03.01.01.04.07,,P445,Joseph Haas,Blake Lewis,Haas,2012-12-06,day,,,Blake,Haas,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Haas,twin brother Landen,2018-08-01,Melanie,
+596,P594,03.03.01.01.04.07,,P445,Joseph Haas,Landen James,Haas,2012-12-06,day,,,Landen,Haas,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Haas,twin brother Blake,2018-08-01,Melanie,
+597,P595,01.03.02.01.04.07,,P442,Gena Haas,Lilly,Crane,2016-06-02,day,,,,,,Lilly,Crane,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Crane,,2018-08-01,Melanie,
+598,P596,01.02.03.01.04.07,,P439,Danielle Haas,Deacon Mongomery,Hull,2018-06-28,day,,,Deacon,Hull,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Hall,,2018-08-01,Melanie,
+599,P597,02.01.04.01.04.07,,P436,Shannon Leigh Haas,Annabel Leigh,Sheaffer,2010-08-03,day,,,,,,Annabel,Sheaffer,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Sheaffer,,2018-08-01,Melanie,
+600,P598,03.01.02.01.01.06,,P395,Bradley Eugene Gordon,Xane Edward,Gordon,2017-09-29,day,,,Xane,Gordon,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Gordon,,2018-08-01,Melanie,
+601,P599,01.01.03.06.05.03,,P389,Cassie Sue McMillen,Cheyenne Sky,Seppanen,2017-02-23,day,,,,,,Cheyenne,Seppanen,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Seppanen,,2018-08-01,Melanie,
+602,P600,01.02.03.06.05.03,,P390,Chloe Danae McMillen,Brynley Grace,Skethway,2017-12-12,day,,,,,,Brynley,Skethway,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Skethway,,2018-08-01,Melanie,
+603,P601,01.01.02.06.05.03,,P386,Joshua Paul McMillen,Isaac Paul,McMillen,2016-03-15,day,,,Isaac,McMillen,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,McMillen,,2018-08-01,Melanie,
+604,P602,02.01.03.03.02.07,,P458,Matthew Lyons McMillen,Harper Brooke,McMillen,2018-01-08,day,,,,,,Harper,McMillen,SF,,,,,Birth Date,invalid,,,,,,,,,,,,,,,,,,,,McMillen,,2018-08-09,Melanie,"spouse_1_birth date is not parseable: ""Birth Date"""
+605,P603,02.02.03.03.02.07,,P459,Aimee Elizabeth McMillen,Drake Roland,Cauffman,2017-11-20,day,,,Drake,Cauffman,,,,SM,,,,,Birth date,invalid,,,,,,,,,,,,,,,,,,,,Cauffman,,2018-08-09,Melanie,"spouse_1_birth date is not parseable: ""Birth date"""
+606,P604,02.01.03.05.02.03,,P223,Stephanie Christine Hommas,Isabella,,2011-11,month,,,,Meckley,,Isabella,Meckley,SF,,,,,,,,,,,,,,,,,,,,,,,,,,Meckley,,2018-08-20,Melanie,missing descendant last name
+607,P605,04.98.01.04.04.07,,P427,Lisa Marie Schroeder,Enrique Manuel,Palmas-Schroeder,2018-02-16,day,,,Enique,Palmas-Schroeder,,,,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Palmas-Schroeder,Lisa is Allen's Step-daughter,2018-08-20,Melanie,
+608,P606,99.01.04.04.07,,P214,Allen Perry Kretzing,David Allen,Couts,2018,year,,UNKNOWN,David,Couts,,,,SM,,,,,Birthdate,invalid,,,,,,,,,,,,,,,,,,,,Couts,Rebecca is Allen's step daughter.,2018-08-20,Melanie,"duplicate lineage_id in source; spouse_1_birth date is not parseable: ""Birthdate"""
+609,P607,02.01.03.01.04.02.03,,P326,Jessica Renee Hench,Clayton,Hench,,UNKNOWN,,,,,,Clayton,Hench,SM,,,,,,,,,,,,,,,,,,,,,,,,,,Hench,,2018-08-22,Melanie,"descendant_birth date is not parseable: ""Birthdate"""
