@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.23",
-      buildId: "0.0.1.23",
+      version: "0.0.1.24",
+      buildId: "0.0.1.24",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -84,6 +84,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.24",
+        date: "2026-08-19T20:05:32.000Z",
+        title: "Explicit parent roles",
+        summary: "Current McLineage imports now distinguish the direct bloodline parent from an evidence-supported spouse-parent reference.",
+        features: ["Consanguineous parent references", "Explicit affinal parent links"],
+        improvements: ["Affinal parents become real parent relationships", "Bloodline lineage remains authoritative"],
+        fixes: ["Affinal references must resolve through the bloodline parent's spouse slots", "Older direct-parent and lineage-path schemas remain importable"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.23",
         date: "2026-08-19T19:41:43.000Z",

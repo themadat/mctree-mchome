@@ -364,6 +364,7 @@
   }
 
   function directLineageParentField(person) {
+    if (sourceHasField(person, "parent_consanguinity_person_id")) return "parent_consanguinity_person_id";
     if (sourceHasField(person, "lineage_parent_id")) return "lineage_parent_id";
     return sourceHasField(person, "parent_lineage_id") && sourceHasField(person, "person_first_names") ? "parent_lineage_id" : "";
   }

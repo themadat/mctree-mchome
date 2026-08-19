@@ -230,8 +230,16 @@
   }
 
   function directParentReferenceField(parsed) {
+    if (parsed.headers.includes("parent_consanguinity_person_id")) return "parent_consanguinity_person_id";
     if (parsed.headers.includes("lineage_parent_id")) return "lineage_parent_id";
     return parsed.headers.includes("parent_lineage_id") && parsed.headers.includes("person_first_names") ? "parent_lineage_id" : "";
+  }
+
+  function validateCurrentParentRoleSchema(parsed) {
+    const roleHeaders = ["parent_consanguinity_person_id", "parent_affinal_person_id"];
+    const present = roleHeaders.filter(function (header) { return parsed.headers.includes(header); });
+    if (present.length && present.length !== roleHeaders.length) throw new Error("The current McLineage parent-role schema is incomplete.");
+    return present.length === roleHeaders.length;
   }
 
   function usesRootToPersonLineage(parsed) {
@@ -387,9 +395,10 @@
   }
 
   function prepareMcLineage(parsed, fileName) {
-    const counters = { sourceRows: parsed.rows.length, orphanParents: 0, ambiguousParents: 0, partialDates: 0, unmappedDates: 0 };
+    const counters = { sourceRows: parsed.rows.length, orphanParents: 0, ambiguousParents: 0, orphanAffinalParents: 0, partialDates: 0, unmappedDates: 0 };
     const parentReferenceField = directParentReferenceField(parsed);
     const directParentReferences = Boolean(parentReferenceField);
+    const currentParentRoleSchema = validateCurrentParentRoleSchema(parsed);
     validatePersonDateSchema(parsed);
     validateCurrentSourceDates(parsed, counters);
     const people = [];
@@ -424,13 +433,14 @@
       const primary = primaryByRow[index];
       const parentReference = directParentReferences ? sourceRecordKey(row[parentReferenceField]) : u.cleanLine(row.parent_lineage_id, 100);
       if (parentReference) {
+        if (currentParentRoleSchema && !/^P\d{3,}$/.test(parentReference)) throw new Error("McLineage consanguinity parent references must use P references such as P001.");
         const candidates = directParentReferences ? byRecordId.get(parentReference) || [] : byLineage.get(parentReference) || [];
         const directSourceFields = { child_record_id: row.record_id || "" };
         if (directParentReferences) directSourceFields[parentReferenceField] = parentReference;
         if (directParentReferences && parsed.headers.includes("lineage_parent_name_full")) directSourceFields.lineage_parent_name_full = row.lineage_parent_name_full || "";
         if (candidates.length === 1) relationships.push({
           id: stableId("relationship", (row.record_id || index + 1) + "-parent", "parent-" + index),
-          type: "parent-child", parentId: candidates[0].id, childId: primary.id, kind: "unknown",
+          type: "parent-child", parentId: candidates[0].id, childId: primary.id, kind: currentParentRoleSchema ? "biological" : "unknown",
           notes: "Imported lineage parent " + parentReference,
           source: { format: "mclineage-cleaned", fields: directParentReferences
             ? directSourceFields
@@ -439,6 +449,24 @@
         });
         else if (candidates.length > 1) counters.ambiguousParents += 1;
         else counters.orphanParents += 1;
+      }
+      const affinalParentReference = currentParentRoleSchema ? sourceRecordKey(row.parent_affinal_person_id) : "";
+      if (affinalParentReference) {
+        if (!parentReference) throw new Error("A McLineage affinal parent requires a consanguinity parent: " + row.record_id + ".");
+        if (!/^P\d{3,}$/.test(affinalParentReference)) throw new Error("McLineage affinal parent references must use P references such as P001.");
+        if (affinalParentReference === sourceRecordKey(row.record_id) || affinalParentReference === parentReference) throw new Error("McLineage affinal parents must differ from the child and consanguinity parent: " + row.record_id + ".");
+        const affinalCandidates = byRecordId.get(affinalParentReference) || [];
+        const parentSourceRow = parsed.rows.find(function (candidate) { return sourceRecordKey(candidate.record_id) === parentReference; });
+        const spouseReferences = parentSourceRow ? [1, 2, 3].map(function (slot) { return sourceRecordKey(parentSourceRow["spouse_" + slot + "_record_id"]); }).filter(Boolean) : [];
+        if (!spouseReferences.includes(affinalParentReference)) throw new Error("McLineage affinal parent " + affinalParentReference + " is not a recorded spouse of " + parentReference + ".");
+        if (affinalCandidates.length === 1) relationships.push({
+          id: stableId("relationship", (row.record_id || index + 1) + "-affinal-parent", "affinal-parent-" + index),
+          type: "parent-child", parentId: affinalCandidates[0].id, childId: primary.id, kind: "unknown",
+          notes: "Imported affinal parent " + affinalParentReference,
+          source: { format: "mclineage-cleaned", fields: { child_record_id: row.record_id || "", parent_affinal_person_id: affinalParentReference } },
+          order: relationships.length
+        });
+        else counters.orphanAffinalParents += 1;
       }
       [1, 2, 3].forEach(function (slot) {
         if (explicitSpouseReferences) {
@@ -482,6 +510,7 @@
     const warnings = [];
     if (counters.orphanParents) warnings.push(counters.orphanParents + " lineage parent reference" + (counters.orphanParents === 1 ? " was" : "s were") + " not found and skipped.");
     if (counters.ambiguousParents) warnings.push(counters.ambiguousParents + " ambiguous lineage parent reference" + (counters.ambiguousParents === 1 ? " was" : "s were") + " skipped.");
+    if (counters.orphanAffinalParents) warnings.push(counters.orphanAffinalParents + " affinal parent reference" + (counters.orphanAffinalParents === 1 ? " was" : "s were") + " not found and skipped.");
     if (counters.partialDates) warnings.push(counters.partialDates + " partial source date" + (counters.partialDates === 1 ? " is" : "s are") + " preserved in source fields but not shown as a normalized date.");
     if (counters.unmappedDates) warnings.push(counters.unmappedDates + " unrecognized source date" + (counters.unmappedDates === 1 ? " is" : "s are") + " preserved in source fields but not shown as a normalized date.");
     prepared.validation.warnings = prepared.validation.warnings.concat(warnings);
@@ -565,7 +594,7 @@
     if (parsed.headers.includes("mcfamily_csv_version") && parsed.headers.includes("record_type")) return prepareNative(parsed, fileName);
     const hasPersonNames = ["person_first_names", "person_last_name"].every(function (header) { return parsed.headers.includes(header); });
     const hasLegacyDescendantNames = ["descendant_first_names", "descendant_last_name"].every(function (header) { return parsed.headers.includes(header); });
-    if (MCLINEAGE_REQUIRED.every(function (header) { return parsed.headers.includes(header); }) && (hasPersonNames || hasLegacyDescendantNames) && (parsed.headers.includes("lineage_parent_id") || parsed.headers.includes("parent_lineage_id"))) return prepareMcLineage(parsed, fileName);
+    if (MCLINEAGE_REQUIRED.every(function (header) { return parsed.headers.includes(header); }) && (hasPersonNames || hasLegacyDescendantNames) && (parsed.headers.includes("parent_consanguinity_person_id") || parsed.headers.includes("lineage_parent_id") || parsed.headers.includes("parent_lineage_id"))) return prepareMcLineage(parsed, fileName);
     throw new Error("That CSV is neither a McFamily export nor the supported McLineage-cleaned format.");
   }
 
