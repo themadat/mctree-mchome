@@ -18,12 +18,13 @@ Use synthetic families only.
 - [ ] A valid cleaned McLineage or native McFamily CSV with at least one person shows a summary and opens the family.
 - [ ] Unknown headers, missing required cells, zero-person first import, malformed CSV, oversized file, duplicate ids, unsafe headers, self-links, duplicate links, and ancestry cycles are rejected without replacing state.
 - [ ] Current cleaned-source `P` record IDs and direct `parent_consanguinity_person_id` references import without remapping; `record_id` is first, both parent-role fields are adjacent, `person_name_sort` follows `person_last_name`, `source_row_number` immediately precedes `data_quality_notes`, `lineage_id` is a unique two-digit root-to-person path except for isolated `99` records, and removed legacy columns are absent.
-- [ ] Every populated `parent_affinal_person_id` resolves to a distinct person referenced by a spouse slot on the consanguinity parent's row and imports as a second parent; missing, self, duplicate, non-spouse, and partial parent-role schemas are rejected.
-- [ ] Current spouse rows import as their own P-referenced people; their source-row and lineage fields are blank, every populated spouse slot resolves through `spouse_#_record_id`, and no duplicate spouse people are synthesized.
-- [ ] Missing, self, partial-schema, and duplicate spouse-record references are rejected; older embedded-spouse sources still create compatibility spouse people.
+- [ ] Every populated `parent_affinal_person_id` resolves to a distinct person paired with the consanguinity parent through `partner_relationships_json` and imports as a second parent; missing, self, duplicate, non-partner, and partial parent-role schemas are rejected.
+- [ ] Current partner rows import as their own P-referenced people; their source-row and lineage fields are blank, each JSON partner P reference resolves, and no duplicate people are synthesized.
+- [ ] Each current partner relationship has one unique R ID and unordered person pair; malformed JSON, missing/self references, invalid types/orders/end reasons, inconsistent date pairs, duplicate relationships, and mixed JSON/spouse-slot schemas are rejected.
+- [ ] Relationship type plus end reason maps to married, partnered, widowed, divorced, separated, former, or unknown without a redundant source status field; older spouse-record and embedded-spouse sources retain compatibility behavior.
 - [ ] Every current non-root lineage path extends its direct parent's path by exactly one segment; blank unlineaged people are accepted, while malformed, duplicate, or parent-mismatched paths are rejected.
 - [ ] Current source date values accept blank, `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, or the same shapes with `?` in unknown digit positions; question-mark values require `partial`, `invalid` descriptors are rejected, and birth descriptors reject blank.
-- [ ] Current `person_*` identity/date columns import primary and spouse rows consistently: known death values and G0-G4 lineage people import as deceased, G5+ `UNKNOWN` death descriptors import with unknown status, G5+ blank death descriptors import as living, and legacy descendant date columns remain compatible.
+- [ ] Current `person_*` identity/date columns import lineage and partner rows consistently: known death values and G0-G4 lineage people import as deceased, G5+ `UNKNOWN` death descriptors import with unknown status, G5+ blank death descriptors import as living, and legacy descendant date columns remain compatible.
 - [ ] Loading schema v7 state migrates the same cleaned-source life statuses to schema v8 and saves them under the v8 storage key without losing family data.
 - [ ] Partial source dates remain in source details, produce a partial-only preview warning, and do not become invented normalized dates in editable/native state.
 - [ ] Older direct `parent_lineage_id` and `lineage_parent_id` sources and legacy lineage-path `parent_lineage_id` or lineage-name sources remain importable.
@@ -56,7 +57,7 @@ Use synthetic families only.
 - [ ] Arrow keys move between rendered nodes and Enter/Space selects.
 - [ ] Every node and relationship has an understandable accessible label.
 - [ ] Condensed cards are the default; both card modes are narrow, put every whitespace-separated name part on its own line, grow generation rows for taller names, show birth/death years with `????` for either unknown year, and keep deceased cards light brown.
-- [ ] Partner pairs are adjacent when possible; married lines are solid, divorced lines are dotted, and other partner states remain distinguishable.
+- [ ] Partner pairs are adjacent when possible; married lines are solid, death-ended lines are solid and subdued, divorced lines are dotted, and other partner states remain distinguishable.
 - [ ] Family Tree rows use numeric lineage order rather than alphabetical names; Seth Lauer appears before Jared Lauer.
 - [ ] A multi-partner lineage person is preceded by past partners from earliest to latest and followed by the current married partner.
 - [ ] Christine Perrietta McMillen renders with Ray Shanaman on her left using a divorced line and Howard David Weiss as the only partner on her right using a married line.
@@ -76,11 +77,15 @@ Use synthetic families only.
 - [ ] Adam's imported lineage is `01.01.01.03.05.05.05.01` with the first three segments italic and the final `01` bold, and its Family line begins `Adam [01 | G7]`, then `Melanie [05 | G6]`; the corresponding readings begin `Gen 7, 1st Child of Melanie`, then `Gen 6, 5th Child of Max`.
 - [ ] A Family line heading introduces paired name/reading rows with equal row heights and vertically centered cells; the family totals span both columns on one line, there is no visible Reading heading, and the root reads `Gen 0, Root ancestor`.
 - [ ] Every resolved first-name parent link selects that person and focuses the tree; unknown positions read `Gen #, Child of FirstName` without an ordinal.
-- [ ] Parents, Siblings, Partners, and Children are compact open groups containing names only in that order; the bloodline parent is first, siblings and children are in birth order, and Melanie's Parents group contains both Max and Martha through display-only co-parent inference.
+- [ ] Parents, Siblings, Partners, and Children are compact open groups in that order; the bloodline parent is first, siblings and children are in birth order, and Melanie's Parents group contains both Max and Martha through display-only co-parent inference.
 - [ ] Partners lists the current partner first in bold, followed by prior partners in reverse history order with de-emphasized styling.
 - [ ] Notes follows Relationships, and Imported source is the final information section on screen and in each printable person profile.
 - [ ] The profile X closes the module, clears directory/tree selection, disables the empty mobile Person tab, and a Family Tree selection reopens the profile without a Show person button.
 - [ ] A child listed from a parent's profile is labelled `Child`, without a redundant parent-kind suffix.
+- [ ] Parents, Siblings, and Children headings show the correct `Gen #`; parents show `(Consanguinity)` or `(Affinity)`.
+- [ ] Siblings and children show two-digit birth order and birth year as `(01 :: 1991)`, including `????` for an unknown year.
+- [ ] Partners show the relationship start year as their marriage year, or `????` when no year is recorded.
+- [ ] Screen and print profiles use the same Parents, Siblings, Partners, Children order and relationship context.
 
 ## Responsive and accessibility
 

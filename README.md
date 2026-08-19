@@ -4,7 +4,7 @@ McFamily is a private, local-first family atlas that runs as a static GitHub Pag
 
 There is no backend, account, cloud database, or runtime dependency. Family data stays in browser storage and moves only through an explicit CSV import or export. The published repository must never contain a real family CSV or private family data.
 
-Current version: `0.0.1.25` (`major.minor.patch.build`).
+Current version: `0.0.1.27` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -18,9 +18,9 @@ Current version: `0.0.1.25` (`major.minor.patch.build`).
 - Supports partial/fuzzy matches that return the tree to Focus, collapsible side panels, a resizable desktop tree/profile split, and narrow tree cards that stack each name word on its own line.
 - Keeps portrait placeholders and internal person references out of the ordinary workspace; Developer Mode reveals references for troubleshooting.
 - Presents complete oldest-to-newest, two-digit Lineage IDs with the first three ancestral segments italicized and the selected person's final segment bold, followed by a compact direct-parent-linked Family line with each name's lineage number and generation.
-- Imports every current McLineage row as one stable person, resolves spouse slots to explicit spouse-record references, and retains older embedded-spouse and descendant-column sources for compatibility.
+- Imports every current McLineage row as one stable person, expands `partner_relationships_json` into explicit partner records, and retains older spouse-slot, embedded-spouse, and descendant-column sources for compatibility.
 - Imports known and question-mark partial source dates; known deaths and G0-G4 lineage people are deceased, while later `UNKNOWN` death descriptors keep status unknown and blank descriptors mean living.
-- Uses compact open Parents, Siblings, Partners, and Children groups with bloodline-first parents, birth-ordered siblings and children, and current-first partner history; Imported source finishes each profile.
+- Uses compact open Parents, Siblings, Partners, and Children groups with generation labels, consanguinity/affinity parent roles, birth order and year for siblings and children, marriage years for partners, and current-first partner history; Imported source finishes each profile.
 - Uses absolute lineage generations rooted at George McMillen (1745) as Gen 0; readings use concise forms such as `Gen 6, 5th Child of Max`.
 - Lets the person panel close and clear selection; choosing any Family Tree person reopens it without a separate Show person control.
 - Keeps family-record add, edit, relationship, home-person, and deletion controls visibly paused during the current build-out.
@@ -60,7 +60,7 @@ assets/css/app.css             Themes, family workspace, responsive, and print s
 assets/js/config.js            Identity, version, enums, help, releases, and roadmap
 assets/js/icons.js             Shared inline SVG symbol catalog
 assets/js/app.js               Rendering, editing, search, tree interaction, and print atlas
-assets/js/core/state.js        Schema v7 migration, normalization, fuzzy matching, and validation
+assets/js/core/state.js        Schema v8 migration, normalization, fuzzy matching, and validation
 assets/js/core/family.js       Relationship indexes, derived family groups, and graph layout
 assets/js/core/storage.js      Local persistence and recovery snapshot
 assets/js/core/portability.js  Private CSV mapping, export, preview, and replacement import
@@ -74,7 +74,7 @@ context/                       Durable agent workflow and wish ledger
 
 ## Data limits and compatibility
 
-Schema v7 supports up to 1,500 people so the current 912-person McLineage source fits safely. Dates accept `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` with exact, about, before, or after qualifiers. Relationships are stored as explicit records; ancestry, descendants, siblings, family units, and lineage labels are derived when needed.
+Schema v8 supports up to 1,500 people so the current 912-person McLineage source fits safely. Dates accept `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` with exact, about, before, or after qualifiers. Relationships are stored as explicit records; ancestry, descendants, siblings, family units, and lineage labels are derived when needed.
 
 Older application states migrate without discarding the single Notes document or retained compatibility fields. A first import must be a supported CSV containing at least one valid person.
 

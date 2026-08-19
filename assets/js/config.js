@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.25",
-      buildId: "0.0.1.25",
+      version: "0.0.1.27",
+      buildId: "0.0.1.27",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -84,6 +84,26 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.27",
+        date: "2026-08-19T21:02:33.000Z",
+        title: "Relationship context",
+        summary: "Profile and print relationships now show generation, parent role, birth order, birth year, and marriage year context.",
+        features: ["Generation-labelled family groups", "Relationship context beside each person"],
+        improvements: ["Consanguinity and affinity parent designations", "Birth order and year for siblings and children"],
+        fixes: ["Marriage years remain visible in compact partner lists", "Screen and print relationship order now matches"],
+        knownIssues: []
+      },
+      {
+        version: "0.0.1.26",
+        date: "2026-08-19T20:37:28.000Z",
+        title: "Flexible partner records",
+        summary: "Current McLineage imports now read one structured partner relationship column instead of fixed spouse slots.",
+        features: ["partner_relationships_json source records", "Relationship end reasons"],
+        improvements: ["Stable relationship references", "Death, divorce, and unknown endings map to distinct partner states"],
+        fixes: ["Affinal parents validate against normalized partner pairs", "Legacy spouse-slot files remain importable"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.25",
         date: "2026-08-19T20:20:01.000Z",
@@ -336,7 +356,7 @@
     help: [
       { id: "start", title: "Getting started", section: "Basics", keywords: "start import csv backup seed first launch", html: "<p>McFamily opens after you import the cleaned McLineage CSV or a native McFamily CSV export. The file is mapped, validated, and previewed before it replaces local data. There is no demo-family or blank-family bypass.</p>" },
       { id: "tree", title: "Exploring the Family Tree", section: "Family", keywords: "tree focus overview zoom pan scroll horizontal vertical generation ancestor descendant home person condensed detailed co-parent resize", html: "<p>Focus view shows the selected person and nearby generations; choosing a person from search returns here automatically. Select any person to recenter the Family Tree, set separate Ancestor and Descendant depth numbers, or switch between condensed and detailed cards. Narrow cards place each name word on its own line, and deceased people use light-brown cards. <strong>Other parent lines</strong> adds lighter, inferred branches from a recorded parent's partner to the recorded parent-child line without changing family data. On desktop, drag the divider beside the selected person panel to resize both modules. Scroll horizontally or vertically to explore larger layouts; enter a zoom percentage or use Out, In, and Fit.</p>" },
-      { id: "people", title: "People and relationships", section: "Family", keywords: "people directory favorites star search sort alphabet address phone email parent child partner ancestry lineage generation", html: "<p>Use Directory to the left of Search to open or close the pane, sort by first or last name, and jump through matching people with the A–Z rail. Select the star beside a person search result to pin them above other matches. Favorites to the right of Search opens every starred person and can be narrowed with the search field. The person panel closes and deselects with its X; selecting a person in the Family Tree reopens it. Lineage uses a compact Family line with each name followed by its lineage number and generation; readings use the generation and the parent's first name, such as Gen 6, 5th Child of Max. Parents put the bloodline parent first, siblings and children follow birth order, and Partners puts the current partner first in bold before reverse-ordered prior partners. Notes follow Relationships, and Imported source finishes the profile. Generations are rooted at George McMillen (1745) as G0.</p>" },
+      { id: "people", title: "People and relationships", section: "Family", keywords: "people directory favorites star search sort alphabet address phone email parent child partner ancestry lineage generation", html: "<p>Use Directory to the left of Search to open or close the pane, sort by first or last name, and jump through matching people with the A–Z rail. Select the star beside a person search result to pin them above other matches. Favorites to the right of Search opens every starred person and can be narrowed with the search field. The person panel closes and deselects with its X; selecting a person in the Family Tree reopens it. Lineage uses a compact Family line with each name followed by its lineage number and generation; readings use the generation and the parent's first name, such as Gen 6, 5th Child of Max. Relationship groups label parent, sibling, and child generations; parents identify consanguinity or affinity, siblings and children show birth order and year, and partners show marriage year. Partners puts the current partner first in bold before reverse-ordered prior partners. Notes follow Relationships, and Imported source finishes the profile. Generations are rooted at George McMillen (1745) as G0.</p>" },
       { id: "print", title: "Print or save a PDF", section: "Family", keywords: "print pdf atlas directory lineage family maps generation", html: "<p>Choose <strong>Print / Save PDF</strong> to build the complete atlas and open the browser print dialog. Family maps are named for their top sibling and use compact name-and-years cards; detailed profiles follow alphabetically. Select Save as PDF to create a file.</p>" },
       { id: "notes", title: "Working with Notes", section: "Features", keywords: "notes text edit modal autosave", html: "<p>Notes is a single local plain-text scratchpad. Open it from the top bar or press <kbd>N</kbd>; it is included in McFamily backups.</p>" },
       { id: "backup", title: "CSV backup and restore", section: "Data", keywords: "csv export import backup restore recovery private", html: "<p>CSV export is the complete editable copy of the family and contains private contact information. Native exports use typed rows for people, contacts, relationships, Notes, and settings. Store them securely. Replacement imports are previewed and confirmed; the prior local copy becomes the recovery snapshot.</p>" },
