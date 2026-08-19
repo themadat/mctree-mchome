@@ -32,9 +32,11 @@ Notes remains one large plain-text textarea. It opens from the header or `N`, au
 
 `/` focuses global search outside editable controls. Directory and global search support partial substrings and in-order fuzzy characters. Results include people, contact data, life places, heritage, notes, the Notes document, Help topics, releases, and Roadmap items. A person result selects that person and routes to Profile on mobile.
 
-## Heritage and lineage
+## Lineage
 
-The selected-person profile presents the imported ancestry name line and Lineage ID together. Activating the name line swaps it for a relationship-derived family reading such as `Son of …`, `Daughter of …`, or the gender-neutral `Child of …`. The printable atlas includes both readings without requiring interaction.
+The selected-person profile presents the source Lineage ID first, reverses its segments so the selected person's two-digit segment leads, and bolds that first segment. A nearest-to-oldest name list follows with each resolved person linked to their profile and tree focus. The reading lists each generation as `Gen N · ordinal Child of …`; unknown positions use `Nth`. The printable atlas includes the same ID, name list, and reading without interactive controls.
+
+Family-record mutation controls remain visible but disabled while `features.familyEditing` is false. This includes adding, editing, connecting, removing, deleting, and changing the home person.
 
 ## Print report
 
