@@ -302,25 +302,93 @@
     return (!startYear || startYear <= birthYear) && (!endYear || endYear >= birthYear);
   }
 
-  function relationshipNameList(entries, emptyText) {
+  function relationshipGeneration(person) {
+    if (lineageSegments(person).length) {
+      const member = lineageChain(person).members[0];
+      if (member) return member.generation;
+    }
+    return family.generationMap(state().workspace.people, state().workspace.relationships).get(person.id) || 0;
+  }
+
+  function relationshipGroupLabel(label, generation) {
+    return generation == null ? label : label + " · Gen " + generation;
+  }
+
+  function relationshipBirthValue(person) {
+    return sourceField(person, "person_date_birth_value")
+      || sourceField(person, "descendant_date_birth_value")
+      || sourceField(person, "descendant_birth_date_value")
+      || String(person && person.birth && person.birth.date && person.birth.date.value || "");
+  }
+
+  function relationshipBirthYear(person) {
+    const match = relationshipBirthValue(person).match(/^[\d?]{4}/);
+    return match ? match[0] : "????";
+  }
+
+  function birthOrderMap(entries) {
+    const people = [];
+    const seen = new Set();
+    entries.filter(Boolean).forEach(function (entry) {
+      const person = entry.person || entry;
+      if (!person || seen.has(person.id)) return;
+      seen.add(person.id);
+      people.push(person);
+    });
+    people.sort(function (first, second) {
+      const firstDate = relationshipBirthValue(first);
+      const secondDate = relationshipBirthValue(second);
+      if (firstDate && secondDate && firstDate !== secondDate) return firstDate.localeCompare(secondDate);
+      if (firstDate !== secondDate) return firstDate ? -1 : 1;
+      return model.sortName(first).localeCompare(model.sortName(second)) || first.id.localeCompare(second.id);
+    });
+    return new Map(people.map(function (person, index) { return [person.id, index + 1]; }));
+  }
+
+  function birthOrderContext(person, orderMap) {
+    const order = String(orderMap.get(person.id) || 0).padStart(2, "0");
+    return "(" + order + " :: " + relationshipBirthYear(person) + ")";
+  }
+
+  function parentContext(child, entry) {
+    const parent = entry.person || entry;
+    const recordId = sourceField(parent, "record_id").toUpperCase();
+    const consanguinityId = sourceField(child, directLineageParentField(child)).toUpperCase();
+    const affinityId = sourceField(child, "parent_affinal_person_id").toUpperCase();
+    if (recordId && recordId === consanguinityId) return "(Consanguinity)";
+    if (recordId && recordId === affinityId) return "(Affinity)";
+    return entry.relationship && entry.relationship.kind === "biological" ? "(Consanguinity)" : "(Affinity)";
+  }
+
+  function partnerContext(entry) {
+    const relationship = entry.relationship;
+    const sourceValue = String(relationship && relationship.source && relationship.source.fields && relationship.source.fields.date_start_value || "");
+    const value = sourceValue || String(relationship && relationship.startDate && relationship.startDate.value || "");
+    const year = value.match(/^[\d?]{4}/);
+    return "(" + (year ? year[0] : "????") + ")";
+  }
+
+  function relationshipNameList(entries, emptyText, contextForEntry) {
     const unique = [];
     const seen = new Set();
     entries.filter(Boolean).forEach(function (entry) {
       const person = entry.person || entry;
       if (!person || seen.has(person.id)) return;
       seen.add(person.id);
-      unique.push({ person: person, current: entry.current });
+      unique.push({ person: person, relationship: entry.relationship, current: entry.current });
     });
-    return unique.length ? unique.map(function (entry) {
+    return unique.length ? unique.map(function (entry, index) {
       const partnerClass = entry.current === true ? " current-partner" : entry.current === false ? " previous-partner" : "";
-      const partnerLabel = entry.current === true ? ' aria-label="' + u.escapeHtml(model.displayName(entry.person) + ", current partner") + '"' : entry.current === false ? ' aria-label="' + u.escapeHtml(model.displayName(entry.person) + ", previous partner") + '"' : "";
-      return '<button type="button" class="relationship-name' + partnerClass + '" data-select-person="' + u.escapeHtml(entry.person.id) + '"' + partnerLabel + '>' + u.escapeHtml(model.displayName(entry.person)) + "</button>";
+      const context = contextForEntry ? contextForEntry(entry, index, unique) : "";
+      const partnerStatus = entry.current === true ? ", current partner" : entry.current === false ? ", previous partner" : "";
+      const accessibleLabel = ' aria-label="' + u.escapeHtml(model.displayName(entry.person) + (context ? ", " + context.replace(/[()]/g, "") : "") + partnerStatus) + '"';
+      return '<button type="button" class="relationship-name' + partnerClass + '" data-select-person="' + u.escapeHtml(entry.person.id) + '"' + accessibleLabel + '><span>' + u.escapeHtml(model.displayName(entry.person)) + '</span>' + (context ? '<small class="relationship-context">' + u.escapeHtml(context) + "</small>" : "") + "</button>";
     }).join("") : '<span class="relationship-empty">' + u.escapeHtml(emptyText) + "</span>";
   }
 
-  function relationshipGroup(label, entries, emptyText) {
+  function relationshipGroup(label, generation, entries, emptyText, contextForEntry) {
     const count = new Set(entries.filter(Boolean).map(function (entry) { const person = entry.person || entry; return person && person.id; }).filter(Boolean)).size;
-    return '<details class="relationship-group" open><summary><span>' + u.escapeHtml(label) + '</span><span class="count-pill">' + count + '</span></summary><div class="relationship-names">' + relationshipNameList(entries, emptyText) + "</div></details>";
+    return '<details class="relationship-group" open><summary><span>' + u.escapeHtml(relationshipGroupLabel(label, generation)) + '</span><span class="count-pill">' + count + '</span></summary><div class="relationship-names">' + relationshipNameList(entries, emptyText, contextForEntry) + "</div></details>";
   }
 
   function expandedParentEntries(person, groups, graph) {
@@ -340,10 +408,13 @@
     const graph = family.indexes(state());
     const groups = family.relationGroups(person.id, state());
     const parents = expandedParentEntries(person, groups, graph);
-    return relationshipGroup("Parents", parents, "No parents recorded")
-      + relationshipGroup("Siblings", groups.siblings, "No siblings recorded")
-      + relationshipGroup("Partners", groups.partners, "No partners recorded")
-      + relationshipGroup("Children", groups.children, "No children recorded");
+    const generation = relationshipGeneration(person);
+    const siblingOrder = birthOrderMap([person].concat(groups.siblings));
+    const childOrder = birthOrderMap(groups.children);
+    return relationshipGroup("Parents", Math.max(0, generation - 1), parents, "No parents recorded", function (entry) { return parentContext(person, entry); })
+      + relationshipGroup("Siblings", generation, groups.siblings, "No siblings recorded", function (entry) { return birthOrderContext(entry.person, siblingOrder); })
+      + relationshipGroup("Partners", null, groups.partners, "No partners recorded", partnerContext)
+      + relationshipGroup("Children", generation + 1, groups.children, "No children recorded", function (entry) { return birthOrderContext(entry.person, childOrder); });
   }
 
   function sourceEntries(source) {
@@ -1177,16 +1248,24 @@
 
   function printRelationshipList(person, graph) {
     const groups = family.relationGroups(person.id, state());
-    const section = function (label, entries, fallbackMeta) {
+    const parents = expandedParentEntries(person, groups, graph);
+    const generation = relationshipGeneration(person);
+    const siblingOrder = birthOrderMap([person].concat(groups.siblings));
+    const childOrder = birthOrderMap(groups.children);
+    const section = function (label, groupGeneration, entries, contextForEntry, fallbackMeta) {
       if (!entries.length) return "";
-      return '<div class="print-rel-group"><dt>' + label + "</dt><dd>" + entries.map(function (entry) {
+      return '<div class="print-rel-group"><dt>' + u.escapeHtml(relationshipGroupLabel(label, groupGeneration)) + "</dt><dd>" + entries.map(function (entry, index) {
         const other = entry.person || entry;
         const relationship = entry.relationship;
         const meta = relationship ? relationshipLabel(relationship, person.id, other) + (relationshipMeta(relationship) ? " · " + relationshipMeta(relationship) : "") : fallbackMeta;
-        return u.escapeHtml((developerReferencesEnabled() ? other.reference + " " : "") + model.displayName(other) + " — " + meta);
+        const context = contextForEntry ? contextForEntry(entry, index, entries) : "";
+        return u.escapeHtml((developerReferencesEnabled() ? other.reference + " " : "") + model.displayName(other) + (context ? " " + context : "") + " — " + meta);
       }).join("<br>") + "</dd></div>";
     };
-    return section("Parents", expandedParentEntries(person, groups, graph), "Parent") + section("Partners", groups.partners, "Partner") + section("Children", groups.children, "Child") + section("Siblings", groups.siblings, "Sibling");
+    return section("Parents", Math.max(0, generation - 1), parents, function (entry) { return parentContext(person, entry); }, "Parent")
+      + section("Siblings", generation, groups.siblings, function (entry) { return birthOrderContext(entry.person || entry, siblingOrder); }, "Sibling")
+      + section("Partners", null, groups.partners, partnerContext, "Partner")
+      + section("Children", generation + 1, groups.children, function (entry) { return birthOrderContext(entry.person || entry, childOrder); }, "Child");
   }
 
   function buildPrintReport() {

@@ -390,6 +390,72 @@
     };
   }
 
+  function validatePartnerRelationshipDate(value, descriptor, label) {
+    const cleanValue = u.cleanLine(value, 40);
+    const cleanDescriptor = u.cleanLine(descriptor, 40);
+    if (!["year", "month", "day", "UNKNOWN", "partial", ""].includes(cleanDescriptor)) throw new Error(label + " descriptors must be year, month, day, partial, UNKNOWN, or blank.");
+    const partial = isPartialSourceDate(cleanValue);
+    if (cleanValue && !partial && !/^\d{4}(?:-(?:0[1-9]|1[0-2])(?:-(?:0[1-9]|[12]\d|3[01]))?)?$/.test(cleanValue)) throw new Error(label + " values must be normalized dates, question-mark partial dates, or blank.");
+    const expected = partial ? "partial" : cleanValue.length === 4 ? "year" : cleanValue.length === 7 ? "month" : cleanValue.length === 10 ? "day" : "";
+    if (cleanValue && cleanDescriptor !== expected) throw new Error(label + " value and descriptor do not match.");
+    if (!cleanValue && !["UNKNOWN", ""].includes(cleanDescriptor)) throw new Error(label + " without a value must be UNKNOWN or blank.");
+    return { value: cleanValue, descriptor: cleanDescriptor };
+  }
+
+  function partnerStatusFromSource(type, endReason) {
+    if (endReason === "death") return "widowed";
+    if (endReason === "divorce") return "divorced";
+    if (endReason === "separation") return "separated";
+    if (endReason === "annulment") return "former";
+    if (endReason === "UNKNOWN") return "unknown";
+    if (type === "marriage") return "married";
+    if (type === "partnership") return "partnered";
+    return "unknown";
+  }
+
+  function sourcePartnerRelationships(row, owner, index, counters) {
+    const text = originalCsvValue(row.partner_relationships_json).trim();
+    if (!text) return [];
+    let entries;
+    try { entries = JSON.parse(text); }
+    catch (error) { throw new Error("partner_relationships_json on " + row.record_id + " contains invalid JSON."); }
+    if (!Array.isArray(entries)) throw new Error("partner_relationships_json on " + row.record_id + " must be a JSON array.");
+    return entries.map(function (input) {
+      if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Every partner relationship on " + row.record_id + " must be a JSON object.");
+      const required = ["relationship_id", "partner_person_id", "relationship_type", "relationship_order", "date_start_value", "date_start_descriptor", "date_end_value", "date_end_descriptor", "end_reason"];
+      const missing = required.find(function (key) { return !Object.prototype.hasOwnProperty.call(input, key); });
+      if (missing) throw new Error("A partner relationship on " + row.record_id + " is missing " + missing + ".");
+      const relationshipId = u.cleanLine(input.relationship_id, 100).toUpperCase();
+      const partnerId = sourceRecordKey(input.partner_person_id);
+      const type = u.cleanLine(input.relationship_type, 40);
+      const order = Number(input.relationship_order);
+      const endReason = u.cleanLine(input.end_reason, 40);
+      if (!/^R\d{3,}$/.test(relationshipId)) throw new Error("McLineage partner relationship IDs must use R references such as R001.");
+      if (!/^P\d{3,}$/.test(partnerId)) throw new Error("McLineage partner person references must use P references such as P001.");
+      if (!["marriage", "partnership", "UNKNOWN"].includes(type)) throw new Error("McLineage relationship types must be marriage, partnership, or UNKNOWN.");
+      if (!Number.isInteger(order) || order < 1 || order > config.controls.maxRelationships) throw new Error("McLineage relationship_order values must be positive integers within the relationship limit.");
+      if (!["death", "divorce", "separation", "annulment", "UNKNOWN", ""].includes(endReason)) throw new Error("McLineage relationship end reasons must be death, divorce, separation, annulment, UNKNOWN, or blank.");
+      const start = validatePartnerRelationshipDate(input.date_start_value, input.date_start_descriptor, "McLineage partner start date");
+      const end = validatePartnerRelationshipDate(input.date_end_value, input.date_end_descriptor, "McLineage partner end date");
+      if (end.value && !endReason) throw new Error("A McLineage partner end date requires an end_reason.");
+      const sourceFields = { originating_record_id: row.record_id || "" };
+      required.forEach(function (key) { sourceFields[key] = String(input[key] == null ? "" : input[key]); });
+      return {
+        id: relationshipId,
+        type: "partner",
+        person1Id: owner.id,
+        partnerPersonId: partnerId,
+        status: partnerStatusFromSource(type, endReason),
+        startDate: sourceDate(start.value, start.descriptor, counters),
+        endDate: sourceDate(end.value, end.descriptor, counters),
+        place: "",
+        notes: "Imported " + type + " relationship " + relationshipId + (endReason ? " · ended by " + endReason : ""),
+        source: { format: "mclineage-cleaned", fields: sourceFields },
+        order: 10000 + index * 10 + order
+      };
+    });
+  }
+
   function prepareMcLineage(parsed, fileName) {
     const counters = { sourceRows: parsed.rows.length, orphanParents: 0, ambiguousParents: 0, orphanAffinalParents: 0, partialDates: 0, unmappedDates: 0 };
     const parentReferenceField = directParentReferenceField(parsed);
@@ -421,10 +487,30 @@
     const duplicateRecordId = Array.from(byRecordId.entries()).find(function (entry) { return entry[1].length > 1; });
     if (duplicateRecordId) throw new Error("The McLineage CSV contains a duplicate record_id: " + duplicateRecordId[0] + ".");
     validateRootToPersonLineage(parsed, byRecordId);
+    const jsonPartnerRelationships = parsed.headers.includes("partner_relationships_json");
+    const spouseHeaders = parsed.headers.filter(function (header) { return header.startsWith("spouse_"); });
+    if (jsonPartnerRelationships && spouseHeaders.length) throw new Error("Current McLineage files cannot mix partner_relationships_json with legacy spouse columns.");
     const spouseReferenceHeaders = [1, 2, 3].filter(function (slot) { return parsed.headers.includes("spouse_" + slot + "_record_id"); });
     if (spouseReferenceHeaders.length && spouseReferenceHeaders.length !== 3) throw new Error("The current McLineage spouse record-reference schema is incomplete.");
     const explicitSpouseReferences = spouseReferenceHeaders.length === 3;
     const partnerPairs = new Set();
+    const relationshipIds = new Set();
+    if (jsonPartnerRelationships) parsed.rows.forEach(function (row, index) {
+      const primary = primaryByRow[index];
+      sourcePartnerRelationships(row, primary, index, counters).forEach(function (relationship) {
+        const candidates = byRecordId.get(relationship.partnerPersonId) || [];
+        if (candidates.length !== 1) throw new Error("McLineage partner reference " + relationship.partnerPersonId + " on " + row.record_id + " does not resolve to exactly one person.");
+        if (candidates[0].id === primary.id) throw new Error("McLineage partner references cannot point to the same person: " + row.record_id + ".");
+        if (relationshipIds.has(relationship.id)) throw new Error("The McLineage CSV contains a duplicate partner relationship ID: " + relationship.id + ".");
+        relationshipIds.add(relationship.id);
+        const pairKey = [primary.id, candidates[0].id].sort().join("|");
+        if (partnerPairs.has(pairKey)) throw new Error("The McLineage CSV contains a duplicate partner relationship for " + row.record_id + " and " + relationship.partnerPersonId + ".");
+        partnerPairs.add(pairKey);
+        relationship.person2Id = candidates[0].id;
+        delete relationship.partnerPersonId;
+        relationships.push(relationship);
+      });
+    });
     parsed.rows.forEach(function (row, index) {
       const primary = primaryByRow[index];
       const parentReference = directParentReferences ? sourceRecordKey(row[parentReferenceField]) : u.cleanLine(row.parent_lineage_id, 100);
@@ -453,8 +539,11 @@
         if (affinalParentReference === sourceRecordKey(row.record_id) || affinalParentReference === parentReference) throw new Error("McLineage affinal parents must differ from the child and consanguinity parent: " + row.record_id + ".");
         const affinalCandidates = byRecordId.get(affinalParentReference) || [];
         const parentSourceRow = parsed.rows.find(function (candidate) { return sourceRecordKey(candidate.record_id) === parentReference; });
-        const spouseReferences = parentSourceRow ? [1, 2, 3].map(function (slot) { return sourceRecordKey(parentSourceRow["spouse_" + slot + "_record_id"]); }).filter(Boolean) : [];
-        if (!spouseReferences.includes(affinalParentReference)) throw new Error("McLineage affinal parent " + affinalParentReference + " is not a recorded spouse of " + parentReference + ".");
+        const spouseReferences = parentSourceRow && !jsonPartnerRelationships ? [1, 2, 3].map(function (slot) { return sourceRecordKey(parentSourceRow["spouse_" + slot + "_record_id"]); }).filter(Boolean) : [];
+        const recordedPartner = jsonPartnerRelationships
+          ? partnerPairs.has([parentReference, affinalParentReference].sort().join("|"))
+          : spouseReferences.includes(affinalParentReference);
+        if (!recordedPartner) throw new Error("McLineage affinal parent " + affinalParentReference + " is not a recorded partner of " + parentReference + ".");
         if (affinalCandidates.length === 1) relationships.push({
           id: stableId("relationship", (row.record_id || index + 1) + "-affinal-parent", "affinal-parent-" + index),
           type: "parent-child", parentId: affinalCandidates[0].id, childId: primary.id, kind: "unknown",
@@ -464,7 +553,7 @@
         });
         else counters.orphanAffinalParents += 1;
       }
-      [1, 2, 3].forEach(function (slot) {
+      if (!jsonPartnerRelationships) [1, 2, 3].forEach(function (slot) {
         if (explicitSpouseReferences) {
           const prefix = "spouse_" + slot + "_";
           const spouseReference = sourceRecordKey(row[prefix + "record_id"]);
