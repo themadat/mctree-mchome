@@ -43,11 +43,11 @@ Use synthetic families only.
 - [ ] Focus mode shows the selected/home person's configured ancestor and descendant depth plus partners and siblings.
 - [ ] Overview contains every connected component and isolated person.
 - [ ] Single-person, multi-partner, adopted, disconnected, pedigree-collapse, and 1,500-person synthetic families render without exceptions.
-- [ ] Pan, Ctrl/Command-wheel and pinch zoom, zoom buttons, Fit, node click, and independent ancestor/descendant depths work.
+- [ ] Pan, Ctrl/Command-wheel and pinch zoom, grouped icon-over-label Out/In/Fit buttons, direct zoom percentage entry, node click, and independent numeric ancestor/descendant steppers work.
 - [ ] Natural-size Family Tree layouts expose horizontal and vertical scrolling when needed; ordinary wheel input scrolls and Ctrl/Command-wheel zooms.
 - [ ] Arrow keys move between rendered nodes and Enter/Space selects.
 - [ ] Every node and relationship has an understandable accessible label.
-- [ ] Condensed cards are the default and show separate given/family name lines plus birth/death years, with no avatar or identifier; Detailed restores the fuller card.
+- [ ] Condensed cards are the default and show separate given/family name lines plus birth/death years, with `????` for either unknown year and no avatar or identifier; Detailed restores the fuller card, and deceased cards are light brown in both modes.
 - [ ] Partner pairs are adjacent when possible; married lines are solid, divorced lines are dotted, and other partner states remain distinguishable.
 - [ ] Family Tree rows use numeric lineage order rather than alphabetical names; Seth Lauer appears before Jared Lauer.
 - [ ] A multi-partner lineage person is preceded by past partners from earliest to latest and followed by the current married partner.
@@ -55,21 +55,22 @@ Use synthetic families only.
 - [ ] Other parent lines is disabled by default; enabling it adds accessible light branches to plausible visible co-parents without creating relationship records.
 - [ ] Selecting a person from global search or a filtered directory returns the Family Tree to Focus mode.
 - [ ] The desktop tree/profile divider resizes both modules with pointer drag and Left/Right/Home/End keys, persists locally, and disappears below 960px.
-- [ ] Directory and selected-person panes collapse independently on desktop and can be reopened without losing selection or tree focus; the header Directory control and mobile tabs reopen a collapsed module.
+- [ ] Directory and selected-person panes collapse independently and can be reopened without losing selection or tree focus; the header Directory control toggles the directory both open and closed, including mobile routing back to the tree.
 - [ ] Directory first/last-name sorting, living/deceased/unknown filters, and A–Z quick jumps work on the filtered result set.
-- [ ] Directory rows show `[birth-death]` with `????` for unknown years followed by the lineage ID.
+- [ ] Directory rows show `[birth – death]` with `????` for unknown years followed by the lineage ID; other lifespan surfaces use the same four-character placeholder.
 - [ ] Internal stable `P` references are absent throughout ordinary app and print views and appear only in Developer Mode.
-- [ ] Partial and in-order fuzzy search finds name, address, phone, email, birth/death place, heritage, general notes, Notes, Help, releases, and Roadmap.
+- [ ] Partial and in-order fuzzy search finds name, address, phone, email, birth/death place, heritage, general notes, Notes, Help, releases, and Roadmap, but does not match a person solely through the imported `Source Last Modified By` value.
 - [ ] Directory appears left of Search and Favorites appears right; both show an icon above their visible name without causing desktop or mobile overflow.
 - [ ] Starring a person search result persists across reloads, pins them above unstarred matches, and exposes an accessible pressed state without activating the person.
 - [ ] Favorites opens every starred person with an empty search, allows narrowing that list, and shows useful empty guidance; unstarred or deleted people disappear immediately.
 - [ ] Lineage preserves the normalized person-to-root source order, two-digit-pads every segment, and bolds the selected person's first segment.
-- [ ] George McMillen (1745) reads Gen 0, James reads Gen 1, George (1818) reads Gen 2, and Albon/Newton/Lucian read Gen 3.
-- [ ] Adam's imported lineage is `01.05.05.05.03` with the first `01` bold, and its reading begins `Gen 7 · 1st Child of Melanie`, then `Gen 6 · 5th Child of Max`.
-- [ ] A Names heading introduces paired name/reading rows with equal row heights and vertically centered cells; the family totals span both columns on one line, and there is no visible Reading heading.
+- [ ] George McMillen (1745) is labelled G0, James G1, George (1818) G2, and Albon/Newton/Lucian G3 in Family line brackets.
+- [ ] Adam's imported lineage is `01.05.05.05.03` with the first `01` bold, and its Family line begins `Adam [01 | G7]`, then `Melanie [05 | G6]`; the corresponding readings begin `1st Child of Melanie`, then `5th Child of Max`.
+- [ ] A Family line heading introduces paired name/reading rows with equal row heights and vertically centered cells; the family totals span both columns on one line, there is no visible Reading heading, and the root reads `Root ancestor`.
 - [ ] Every resolved name selects that person and focuses the tree; unknown positions read `Child of` without `Nth`.
-- [ ] Parents, Siblings, Partners, and Children are compact open groups containing names only in that order; Melanie's Parents group contains both Max and Martha through display-only co-parent inference.
-- [ ] Notes is the final profile content section on screen and in each printable person profile.
+- [ ] Parents, Siblings, Partners, and Children are compact open groups containing names only in that order; the bloodline parent is first, siblings and children are in birth order, and Melanie's Parents group contains both Max and Martha through display-only co-parent inference.
+- [ ] Partners lists the current partner first in bold, followed by prior partners in reverse history order with de-emphasized styling.
+- [ ] Notes follows Relationships, and Imported source is the final information section on screen and in each printable person profile.
 - [ ] The profile X closes the module, clears directory/tree selection, disables the empty mobile Person tab, and a Family Tree selection reopens the profile without a Show person button.
 - [ ] A child listed from a parent's profile is labelled `Child`, without a redundant parent-kind suffix.
 
