@@ -25,8 +25,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 7,
   "meta": {
-    "appVersion": "0.0.1.20",
-    "buildId": "0.0.1.20",
+    "appVersion": "0.0.1.22",
+    "buildId": "0.0.1.22",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -61,7 +61,7 @@ The compatibility `records`, `documents`, tombstone, UI, and module fields remai
 
 A fresh default has no `initializedAt` value and no people. `app.js` renders only the introduction and file input in that state. `portability.js` accepts the documented cleaned McLineage columns or native `mcfamily-csv-v1` rows and requires at least one valid person before the first local state is stored.
 
-Current cleaned McLineage rows use strict descendant date values and descriptors plus complete root-to-person lineage paths that extend each direct parent's path by one two-digit segment. A blank death descriptor imports as living, while `UNKNOWN` imports as deceased without a normalized death date. Older person-to-root lineage files and cleaned date-column names remain compatible.
+Current cleaned McLineage rows represent every primary person and spouse as a stable P-referenced row. Lineage people use complete root-to-person paths that extend each direct parent's path by one two-digit segment; spouse rows intentionally leave lineage fields blank and are connected through explicit spouse-record references. Known and question-mark partial source date values share the `person_*` identity/date columns. A blank death descriptor imports as living, while `UNKNOWN` imports as deceased without a normalized death date. Partial source dates remain in source details because the editable/native date model accepts only normalized known values. Older embedded-spouse, person-to-root lineage, and descendant-date sources remain compatible.
 
 After initialization, deleting the last person does not clear `initializedAt`; the workspace remains open and offers Add Person. Subsequent imports may contain an initialized empty family, but replacement always shows a summary, asks for confirmation, and writes the current state to recovery first.
 
