@@ -30,7 +30,7 @@ Notes remains one large plain-text textarea. It opens from the header or `N`, au
 
 ## Global search
 
-`/` focuses global search outside editable controls. Directory and global search support partial substrings and in-order fuzzy characters. Results include people, contact data, life places, heritage, notes, the Notes document, Help topics, releases, and Roadmap items. A person result selects that person and routes to Profile on mobile.
+`/` focuses global search outside editable controls. Directory sits to its left and Favorites to its right; both follow the header icon-over-label convention. Directory and global search support partial substrings and in-order fuzzy characters. Results include people, contact data, life places, heritage, notes, the Notes document, Help topics, releases, and Roadmap items. Person rows pair the main result action with a separate star toggle. Starred people persist locally, sort before other matching people, and appear together when Favorites is active. A person result selects that person and routes to Profile on mobile.
 
 ## Lineage
 

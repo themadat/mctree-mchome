@@ -55,6 +55,9 @@ Use synthetic families only.
 - [ ] Directory rows show `[birth-death]` with `????` for unknown years followed by the lineage ID.
 - [ ] Internal stable `P` references are absent throughout ordinary app and print views and appear only in Developer Mode.
 - [ ] Partial and in-order fuzzy search finds name, address, phone, email, birth/death place, heritage, general notes, Notes, Help, releases, and Roadmap.
+- [ ] Directory appears left of Search and Favorites appears right; both show an icon above their visible name without causing desktop or mobile overflow.
+- [ ] Starring a person search result persists across reloads, pins them above unstarred matches, and exposes an accessible pressed state without activating the person.
+- [ ] Favorites opens every starred person with an empty search, allows narrowing that list, and shows useful empty guidance; unstarred or deleted people disappear immediately.
 - [ ] Lineage preserves and two-digit-pads source ID order and bolds the selected person's final segment.
 - [ ] George McMillen (1745) reads Gen 0, James reads Gen 1, George (1818) reads Gen 2, and Albon/Newton/Lucian read Gen 3.
 - [ ] Adam's imported lineage is `03.05.05.05.01` with `01` bold, and its reading begins `Gen 7 · 1st Child of Melanie`, then `Gen 6 · 5th Child of Max`.

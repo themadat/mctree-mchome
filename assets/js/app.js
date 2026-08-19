@@ -132,7 +132,13 @@
     $("#addPersonButton").disabled = !isInitialized || !familyEditingEnabled();
     $("#directoryButton").disabled = !isInitialized;
     $("#directoryButton").setAttribute("aria-pressed", String(isInitialized && !state().ui.directoryCollapsed));
+    const favoriteCount = state().ui.favoritePersonIds.length;
+    const favoriteCountLabel = favoriteCount + " favorite " + (favoriteCount === 1 ? "person" : "people");
+    $("#favoritesButton").disabled = !isInitialized;
+    $("#favoritesButton").setAttribute("aria-pressed", String(isInitialized && state().ui.favoritesOnly));
+    $("#favoritesButton").title = state().ui.favoritesOnly ? "Showing " + favoriteCountLabel : "Show " + favoriteCountLabel;
     $("#globalSearch").disabled = !isInitialized;
+    $("#globalSearch").placeholder = state().ui.favoritesOnly ? "Search favorites" : "Search family";
     renderLocalStatus();
     const latest = config.releases[0];
     const unread = isInitialized && latest && state().ui.seenReleaseVersion !== latest.version;
@@ -973,6 +979,7 @@
     storage.mutate(function (next) {
       next.workspace.people = next.workspace.people.filter(function (item) { return item.id !== id; });
       next.workspace.relationships = next.workspace.relationships.filter(function (relationship) { return relationship.type === "parent-child" ? relationship.parentId !== id && relationship.childId !== id : relationship.person1Id !== id && relationship.person2Id !== id; });
+      next.ui.favoritePersonIds = next.ui.favoritePersonIds.filter(function (personId) { return personId !== id; });
       const fallback = next.workspace.people[0] && next.workspace.people[0].id || "";
       if (next.workspace.family.homePersonId === id) next.workspace.family.homePersonId = fallback;
       next.ui.selectedPersonId = fallback;
@@ -1080,11 +1087,16 @@
 
   function globalSearchMatches(query) {
     const needle = query.trim();
-    if (!needle) return [];
+    const favoritesOnly = state().ui.favoritesOnly;
+    if (!needle && !favoritesOnly) return [];
     const results = [];
+    const favoriteIds = new Set(state().ui.favoritePersonIds);
     state().workspace.people.forEach(function (person) {
-      if (model.fuzzySearchMatch(needle, model.personSearchText(person))) results.push({ type: "person", id: person.id, title: model.displayName(person), meta: "Person" + (developerReferencesEnabled() ? " · " + person.reference : "") });
+      const favorite = favoriteIds.has(person.id);
+      if ((!favoritesOnly || favorite) && (!needle || model.fuzzySearchMatch(needle, model.personSearchText(person)))) results.push({ type: "person", id: person.id, title: model.displayName(person), meta: "Person" + (developerReferencesEnabled() ? " · " + person.reference : ""), favorite: favorite });
     });
+    results.sort(function (a, b) { return Number(b.favorite) - Number(a.favorite) || a.title.localeCompare(b.title); });
+    if (favoritesOnly) return results;
     const notes = state().workspace.documents[0];
     if (notes && model.fuzzySearchMatch(needle, "notes " + documentText(notes))) results.push({ type: "notes", id: notes.id, title: "Notes", meta: "Private family notes" });
     config.help.forEach(function (topic) { if (model.fuzzySearchMatch(needle, topic.title + " " + topic.keywords + " " + u.stripHtml(topic.html))) results.push({ type: "help", id: topic.id, title: topic.title, meta: "Help · " + topic.section }); });
@@ -1096,10 +1108,35 @@
   function renderGlobalSearchResults() {
     const container = $("#globalSearchResults");
     const query = state().ui.search;
-    if (!initialized() || !query || document.activeElement !== $("#globalSearch")) { container.hidden = true; return; }
+    const searchActive = document.activeElement === $("#globalSearch") || container.contains(document.activeElement);
+    if (!initialized() || (!query && !state().ui.favoritesOnly) || !searchActive) { container.hidden = true; $("#globalSearch").setAttribute("aria-expanded", "false"); return; }
     const results = globalSearchMatches(query);
     container.hidden = false;
-    container.innerHTML = results.length ? results.map(function (result, index) { return '<button type="button" role="option" id="global-result-' + index + '" data-search-type="' + result.type + '" data-search-id="' + u.escapeHtml(result.id) + '"><span><strong>' + u.escapeHtml(result.title) + '</strong><small>' + u.escapeHtml(result.meta) + "</small></span><span aria-hidden=\"true\">→</span></button>"; }).join("") : '<div class="search-empty">No matches across people, contacts, Notes, Help, releases, or Roadmap.</div>';
+    $("#globalSearch").setAttribute("aria-expanded", "true");
+    container.innerHTML = results.length ? results.map(function (result, index) {
+      const main = '<button type="button" class="global-search-result-main" id="global-result-' + index + '" data-search-type="' + result.type + '" data-search-id="' + u.escapeHtml(result.id) + '"><span><strong>' + u.escapeHtml(result.title) + '</strong><small>' + u.escapeHtml(result.meta) + "</small></span><span aria-hidden=\"true\">→</span></button>";
+      if (result.type !== "person") return '<div class="global-search-result-row no-favorite" role="listitem">' + main + "</div>";
+      const action = result.favorite ? "Remove " + result.title + " from favorites" : "Star " + result.title;
+      return '<div class="global-search-result-row" role="listitem">' + main + '<button type="button" class="search-favorite-toggle" data-toggle-favorite="' + u.escapeHtml(result.id) + '" aria-label="' + u.escapeHtml(action) + '" title="' + u.escapeHtml(action) + '" aria-pressed="' + String(result.favorite) + '"><span data-symbol="favorite" aria-hidden="true"></span></button></div>';
+    }).join("") : '<div class="search-empty">' + (state().ui.favoritesOnly ? "No favorite people yet. Turn off Favorites, search for someone, and select their star." : "No matches across people, contacts, Notes, Help, releases, or Roadmap.") + "</div>";
+    icons.mount(container);
+  }
+
+  function toggleFavoritePerson(id) {
+    const person = state().workspace.people.find(function (item) { return item.id === id; });
+    if (!person) return;
+    const wasFavorite = state().ui.favoritePersonIds.includes(id);
+    storage.mutate(function (next) {
+      const favorites = new Set(next.ui.favoritePersonIds);
+      if (favorites.has(id)) favorites.delete(id); else favorites.add(id);
+      next.ui.favoritePersonIds = Array.from(favorites);
+    }, { reason: wasFavorite ? "favorite-remove" : "favorite-add" });
+    renderHeader();
+    renderGlobalSearchResults();
+    requestAnimationFrame(function () {
+      const replacement = $("[data-toggle-favorite='" + CSS.escape(id) + "']", $("#globalSearchResults"));
+      (replacement || $("#globalSearch")).focus();
+    });
   }
 
   function activateGlobalSearchResult(type, id) {
@@ -1109,6 +1146,7 @@
     else if (type === "roadmap") { storage.mutate(function (next) { next.modules.roadmap.search = config.roadmap.find(function (item) { return item.id === id; })?.title || ""; }, { touch: false, reason: "roadmap-search" }); openSupport("roadmap", $("#globalSearch")); }
     else if (type === "release") { versionView = "released"; openSupport("releases", $("#globalSearch")); }
     $("#globalSearchResults").hidden = true;
+    $("#globalSearch").setAttribute("aria-expanded", "false");
   }
 
   function openSupport(tab, trigger) {
@@ -1451,6 +1489,15 @@
       renderWorkspace();
       requestAnimationFrame(function () { $("#directorySearch")?.focus(); });
     });
+    $("#favoritesButton").addEventListener("click", function () {
+      storage.mutate(function (next) {
+        next.ui.favoritesOnly = !next.ui.favoritesOnly;
+        next.ui.search = "";
+      }, { touch: false, reason: "favorites-search" });
+      renderHeader();
+      $("#globalSearch").focus();
+      renderGlobalSearchResults();
+    });
     $("#supportButton").addEventListener("click", function (event) { openSupport(state().ui.supportTab, event.currentTarget); });
     $("#notesButton").addEventListener("click", function (event) { openNotes(event.currentTarget); });
     $("#addPersonButton").addEventListener("click", function (event) { pendingRelative = null; openPersonEditor("", event.currentTarget); });
@@ -1495,10 +1542,10 @@
     });
     $("#globalSearch").addEventListener("input", function (event) { storage.mutate(function (next) { next.ui.search = u.cleanLine(event.target.value, 200); }, { touch: false, reason: "global-search" }); renderGlobalSearchResults(); });
     $("#globalSearch").addEventListener("focus", renderGlobalSearchResults);
-    $("#globalSearch").addEventListener("keydown", function (event) { const results = $$("button[role='option']", $("#globalSearchResults")); if (event.key === "ArrowDown" && results.length) { event.preventDefault(); results[0].focus(); } if (event.key === "Escape") { $("#globalSearchResults").hidden = true; event.target.select(); } });
-    $("#globalSearchResults").addEventListener("click", function (event) { const result = event.target.closest("[data-search-type]"); if (result) activateGlobalSearchResult(result.dataset.searchType, result.dataset.searchId); });
-    $("#globalSearchResults").addEventListener("keydown", function (event) { const button = event.target.closest("[data-search-type]"); if (!button) return; const buttons = $$("[data-search-type]", event.currentTarget); const index = buttons.indexOf(button); if (event.key === "ArrowDown" || event.key === "ArrowUp") { event.preventDefault(); buttons[(index + (event.key === "ArrowDown" ? 1 : -1) + buttons.length) % buttons.length]?.focus(); } else if (event.key === "Escape") { event.preventDefault(); $("#globalSearch").focus(); $("#globalSearchResults").hidden = true; } });
-    document.addEventListener("focusin", function (event) { if (!event.target.closest(".global-search-wrap")) $("#globalSearchResults").hidden = true; });
+    $("#globalSearch").addEventListener("keydown", function (event) { const results = $$(".global-search-result-main", $("#globalSearchResults")); if (event.key === "ArrowDown" && results.length) { event.preventDefault(); results[0].focus(); } if (event.key === "Escape") { $("#globalSearchResults").hidden = true; event.target.setAttribute("aria-expanded", "false"); event.target.select(); } });
+    $("#globalSearchResults").addEventListener("click", function (event) { const favorite = event.target.closest("[data-toggle-favorite]"); if (favorite) { toggleFavoritePerson(favorite.dataset.toggleFavorite); return; } const result = event.target.closest("[data-search-type]"); if (result) activateGlobalSearchResult(result.dataset.searchType, result.dataset.searchId); });
+    $("#globalSearchResults").addEventListener("keydown", function (event) { const button = event.target.closest(".global-search-result-main"); const buttons = $$(".global-search-result-main", event.currentTarget); if (button && (event.key === "ArrowDown" || event.key === "ArrowUp")) { event.preventDefault(); const index = buttons.indexOf(button); buttons[(index + (event.key === "ArrowDown" ? 1 : -1) + buttons.length) % buttons.length]?.focus(); } else if (event.key === "Escape") { event.preventDefault(); $("#globalSearch").focus(); $("#globalSearchResults").hidden = true; $("#globalSearch").setAttribute("aria-expanded", "false"); } });
+    document.addEventListener("focusin", function (event) { if (!event.target.closest(".global-search-wrap")) { $("#globalSearchResults").hidden = true; $("#globalSearch").setAttribute("aria-expanded", "false"); } });
     bindSupportEvents();
     document.addEventListener("keydown", handleGlobalKeydown);
     document.addEventListener("keyup", function (event) { updateShortcutHints(event, false); });
