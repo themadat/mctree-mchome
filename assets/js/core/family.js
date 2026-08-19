@@ -400,13 +400,13 @@
       items.forEach(function (person, index) { positions.set(person.id, index); });
     });
     const detailed = settings.nodeView === "detailed";
-    const nodeWidth = detailed ? 128 : 112;
-    const horizontalGap = settings.mode === "overview" ? 24 : 32;
-    const verticalGap = 72;
+    const nodeWidth = detailed ? 116 : 100;
+    const horizontalGap = settings.mode === "overview" ? 20 : 26;
+    const verticalGap = 60;
     const rowHeights = new Map();
     sortedLevels.forEach(function (level) {
       const lineCount = Math.max.apply(null, groups.get(level).map(function (person) { return treeNameLines(person, detailed).length; }));
-      rowHeights.set(level, (detailed ? 57 : 42) + Math.max(1, lineCount) * 15);
+      rowHeights.set(level, (detailed ? 52 : 38) + Math.max(1, lineCount) * 14);
     });
     const maxCount = Math.max.apply(null, Array.from(groups.values()).map(function (items) { return items.length; }));
     const contentWidth = Math.max(680, maxCount * (nodeWidth + horizontalGap) - horizontalGap + 80);
