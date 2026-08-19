@@ -6,7 +6,7 @@ Start a new session with:
 Continue work in /Users/stripes/Documents/GitHub/mctree-mchome. Read AGENTS.md and context/LLM_HANDOFF.md first. Preserve manual edits and run git status --short before editing.
 ```
 
-This repository is McFamily, a static, local-first family atlas. Version `0.0.1.6` uses schema v7, strict private-CSV onboarding, cleaned McLineage mapping, fuzzy search, collapsible side panes, condensed/detailed couple-aware SVG trees, a complete native CSV transfer format, an editable family directory, and print atlas. There is no backend, account, GitHub Sync, cloud database, or runtime dependency.
+This repository is McFamily, a static, local-first family atlas. Version `0.0.1.7` uses schema v7, strict private-CSV onboarding, cleaned McLineage mapping, fuzzy search, collapsible side panes, condensed/detailed couple-aware SVG trees, a complete native CSV transfer format, an editable family directory, and compact top-sibling-labelled print maps. There is no backend, account, GitHub Sync, cloud database, or runtime dependency.
 
 The main product invariants are now the initialized import gate, directory/tree/profile workspace, single Notes modal, Settings Roadmap, local save/backup status, recovery copy, themes, accessibility, install assets, and offline shell. Do not restore the removed Records interface, multi-note workspace, rich-text editor, or GitHub Sync.
 
@@ -86,7 +86,7 @@ Do not silently move between lifecycle stages.
 - Standard controls use the shared inline SVG catalog rather than emoji or icon fonts.
 - Controls use native elements, labels, visible focus, touch-sized targets, and safe rendered user text.
 - Avoid horizontal overflow and preserve safe-area behavior at mobile widths.
-- Print builds semantic HTML for cover, counts, legend, index, component generation maps, every person profile, cross-references, and Notes; native browser print produces the PDF.
+- Print builds semantic HTML for cover, counts, legend, compact top-sibling-labelled generation maps, every person profile, cross-references, and Notes; native browser print produces the PDF. Do not restore the removed alphabetical index unless explicitly requested.
 - Keep the single Notes modal, Settings/Help/Releases/Roadmap, recovery, themes, installation, and service-worker update handling.
 - The icon click changes theme; press-and-hold toggles Developer Mode without also changing theme. Developer Mode adds `DEV` to the version pill; Beta stays separate.
 

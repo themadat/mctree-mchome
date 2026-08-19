@@ -65,9 +65,9 @@ Use synthetic families only.
 
 ## Print / Save PDF
 
-- [ ] Report includes cover, statistics, relationship legend, alphabetical index, every family component, every person, and Family Notes.
+- [ ] Report includes cover, statistics, relationship legend, every family map, every person profile, and Family Notes, with no alphabetical person index.
 - [ ] Every recorded contact, life, heritage, note, and relationship value appears.
-- [ ] Person `P` and component `F` references remain stable within the report.
+- [ ] Family maps are named for their top sibling; compact map items contain only names and years, while detailed relationship cross-references retain stable person `P` references.
 - [ ] Large components split by generation instead of shrinking one giant tree.
 - [ ] Application controls are suppressed and print colors remain legible.
 - [ ] Profiles and section headings use sensible page breaks; long addresses and URLs remain complete.

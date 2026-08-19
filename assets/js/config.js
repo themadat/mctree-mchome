@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.6",
-      buildId: "0.0.1.6",
+      version: "0.0.1.7",
+      buildId: "0.0.1.7",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -84,6 +84,16 @@
 
     releases: [
       {
+        version: "0.0.1.7",
+        date: "2026-08-19T03:15:00.000Z",
+        title: "More useful family maps",
+        summary: "The printable atlas now gets directly to compact, clearly named family maps before the detailed directory.",
+        features: ["Family maps named for their top sibling", "Generation labels on dedicated rows with compact name-and-years cards"],
+        improvements: ["Four-column map cards fit more relatives on each printed page", "Cover and guide language now describe family maps instead of numbered components"],
+        fixes: ["Removed the redundant alphabetical person index from the PDF atlas"],
+        knownIssues: []
+      },
+      {
         version: "0.0.1.6",
         date: "2026-08-19T02:30:00.000Z",
         title: "Focused family tree controls",
@@ -146,7 +156,7 @@
       { id: "start", title: "Getting started", section: "Basics", keywords: "start import csv backup seed first launch", html: "<p>McFamily opens after you import the cleaned McLineage CSV or a native McFamily CSV export. The file is mapped, validated, and previewed before it replaces local data. There is no demo-family or blank-family bypass.</p>" },
       { id: "tree", title: "Exploring the family tree", section: "Family", keywords: "tree focus overview zoom pan generation home person condensed detailed collapse panels", html: "<p>Focus view shows the selected person and nearby generations. Select any person to recenter the tree, adjust generation depth, switch between condensed and detailed cards, or collapse the side panes for a tree-only view. Overview fits every family component.</p>" },
       { id: "people", title: "People and relationships", section: "Family", keywords: "people add edit address phone email parent child partner ancestry lineage", html: "<p>Add or edit people from the workspace. A profile can hold multiple addresses, phone numbers, and email addresses. Heritage shows the imported name line and lineage ID; activate the name line to read the person as a son, daughter, or child of their recorded parents.</p>" },
-      { id: "print", title: "Print or save a PDF", section: "Family", keywords: "print pdf atlas directory lineage", html: "<p>Choose <strong>Print / Save PDF</strong> to build the complete atlas and open the browser print dialog. Select Save as PDF to create a file.</p>" },
+      { id: "print", title: "Print or save a PDF", section: "Family", keywords: "print pdf atlas directory lineage family maps generation", html: "<p>Choose <strong>Print / Save PDF</strong> to build the complete atlas and open the browser print dialog. Family maps are named for their top sibling and use compact name-and-years cards; detailed profiles follow alphabetically. Select Save as PDF to create a file.</p>" },
       { id: "notes", title: "Working with Notes", section: "Features", keywords: "notes text edit modal autosave", html: "<p>Notes is a single local plain-text scratchpad. Open it from the top bar or press <kbd>N</kbd>; it is included in McFamily backups.</p>" },
       { id: "backup", title: "CSV backup and restore", section: "Data", keywords: "csv export import backup restore recovery private", html: "<p>CSV export is the complete editable copy of the family and contains private contact information. Native exports use typed rows for people, contacts, relationships, Notes, and settings. Store them securely. Replacement imports are previewed and confirmed; the prior local copy becomes the recovery snapshot.</p>" },
       { id: "privacy", title: "Privacy and local data", section: "Data", keywords: "privacy local storage static gate authentication", html: "<p>Family data stays in this browser unless you export it. The first-run import gate is an onboarding step, not authentication. Never commit a private family backup into the public Pages repository.</p>" },

@@ -25,8 +25,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 7,
   "meta": {
-    "appVersion": "0.0.1.6",
-    "buildId": "0.0.1.6",
+    "appVersion": "0.0.1.7",
+    "buildId": "0.0.1.7",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -81,9 +81,9 @@ The layout is deterministic and dependency-free. People in the same generation a
 
 ## Print atlas
 
-The print action constructs hidden semantic HTML before calling `window.print()`. Print CSS suppresses application controls and exposes only the report. Stable `P` references identify people; stable per-report `F` references identify components.
+The print action constructs hidden semantic HTML before calling `window.print()`. Print CSS suppresses application controls and exposes only the report. Stable `P` references identify people in detailed profiles and relationship cross-references.
 
-The report contains a cover and counts, relationship legend, alphabetical index, generation-grouped maps for every component, alphabetical profiles with all stored person fields, and Family Notes. Cross-references avoid scaling one enormous SVG tree to illegible size. Page-break rules prefer intact profiles and repeat important section headings where supported.
+The report contains a cover and counts, relationship legend, compact generation-grouped maps for every component, alphabetical profiles with all stored person fields, and Family Notes. Each map is named for the top-generation person with the most direct children, falling back to name order; cards show names and years without identifiers. Cross-references avoid scaling one enormous SVG tree to illegible size. Page-break rules prefer intact profiles and repeat important section headings where supported.
 
 The browser owns PDF generation. McFamily does not create a binary PDF directly.
 
