@@ -3,6 +3,7 @@
 
   const App = window.LocalApp;
   const model = App.stateModel;
+  const CONSANGUINITY_FIELD = "parent_consanguinity_person_id";
 
   function indexes(state) {
     const people = state.workspace.people;
@@ -129,19 +130,12 @@
     return String(person && person.source && person.source.fields && person.source.fields[key] || "").trim();
   }
 
-  function directLineageParentField(person) {
-    const fields = person && person.source && person.source.fields;
-    if (fields && Object.prototype.hasOwnProperty.call(fields, "parent_consanguinity_person_id")) return "parent_consanguinity_person_id";
-    if (fields && Object.prototype.hasOwnProperty.call(fields, "lineage_parent_id")) return "lineage_parent_id";
-    return fields && Object.prototype.hasOwnProperty.call(fields, "parent_lineage_id") && Object.prototype.hasOwnProperty.call(fields, "person_first_names") ? "parent_lineage_id" : "";
-  }
-
   function bloodlineParentRank(person, entry) {
     const parent = relationPerson(entry);
-    const lineageParentId = sourceField(person, directLineageParentField(person)).toUpperCase();
+    const consanguinityId = sourceField(person, CONSANGUINITY_FIELD).toUpperCase();
     const recordId = sourceField(parent, "record_id").toUpperCase();
-    if (lineageParentId && recordId === lineageParentId) return 0;
-    if (parent && parent.source && parent.source.format === "mclineage-cleaned") return 1;
+    if (consanguinityId && recordId === consanguinityId) return 0;
+    if (entry && entry.relationship && entry.relationship.kind === "biological") return 1;
     return 2;
   }
 
@@ -250,12 +244,7 @@
   function lineageParts(person) {
     const fields = person && person.source && person.source.fields;
     const raw = String(fields && fields.lineage_id || "").trim();
-    const parts = raw ? raw.split(".").map(function (part) { return part.trim(); }).filter(Boolean) : [];
-    const directParentSchema = Boolean(directLineageParentField(person));
-    const rootToPersonSchema = directParentSchema
-      && (Object.prototype.hasOwnProperty.call(fields, "person_date_birth_descriptor") || Object.prototype.hasOwnProperty.call(fields, "descendant_date_birth_descriptor"))
-      && !Object.prototype.hasOwnProperty.call(fields, "legacy_page_reference");
-    return directParentSchema && !rootToPersonSchema ? parts.reverse() : parts;
+    return raw ? raw.split(".").map(function (part) { return part.trim(); }).filter(Boolean) : [];
   }
 
   function compareLineage(a, b) {

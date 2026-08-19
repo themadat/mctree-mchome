@@ -621,15 +621,17 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .pane-reopen-controls:empty { display: none; }
 .directory-panel, .tree-panel, .profile-panel { display: flex; flex-direction: column; }
 .directory-module-bar { display: flex; flex: 0 0 auto; align-items: center; gap: .35rem; min-height: 46px; padding: .35rem .45rem; border-bottom: 1px solid var(--line); }
-.directory-search-field { position: relative; flex: 1 1 auto; min-width: 0; }
-.directory-search-field input { width: 100%; padding-right: 4.85rem; }
-.directory-search-field input[type="search"]::-webkit-search-cancel-button { margin-right: 4.1rem; }
-.directory-search-field .count-pill { position: absolute; top: 50%; right: .3rem; min-height: 22px; padding: .12rem .42rem; pointer-events: none; transform: translateY(-50%); }
+.directory-search-field { display: flex; flex: 1 1 auto; align-items: center; gap: .3rem; min-width: 0; padding-right: .3rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.directory-search-field:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.directory-search-field input { flex: 1 1 auto; width: 100%; min-width: 0; padding-right: .2rem; padding-left: .5rem; border: 0; background: none; }
+.directory-search-field input:focus { outline: 0; box-shadow: none; }
+.directory-search-field .count-pill { flex: 0 0 auto; min-height: 22px; padding: .12rem .34rem; font-size: .68rem; pointer-events: none; }
 .directory-controls { display: grid; gap: .45rem; padding: .55rem; border-bottom: 1px solid var(--line); background: var(--surface-2); }
 .directory-filter-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .35rem; }
 .directory-filter-control { position: relative; }
 .directory-filter-menu { position: relative; margin: 0; color: var(--text); font-weight: 650; }
-.directory-filter-menu > summary { display: flex; align-items: center; width: 100%; min-height: var(--control-height); padding: .45rem .58rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--text); font-weight: 650; }
+.directory-filter-menu > summary, .directory-controls select { display: flex; align-items: center; width: 100%; min-height: var(--control-height); height: var(--control-height); padding: .45rem .58rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--text); font-size: inherit; font-weight: 650; }
+.directory-controls select { appearance: none; padding-right: 1.55rem; background-image: linear-gradient(45deg, transparent 49%, currentcolor 50%, currentcolor 58%, transparent 59%), linear-gradient(-45deg, transparent 49%, currentcolor 50%, currentcolor 58%, transparent 59%); background-repeat: no-repeat; background-position: right 1.02rem center, right .58rem center; background-size: .48rem .48rem; }
 .directory-filter-menu > summary:focus-visible { border-color: var(--accent); outline: 0; box-shadow: 0 0 0 3px var(--accent-soft); }
 .directory-filter-menu > summary span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .directory-filter-options { position: absolute; z-index: 20; top: calc(100% + .28rem); left: 0; display: grid; width: max(240px, 100%); padding: .3rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); box-shadow: var(--shadow); }
@@ -675,8 +677,7 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .tree-edge.partner[data-kind="married"] { stroke-dasharray: none; stroke-width: 2.5; }
 .tree-edge.partner[data-kind="widowed"] { stroke-dasharray: none; stroke-width: 2; opacity: .72; }
 .tree-edge.partner[data-kind="divorced"] { stroke-dasharray: 1 5; stroke-linecap: round; }
-.tree-edge.inferred-parent { stroke: color-mix(in srgb, var(--accent) 58%, var(--line)); stroke-width: 1.5; stroke-dasharray: 4 5; opacity: .72; }
-.tree-inferred-junction { fill: var(--surface); stroke: var(--accent); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.tree-edge.affinal-parent { stroke: color-mix(in srgb, var(--accent) 58%, var(--line)); stroke-width: 1.5; stroke-dasharray: 4 5; opacity: .72; }
 .tree-edge[data-kind="adoptive"], .tree-edge[data-kind="step"], .tree-edge[data-kind="foster"], .tree-edge[data-kind="guardian"] { stroke-dasharray: 7 4; }
 .tree-node { cursor: pointer; outline: none; }
 .tree-node rect { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.5; vector-effect: non-scaling-stroke; filter: drop-shadow(0 3px 5px rgba(20, 28, 25, .12)); }

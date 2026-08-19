@@ -154,24 +154,15 @@
   function mcLineageLivingStatus(person, fallback) {
     const source = u.plainObject(person);
     const imported = u.plainObject(source.source);
-    const fields = u.plainObject(imported.fields);
-    const normalizedBirthValue = u.cleanLine(source.birth && source.birth.date && source.birth.date.value, 40);
-    const sourceBirthValue = u.cleanLine(Object.prototype.hasOwnProperty.call(fields, "person_date_birth_value") ? fields.person_date_birth_value : fields.descendant_date_birth_value, 40);
-    const birthMatch = (normalizedBirthValue || sourceBirthValue).match(/^(\d{4})(?:-(\d{2})(?:-(\d{2}))?)?$/);
-    if (birthMatch) {
-      const hundredthBirthday = new Date(Number(birthMatch[1]) + 100, birthMatch[2] ? Number(birthMatch[2]) - 1 : 6, birthMatch[3] ? Number(birthMatch[3]) : 1);
-      if (new Date() > hundredthBirthday) return "deceased";
-    }
     if (imported.format !== "mclineage-cleaned") return fallback;
-    const deathValueField = Object.prototype.hasOwnProperty.call(fields, "person_date_death_value") ? "person_date_death_value" : "descendant_date_death_value";
-    const deathDescriptorField = Object.prototype.hasOwnProperty.call(fields, "person_date_death_descriptor") ? "person_date_death_descriptor" : "descendant_date_death_descriptor";
-    if (!Object.prototype.hasOwnProperty.call(fields, deathDescriptorField)) return fallback;
-    const deathValue = u.cleanLine(fields[deathValueField], 40);
-    const deathDescriptor = u.cleanLine(fields[deathDescriptorField], 40);
-    const lineage = u.cleanLine(fields.lineage_id, 100);
-    const generation = lineage && lineage !== "99" ? lineage.split(".").length - 1 : null;
-    if (deathValue || deathDescriptor === "UNKNOWN" || (generation !== null && generation <= 4)) return "deceased";
-    return "living";
+    const fields = u.plainObject(imported.fields);
+    const deathValue = u.cleanLine(fields.person_date_death_value, 40) || u.cleanLine(source.death && source.death.date && source.death.date.value, 40);
+    if (deathValue) return "deceased";
+    const birthValue = u.cleanLine(source.birth && source.birth.date && source.birth.date.value, 40) || u.cleanLine(fields.person_date_birth_value, 40);
+    const birthMatch = birthValue.match(/^(\d{4})(?:-(\d{2})(?:-(\d{2}))?)?$/);
+    if (!birthMatch) return "unknown";
+    const hundredthBirthday = new Date(Number(birthMatch[1]) + 100, birthMatch[2] ? Number(birthMatch[2]) - 1 : 6, birthMatch[3] ? Number(birthMatch[3]) : 1);
+    return new Date() > hundredthBirthday ? "deceased" : "living";
   }
 
   function migrate7to8(input) {
@@ -331,7 +322,7 @@
         type: "parent-child",
         parentId: parentId,
         childId: childId,
-        kind: PARENT_KINDS.has(source.kind) ? source.kind : "unknown",
+        kind: mcLineageParentKind(source) || (PARENT_KINDS.has(source.kind) ? source.kind : "unknown"),
         startDate: normalizeFlexibleDate(source.startDate),
         endDate: normalizeFlexibleDate(source.endDate),
         place: u.cleanLine(source.place, 240),
@@ -425,30 +416,12 @@
     };
   }
 
-  function normalizeMcLineagePartnerHistory(relationships) {
-    const groups = new Map();
-    relationships.forEach(function (relationship) {
-      const fields = relationship.type === "partner" && relationship.source && relationship.source.format === "mclineage-cleaned" ? relationship.source.fields : null;
-      const slot = Number(fields && fields.spouse_slot);
-      if (!Number.isInteger(slot) || slot < 1) return;
-      if (!groups.has(relationship.person1Id)) groups.set(relationship.person1Id, []);
-      groups.get(relationship.person1Id).push({ relationship: relationship, slot: slot, fields: fields });
-    });
-    groups.forEach(function (entries) {
-      const matchesFormerImporter = entries.every(function (entry) {
-        const code = u.cleanLine(entry.fields.legacy_relationship_status_code, 20).toUpperCase();
-        const formerStatus = entry.slot === 1 && code === "M" ? "married" : entry.slot === 1 && code === "D" ? "divorced" : "unknown";
-        return entry.relationship.status === formerStatus;
-      });
-      if (!matchesFormerImporter) return;
-      const lastSlot = Math.max.apply(null, entries.map(function (entry) { return entry.slot; }));
-      entries.forEach(function (entry) {
-        const code = u.cleanLine(entry.fields.legacy_relationship_status_code, 20).toUpperCase();
-        if (entry.slot < lastSlot) entry.relationship.status = "divorced";
-        else if (code === "M") entry.relationship.status = "married";
-        else if (code === "D") entry.relationship.status = "divorced";
-      });
-    });
+  function mcLineageParentKind(relationship) {
+    const imported = u.plainObject(u.plainObject(relationship).source);
+    if (imported.format !== "mclineage-cleaned") return "";
+    const fields = u.plainObject(imported.fields);
+    if (u.cleanLine(fields.parent_affinal_person_id, 100)) return "affinal";
+    return u.cleanLine(fields.parent_consanguinity_person_id, 100) ? "biological" : "";
   }
 
   function normalize(input) {
@@ -471,7 +444,6 @@
     people.forEach(function (person) { person.livingStatus = mcLineageLivingStatus(person, person.livingStatus); });
     const relationshipIds = new Set();
     const relationships = (Array.isArray(sourceWorkspace.relationships) ? sourceWorkspace.relationships : []).slice(0, config.controls.maxRelationships).map(function (relationship, index) { return normalizeRelationship(relationship, index, relationshipIds, personIds, now); }).filter(Boolean);
-    normalizeMcLineagePartnerHistory(relationships);
     const documentIds = new Set();
     const documents = consolidateDocuments((Array.isArray(sourceWorkspace.documents) ? sourceWorkspace.documents : []).map(function (document, index) { return normalizeDocument(document, index, documentIds, now); }), now);
     const recordIds = new Set();
@@ -539,9 +511,9 @@
         treeFocusId: personIds.has(sourceUi.treeFocusId) ? sourceUi.treeFocusId : selectedPersonId,
         treeMode: sourceUi.treeMode === "overview" ? "overview" : "focus",
         treeNodeView: sourceUi.treeNodeView === "detailed" ? "detailed" : "condensed",
-        generationDepth: Math.round(u.clamp(sourceUi.generationDepth, 1, 4, 2)),
-        ancestorDepth: Math.round(u.clamp(sourceUi.ancestorDepth, 0, 4, sourceUi.generationDepth == null ? 2 : sourceUi.generationDepth)),
-        descendantDepth: Math.round(u.clamp(sourceUi.descendantDepth, 0, 4, sourceUi.generationDepth == null ? 2 : sourceUi.generationDepth)),
+        generationDepth: Math.round(u.clamp(sourceUi.generationDepth, 1, config.controls.maxTreeDepth, 2)),
+        ancestorDepth: Math.round(u.clamp(sourceUi.ancestorDepth, 0, config.controls.maxTreeDepth, sourceUi.generationDepth == null ? 2 : sourceUi.generationDepth)),
+        descendantDepth: Math.round(u.clamp(sourceUi.descendantDepth, 0, config.controls.maxTreeDepth, sourceUi.generationDepth == null ? 2 : sourceUi.generationDepth)),
         directoryCollapsed: sourceUi.directoryCollapsed === true,
         profileCollapsed: sourceUi.profileCollapsed === true,
         showInferredParentLines: sourceUi.showInferredParentLines === true,

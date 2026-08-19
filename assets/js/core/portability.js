@@ -16,15 +16,16 @@
     "relationship_start_qualifier", "relationship_end_date", "relationship_end_qualifier", "relationship_place", "relationship_notes", "family_notes",
     "source_json", "settings_json"
   ];
-  const MCLINEAGE_REQUIRED = ["record_id", "lineage_id"];
   const MCLINEAGE_PERSON_DATE_HEADERS = [
     "person_date_birth_value", "person_date_birth_descriptor",
     "person_date_death_value", "person_date_death_descriptor"
   ];
-  const MCLINEAGE_DESCENDANT_DATE_HEADERS = [
-    "descendant_date_birth_value", "descendant_date_birth_descriptor",
-    "descendant_date_death_value", "descendant_date_death_descriptor"
-  ];
+  const CONSANGUINITY_FIELD = "parent_consanguinity_person_id";
+  const AFFINITY_FIELD = "parent_affinal_person_id";
+  const MCLINEAGE_REQUIRED = [
+    "record_id", "lineage_id", "parent_consanguinity_person_id", "parent_affinal_person_id",
+    "person_first_names", "person_last_name", "partner_relationships_json"
+  ].concat(MCLINEAGE_PERSON_DATE_HEADERS);
   let pendingImport = null;
 
   function parseCsv(text) {
@@ -185,29 +186,17 @@
     return { value: "", qualifier: "exact" };
   }
 
-  function sourceHasField(row, field) {
-    return Object.prototype.hasOwnProperty.call(row, field);
-  }
-
   function personDateValue(row, kind) {
-    const current = "person_date_" + kind + "_value";
-    if (sourceHasField(row, current)) return row[current];
-    const descendantCurrent = "descendant_date_" + kind + "_value";
-    return sourceHasField(row, descendantCurrent) ? row[descendantCurrent] : row["descendant_" + kind + "_date_value"];
+    return row["person_date_" + kind + "_value"];
   }
 
   function personDateDescriptor(row, kind) {
-    const current = "person_date_" + kind + "_descriptor";
-    if (sourceHasField(row, current)) return row[current];
-    const descendantCurrent = "descendant_date_" + kind + "_descriptor";
-    return sourceHasField(row, descendantCurrent) ? row[descendantCurrent] : row["descendant_" + kind + "_date_precision"];
+    return row["person_date_" + kind + "_descriptor"];
   }
 
   function validatePersonDateSchema(parsed) {
-    const currentHeaders = parsed.headers.includes("person_date_birth_descriptor") ? MCLINEAGE_PERSON_DATE_HEADERS : MCLINEAGE_DESCENDANT_DATE_HEADERS;
-    const present = currentHeaders.filter(function (header) { return parsed.headers.includes(header); });
-    if (!present.length) return false;
-    if (present.length !== currentHeaders.length) throw new Error("The current McLineage person date schema is incomplete.");
+    const present = MCLINEAGE_PERSON_DATE_HEADERS.filter(function (header) { return parsed.headers.includes(header); });
+    if (present.length !== MCLINEAGE_PERSON_DATE_HEADERS.length) throw new Error("The current McLineage person date schema is incomplete.");
     parsed.rows.forEach(function (row) {
       ["birth", "death"].forEach(function (kind) {
         const value = u.cleanLine(personDateValue(row, kind), 40);
@@ -224,31 +213,11 @@
     return true;
   }
 
-  function directParentReferenceField(parsed) {
-    if (parsed.headers.includes("parent_consanguinity_person_id")) return "parent_consanguinity_person_id";
-    if (parsed.headers.includes("lineage_parent_id")) return "lineage_parent_id";
-    return parsed.headers.includes("parent_lineage_id") && parsed.headers.includes("person_first_names") ? "parent_lineage_id" : "";
-  }
-
-  function validateCurrentParentRoleSchema(parsed) {
-    const roleHeaders = ["parent_consanguinity_person_id", "parent_affinal_person_id"];
-    const present = roleHeaders.filter(function (header) { return parsed.headers.includes(header); });
-    if (present.length && present.length !== roleHeaders.length) throw new Error("The current McLineage parent-role schema is incomplete.");
-    return present.length === roleHeaders.length;
-  }
-
-  function usesRootToPersonLineage(parsed) {
-    return Boolean(directParentReferenceField(parsed))
-      && (parsed.headers.includes("person_date_birth_descriptor") || parsed.headers.includes("descendant_date_birth_descriptor"))
-      && !parsed.headers.includes("legacy_page_reference");
-  }
-
   function validateCurrentSourceDates(parsed, counters) {
-    if (!usesRootToPersonLineage(parsed)) return;
     const valueHeaders = parsed.headers.filter(function (header) { return header.includes("date") && header.endsWith("_value"); });
     parsed.rows.forEach(function (row) {
       valueHeaders.forEach(function (valueHeader) {
-        const descriptorHeader = valueHeader.replace(/_value$/, valueHeader.startsWith("person_") || valueHeader.startsWith("descendant_") ? "_descriptor" : "_precision");
+        const descriptorHeader = valueHeader.replace(/_value$/, "_descriptor");
         if (!parsed.headers.includes(descriptorHeader)) throw new Error("The current McLineage date schema is incomplete at " + valueHeader + ".");
         const value = u.cleanLine(row[valueHeader], 40);
         const descriptor = u.cleanLine(row[descriptorHeader], 40);
@@ -269,8 +238,7 @@
   }
 
   function validateRootToPersonLineage(parsed, byRecordId) {
-    if (!usesRootToPersonLineage(parsed)) return;
-    const parentReferenceField = directParentReferenceField(parsed);
+    const parentReferenceField = CONSANGUINITY_FIELD;
     const byLineageId = new Map();
     parsed.rows.forEach(function (row) {
       const recordId = sourceRecordKey(row.record_id);
@@ -325,19 +293,18 @@
     const birthDescriptor = u.cleanLine(personDateDescriptor(row, "birth"), 40);
     const deathRaw = u.cleanLine(personDateValue(row, "death"), 40);
     const deathDescriptor = u.cleanLine(personDateDescriptor(row, "death"), 40);
-    const ancestry = ["root_ancestor_01_name", "root_ancestor_02_name", "root_ancestor_03_name", "lineage_level_01_name", "lineage_level_02_name", "lineage_level_03_name", "lineage_level_04_name", "lineage_level_05_name", "lineage_level_06_name"].map(function (key) { return u.cleanLine(row[key], 200); }).filter(Boolean);
     const notes = [];
     if (u.cleanText(row.notes, 4000).trim()) notes.push(u.cleanText(row.notes, 4000).trim());
     if (u.cleanText(row.data_quality_notes, 4000).trim()) notes.push("Data quality: " + u.cleanText(row.data_quality_notes, 4000).trim());
     const person = {
       id: sourcePersonId(row, index),
-      givenName: sourceHasField(row, "person_first_names") ? row.person_first_names : row.descendant_first_names,
-      familyName: sourceHasField(row, "person_last_name") ? row.person_last_name : row.descendant_last_name,
+      givenName: row.person_first_names,
+      familyName: row.person_last_name,
       livingStatus: deathRaw ? "deceased" : "unknown",
       birth: { date: sourceDate(birthRaw, birthDescriptor, counters), place: "" },
       death: { date: sourceDate(deathRaw, deathDescriptor, counters), place: "" },
       addresses: [], phones: [], emails: [],
-      heritageNote: ancestry.join(" → "),
+      heritageNote: "",
       notes: notes.join("\n\n"),
       source: { format: "mclineage-cleaned", fields: sourceFields(row) },
       order: index,
@@ -345,49 +312,6 @@
     };
     person.livingStatus = model.mcLineageLivingStatus(person, person.livingStatus);
     return person;
-  }
-
-  function sourceSpouse(row, slot, primaryId, index, counters) {
-    const prefix = "spouse_" + slot + "_";
-    const first = u.cleanLine(row[prefix + "first_names"], 200);
-    const last = u.cleanLine(row[prefix + "last_name"], 200);
-    if (!first && !last) return null;
-    const sourceSubset = { originating_record_id: row.record_id || "", spouse_slot: String(slot) };
-    Object.keys(row).filter(function (key) { return key.startsWith(prefix); }).forEach(function (key) { sourceSubset[key] = row[key]; });
-    const deathRaw = u.cleanLine(row[prefix + "death_date_value"], 40);
-    return {
-      person: {
-        id: stableId("person", (row.record_id || index + 1) + "-spouse-" + slot, "spouse-" + index + "-" + slot),
-        givenName: first,
-        familyName: last,
-        livingStatus: deathRaw || String(row[prefix + "deceased"]).toLowerCase() === "true" ? "deceased" : "unknown",
-        birth: { date: sourceDate(row[prefix + "birth_date_value"], row[prefix + "birth_date_precision"], counters), place: "" },
-        death: { date: sourceDate(row[prefix + "death_date_value"], row[prefix + "death_date_precision"], counters), place: "" },
-        addresses: [], phones: [], emails: [], heritageNote: "", notes: "",
-        source: { format: "mclineage-cleaned-spouse", fields: sourceSubset },
-        order: 10000 + index * 3 + slot
-      },
-      relationship: sourceSpouseRelationship(row, slot, primaryId, index, counters)
-    };
-  }
-
-  function sourceSpouseRelationship(row, slot, primaryId, index, counters) {
-    const prefix = "spouse_" + slot + "_";
-    const lastSpouseSlot = [1, 2, 3].filter(function (candidate) {
-      return u.cleanLine(row["spouse_" + candidate + "_record_id"], 100) || u.cleanLine(row["spouse_" + candidate + "_first_names"], 200) || u.cleanLine(row["spouse_" + candidate + "_last_name"], 200);
-    }).slice(-1)[0] || slot;
-    const legacyStatus = u.cleanLine(row.legacy_relationship_status_code, 20).toUpperCase();
-    const partnerStatus = slot < lastSpouseSlot ? "divorced" : legacyStatus === "M" ? "married" : legacyStatus === "D" ? "divorced" : "unknown";
-    return {
-      id: stableId("relationship", (row.record_id || index + 1) + "-spouse-" + slot, "spouse-relationship-" + index + "-" + slot),
-      type: "partner", person1Id: primaryId,
-      status: partnerStatus,
-      startDate: sourceDate(row[prefix + "marriage_date_value"], row[prefix + "marriage_date_precision"], counters),
-      endDate: { value: "", qualifier: "exact" }, place: "",
-      notes: "Imported spouse slot " + slot + (row.legacy_relationship_status_code ? " · legacy status " + row.legacy_relationship_status_code : ""),
-      source: { format: "mclineage-cleaned", fields: { originating_record_id: row.record_id || "", spouse_slot: String(slot), spouse_record_id: row[prefix + "record_id"] || "", legacy_relationship_status_code: row.legacy_relationship_status_code || "" } },
-      order: 10000 + index * 3 + slot
-    };
   }
 
   function validatePartnerRelationshipDate(value, descriptor, label) {
@@ -458,44 +382,27 @@
 
   function prepareMcLineage(parsed, fileName) {
     const counters = { sourceRows: parsed.rows.length, orphanParents: 0, ambiguousParents: 0, orphanAffinalParents: 0, partialDates: 0, unmappedDates: 0 };
-    const parentReferenceField = directParentReferenceField(parsed);
-    const directParentReferences = Boolean(parentReferenceField);
-    const currentParentRoleSchema = validateCurrentParentRoleSchema(parsed);
     validatePersonDateSchema(parsed);
     validateCurrentSourceDates(parsed, counters);
     const people = [];
     const relationships = [];
     const primaryByRow = [];
     const byRecordId = new Map();
-    const byLineage = new Map();
     parsed.rows.forEach(function (row, index) {
-      if (directParentReferences && !/^P\d{3,}$/.test(sourceRecordKey(row.record_id))) throw new Error("McLineage record_id values must use P references such as P001.");
+      if (!/^P\d{3,}$/.test(sourceRecordKey(row.record_id))) throw new Error("McLineage record_id values must use P references such as P001.");
       const person = sourcePerson(row, index, counters);
       people.push(person);
       primaryByRow[index] = person;
       const recordId = sourceRecordKey(row.record_id);
-      if (recordId) {
-        if (!byRecordId.has(recordId)) byRecordId.set(recordId, []);
-        byRecordId.get(recordId).push(person);
-      }
-      const lineageId = u.cleanLine(row.lineage_id, 100);
-      if (lineageId) {
-        if (!byLineage.has(lineageId)) byLineage.set(lineageId, []);
-        byLineage.get(lineageId).push(person);
-      }
+      if (!byRecordId.has(recordId)) byRecordId.set(recordId, []);
+      byRecordId.get(recordId).push(person);
     });
     const duplicateRecordId = Array.from(byRecordId.entries()).find(function (entry) { return entry[1].length > 1; });
     if (duplicateRecordId) throw new Error("The McLineage CSV contains a duplicate record_id: " + duplicateRecordId[0] + ".");
     validateRootToPersonLineage(parsed, byRecordId);
-    const jsonPartnerRelationships = parsed.headers.includes("partner_relationships_json");
-    const spouseHeaders = parsed.headers.filter(function (header) { return header.startsWith("spouse_"); });
-    if (jsonPartnerRelationships && spouseHeaders.length) throw new Error("Current McLineage files cannot mix partner_relationships_json with legacy spouse columns.");
-    const spouseReferenceHeaders = [1, 2, 3].filter(function (slot) { return parsed.headers.includes("spouse_" + slot + "_record_id"); });
-    if (spouseReferenceHeaders.length && spouseReferenceHeaders.length !== 3) throw new Error("The current McLineage spouse record-reference schema is incomplete.");
-    const explicitSpouseReferences = spouseReferenceHeaders.length === 3;
     const partnerPairs = new Set();
     const relationshipIds = new Set();
-    if (jsonPartnerRelationships) parsed.rows.forEach(function (row, index) {
+    parsed.rows.forEach(function (row, index) {
       const primary = primaryByRow[index];
       sourcePartnerRelationships(row, primary, index, counters).forEach(function (relationship) {
         const candidates = byRecordId.get(relationship.partnerPersonId) || [];
@@ -513,74 +420,37 @@
     });
     parsed.rows.forEach(function (row, index) {
       const primary = primaryByRow[index];
-      const parentReference = directParentReferences ? sourceRecordKey(row[parentReferenceField]) : u.cleanLine(row.parent_lineage_id, 100);
+      const parentReference = sourceRecordKey(row[CONSANGUINITY_FIELD]);
       if (parentReference) {
-        if (currentParentRoleSchema && !/^P\d{3,}$/.test(parentReference)) throw new Error("McLineage consanguinity parent references must use P references such as P001.");
-        const candidates = directParentReferences ? byRecordId.get(parentReference) || [] : byLineage.get(parentReference) || [];
-        const directSourceFields = { child_record_id: row.record_id || "" };
-        if (directParentReferences) directSourceFields[parentReferenceField] = parentReference;
-        if (directParentReferences && parsed.headers.includes("lineage_parent_name_full")) directSourceFields.lineage_parent_name_full = row.lineage_parent_name_full || "";
+        if (!/^P\d{3,}$/.test(parentReference)) throw new Error("McLineage consanguinity parent references must use P references such as P001.");
+        const candidates = byRecordId.get(parentReference) || [];
         if (candidates.length === 1) relationships.push({
-          id: stableId("relationship", (row.record_id || index + 1) + "-parent", "parent-" + index),
-          type: "parent-child", parentId: candidates[0].id, childId: primary.id, kind: currentParentRoleSchema ? "biological" : "unknown",
-          notes: "Imported lineage parent " + parentReference,
-          source: { format: "mclineage-cleaned", fields: directParentReferences
-            ? directSourceFields
-            : { child_record_id: row.record_id || "", parent_lineage_id: parentReference } },
+          id: stableId("relationship", row.record_id + "-parent", "parent-" + index),
+          type: "parent-child", parentId: candidates[0].id, childId: primary.id, kind: "biological",
+          notes: "Imported consanguinity parent " + parentReference,
+          source: { format: "mclineage-cleaned", fields: { child_record_id: row.record_id, [CONSANGUINITY_FIELD]: parentReference } },
           order: relationships.length
         });
-        else if (candidates.length > 1) counters.ambiguousParents += 1;
         else counters.orphanParents += 1;
       }
-      const affinalParentReference = currentParentRoleSchema ? sourceRecordKey(row.parent_affinal_person_id) : "";
+      const affinalParentReference = sourceRecordKey(row[AFFINITY_FIELD]);
       if (affinalParentReference) {
         if (!parentReference) throw new Error("A McLineage affinal parent requires a consanguinity parent: " + row.record_id + ".");
         if (!/^P\d{3,}$/.test(affinalParentReference)) throw new Error("McLineage affinal parent references must use P references such as P001.");
         if (affinalParentReference === sourceRecordKey(row.record_id) || affinalParentReference === parentReference) throw new Error("McLineage affinal parents must differ from the child and consanguinity parent: " + row.record_id + ".");
         const affinalCandidates = byRecordId.get(affinalParentReference) || [];
-        const parentSourceRow = parsed.rows.find(function (candidate) { return sourceRecordKey(candidate.record_id) === parentReference; });
-        const spouseReferences = parentSourceRow && !jsonPartnerRelationships ? [1, 2, 3].map(function (slot) { return sourceRecordKey(parentSourceRow["spouse_" + slot + "_record_id"]); }).filter(Boolean) : [];
-        const recordedPartner = jsonPartnerRelationships
-          ? partnerPairs.has([parentReference, affinalParentReference].sort().join("|"))
-          : spouseReferences.includes(affinalParentReference);
-        if (!recordedPartner) throw new Error("McLineage affinal parent " + affinalParentReference + " is not a recorded partner of " + parentReference + ".");
+        if (!partnerPairs.has([parentReference, affinalParentReference].sort().join("|"))) throw new Error("McLineage affinal parent " + affinalParentReference + " is not a recorded partner of " + parentReference + ".");
         if (affinalCandidates.length === 1) relationships.push({
-          id: stableId("relationship", (row.record_id || index + 1) + "-affinal-parent", "affinal-parent-" + index),
-          type: "parent-child", parentId: affinalCandidates[0].id, childId: primary.id, kind: "unknown",
+          id: stableId("relationship", row.record_id + "-affinal-parent", "affinal-parent-" + index),
+          type: "parent-child", parentId: affinalCandidates[0].id, childId: primary.id, kind: "affinal",
           notes: "Imported affinal parent " + affinalParentReference,
-          source: { format: "mclineage-cleaned", fields: { child_record_id: row.record_id || "", parent_affinal_person_id: affinalParentReference } },
+          source: { format: "mclineage-cleaned", fields: { child_record_id: row.record_id, [AFFINITY_FIELD]: affinalParentReference } },
           order: relationships.length
         });
         else counters.orphanAffinalParents += 1;
       }
-      if (!jsonPartnerRelationships) [1, 2, 3].forEach(function (slot) {
-        if (explicitSpouseReferences) {
-          const prefix = "spouse_" + slot + "_";
-          const spouseReference = sourceRecordKey(row[prefix + "record_id"]);
-          const hasSpouseDetails = u.cleanLine(row[prefix + "first_names"], 200) || u.cleanLine(row[prefix + "last_name"], 200);
-          if (!spouseReference) {
-            if (hasSpouseDetails) throw new Error("McLineage spouse slot " + slot + " on " + row.record_id + " has details but no spouse record reference.");
-            return;
-          }
-          const candidates = byRecordId.get(spouseReference) || [];
-          if (candidates.length !== 1) throw new Error("McLineage spouse reference " + spouseReference + " on " + row.record_id + " does not resolve to exactly one person.");
-          if (candidates[0].id === primary.id) throw new Error("McLineage spouse references cannot point to the same person: " + row.record_id + ".");
-          const pairKey = [primary.id, candidates[0].id].sort().join("|");
-          if (partnerPairs.has(pairKey)) throw new Error("The McLineage CSV contains a duplicate spouse relationship for " + row.record_id + " and " + spouseReference + ".");
-          partnerPairs.add(pairKey);
-          const relationship = sourceSpouseRelationship(row, slot, primary.id, index, counters);
-          relationship.person2Id = candidates[0].id;
-          relationships.push(relationship);
-          return;
-        }
-        const spouse = sourceSpouse(row, slot, primary.id, index, counters);
-        if (!spouse) return;
-        spouse.relationship.person2Id = spouse.person.id;
-        people.push(spouse.person);
-        relationships.push(spouse.relationship);
-      });
     });
-    const firstRoot = parsed.rows.findIndex(function (row) { return !u.cleanLine(directParentReferences ? row[parentReferenceField] : row.parent_lineage_id, 100); });
+    const firstRoot = parsed.rows.findIndex(function (row) { return !u.cleanLine(row[CONSANGUINITY_FIELD], 100); });
     const now = u.isoNow();
     const rawState = {
       schemaVersion: config.schemaVersion,
@@ -677,10 +547,10 @@
   function prepareCsv(text, fileName) {
     const parsed = parseCsv(text);
     if (parsed.headers.includes("mcfamily_csv_version") && parsed.headers.includes("record_type")) return prepareNative(parsed, fileName);
-    const hasPersonNames = ["person_first_names", "person_last_name"].every(function (header) { return parsed.headers.includes(header); });
-    const hasLegacyDescendantNames = ["descendant_first_names", "descendant_last_name"].every(function (header) { return parsed.headers.includes(header); });
-    if (MCLINEAGE_REQUIRED.every(function (header) { return parsed.headers.includes(header); }) && (hasPersonNames || hasLegacyDescendantNames) && (parsed.headers.includes("parent_consanguinity_person_id") || parsed.headers.includes("lineage_parent_id") || parsed.headers.includes("parent_lineage_id"))) return prepareMcLineage(parsed, fileName);
-    throw new Error("That CSV is neither a McFamily export nor the supported McLineage-cleaned format.");
+    const missing = MCLINEAGE_REQUIRED.filter(function (header) { return !parsed.headers.includes(header); });
+    if (!missing.length) return prepareMcLineage(parsed, fileName);
+    if (missing.length < MCLINEAGE_REQUIRED.length) throw new Error("That McLineage CSV is missing current schema columns: " + missing.join(", ") + ".");
+    throw new Error("That CSV is neither a McFamily export nor the current McLineage-cleaned format.");
   }
 
   function summaryFor(state, candidate) {
