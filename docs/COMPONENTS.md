@@ -2,7 +2,7 @@
 
 ## Onboarding gate
 
-An uninitialized browser shows only the McFamily introduction, privacy explanation, and CSV picker. The import preview reports people, relationships, addresses, and source warnings before it can open the family. There is no blank-family, demo, JSON/GEDCOM, or authentication bypass.
+An uninitialized browser shows only the McFamily introduction, privacy explanation, and CSV picker. The import preview reports people, relationships, addresses, and source warnings before it can open the family. Current cleaned sources validate normalized descendant date values and explicit year, month, day, unknown, or living status; older date-column names remain compatible. There is no blank-family, demo, JSON/GEDCOM, or authentication bypass.
 
 ## Family workspace
 

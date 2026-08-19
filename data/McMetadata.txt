@@ -4,14 +4,34 @@ McLineage Dataset Metadata
 Current dataset
 ---------------
 
-Version: 3.0.1
+Version: 4.0.0
 Updated: 2026-08-19
-File: McLineage-3-0-1-2026-08-19.csv
+File: McLineage-4-0-0-2026-08-19.csv
 Source: McLineage.xlsx legacy database export
 Status: Private family data; do not commit to a public or shared source repository.
 
 Changelog
 ---------
+
+4.0.0 — 2026-08-19 — [123,572 bytes | 607 records | 48 fields]
+Author: Adam Lauer
+Agent: Codex [GPT-5-based Codex | Model UNK | Effort UNK | Speed UNK]
+Summary: Standardized descendant dates and made living/deceased status explicit.
+
+- Renamed the four descendant birth/death columns to date-first value and
+  descriptor names and restricted their values to YYYY, YYYY-MM, YYYY-MM-DD, or
+  blank.
+- Collapsed ten partial birth dates to known months and two partial death dates to
+  their known month or year without guessing missing components.
+- Assigned every birth a year, month, day, or UNKNOWN descriptor; birth descriptors
+  are never blank.
+- Assigned death descriptors as 71 day, 2 month, 14 year, 302 UNKNOWN deceased, and
+  218 blank living records. Blank G0-G4 deaths and other explicit death evidence use
+  UNKNOWN.
+- Moved legacy_page_reference immediately to the right of lineage_id without
+  changing the 607-record, 48-field shape.
+- Verified UTF-8 CSV parsing, descriptor/value consistency, unique P references,
+  direct lineage parents, and the absence of self-links or ancestry cycles.
 
 3.0.1 — 2026-08-19 — [122,183 bytes | 607 records | 48 fields]
 Author: Adam Lauer
@@ -123,8 +143,11 @@ Versioning rules for humans and agents
    - Keep lineage_id branches as two-digit segments in person-to-root order, such as
      02.02.05.03. Store the direct parent P reference in lineage_parent_id and repeat
      the resolved full name in lineage_parent_name_full for readability.
-   - Store exact dates as YYYY-MM-DD with precision "day". Preserve incomplete or
-     uncertain dates in the date value and state their precision; do not guess.
+   - Store descendant date values only as YYYY, YYYY-MM, YYYY-MM-DD, or blank. Use
+     year, month, day, UNKNOWN, or blank descriptors; birth descriptors cannot be
+     blank, while a blank death descriptor means living.
+   - Use UNKNOWN with a blank death value when the person is deceased but the date
+     is unknown. Treat G0-G4 descendants without death values as deceased.
    - Record unresolved source problems in data_quality_notes instead of silently
      inventing or discarding genealogy facts.
    - Parse the complete CSV after editing and verify consistent column counts,
