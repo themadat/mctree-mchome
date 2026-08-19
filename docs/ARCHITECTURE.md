@@ -25,8 +25,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 7,
   "meta": {
-    "appVersion": "0.0.1.16",
-    "buildId": "0.0.1.16",
+    "appVersion": "0.0.1.17",
+    "buildId": "0.0.1.17",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
