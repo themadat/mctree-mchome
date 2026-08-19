@@ -1,35 +1,41 @@
 # Shared components
 
-## Dialogs and choices
+## Onboarding gate
 
-`components.openDialog()` stores the trigger, opens a native modal, and focuses the requested or first appropriate control. Closing restores focus. Confirmation, message, choice, import-preview, creation, and Settings dialogs share this lifecycle. On mobile, application dialogs become full-screen surfaces with one scrolling panel.
+An uninitialized browser shows only the McFamily introduction, privacy explanation, and CSV picker. The import preview reports people, relationships, addresses, and source warnings before it can open the family. There is no blank-family, demo, JSON/GEDCOM, or authentication bypass.
 
-Use `components.confirm()` for destructive operations and `components.choose()` when the user must explicitly select among safe alternatives such as sync merge/upload/download.
+## Family workspace
 
-## Menus and popovers
+Desktop uses directory, SVG tree, and profile columns. Mobile uses touch-sized People, Tree, and Profile tabs; selecting a person from the directory opens Profile. All modes share the same selected-person state.
 
-`components.openMenu()` renders an anchored menu into the shared popover. Positioning is clamped to the visible viewport, focus moves into the menu, arrow keys move between commands, and Escape closes and restores focus.
+The tree toolbar controls focus/overview mode, generation depth, zoom, fit, and reset. Person nodes are native SVG buttons by role and expose accessible labels; relationship paths also have textual descriptions.
 
-## Toasts, announcements, and loading
+## Person and relationship editors
 
-`components.toast()` updates the reusable `role="status"` toast and can include one text or SF Symbol action. Critical completion text can also be written to the assertive live region. `components.setLoading()` controls the modal loading overlay for operations such as connection tests.
+The person dialog uses structured name and life fields plus repeatable address, phone, and email groups. Add Relative creates a person and a relationship in one flow. Connect Relative links existing people. Relationship metadata lives only on relationship records.
 
-## Empty and error states
+Destructive controls use the shared confirmation dialog. Deleting a person creates recovery and removes all attached relationships. Validation errors are shown without closing the editor or changing stored data.
 
-Module empty states use one shared visual pattern with a heading, explanation, and optional visible recovery action. Sync, storage, import, and PWA failures use inline status, message dialogs, or persistent toasts depending on whether immediate action is required.
+## Dialogs and focus
+
+`components.openDialog()` records its trigger, opens a native modal, and moves focus to the requested or first appropriate control. Closing restores focus. Confirmation, message, import-preview, person, relationship, Notes, and Settings dialogs use this lifecycle. On small screens application dialogs become full-screen surfaces with a single scrolling panel.
+
+## Toasts and status
+
+`components.toast()` reports saves, exports, imports, recovery, and update availability through reusable status UI. The floating status shows local save and backup state only. Completion and errors are also announced in polite or assertive live regions as appropriate.
 
 ## Notes
 
-Notes is one large, initially blank plain-text textarea in a native modal. It opens from the visible Notes control or `N`, autosaves locally, closes from the standard close control or Escape, and returns focus to its trigger. There is no redundant Done action or autosave heading. The compatibility `documents` collection remains in state and sync payloads, but normalization consolidates it to the stable `app-notes` document. Migration from earlier multi-note state retains each title as a section heading and preserves its text.
+Notes remains one large plain-text textarea. It opens from the header or `N`, autosaves locally, and returns focus when closed. The compatibility `documents` collection is normalized to `app-notes`, and older multi-note content is consolidated during migration.
 
 ## Global search
 
-`/` focuses the centered global search unless the user is already editing a field. Results include Notes, Help topics, release entries, and Roadmap items. Roadmap results open its Settings view; the main application workspace stays blank.
+`/` focuses global search outside editable controls. Results include people, contact data, life places, heritage, notes, the Notes document, Help topics, releases, and Roadmap items. A person result selects that person and routes to Profile on mobile.
 
-## Shortcut hints
+## Print report
 
-Controls declare `data-shortcut`. When the configured modifier is held, a CSS badge appears without replacing the visible control. Global shortcuts use physical key codes and continue to work while Shift, Control, or Option is held; Command-key combinations remain available to the browser. Shortcuts never replace visible buttons or native interactions.
+The print host remains hidden and inaccessible during normal operation. Print / Save PDF builds it from normalized state, reveals it only to print media, invokes the native dialog, then cleans up the transient print state.
 
 ## Icon conventions
 
-Use the inline SVG catalog in `assets/js/icons.js` whenever an appropriate SF Symbol exists. Controls still require meaningful visible text or an accessible name; state is never communicated by icon or color alone.
+Use the shared inline SVG catalog in `assets/js/icons.js` for standard controls. Controls still need visible text or an accessible name; state is never communicated by icon or color alone.

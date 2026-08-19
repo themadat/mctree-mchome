@@ -158,49 +158,23 @@
   function recoveryInfo() {
     const recovery = readRecovery();
     if (!recovery) return null;
-    return { createdAt: recovery.createdAt, reason: recovery.reason, records: recovery.state.workspace.records.length, documents: recovery.state.workspace.documents.length };
+    return {
+      createdAt: recovery.createdAt,
+      reason: recovery.reason,
+      people: recovery.state.workspace.people.length,
+      relationships: recovery.state.workspace.relationships.length,
+      documents: recovery.state.workspace.documents.length
+    };
   }
 
   function clearAll() {
     scheduleSave.cancel();
-    [config.storage.stateKey, config.storage.recoveryKey, config.storage.secretKey, config.storage.sessionSecretKey].concat(config.storage.legacyKeys).forEach(removeLocal);
-    try { sessionStorage.removeItem(config.storage.sessionSecretKey); } catch (error) { /* unavailable */ }
+    [config.storage.stateKey, config.storage.recoveryKey].concat(config.storage.legacyKeys).filter(Boolean).forEach(removeLocal);
     lastSavedJson = "";
     currentState = model.createDefaultState({ demo: false });
     saveNow();
     emit("app:statechange", { reason: "erase-all", state: currentState });
     return currentState;
-  }
-
-  function setSecret(token, remember) {
-    const clean = u.cleanLine(token, 500);
-    try {
-      if (remember) {
-        localStorage.setItem(config.storage.secretKey, clean);
-        sessionStorage.removeItem(config.storage.sessionSecretKey);
-      } else {
-        sessionStorage.setItem(config.storage.sessionSecretKey, clean);
-        localStorage.removeItem(config.storage.secretKey);
-      }
-      return true;
-    } catch (error) {
-      emit("app:storageerror", { title: "Token was not stored", message: "This browser would not allow per-device token storage.", error: error });
-      return false;
-    }
-  }
-
-  function getSecret() {
-    try { return localStorage.getItem(config.storage.secretKey) || sessionStorage.getItem(config.storage.sessionSecretKey) || ""; }
-    catch (error) { return ""; }
-  }
-
-  function hasSecret() {
-    return Boolean(getSecret());
-  }
-
-  function clearSecret() {
-    removeLocal(config.storage.secretKey);
-    try { sessionStorage.removeItem(config.storage.sessionSecretKey); } catch (error) { /* unavailable */ }
   }
 
   async function usage() {
@@ -232,10 +206,6 @@
     restoreRecovery: restoreRecovery,
     recoveryInfo: recoveryInfo,
     clearAll: clearAll,
-    setSecret: setSecret,
-    getSecret: getSecret,
-    hasSecret: hasSecret,
-    clearSecret: clearSecret,
     usage: usage,
     isPersistent: function () { return persistentStorageAvailable; }
   };

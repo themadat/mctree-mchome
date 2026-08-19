@@ -1,7 +1,7 @@
 {
-  "name": "App Template",
-  "short_name": "Template",
-  "description": "A focused pre-launch local-first app foundation with a blank workspace, Notes, settings, and optional GitHub Sync.",
+  "name": "McFamily",
+  "short_name": "McFamily",
+  "description": "A private, local-first family tree, address book, and printable family atlas.",
   "id": "./",
   "start_url": "./index.html",
   "scope": "./",
@@ -10,7 +10,7 @@
   "background_color": "#f5f3ed",
   "theme_color": "#f5f3ed",
   "orientation": "any",
-  "categories": ["utilities"],
+  "categories": ["lifestyle", "utilities"],
   "icons": [
     { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },

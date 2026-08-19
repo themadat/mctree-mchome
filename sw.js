@@ -1,7 +1,7 @@
 "use strict";
 
-const CACHE_NAME = "app-template-shell-0.0.1.2";
-const ASSET_VERSION = "0.0.1.2";
+const CACHE_NAME = "mcfamily-shell-0.0.1.5";
+const ASSET_VERSION = "0.0.1.5";
 const versioned = function (path) { return path + "?v=" + ASSET_VERSION; };
 const SHELL = [
   "./",
@@ -15,13 +15,13 @@ const SHELL = [
   versioned("./assets/js/core/state.js"),
   versioned("./assets/js/core/storage.js"),
   versioned("./assets/js/core/components.js"),
+  versioned("./assets/js/core/family.js"),
   versioned("./assets/js/core/portability.js"),
-  versioned("./assets/js/core/sync.js"),
   versioned("./assets/js/core/pwa.js"),
   versioned("./assets/js/app.js"),
   versioned("./assets/icons/favicon.svg"),
-  versioned("./assets/icons/app-icon-light.svg"),
-  versioned("./assets/icons/app-icon-dark.svg"),
+  versioned("./assets/icons/app-icon-light.png"),
+  versioned("./assets/icons/app-icon-dark.png"),
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
   "./assets/icons/icon-512-maskable.png",
@@ -40,7 +40,7 @@ self.addEventListener("install", function (event) {
 
 self.addEventListener("activate", function (event) {
   event.waitUntil(Promise.all([
-    caches.keys().then(function (keys) { return Promise.all(keys.filter(function (key) { return (key.startsWith("app-template-shell-") || key.startsWith("local-workspace-shell-")) && key !== CACHE_NAME; }).map(function (key) { return caches.delete(key); })); }),
+    caches.keys().then(function (keys) { return Promise.all(keys.filter(function (key) { return (key.startsWith("mcfamily-shell-") || key.startsWith("app-template-shell-") || key.startsWith("local-workspace-shell-")) && key !== CACHE_NAME; }).map(function (key) { return caches.delete(key); })); }),
     self.clients.claim()
   ]));
 });
