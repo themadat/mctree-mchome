@@ -341,6 +341,15 @@
     return arranged;
   }
 
+  function treeNameLines(person, detailed) {
+    const names = person && person.names || {};
+    const fullName = model.displayName(person);
+    const compactName = [names.preferred || names.given, names.family || names.birth].filter(Boolean).join(" ") || fullName;
+    return String(detailed ? fullName : compactName).trim().split(/\s+/).filter(Boolean).map(function (part) {
+      return part.length > 14 ? part.slice(0, 13) + "…" : part;
+    });
+  }
+
   function layout(state, options) {
     const settings = Object.assign({ mode: "focus", focusId: "", ancestorDepth: 2, descendantDepth: 2, nodeView: "condensed" }, options || {});
     if (options && options.depth != null) {
@@ -391,16 +400,21 @@
       items.forEach(function (person, index) { positions.set(person.id, index); });
     });
     const detailed = settings.nodeView === "detailed";
-    const nodeWidth = detailed ? 176 : 148;
-    const nodeHeight = detailed ? 72 : 74;
-    const horizontalGap = settings.mode === "overview" ? (detailed ? 34 : 26) : (detailed ? 48 : 34);
-    const verticalGap = 88;
+    const nodeWidth = detailed ? 128 : 112;
+    const horizontalGap = settings.mode === "overview" ? 24 : 32;
+    const verticalGap = 72;
+    const rowHeights = new Map();
+    sortedLevels.forEach(function (level) {
+      const lineCount = Math.max.apply(null, groups.get(level).map(function (person) { return treeNameLines(person, detailed).length; }));
+      rowHeights.set(level, (detailed ? 57 : 42) + Math.max(1, lineCount) * 15);
+    });
     const maxCount = Math.max.apply(null, Array.from(groups.values()).map(function (items) { return items.length; }));
     const contentWidth = Math.max(680, maxCount * (nodeWidth + horizontalGap) - horizontalGap + 80);
-    const minLevel = sortedLevels[0];
     const nodes = [];
+    let rowY = 40;
     sortedLevels.forEach(function (level) {
       const items = groups.get(level);
+      const nodeHeight = rowHeights.get(level);
       const rowWidth = items.length * (nodeWidth + horizontalGap) - horizontalGap;
       const startX = (contentWidth - rowWidth) / 2;
       items.forEach(function (person, index) {
@@ -408,12 +422,13 @@
           id: person.id,
           person: person,
           x: startX + index * (nodeWidth + horizontalGap),
-          y: 40 + (level - minLevel) * (nodeHeight + verticalGap),
+          y: rowY,
           width: nodeWidth,
           height: nodeHeight,
           generation: level
         });
       });
+      rowY += nodeHeight + verticalGap;
     });
     const nodeById = new Map(nodes.map(function (node) { return [node.id, node]; }));
     const edges = visibleRelationships.map(function (relationship) {
@@ -421,7 +436,7 @@
       const bId = relationship.type === "parent-child" ? relationship.childId : relationship.person2Id;
       return { relationship: relationship, from: nodeById.get(aId), to: nodeById.get(bId) };
     }).filter(function (edge) { return edge.from && edge.to; });
-    const height = 80 + sortedLevels.length * nodeHeight + Math.max(0, sortedLevels.length - 1) * verticalGap;
+    const height = rowY - verticalGap + 40;
     return { nodes: nodes, edges: edges, width: contentWidth, height: Math.max(360, height), bounds: { x: 0, y: 0, width: contentWidth, height: Math.max(360, height) }, peopleById: peopleById, nodeView: detailed ? "detailed" : "condensed" };
   }
 
@@ -467,6 +482,7 @@
     focusPeople: focusPeople,
     connectedComponents: connectedComponents,
     generationMap: generationMap,
+    treeNameLines: treeNameLines,
     layout: layout,
     validateRelationshipDraft: validateRelationshipDraft,
     lifespan: lifespan

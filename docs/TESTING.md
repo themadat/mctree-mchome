@@ -22,8 +22,9 @@ Use synthetic families only.
 - [ ] Current spouse rows import as their own P-referenced people; their source-row and lineage fields are blank, every populated spouse slot resolves through `spouse_#_record_id`, and no duplicate spouse people are synthesized.
 - [ ] Missing, self, partial-schema, and duplicate spouse-record references are rejected; older embedded-spouse sources still create compatibility spouse people.
 - [ ] Every current non-root lineage path extends its direct parent's path by exactly one segment; blank unlineaged people are accepted, while malformed, duplicate, or parent-mismatched paths are rejected.
-- [ ] Current source date values accept blank, `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, or the same shapes with `?` in unknown digit positions; question-mark values require `partial`, `invalid` descriptors are rejected, birth descriptors reject blank, and G0-G4 blank deaths require `UNKNOWN`.
-- [ ] Current `person_*` identity/date columns import primary and spouse rows consistently; a blank death descriptor imports as living, `UNKNOWN` imports as deceased with an unknown date, and legacy descendant date columns remain compatible.
+- [ ] Current source date values accept blank, `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, or the same shapes with `?` in unknown digit positions; question-mark values require `partial`, `invalid` descriptors are rejected, and birth descriptors reject blank.
+- [ ] Current `person_*` identity/date columns import primary and spouse rows consistently: known death values and G0-G4 lineage people import as deceased, G5+ `UNKNOWN` death descriptors import with unknown status, G5+ blank death descriptors import as living, and legacy descendant date columns remain compatible.
+- [ ] Loading schema v7 state migrates the same cleaned-source life statuses to schema v8 and saves them under the v8 storage key without losing family data.
 - [ ] Partial source dates remain in source details, produce a partial-only preview warning, and do not become invented normalized dates in editable/native state.
 - [ ] Older direct `parent_lineage_id` and `lineage_parent_id` sources and legacy lineage-path `parent_lineage_id` or lineage-name sources remain importable.
 - [ ] Legacy schema states migrate without losing Notes or retained compatibility fields.
@@ -54,7 +55,7 @@ Use synthetic families only.
 - [ ] Natural-size Family Tree layouts expose horizontal and vertical scrolling when needed; ordinary wheel input scrolls and Ctrl/Command-wheel zooms.
 - [ ] Arrow keys move between rendered nodes and Enter/Space selects.
 - [ ] Every node and relationship has an understandable accessible label.
-- [ ] Condensed cards are the default and show separate given/family name lines plus birth/death years, with `????` for either unknown year and no avatar or identifier; Detailed restores the fuller card, and deceased cards are light brown in both modes.
+- [ ] Condensed cards are the default; both card modes are narrow, put every whitespace-separated name part on its own line, grow generation rows for taller names, show birth/death years with `????` for either unknown year, and keep deceased cards light brown.
 - [ ] Partner pairs are adjacent when possible; married lines are solid, divorced lines are dotted, and other partner states remain distinguishable.
 - [ ] Family Tree rows use numeric lineage order rather than alphabetical names; Seth Lauer appears before Jared Lauer.
 - [ ] A multi-partner lineage person is preceded by past partners from earliest to latest and followed by the current married partner.
@@ -72,9 +73,9 @@ Use synthetic families only.
 - [ ] Favorites opens every starred person with an empty search, allows narrowing that list, and shows useful empty guidance; unstarred or deleted people disappear immediately.
 - [ ] Lineage preserves the normalized root-to-person source order, two-digit-pads every segment, italicizes the first three segments, and bolds the final segment; overlapping emphasis is bold italic.
 - [ ] George McMillen (1745) is labelled G0, James G1, George (1818) G2, and Albon/Newton/Lucian G3 in Family line brackets.
-- [ ] Adam's imported lineage is `01.01.01.03.05.05.05.01` with the first three segments italic and the final `01` bold, and its Family line begins `Adam [01 | G7]`, then `Melanie [05 | G6]`; the corresponding readings begin `1st Child of Melanie`, then `5th Child of Max`.
-- [ ] A Family line heading introduces paired name/reading rows with equal row heights and vertically centered cells; the family totals span both columns on one line, there is no visible Reading heading, and the root reads `Root ancestor`.
-- [ ] Every resolved name selects that person and focuses the tree; unknown positions read `Child of` without `Nth`.
+- [ ] Adam's imported lineage is `01.01.01.03.05.05.05.01` with the first three segments italic and the final `01` bold, and its Family line begins `Adam [01 | G7]`, then `Melanie [05 | G6]`; the corresponding readings begin `Gen 7, 1st Child of Melanie`, then `Gen 6, 5th Child of Max`.
+- [ ] A Family line heading introduces paired name/reading rows with equal row heights and vertically centered cells; the family totals span both columns on one line, there is no visible Reading heading, and the root reads `Gen 0, Root ancestor`.
+- [ ] Every resolved first-name parent link selects that person and focuses the tree; unknown positions read `Gen #, Child of FirstName` without an ordinal.
 - [ ] Parents, Siblings, Partners, and Children are compact open groups containing names only in that order; the bloodline parent is first, siblings and children are in birth order, and Melanie's Parents group contains both Max and Martha through display-only co-parent inference.
 - [ ] Partners lists the current partner first in bold, followed by prior partners in reverse history order with de-emphasized styling.
 - [ ] Notes follows Relationships, and Imported source is the final information section on screen and in each printable person profile.

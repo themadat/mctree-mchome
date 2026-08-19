@@ -149,7 +149,33 @@
     return source;
   }
 
-  const migrations = { 1: migrate1to2, 2: migrate2to3, 3: migrate3to4, 4: migrate4to5, 5: migrate5to6, 6: migrate6to7 };
+  function mcLineageLivingStatus(person, fallback) {
+    const source = u.plainObject(person);
+    const imported = u.plainObject(source.source);
+    const fields = u.plainObject(imported.fields);
+    if (imported.format !== "mclineage-cleaned") return fallback;
+    const deathValueField = Object.prototype.hasOwnProperty.call(fields, "person_date_death_value") ? "person_date_death_value" : "descendant_date_death_value";
+    const deathDescriptorField = Object.prototype.hasOwnProperty.call(fields, "person_date_death_descriptor") ? "person_date_death_descriptor" : "descendant_date_death_descriptor";
+    if (!Object.prototype.hasOwnProperty.call(fields, deathDescriptorField)) return fallback;
+    const deathValue = u.cleanLine(fields[deathValueField], 40);
+    const deathDescriptor = u.cleanLine(fields[deathDescriptorField], 40);
+    const lineage = u.cleanLine(fields.lineage_id, 100);
+    const generation = lineage && lineage !== "99" ? lineage.split(".").length - 1 : null;
+    if (deathValue || (generation !== null && generation <= 4)) return "deceased";
+    return deathDescriptor === "UNKNOWN" ? "unknown" : "living";
+  }
+
+  function migrate7to8(input) {
+    const source = u.plainObject(input);
+    const workspace = u.plainObject(source.workspace);
+    source.schemaVersion = 8;
+    if (Array.isArray(workspace.people)) workspace.people.forEach(function (person) {
+      person.livingStatus = mcLineageLivingStatus(person, person.livingStatus);
+    });
+    return source;
+  }
+
+  const migrations = { 1: migrate1to2, 2: migrate2to3, 3: migrate3to4, 4: migrate4to5, 5: migrate5to6, 6: migrate6to7, 7: migrate7to8 };
 
   function unwrapInput(input) {
     const source = u.plainObject(input);
@@ -784,6 +810,7 @@
     sortName: sortName,
     formatFlexibleDate: formatFlexibleDate,
     formatAddress: formatAddress,
+    mcLineageLivingStatus: mcLineageLivingStatus,
     personSearchText: personSearchText,
     normalizeSearchText: normalizeSearchText,
     fuzzySearchMatch: fuzzySearchMatch,
