@@ -6,9 +6,9 @@ An uninitialized browser shows only the McFamily introduction, privacy explanati
 
 ## Family workspace
 
-Desktop coordinates a header-opened directory, SVG tree, and profile columns; global Add and PDF actions live only in the application title bar. The directory and selected-person columns can be closed independently so the tree can fill the workspace. The directory sorts by first or last name, shows lifespan and lineage context, and has an A–Z quick-jump rail. Mobile uses touch-sized Directory, Tree, and Person tabs; selecting a person from the directory opens Person. All modes share the same selected-person state.
+Desktop coordinates a header-opened directory, SVG Family Tree, and profile columns; global Add and PDF actions live only in the application title bar. The directory and selected-person columns can be closed independently so the Family Tree can fill the workspace. The directory sorts by first or last name, shows lifespan and lineage context, and has an A–Z quick-jump rail. Mobile uses touch-sized Directory, Family Tree, and Person tabs; selecting a person from the directory opens Person. All modes share the same selected-person state.
 
-The tree toolbar controls focus/overview mode, condensed/detailed cards, separate ancestor and descendant depths, zoom, and fit. Condensed cards are the default and show given name, family name, and lifespan only. Neither tree mode uses a portrait or initial placeholder, and internal person references appear only in Developer Mode. Partner pairs are kept adjacent when their generation allows it; married links are solid, divorced links are dotted, and other partner states are dashed. Person nodes are native SVG buttons by role and expose accessible labels; relationship paths also have textual descriptions.
+The Family Tree toolbar controls focus/overview mode, condensed/detailed cards, separate ancestor and descendant depths, zoom, and fit. Its canvas scrolls horizontally and vertically whenever the natural-size layout exceeds the viewport; ordinary wheel input scrolls and Ctrl/Command-wheel zooms. Condensed cards are the default and show given name, family name, and lifespan only. Neither tree mode uses a portrait or initial placeholder, and internal person references appear only in Developer Mode. Partner pairs are kept adjacent when their generation allows it; married links are solid, divorced links are dotted, and other partner states are dashed. Person nodes are native SVG buttons by role and expose accessible labels; relationship paths also have textual descriptions.
 
 ## Person and relationship editors
 
@@ -34,7 +34,9 @@ Notes remains one large plain-text textarea. It opens from the header or `N`, au
 
 ## Lineage
 
-The selected-person profile presents the source Lineage ID first, reverses its segments so the selected person's two-digit segment leads, and bolds that first segment. A nearest-to-oldest name list follows with each resolved person linked to their profile and tree focus. The reading lists each generation as `Gen N · ordinal Child of …`; unknown positions use `Nth`. The printable atlas includes the same ID, name list, and reading without interactive controls.
+The selected-person profile presents the source Lineage ID first, reverses its segments so the selected person's two-digit segment leads, and bolds that first segment. A nearest-to-oldest name list follows with each resolved person linked to their profile and tree focus. The reading uses absolute generations rooted at George McMillen (1745) as Gen 0; known positions read `ordinal Child of …` and unknown positions read only `Child of …`. The root receives its own Gen 0 line. The printable atlas includes the same ID, name list, and reading without interactive controls.
+
+The profile X closes the panel and clears the selected-person state. Its Family Tree focus remains in place, and selecting a tree node reopens the profile. There is no separate Show person control.
 
 Family-record mutation controls remain visible but disabled while `features.familyEditing` is false. This includes adding, editing, connecting, removing, deleting, and changing the home person.
 

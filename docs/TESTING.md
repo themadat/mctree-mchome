@@ -42,7 +42,8 @@ Use synthetic families only.
 - [ ] Focus mode shows the selected/home person's configured ancestor and descendant depth plus partners and siblings.
 - [ ] Overview contains every connected component and isolated person.
 - [ ] Single-person, multi-partner, adopted, disconnected, pedigree-collapse, and 1,500-person synthetic families render without exceptions.
-- [ ] Pan, wheel/pinch zoom, zoom buttons, Fit, node click, and independent ancestor/descendant depths work.
+- [ ] Pan, Ctrl/Command-wheel and pinch zoom, zoom buttons, Fit, node click, and independent ancestor/descendant depths work.
+- [ ] Natural-size Family Tree layouts expose horizontal and vertical scrolling when needed; ordinary wheel input scrolls and Ctrl/Command-wheel zooms.
 - [ ] Arrow keys move between rendered nodes and Enter/Space selects.
 - [ ] Every node and relationship has an understandable accessible label.
 - [ ] Condensed cards are the default and show separate given/family name lines plus birth/death years, with no avatar or identifier; Detailed restores the fuller card.
@@ -53,15 +54,17 @@ Use synthetic families only.
 - [ ] Internal stable `P` references are absent throughout ordinary app and print views and appear only in Developer Mode.
 - [ ] Partial and in-order fuzzy search finds name, address, phone, email, birth/death place, heritage, general notes, Notes, Help, releases, and Roadmap.
 - [ ] Lineage shows ID before Name List, reverses and two-digit-pads ID segments, and bolds the selected person's first segment.
-- [ ] Adam's imported lineage begins `01.05`, and its reading begins `Gen 1 · 1st Child of Melanie`, then `Gen 2 · 5th Child of Max`.
-- [ ] Every resolved name in both Name List and Reading selects that person and focuses the tree; unknown positions read `Nth`.
+- [ ] George McMillen (1745) reads Gen 0, James reads Gen 1, George (1818) reads Gen 2, and Albon/Newton/Lucian read Gen 3.
+- [ ] Adam's imported lineage begins `01.05`, and its reading begins `Gen 7 · 1st Child of Melanie`, then `Gen 6 · 5th Child of Max`.
+- [ ] Every resolved name in both Name List and Reading selects that person and focuses the tree; unknown positions read `Child of` without `Nth`.
+- [ ] The profile X closes the module, clears directory/tree selection, disables the empty mobile Person tab, and a Family Tree selection reopens the profile without a Show person button.
 - [ ] A child listed from a parent's profile is labelled `Child`, without a redundant parent-kind suffix.
 
 ## Responsive and accessibility
 
 - [ ] At 1280px, 768px, and 390px, page and body widths do not exceed the viewport.
 - [ ] Desktop shows coordinated directory, tree, and detail panes.
-- [ ] Mobile Directory/Tree/Person tabs are touch-sized; choosing a person opens Person.
+- [ ] Mobile Directory/Family Tree/Person tabs are touch-sized; choosing a person opens Person.
 - [ ] Dialogs fit the mobile viewport with one usable scrolling surface.
 - [ ] Labels, landmarks, focus order, visible focus, live regions, and focus restoration are correct.
 - [ ] Escape closes temporary UI; `/`, `?`, `N`, `V`, `T`, and supported navigation keys work outside fields.
