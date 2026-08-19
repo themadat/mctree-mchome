@@ -4,21 +4,21 @@ McFamily is a private, local-first family atlas that runs as a static GitHub Pag
 
 There is no backend, account, cloud database, or runtime dependency. Family data stays in browser storage and moves only through an explicit CSV import or export. The published repository must never contain a real family CSV or private family data.
 
-Current version: `0.0.1.17` (`major.minor.patch.build`).
+Current version: `0.0.1.18` (`major.minor.patch.build`).
 
 ## What it does
 
 - Opens only after importing the cleaned McLineage CSV or a native McFamily CSV with at least one person on first launch.
 - Shows a focus tree around a home person and a whole-family overview of connected and isolated people.
-- Supports two-axis scrolling, pan, zoom, fit, separate ancestor and descendant depths, keyboard selection, touch, and accessible relationship descriptions.
+- Supports two-axis scrolling, pan, directly editable zoom and depth numbers, fit, keyboard selection, touch, and accessible relationship descriptions.
 - Orders each Family Tree generation by numeric lineage ID; past partners appear chronologically to the left of the lineage person and exactly one current spouse appears to the right.
 - Can reveal likely other-parent branches as lighter, display-only lines without changing relationship records.
-- Provides a header-opened directory with first/last-name sorting, A–Z quick jumps, lifespan and lineage context, and broad search across names, contact details, places, heritage, and notes.
+- Provides a header-toggled directory with first/last-name sorting, A–Z quick jumps, lifespan and lineage context, and broad search across names, contact details, places, heritage, and notes.
 - Lets people be starred directly in search, pins favorites above other matches, and provides a Favorites-only search control beside the search field.
 - Supports partial/fuzzy matches that return the tree to Focus, collapsible side panels, a resizable desktop tree/profile split, and concise or detailed tree cards.
 - Keeps portrait placeholders and internal person references out of the ordinary workspace; Developer Mode reveals references for troubleshooting.
-- Presents person-to-root, two-digit Lineage IDs with the selected person's first segment emphasized, followed by direct-parent-linked Names and generation readings with one full-width family summary.
-- Uses compact open Parents, Siblings, Partners, and Children groups that include likely co-parents, and places Notes at the end of each profile.
+- Presents person-to-root, two-digit Lineage IDs with the selected person's first segment emphasized, followed by a compact direct-parent-linked Family line with each name's lineage number and generation.
+- Uses compact open Parents, Siblings, Partners, and Children groups with bloodline-first parents, birth-ordered siblings and children, and current-first partner history; Imported source finishes each profile.
 - Uses absolute lineage generations rooted at George McMillen (1745) as Gen 0; unknown ordinals read simply as `Child of`.
 - Lets the person panel close and clear selection; choosing any Family Tree person reopens it without a separate Show person control.
 - Keeps family-record add, edit, relationship, home-person, and deletion controls visibly paused during the current build-out.

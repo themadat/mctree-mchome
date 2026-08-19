@@ -111,13 +111,52 @@
     };
   }
 
+  function relationPerson(entry) {
+    return entry && entry.person || entry;
+  }
+
+  function compareBirthOrder(a, b) {
+    const first = relationPerson(a);
+    const second = relationPerson(b);
+    const firstDate = String(first && first.birth && first.birth.date && first.birth.date.value || "");
+    const secondDate = String(second && second.birth && second.birth.date && second.birth.date.value || "");
+    if (firstDate && secondDate && firstDate !== secondDate) return firstDate.localeCompare(secondDate);
+    if (firstDate !== secondDate) return firstDate ? -1 : 1;
+    return model.sortName(first).localeCompare(model.sortName(second)) || String(first && first.id || "").localeCompare(String(second && second.id || ""));
+  }
+
+  function sourceField(person, key) {
+    return String(person && person.source && person.source.fields && person.source.fields[key] || "").trim();
+  }
+
+  function bloodlineParentRank(person, entry) {
+    const parent = relationPerson(entry);
+    const lineageParentId = sourceField(person, "lineage_parent_id").toUpperCase();
+    const recordId = sourceField(parent, "record_id").toUpperCase();
+    if (lineageParentId && recordId === lineageParentId) return 0;
+    if (parent && parent.source && parent.source.format === "mclineage-cleaned") return 1;
+    return 2;
+  }
+
+  function orderPartnerHistory(entries) {
+    const histories = entries.slice().sort(comparePartnerHistory);
+    const pastStatuses = new Set(["divorced", "former", "separated", "widowed"]);
+    const active = histories.filter(function (entry) { return !pastStatuses.has(entry.relationship.status); });
+    const preferredActive = active.filter(function (entry) { return entry.relationship.status === "married" || entry.relationship.status === "partnered"; });
+    const current = (preferredActive.length ? preferredActive : active).slice(-1)[0] || null;
+    return (current ? [current] : []).concat(histories.filter(function (entry) { return entry !== current; }).reverse()).map(function (entry) {
+      return Object.assign({}, entry, { current: entry === current });
+    });
+  }
+
   function relationGroups(id, state) {
     const graph = indexes(state);
+    const person = graph.peopleById.get(id);
     return {
-      parents: graph.parents.get(id) || [],
-      children: graph.children.get(id) || [],
-      partners: graph.partners.get(id) || [],
-      siblings: siblingsOf(id, graph)
+      parents: (graph.parents.get(id) || []).slice().sort(function (a, b) { return bloodlineParentRank(person, a) - bloodlineParentRank(person, b) || compareBirthOrder(a, b); }),
+      children: (graph.children.get(id) || []).slice().sort(compareBirthOrder),
+      partners: orderPartnerHistory(graph.partners.get(id) || []),
+      siblings: siblingsOf(id, graph).sort(compareBirthOrder)
     };
   }
 
@@ -404,8 +443,7 @@
   function lifespan(person) {
     const birth = person.birth && person.birth.date && person.birth.date.value ? person.birth.date.value.slice(0, 4) : "";
     const death = person.death && person.death.date && person.death.date.value ? person.death.date.value.slice(0, 4) : "";
-    if (birth || death) return (birth || "?") + "–" + (death || (person.livingStatus === "living" ? "present" : "?"));
-    return person.livingStatus === "deceased" ? "Deceased" : person.livingStatus === "living" ? "Living" : "Dates unknown";
+    return (birth || "????") + " – " + (death || "????");
   }
 
   App.family = {
