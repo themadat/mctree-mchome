@@ -201,9 +201,46 @@
     return components.sort(function (a, b) { return b.length - a.length; });
   }
 
+  function lineageParts(person) {
+    const raw = String(person && person.source && person.source.fields && person.source.fields.lineage_id || "").trim();
+    return raw ? raw.split(".").map(function (part) { return part.trim(); }).filter(Boolean) : [];
+  }
+
+  function compareLineage(a, b) {
+    const aParts = lineageParts(a);
+    const bParts = lineageParts(b);
+    if (!aParts.length && !bParts.length) return 0;
+    if (!aParts.length) return 1;
+    if (!bParts.length) return -1;
+    const length = Math.max(aParts.length, bParts.length);
+    for (let index = 0; index < length; index += 1) {
+      if (aParts[index] == null) return -1;
+      if (bParts[index] == null) return 1;
+      const compared = aParts[index].localeCompare(bParts[index], undefined, { numeric: true, sensitivity: "base" });
+      if (compared) return compared;
+    }
+    return 0;
+  }
+
+  function relationshipOrderValue(relationship) {
+    const sourceSlot = Number(relationship && relationship.source && relationship.source.fields && relationship.source.fields.spouse_slot);
+    if (Number.isFinite(sourceSlot) && sourceSlot > 0) return sourceSlot;
+    const order = Number(relationship && relationship.order);
+    return Number.isFinite(order) ? order : Number.MAX_SAFE_INTEGER;
+  }
+
+  function comparePartnerHistory(a, b) {
+    const aDate = String(a.relationship.startDate && a.relationship.startDate.value || a.relationship.endDate && a.relationship.endDate.value || "");
+    const bDate = String(b.relationship.startDate && b.relationship.startDate.value || b.relationship.endDate && b.relationship.endDate.value || "");
+    if (aDate && bDate && aDate !== bDate) return aDate.localeCompare(bDate);
+    if (aDate !== bDate) return aDate ? -1 : 1;
+    return relationshipOrderValue(a.relationship) - relationshipOrderValue(b.relationship);
+  }
+
   function arrangePartners(items, relationships) {
     const peopleById = new Map(items.map(function (person) { return [person.id, person]; }));
-    const rank = { married: 0, partnered: 1, widowed: 2, separated: 3, divorced: 4, former: 5, unknown: 6 };
+    const pastStatuses = new Set(["divorced", "former", "separated", "widowed"]);
+    const currentRank = { married: 0, partnered: 1, unknown: 2 };
     const links = new Map(items.map(function (person) { return [person.id, []]; }));
     relationships.filter(function (relationship) {
       return relationship.type === "partner" && peopleById.has(relationship.person1Id) && peopleById.has(relationship.person2Id);
@@ -215,12 +252,21 @@
     const arranged = [];
     items.forEach(function (person) {
       if (used.has(person.id)) return;
+      const available = (links.get(person.id) || []).filter(function (entry) { return !used.has(entry.id); });
+      const past = available.filter(function (entry) { return pastStatuses.has(entry.relationship.status); }).sort(comparePartnerHistory);
+      const current = available.filter(function (entry) { return !pastStatuses.has(entry.relationship.status); }).sort(function (a, b) {
+        return (currentRank[a.relationship.status] ?? 9) - (currentRank[b.relationship.status] ?? 9)
+          || comparePartnerHistory(a, b)
+          || model.sortName(peopleById.get(a.id)).localeCompare(model.sortName(peopleById.get(b.id)));
+      });
+      past.forEach(function (entry) {
+        if (used.has(entry.id)) return;
+        arranged.push(peopleById.get(entry.id));
+        used.add(entry.id);
+      });
       arranged.push(person);
       used.add(person.id);
-      (links.get(person.id) || []).filter(function (entry) { return !used.has(entry.id); }).sort(function (a, b) {
-        return (rank[a.relationship.status] ?? 9) - (rank[b.relationship.status] ?? 9)
-          || model.sortName(peopleById.get(a.id)).localeCompare(model.sortName(peopleById.get(b.id)));
-      }).forEach(function (entry) {
+      current.forEach(function (entry) {
         if (used.has(entry.id)) return;
         arranged.push(peopleById.get(entry.id));
         used.add(entry.id);
@@ -264,6 +310,8 @@
     const positions = new Map();
     sortedLevels.forEach(function (level, levelIndex) {
       let items = groups.get(level).sort(function (a, b) {
+        const lineageOrder = compareLineage(a, b);
+        if (lineageOrder) return lineageOrder;
         const aParents = parentIds.get(a.id).map(function (id) { return positions.has(id) ? positions.get(id) : Infinity; });
         const bParents = parentIds.get(b.id).map(function (id) { return positions.has(id) ? positions.get(id) : Infinity; });
         const aAverage = aParents.length ? aParents.reduce(function (sum, value) { return sum + value; }, 0) / aParents.length : Infinity;
@@ -271,7 +319,7 @@
         if (Number.isFinite(aAverage) || Number.isFinite(bAverage)) return aAverage - bAverage || model.sortName(a).localeCompare(model.sortName(b));
         return model.sortName(a).localeCompare(model.sortName(b));
       });
-      if (levelIndex === 0) items = items.sort(function (a, b) { return model.sortName(a).localeCompare(model.sortName(b)); });
+      if (levelIndex === 0) items = items.sort(function (a, b) { return compareLineage(a, b) || model.sortName(a).localeCompare(model.sortName(b)); });
       items = arrangePartners(items, visibleRelationships);
       groups.set(level, items);
       items.forEach(function (person, index) { positions.set(person.id, index); });
