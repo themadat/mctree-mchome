@@ -667,11 +667,13 @@ body[data-onboarding="true"] main { min-height: 100svh; padding: max(1rem, var(-
 .source-section summary { min-height: 36px; padding: .4rem 0; }
 .source-format { margin: .2rem 0 .45rem; color: var(--muted); font-size: .72rem; }
 .source-list dd { overflow-wrap: anywhere; white-space: pre-wrap; }
-.lineage-details { display: grid; margin: 0; }
-.lineage-details > div { display: grid; grid-template-columns: minmax(70px, .34fr) minmax(0, 1fr); gap: .55rem; padding: .42rem 0; border-top: 1px solid var(--line); }
-.lineage-details > div:first-child { border-top: 0; }
-.lineage-details dt { color: var(--muted); font-size: .7rem; font-weight: 750; }
-.lineage-details dd { min-width: 0; margin: 0; overflow-wrap: anywhere; }
+.lineage-section { text-align: left; }
+.lineage-id-row { display: grid; grid-template-columns: 54px minmax(0, 1fr); align-items: baseline; gap: .4rem; padding: .1rem 0 .55rem; border-bottom: 1px solid var(--line); }
+.lineage-id-row > span:first-child { color: var(--muted); font-size: .7rem; font-weight: 750; }
+.lineage-columns { display: grid; grid-template-columns: minmax(0, .78fr) minmax(0, 1.22fr); align-items: start; gap: .65rem; padding-top: .55rem; }
+.lineage-columns > section { min-width: 0; }
+.lineage-columns > section + section { padding-left: .65rem; border-left: 1px solid var(--line); }
+.lineage-columns h4, .lineage-background h4 { margin: 0 0 .4rem; color: var(--muted); font-size: .7rem; font-weight: 800; }
 .lineage-id { color: var(--muted); font-size: .82rem; letter-spacing: .025em; }
 .lineage-id strong { color: var(--text); font-size: 1.05em; }
 .lineage-name-list, .lineage-reading-list { display: grid; gap: .22rem; margin: 0; padding: 0; list-style: none; }
@@ -681,17 +683,21 @@ body[data-onboarding="true"] main { min-height: 100svh; padding: max(1rem, var(-
 .lineage-unlinked-name { font-weight: 700; }
 .lineage-reading-list li { display: grid; grid-template-columns: 48px minmax(0, 1fr); align-items: baseline; gap: .35rem; }
 .lineage-generation { color: var(--muted); font-size: .66rem; font-weight: 750; }
+.lineage-summary { margin: .55rem 0 0; padding-top: .5rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .7rem; line-height: 1.4; }
+.lineage-background { margin-top: .65rem; padding-top: .55rem; border-top: 1px solid var(--line); }
+.lineage-background p { margin: 0; }
 .contact-card { margin-top: .4rem; padding: .55rem; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); }
 .contact-card header { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: .35rem; }
 .contact-card address { font-style: normal; }
 .contact-card p, .contact-card small { display: block; margin: .3rem 0 0; color: var(--muted); }
-.relationship-list { display: grid; }
-.relationship-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: .35rem; padding: .42rem 0; border-top: 1px solid var(--line); }
-.relationship-row:first-child { border-top: 0; }
-.relationship-person { display: grid; min-width: 0; padding: .28rem; border: 0; border-radius: 7px; background: transparent; text-align: left; }
-.relationship-person:hover { background: var(--surface-2); }
-.relationship-person small { color: var(--muted); font-size: .66rem; }
-.relationship-actions { display: flex; gap: .25rem; }
+.relationship-list { display: grid; gap: .3rem; }
+.relationship-group { border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); }
+.relationship-group summary { display: flex; align-items: center; justify-content: space-between; gap: .45rem; min-height: 34px; padding: .32rem .45rem; color: var(--text); font-size: .72rem; font-weight: 800; cursor: pointer; }
+.relationship-group summary .count-pill { min-height: 20px; padding: .12rem .38rem; font-size: .62rem; }
+.relationship-names { display: grid; padding: 0 .3rem .3rem; }
+.relationship-name { min-height: 30px; padding: .28rem .35rem; border: 0; border-radius: 6px; background: transparent; color: var(--accent-strong); font-size: .75rem; font-weight: 750; text-align: left; }
+.relationship-name:hover, .relationship-name:focus-visible { background: var(--accent-soft); }
+.relationship-empty { padding: .25rem .35rem; color: var(--muted); font-size: .7rem; }
 .profile-footer { display: flex; align-items: center; justify-content: space-between; gap: .45rem; flex-wrap: wrap; padding-top: .8rem; border-top: 1px solid var(--line); }
 .mobile-workspace-tabs { display: none; margin-bottom: .55rem; }
 
@@ -759,8 +765,6 @@ body[data-onboarding="true"] main { min-height: 100svh; padding: max(1rem, var(-
   .person-name-grid { grid-template-columns: 1fr; }
   .repeatable-contact { grid-template-columns: 1fr; align-items: stretch; }
   .date-field-group { grid-template-columns: minmax(0, 1fr) 95px; }
-  .relationship-row { grid-template-columns: 1fr; }
-  .relationship-actions .button { flex: 1; }
 }
 
 @media print {

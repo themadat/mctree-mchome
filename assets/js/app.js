@@ -280,20 +280,51 @@
     return first + " and " + second + ": " + (status ? status.label : "Partners") + (relationshipMeta(edge.relationship) ? ". " + relationshipMeta(edge.relationship) : "");
   }
 
+  function relationshipYear(date) {
+    const match = String(date && date.value || "").match(/^\d{4}/);
+    return match ? Number(match[0]) : 0;
+  }
+
+  function partnerCouldBeParent(relationship, child) {
+    const birthYear = relationshipYear(child.birth && child.birth.date);
+    if (!birthYear) return true;
+    const startYear = relationshipYear(relationship.startDate);
+    const endYear = relationshipYear(relationship.endDate);
+    return (!startYear || startYear <= birthYear) && (!endYear || endYear >= birthYear);
+  }
+
+  function relationshipNameList(people, emptyText) {
+    const unique = Array.from(new Map(people.filter(Boolean).map(function (person) { return [person.id, person]; })).values()).sort(function (a, b) { return model.sortName(a).localeCompare(model.sortName(b)); });
+    return unique.length ? unique.map(function (other) {
+      return '<button type="button" class="relationship-name" data-select-person="' + u.escapeHtml(other.id) + '">' + u.escapeHtml(model.displayName(other)) + "</button>";
+    }).join("") : '<span class="relationship-empty">' + u.escapeHtml(emptyText) + "</span>";
+  }
+
+  function relationshipGroup(label, people, emptyText) {
+    const count = new Set(people.filter(Boolean).map(function (person) { return person.id; })).size;
+    return '<details class="relationship-group" open><summary><span>' + u.escapeHtml(label) + '</span><span class="count-pill">' + count + '</span></summary><div class="relationship-names">' + relationshipNameList(people, emptyText) + "</div></details>";
+  }
+
+  function expandedParentEntries(person, groups, graph) {
+    const parents = groups.parents.slice();
+    const parentIds = new Set(parents.map(function (entry) { return entry.person.id; }));
+    groups.parents.forEach(function (entry) {
+      (graph.partners.get(entry.person.id) || []).forEach(function (partnerEntry) {
+        if (!partnerEntry.person || partnerEntry.person.id === person.id || parentIds.has(partnerEntry.person.id) || !partnerCouldBeParent(partnerEntry.relationship, person)) return;
+        parentIds.add(partnerEntry.person.id);
+        parents.push({ person: partnerEntry.person, relationship: null });
+      });
+    });
+    return parents;
+  }
+
   function relationshipRows(person) {
     const graph = family.indexes(state());
-    const rows = [];
-    state().workspace.relationships.filter(function (relationship) {
-      return relationship.type === "parent-child" ? relationship.parentId === person.id || relationship.childId === person.id : relationship.person1Id === person.id || relationship.person2Id === person.id;
-    }).forEach(function (relationship) {
-      const otherId = relationship.type === "parent-child"
-        ? (relationship.parentId === person.id ? relationship.childId : relationship.parentId)
-        : (relationship.person1Id === person.id ? relationship.person2Id : relationship.person1Id);
-      const other = graph.peopleById.get(otherId);
-      if (!other) return;
-      rows.push('<div class="relationship-row"><button type="button" class="relationship-person" data-select-person="' + u.escapeHtml(other.id) + '"><strong>' + u.escapeHtml(model.displayName(other)) + '</strong><small>' + u.escapeHtml(relationshipLabel(relationship, person.id, other)) + '</small>' + (relationshipMeta(relationship) ? '<small>' + u.escapeHtml(relationshipMeta(relationship)) + "</small>" : "") + '</button><div class="relationship-actions"><button type="button" class="button small" data-edit-relationship="' + u.escapeHtml(relationship.id) + '"' + mutationDisabledAttributes() + '>Edit</button><button type="button" class="button small danger-text" data-delete-relationship="' + u.escapeHtml(relationship.id) + '"' + mutationDisabledAttributes() + '>Remove</button></div></div>');
-    });
-    return rows.length ? rows.join("") : '<p class="muted-copy">No relationships recorded yet.</p>';
+    const groups = family.relationGroups(person.id, state());
+    const parents = expandedParentEntries(person, groups, graph).map(function (entry) { return entry.person; });
+    return relationshipGroup("Parents", parents, "No parents recorded")
+      + relationshipGroup("Children", groups.children.map(function (entry) { return entry.person; }), "No children recorded")
+      + relationshipGroup("Siblings", groups.siblings, "No siblings recorded");
   }
 
   function sourceEntries(source) {
@@ -313,7 +344,7 @@
     if (!raw) return [];
     return raw.split(".").map(function (part) { return u.cleanLine(part, 20); }).filter(Boolean).map(function (part) {
       return /^\d+$/.test(part) ? String(Number(part)).padStart(2, "0") : part.padStart(2, "0");
-    }).reverse();
+    });
   }
 
   function sourceBirthYear(person) {
@@ -341,9 +372,10 @@
     const rawId = sourceField(person, "lineage_id");
     const rawSegments = rawId ? rawId.split(".").map(function (part) { return u.cleanLine(part, 20); }).filter(Boolean) : [];
     const numbers = lineageId(person);
+    const chainNumbers = numbers.slice().reverse();
     const people = current.workspace.people;
     const used = new Set([person.id]);
-    const members = [{ name: model.displayName(person), person: person, number: numbers[0] || "" }];
+    const members = [{ name: model.displayName(person), person: person, number: chainNumbers[0] || "" }];
     const levelNames = [1, 2, 3, 4, 5, 6].map(function (level) { return sourceField(person, "lineage_level_" + String(level).padStart(2, "0") + "_name"); }).filter(Boolean).reverse();
 
     levelNames.forEach(function (name, index) {
@@ -351,7 +383,7 @@
       const candidates = people.filter(function (candidate) { return candidate.id !== person.id && sourceField(candidate, "lineage_id") === prefix; });
       const target = candidates.length === 1 ? candidates[0] : candidates.find(function (candidate) { return sourceNameMatches(candidate, name); });
       if (target) used.add(target.id);
-      members.push({ name: name, person: target || null, number: numbers[index + 1] || "" });
+      members.push({ name: name, person: target || null, number: chainNumbers[index + 1] || "" });
     });
 
     const rootNames = [1, 2, 3].map(function (level) { return sourceField(person, "root_ancestor_" + String(level).padStart(2, "0") + "_name"); }).filter(Boolean);
@@ -383,7 +415,19 @@
 
   function lineageIdHtml(numbers) {
     if (!numbers.length) return '<span class="muted-copy">Not recorded</span>';
-    return '<code class="lineage-id"><strong>' + u.escapeHtml(numbers[0]) + "</strong>" + numbers.slice(1).map(function (number) { return "." + u.escapeHtml(number); }).join("") + "</code>";
+    return '<code class="lineage-id">' + numbers.map(function (number, index) {
+      const value = u.escapeHtml(number);
+      return (index ? "." : "") + (index === numbers.length - 1 ? "<strong>" + value + "</strong>" : value);
+    }).join("") + "</code>";
+  }
+
+  function lineageSummaryText(person) {
+    const summary = family.lineageSummary(person.id, state());
+    return [
+      summary.ancestors + " ancestor" + (summary.ancestors === 1 ? "" : "s"),
+      summary.siblings + " sibling" + (summary.siblings === 1 ? "" : "s"),
+      summary.descendants + " descendant" + (summary.descendants === 1 ? "" : "s")
+    ].join(" · ");
   }
 
   function lineageReadingHtml(chain) {
@@ -399,8 +443,8 @@
 
   function profileLineage(person) {
     const chain = lineageChain(person);
-    const background = person.heritageNote && !sourceField(person, "lineage_id") ? '<div><dt>Background</dt><dd class="preserve-lines">' + u.escapeHtml(person.heritageNote) + "</dd></div>" : "";
-    return '<section class="profile-section lineage-section"><h3>Lineage</h3><dl class="lineage-details"><div><dt>ID</dt><dd>' + lineageIdHtml(chain.numbers) + '</dd></div><div><dt>Name List</dt><dd><ol class="lineage-name-list">' + chain.members.map(function (member) { return "<li>" + lineagePersonLink(member, true) + "</li>"; }).join("") + '</ol></dd></div><div><dt>Reading</dt><dd>' + lineageReadingHtml(chain) + "</dd></div>" + background + "</dl></section>";
+    const background = person.heritageNote && !sourceField(person, "lineage_id") ? '<div class="lineage-background"><h4>Background</h4><p class="preserve-lines">' + u.escapeHtml(person.heritageNote) + "</p></div>" : "";
+    return '<section class="profile-section lineage-section"><h3>Lineage</h3><div class="lineage-id-row"><span>ID</span>' + lineageIdHtml(chain.numbers) + '</div><div class="lineage-columns"><section><h4>Names</h4><ol class="lineage-name-list">' + chain.members.map(function (member) { return "<li>" + lineagePersonLink(member, true) + "</li>"; }).join("") + '</ol></section><section><h4>Reading</h4>' + lineageReadingHtml(chain) + '<p class="lineage-summary">' + u.escapeHtml(lineageSummaryText(person)) + "</p></section></div>" + background + "</section>";
   }
 
   function profileSource(person) {
@@ -426,7 +470,7 @@
       return "Gen " + member.generation + " · " + ordinal + "Child of " + u.escapeHtml(parent.name);
     }).join("<br>");
     const background = person.heritageNote && !sourceField(person, "lineage_id") ? '<div><dt>Background</dt><dd>' + u.escapeHtml(person.heritageNote).replace(/\n/g, "<br>") + "</dd></div>" : "";
-    return '<section class="print-wide"><h3>Lineage</h3><dl><div><dt>ID</dt><dd>' + lineageIdHtml(chain.numbers) + '</dd></div><div><dt>Name List</dt><dd>' + nameList + '</dd></div><div><dt>Reading</dt><dd>' + reading + "</dd></div>" + background + "</dl></section>";
+    return '<section class="print-wide"><h3>Lineage</h3><dl><div><dt>ID</dt><dd>' + lineageIdHtml(chain.numbers) + '</dd></div><div><dt>Names</dt><dd>' + nameList + '</dd></div><div><dt>Reading</dt><dd>' + reading + '</dd></div><div><dt>Family</dt><dd>' + u.escapeHtml(lineageSummaryText(person)) + "</dd></div>" + background + "</dl></section>";
   }
 
   function renderProfile() {
@@ -440,11 +484,10 @@
     const isHome = state().workspace.family.homePersonId === person.id;
     const profileLabels = (developerReferencesEnabled() ? [person.reference] : []).concat(isHome ? ["Home person"] : []);
     const profileEyebrow = profileLabels.length ? '<span class="eyebrow">' + u.escapeHtml(profileLabels.join(" · ")) + "</span>" : "";
-    const lineage = family.lineageSummary(person.id, state());
     const contactBlocks = [];
     if (person.addresses.length) contactBlocks.push('<section class="profile-section"><h3>Addresses</h3>' + person.addresses.slice().sort(function (a, b) { return a.order - b.order; }).map(function (address) { return '<article class="contact-card"><header><strong>' + u.escapeHtml(address.label) + '</strong><span class="status-pill" data-kind="' + (address.current ? "success" : "neutral") + '">' + (address.current ? "Current" : "Former") + '</span></header><address>' + u.escapeHtml(model.formatAddress(address)).replace(/\n/g, "<br>") + '</address>' + ((model.formatFlexibleDate(address.startDate) || model.formatFlexibleDate(address.endDate)) ? '<small>' + u.escapeHtml([model.formatFlexibleDate(address.startDate), model.formatFlexibleDate(address.endDate)].filter(Boolean).join(" – ")) + "</small>" : "") + (address.notes ? "<p>" + u.escapeHtml(address.notes) + "</p>" : "") + "</article>"; }).join("") + "</section>");
     if (person.phones.length || person.emails.length) contactBlocks.push('<section class="profile-section"><h3>Contact</h3><dl class="profile-list">' + person.phones.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + person.emails.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + "</dl></section>");
-    container.innerHTML = '<article class="person-profile"><header class="profile-header"><div class="profile-title">' + profileEyebrow + '<h2>' + u.escapeHtml(model.displayName(person)) + '</h2><p>' + u.escapeHtml(family.lifespan(person)) + '</p></div><button type="button" class="icon-button" data-close-profile aria-controls="profilePanel" aria-label="Close and deselect person" title="Close and deselect person"><span data-symbol="close" aria-hidden="true"></span></button></header><div class="profile-action-bar"><button type="button" class="button primary" data-edit-person="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Edit person</button><button type="button" class="button" data-add-relative="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Add relative</button><button type="button" class="button" data-add-relationship="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Connect existing</button></div><dl class="profile-list identity-list">' + formatEvent("Born", person.birth) + formatEvent("Died", person.death) + (person.gender ? '<div><dt>Gender</dt><dd>' + u.escapeHtml(person.gender) + "</dd></div>" : "") + (person.pronouns ? '<div><dt>Pronouns</dt><dd>' + u.escapeHtml(person.pronouns) + "</dd></div>" : "") + '<div><dt>Status</dt><dd>' + u.escapeHtml(person.livingStatus) + '</dd></div><div><dt>Lineage</dt><dd>' + u.escapeHtml(lineage.label) + "</dd></div></dl>" + contactBlocks.join("") + profileLineage(person) + (person.notes ? '<section class="profile-section"><h3>Notes</h3><p class="preserve-lines">' + u.escapeHtml(person.notes) + "</p></section>" : "") + profileSource(person) + '<section class="profile-section"><div class="form-section-heading"><h3>Relationships</h3><button type="button" class="button small" data-add-relationship="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Add</button></div><div class="relationship-list">' + relationshipRows(person) + '</div></section><footer class="profile-footer">' + (isHome ? '<span class="status-pill" data-kind="success">Home person</span>' : '<button type="button" class="button" data-set-home="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Set as home person</button>') + '<button type="button" class="button danger-text" data-delete-person="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Delete person</button></footer></article>';
+    container.innerHTML = '<article class="person-profile"><header class="profile-header"><div class="profile-title">' + profileEyebrow + '<h2>' + u.escapeHtml(model.displayName(person)) + '</h2><p>' + u.escapeHtml(family.lifespan(person)) + '</p></div><button type="button" class="icon-button" data-close-profile aria-controls="profilePanel" aria-label="Close and deselect person" title="Close and deselect person"><span data-symbol="close" aria-hidden="true"></span></button></header><div class="profile-action-bar"><button type="button" class="button primary" data-edit-person="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Edit person</button><button type="button" class="button" data-add-relative="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Add relative</button><button type="button" class="button" data-add-relationship="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Connect existing</button></div><dl class="profile-list identity-list">' + formatEvent("Born", person.birth) + formatEvent("Died", person.death) + (person.gender ? '<div><dt>Gender</dt><dd>' + u.escapeHtml(person.gender) + "</dd></div>" : "") + (person.pronouns ? '<div><dt>Pronouns</dt><dd>' + u.escapeHtml(person.pronouns) + "</dd></div>" : "") + '<div><dt>Status</dt><dd>' + u.escapeHtml(person.livingStatus) + "</dd></div></dl>" + contactBlocks.join("") + (person.notes ? '<section class="profile-section"><h3>Notes</h3><p class="preserve-lines">' + u.escapeHtml(person.notes) + "</p></section>" : "") + profileLineage(person) + profileSource(person) + '<section class="profile-section"><div class="form-section-heading"><h3>Relationships</h3><button type="button" class="button small" data-add-relationship="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Add</button></div><div class="relationship-list">' + relationshipRows(person) + '</div></section><footer class="profile-footer">' + (isHome ? '<span class="status-pill" data-kind="success">Home person</span>' : '<button type="button" class="button" data-set-home="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Set as home person</button>') + '<button type="button" class="button danger-text" data-delete-person="' + u.escapeHtml(person.id) + '"' + mutationDisabledAttributes() + '>Delete person</button></footer></article>';
     icons.mount(container);
   }
 
@@ -952,16 +995,16 @@
 
   function printRelationshipList(person, graph) {
     const groups = family.relationGroups(person.id, state());
-    const section = function (label, entries) {
+    const section = function (label, entries, fallbackMeta) {
       if (!entries.length) return "";
       return '<div class="print-rel-group"><dt>' + label + "</dt><dd>" + entries.map(function (entry) {
         const other = entry.person || entry;
         const relationship = entry.relationship;
-        const meta = relationship ? relationshipLabel(relationship, person.id, other) + (relationshipMeta(relationship) ? " · " + relationshipMeta(relationship) : "") : "Sibling";
+        const meta = relationship ? relationshipLabel(relationship, person.id, other) + (relationshipMeta(relationship) ? " · " + relationshipMeta(relationship) : "") : fallbackMeta;
         return u.escapeHtml((developerReferencesEnabled() ? other.reference + " " : "") + model.displayName(other) + " — " + meta);
       }).join("<br>") + "</dd></div>";
     };
-    return section("Parents", groups.parents) + section("Partners", groups.partners) + section("Children", groups.children) + section("Siblings", groups.siblings);
+    return section("Parents", expandedParentEntries(person, groups, graph), "Parent") + section("Partners", groups.partners, "Partner") + section("Children", groups.children, "Child") + section("Siblings", groups.siblings, "Sibling");
   }
 
   function buildPrintReport() {
@@ -989,9 +1032,8 @@
     const profiles = people.map(function (person) {
       const addressHtml = person.addresses.length ? '<section><h3>Addresses</h3>' + person.addresses.map(function (address) { return '<div class="print-address"><strong>' + u.escapeHtml(address.label + (address.current ? " · current" : " · former")) + '</strong><address>' + u.escapeHtml(model.formatAddress(address)).replace(/\n/g, "<br>") + '</address>' + ((model.formatFlexibleDate(address.startDate) || model.formatFlexibleDate(address.endDate)) ? '<small>' + u.escapeHtml([model.formatFlexibleDate(address.startDate), model.formatFlexibleDate(address.endDate)].filter(Boolean).join(" – ")) + "</small>" : "") + (address.notes ? "<p>" + u.escapeHtml(address.notes) + "</p>" : "") + "</div>"; }).join("") + "</section>" : "";
       const contactHtml = person.phones.length || person.emails.length ? '<section><h3>Contact</h3><dl>' + person.phones.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + person.emails.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + "</dl></section>" : "";
-      const lineage = family.lineageSummary(person.id, current);
       const printReference = developerReferencesEnabled() ? '<span class="print-reference">' + u.escapeHtml(person.reference) + "</span>" : "";
-      return '<article id="print-' + u.escapeHtml(person.id) + '" class="print-person"><header>' + printReference + '<div><h2>' + u.escapeHtml(model.displayName(person)) + '</h2><p>' + u.escapeHtml(family.lifespan(person) + (current.workspace.family.homePersonId === person.id ? " · home person" : "")) + '</p></div></header><div class="print-profile-grid"><section><h3>Life details</h3><dl>' + formatEvent("Born", person.birth) + formatEvent("Died", person.death) + '<div><dt>Status</dt><dd>' + u.escapeHtml(person.livingStatus) + "</dd></div>" + (person.gender ? '<div><dt>Gender</dt><dd>' + u.escapeHtml(person.gender) + "</dd></div>" : "") + (person.pronouns ? '<div><dt>Pronouns</dt><dd>' + u.escapeHtml(person.pronouns) + "</dd></div>" : "") + '<div><dt>Lineage</dt><dd>' + u.escapeHtml(lineage.label) + '</dd></div></dl></section><section><h3>Lineage references</h3><dl>' + printRelationshipList(person, graph) + "</dl></section>" + contactHtml + addressHtml + printLineage(person) + (person.notes ? '<section class="print-wide"><h3>Notes</h3><p>' + u.escapeHtml(person.notes).replace(/\n/g, "<br>") + "</p></section>" : "") + printSource(person) + "</div></article>";
+      return '<article id="print-' + u.escapeHtml(person.id) + '" class="print-person"><header>' + printReference + '<div><h2>' + u.escapeHtml(model.displayName(person)) + '</h2><p>' + u.escapeHtml(family.lifespan(person) + (current.workspace.family.homePersonId === person.id ? " · home person" : "")) + '</p></div></header><div class="print-profile-grid"><section><h3>Life details</h3><dl>' + formatEvent("Born", person.birth) + formatEvent("Died", person.death) + '<div><dt>Status</dt><dd>' + u.escapeHtml(person.livingStatus) + "</dd></div>" + (person.gender ? '<div><dt>Gender</dt><dd>' + u.escapeHtml(person.gender) + "</dd></div>" : "") + (person.pronouns ? '<div><dt>Pronouns</dt><dd>' + u.escapeHtml(person.pronouns) + "</dd></div>" : "") + '</dl></section><section><h3>Lineage references</h3><dl>' + printRelationshipList(person, graph) + "</dl></section>" + contactHtml + addressHtml + (person.notes ? '<section class="print-wide"><h3>Notes</h3><p>' + u.escapeHtml(person.notes).replace(/\n/g, "<br>") + "</p></section>" : "") + printLineage(person) + printSource(person) + "</div></article>";
     }).join("");
     const referenceGuide = developerReferencesEnabled() ? " Developer Mode adds stable P-numbers for cross-reference." : "";
     $("#printReport").innerHTML = '<article class="print-cover"><span class="eyebrow">Private family atlas</span><h1>' + u.escapeHtml(current.workspace.family.title) + '</h1><p>Prepared by McFamily on ' + u.escapeHtml(printDate()) + '</p><dl><div><dt>People</dt><dd>' + people.length + '</dd></div><div><dt>Relationships</dt><dd>' + current.workspace.relationships.length + '</dd></div><div><dt>Family units</dt><dd>' + familyUnits.length + '</dd></div><div><dt>Addresses</dt><dd>' + addressCount + '</dd></div><div><dt>Family maps</dt><dd>' + componentsList.length + '</dd></div></dl><aside><strong>Private document</strong><span>This atlas may contain home addresses, contact details, and family notes. Store and share it carefully.</span></aside></article><article class="print-legend"><h2>How to use this atlas</h2><p>Family maps are named for their top sibling and group people by generation using names and years.' + referenceGuide + '</p><div><span><strong>Parent links</strong> Biological, adoptive, step, foster, guardian, or unspecified</span><span><strong>Partner links</strong> Married, partnered, separated, divorced, widowed, former, or unspecified</span></div></article><section class="print-atlas"><h2>Family maps</h2>' + componentHtml + '</section><section class="print-directory"><h1>Person directory</h1>' + profiles + "</section>" + (notes ? '<article class="print-family-notes"><h1>Family Notes</h1><p>' + u.escapeHtml(notes).replace(/\n/g, "<br>") + "</p></article>" : "");

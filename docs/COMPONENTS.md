@@ -34,7 +34,9 @@ Notes remains one large plain-text textarea. It opens from the header or `N`, au
 
 ## Lineage
 
-The selected-person profile presents the source Lineage ID first, reverses its segments so the selected person's two-digit segment leads, and bolds that first segment. A nearest-to-oldest name list follows with each resolved person linked to their profile and tree focus. The reading uses absolute generations rooted at George McMillen (1745) as Gen 0; known positions read `ordinal Child of …` and unknown positions read only `Child of …`. The root receives its own Gen 0 line. The printable atlas includes the same ID, name list, and reading without interactive controls.
+Below Notes, the selected-person profile presents the two-digit source Lineage ID in source order and bolds the selected person's final segment. Left-aligned Names and Reading columns sit side by side, with ancestor, sibling, and descendant totals below Reading; every resolved person remains linked to their profile and tree focus. The reading uses absolute generations rooted at George McMillen (1745) as Gen 0; known positions read `ordinal Child of …` and unknown positions read only `Child of …`. The root receives its own Gen 0 line. The printable atlas includes the same ID, names, reading, and totals without interactive controls.
+
+Relationships use compact, initially open Parents, Children, and Siblings groups containing linked names only. A parent's partner is displayed as a likely co-parent when partnership dates permit, without adding or changing an explicit relationship record.
 
 The profile X closes the panel and clears the selected-person state. Its Family Tree focus remains in place, and selecting a tree node reopens the profile. There is no separate Show person control.
 
