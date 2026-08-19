@@ -240,7 +240,7 @@
   function arrangePartners(items, relationships) {
     const peopleById = new Map(items.map(function (person) { return [person.id, person]; }));
     const pastStatuses = new Set(["divorced", "former", "separated", "widowed"]);
-    const currentRank = { married: 0, partnered: 1, unknown: 2 };
+    const itemOrder = new Map(items.map(function (person, index) { return [person.id, index]; }));
     const links = new Map(items.map(function (person) { return [person.id, []]; }));
     relationships.filter(function (relationship) {
       return relationship.type === "partner" && peopleById.has(relationship.person1Id) && peopleById.has(relationship.person2Id);
@@ -252,25 +252,39 @@
     const arranged = [];
     items.forEach(function (person) {
       if (used.has(person.id)) return;
-      const available = (links.get(person.id) || []).filter(function (entry) { return !used.has(entry.id); });
-      const past = available.filter(function (entry) { return pastStatuses.has(entry.relationship.status); }).sort(comparePartnerHistory);
-      const current = available.filter(function (entry) { return !pastStatuses.has(entry.relationship.status); }).sort(function (a, b) {
-        return (currentRank[a.relationship.status] ?? 9) - (currentRank[b.relationship.status] ?? 9)
-          || comparePartnerHistory(a, b)
-          || model.sortName(peopleById.get(a.id)).localeCompare(model.sortName(peopleById.get(b.id)));
-      });
-      past.forEach(function (entry) {
+      const componentIds = [];
+      const queue = [person.id];
+      const seen = new Set(queue);
+      while (queue.length) {
+        const id = queue.shift();
+        componentIds.push(id);
+        (links.get(id) || []).forEach(function (entry) {
+          if (!seen.has(entry.id) && !used.has(entry.id)) { seen.add(entry.id); queue.push(entry.id); }
+        });
+      }
+      const anchorId = componentIds.slice().sort(function (aId, bId) {
+        const a = peopleById.get(aId);
+        const b = peopleById.get(bId);
+        const aPrimary = a && a.source && a.source.format === "mclineage-cleaned" ? 1 : 0;
+        const bPrimary = b && b.source && b.source.format === "mclineage-cleaned" ? 1 : 0;
+        return bPrimary - aPrimary
+          || Number(lineageParts(b).length > 0) - Number(lineageParts(a).length > 0)
+          || (itemOrder.get(aId) || 0) - (itemOrder.get(bId) || 0);
+      })[0];
+      const anchor = peopleById.get(anchorId);
+      const histories = (links.get(anchorId) || []).filter(function (entry) { return !used.has(entry.id); }).sort(comparePartnerHistory);
+      const active = histories.filter(function (entry) { return !pastStatuses.has(entry.relationship.status); });
+      const preferredActive = active.filter(function (entry) { return entry.relationship.status === "married" || entry.relationship.status === "partnered"; });
+      const current = (preferredActive.length ? preferredActive : active).slice(-1)[0] || null;
+      histories.filter(function (entry) { return !current || entry.id !== current.id; }).forEach(function (entry) {
         if (used.has(entry.id)) return;
         arranged.push(peopleById.get(entry.id));
         used.add(entry.id);
       });
-      arranged.push(person);
-      used.add(person.id);
-      current.forEach(function (entry) {
-        if (used.has(entry.id)) return;
-        arranged.push(peopleById.get(entry.id));
-        used.add(entry.id);
-      });
+      arranged.push(anchor);
+      used.add(anchorId);
+      if (current && !used.has(current.id)) { arranged.push(peopleById.get(current.id)); used.add(current.id); }
+      componentIds.filter(function (id) { return !used.has(id); }).sort(function (a, b) { return itemOrder.get(a) - itemOrder.get(b); }).forEach(function (id) { arranged.push(peopleById.get(id)); used.add(id); });
     });
     return arranged;
   }
