@@ -4,7 +4,7 @@ McFamily is a private, local-first family atlas that runs as a static GitHub Pag
 
 There is no backend, account, cloud database, or runtime dependency. Family data stays in browser storage and moves only through an explicit CSV import or export. The published repository must never contain a real family CSV or private family data.
 
-Current version: `0.0.1.8` (`major.minor.patch.build`).
+Current version: `0.0.1.9` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -13,8 +13,9 @@ Current version: `0.0.1.8` (`major.minor.patch.build`).
 - Supports pan, zoom, fit, generation depth, keyboard selection, touch, and accessible relationship descriptions.
 - Provides an alphabetical directory and broad search across names, contact details, places, heritage, and notes.
 - Supports partial/fuzzy matches, collapsible side panels, and concise or detailed tree cards.
-- Presents imported ancestry name lines and Lineage IDs alongside relationship-derived family readings.
-- Edits people, multiple addresses, phones, emails, life events, and typed parent or partner relationships.
+- Presents person-first, two-digit Lineage IDs followed by clickable name lists and generation-by-generation child-of readings.
+- Keeps family-record add, edit, relationship, home-person, and deletion controls visibly paused during the current build-out.
+- Retains structured profiles for people, multiple addresses, phones, emails, life events, and typed parent or partner relationships.
 - Rejects missing references, duplicate relationships, self-links, and ancestry cycles.
 - Keeps a recovery snapshot before destructive replacement or deletion.
 - Exports a complete editable McFamily CSV and creates a print-only family atlas for the browser's Save as PDF command.

@@ -658,15 +658,20 @@ body[data-onboarding="true"] main { min-height: 100svh; padding: max(1rem, var(-
 .source-section summary { min-height: 36px; padding: .4rem 0; }
 .source-format { margin: .2rem 0 .45rem; color: var(--muted); font-size: .72rem; }
 .source-list dd { overflow-wrap: anywhere; white-space: pre-wrap; }
-.heritage-details { display: grid; margin: 0; }
-.heritage-details > div { display: grid; grid-template-columns: minmax(70px, .34fr) minmax(0, 1fr); gap: .55rem; padding: .34rem 0; border-top: 1px solid var(--line); }
-.heritage-details > div:first-child { border-top: 0; }
-.heritage-details dt { color: var(--muted); font-size: .7rem; font-weight: 750; }
-.heritage-details dd { min-width: 0; margin: 0; overflow-wrap: anywhere; }
-.lineage-name-line { display: grid; width: 100%; min-height: 42px; padding: .4rem .5rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); color: var(--text); text-align: left; }
-.lineage-name-line:hover, .lineage-name-line:focus-visible { border-color: var(--accent); background: var(--accent-soft); }
-.lineage-name-line > span { white-space: pre-line; }
-.lineage-name-line small { margin-top: .2rem; color: var(--muted); font-size: .64rem; }
+.lineage-details { display: grid; margin: 0; }
+.lineage-details > div { display: grid; grid-template-columns: minmax(70px, .34fr) minmax(0, 1fr); gap: .55rem; padding: .42rem 0; border-top: 1px solid var(--line); }
+.lineage-details > div:first-child { border-top: 0; }
+.lineage-details dt { color: var(--muted); font-size: .7rem; font-weight: 750; }
+.lineage-details dd { min-width: 0; margin: 0; overflow-wrap: anywhere; }
+.lineage-id { color: var(--muted); font-size: .82rem; letter-spacing: .025em; }
+.lineage-id strong { color: var(--text); font-size: 1.05em; }
+.lineage-name-list, .lineage-reading-list { display: grid; gap: .22rem; margin: 0; padding: 0; list-style: none; }
+.lineage-person-link { min-height: 30px; margin: -.18rem -.28rem; padding: .18rem .28rem; border: 0; border-radius: 6px; background: transparent; color: var(--accent-strong); font: inherit; font-weight: 750; text-align: left; }
+.lineage-person-link:hover, .lineage-person-link:focus-visible { background: var(--accent-soft); text-decoration: underline; text-underline-offset: 2px; }
+.lineage-bracket { color: var(--muted); font-size: .72rem; font-weight: 700; }
+.lineage-unlinked-name { font-weight: 700; }
+.lineage-reading-list li { display: grid; grid-template-columns: 48px minmax(0, 1fr); align-items: baseline; gap: .35rem; }
+.lineage-generation { color: var(--muted); font-size: .66rem; font-weight: 750; }
 .contact-card { margin-top: .4rem; padding: .55rem; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); }
 .contact-card header { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: .35rem; }
 .contact-card address { font-style: normal; }

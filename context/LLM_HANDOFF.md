@@ -6,7 +6,7 @@ Start a new session with:
 Continue work in /Users/stripes/Documents/GitHub/mctree-mchome. Read AGENTS.md and context/LLM_HANDOFF.md first. Preserve manual edits and run git status --short before editing.
 ```
 
-This repository is McFamily, a static, local-first family atlas. Version `0.0.1.8` uses schema v7, strict private-CSV onboarding, cleaned McLineage mapping, fuzzy search, collapsible side panes, condensed/detailed couple-aware SVG trees, title-bar-only global actions, a complete native CSV transfer format, an editable family directory, and compact top-sibling-labelled print maps. There is no backend, account, GitHub Sync, cloud database, or runtime dependency.
+This repository is McFamily, a static, local-first family atlas. Version `0.0.1.9` uses schema v7, strict private-CSV onboarding, cleaned McLineage mapping, fuzzy search, collapsible side panes, condensed/detailed couple-aware SVG trees, title-bar-only global actions, a complete native CSV transfer format, a temporarily read-only family directory, and compact top-sibling-labelled print maps. There is no backend, account, GitHub Sync, cloud database, or runtime dependency.
 
 The main product invariants are now the initialized import gate, directory/tree/profile workspace, single Notes modal, Settings Roadmap, local save/backup status, recovery copy, themes, accessibility, install assets, and offline shell. Do not restore the removed Records interface, multi-note workspace, rich-text editor, or GitHub Sync.
 
@@ -82,7 +82,8 @@ Do not silently move between lifecycle stages.
 - Preserve Directory, Tree, and Profile as the coordinated main workspace.
 - The workspace starts directly with its panes. Family title, privacy label, counts, Add Person, and PDF controls are not repeated below the application title bar.
 - Desktop Directory and Profile panes collapse independently. Tree nodes default to condensed given/family/lifespan cards and can switch to detailed cards; recorded partners sit together when possible, with solid married and dotted divorced links.
-- Heritage shows the imported name line and Lineage ID together, with a clickable relationship-derived Son/Daughter/Child reading. Directory and global search accept partial and in-order fuzzy matches.
+- Lineage shows a reversed, two-digit source ID with the selected person's segment first and bold, followed by a linked nearest-to-oldest name list and linked `Gen N · ordinal Child of …` reading. Unknown child positions use `Nth`. Directory and global search accept partial and in-order fuzzy matches.
+- `features.familyEditing` is currently false. Keep person, relationship, home-person, and deletion mutation controls present but disabled and visibly greyed until the maintainer is ready to enable editing.
 - The SVG supports focus/overview, all components and isolated people, pan, zoom, fit, touch, keyboard selection, accessible relationship text, and reduced motion.
 - Standard controls use the shared inline SVG catalog rather than emoji or icon fonts.
 - Controls use native elements, labels, visible focus, touch-sized targets, and safe rendered user text.
