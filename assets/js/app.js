@@ -346,12 +346,22 @@
     return u.cleanLine(person && person.source && person.source.fields && person.source.fields[key], 4000);
   }
 
-  function lineageId(person) {
+  function sourceHasField(person, key) {
+    const fields = person && person.source && person.source.fields;
+    return Boolean(fields && Object.prototype.hasOwnProperty.call(fields, key));
+  }
+
+  function lineageSegments(person) {
     const raw = sourceField(person, "lineage_id");
     if (!raw) return [];
     return raw.split(".").map(function (part) { return u.cleanLine(part, 20); }).filter(Boolean).map(function (part) {
       return /^\d+$/.test(part) ? String(Number(part)).padStart(2, "0") : part.padStart(2, "0");
     });
+  }
+
+  function lineageId(person) {
+    const segments = lineageSegments(person);
+    return sourceHasField(person, "lineage_parent_id") ? segments : segments.reverse();
   }
 
   function sourceBirthYear(person) {
@@ -379,8 +389,36 @@
     const rawId = sourceField(person, "lineage_id");
     const rawSegments = rawId ? rawId.split(".").map(function (part) { return u.cleanLine(part, 20); }).filter(Boolean) : [];
     const numbers = lineageId(person);
-    const chainNumbers = numbers.slice().reverse();
     const people = current.workspace.people;
+
+    if (sourceHasField(person, "lineage_parent_id")) {
+      const byRecordId = new Map();
+      people.forEach(function (candidate) {
+        const recordId = sourceField(candidate, "record_id").toUpperCase();
+        if (recordId && !byRecordId.has(recordId)) byRecordId.set(recordId, candidate);
+      });
+      const members = [];
+      const used = new Set();
+      let cursor = person;
+      while (cursor && !used.has(cursor.id) && members.length <= config.controls.maxPeople) {
+        used.add(cursor.id);
+        members.push({ name: model.displayName(cursor), person: cursor, number: lineageId(cursor)[0] || "" });
+        const parentRecordId = sourceField(cursor, "lineage_parent_id").toUpperCase();
+        if (!parentRecordId) break;
+        const parent = byRecordId.get(parentRecordId);
+        if (!parent || used.has(parent.id)) {
+          const parentName = sourceField(cursor, "lineage_parent_name_full");
+          if (parentName) members.push({ name: parentName, person: null, number: "" });
+          break;
+        }
+        cursor = parent;
+      }
+      const selectedGeneration = Math.max(0, members.length - 1);
+      members.forEach(function (member, index) { member.generation = Math.max(0, selectedGeneration - index); });
+      return { numbers: numbers, members: members };
+    }
+
+    const chainNumbers = numbers;
     const used = new Set([person.id]);
     const members = [{ name: model.displayName(person), person: person, number: chainNumbers[0] || "" }];
     const levelNames = [1, 2, 3, 4, 5, 6].map(function (level) { return sourceField(person, "lineage_level_" + String(level).padStart(2, "0") + "_name"); }).filter(Boolean).reverse();
@@ -424,7 +462,7 @@
     if (!numbers.length) return '<span class="muted-copy">Not recorded</span>';
     return '<code class="lineage-id">' + numbers.map(function (number, index) {
       const value = u.escapeHtml(number);
-      return (index ? "." : "") + (index === numbers.length - 1 ? "<strong>" + value + "</strong>" : value);
+      return (index ? "." : "") + (index === 0 ? "<strong>" + value + "</strong>" : value);
     }).join("") + "</code>";
   }
 

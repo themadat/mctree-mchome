@@ -17,7 +17,8 @@ Use synthetic families only.
 - [ ] No demo family, blank-family action, GEDCOM action, or bypass appears.
 - [ ] A valid cleaned McLineage or native McFamily CSV with at least one person shows a summary and opens the family.
 - [ ] Unknown headers, missing required cells, zero-person first import, malformed CSV, oversized file, duplicate ids, unsafe headers, self-links, duplicate links, and ancestry cycles are rejected without replacing state.
-- [ ] Cleaned-source orphan parent references and non-normalized dates are reported and remain available in source details.
+- [ ] Current cleaned-source `P` record IDs and direct `lineage_parent_id` references import without remapping; missing parent references and non-normalized dates are reported and remain available in source details.
+- [ ] Legacy cleaned sources using root-to-person lineage IDs, `parent_lineage_id`, and lineage-name columns remain importable.
 - [ ] Legacy schema states migrate without losing Notes or retained compatibility fields.
 - [ ] Export/import round trips every person field, relationship field, preference, and Note.
 - [ ] Later replacement creates recovery before changing state; Restore recovery returns the prior family.
@@ -62,9 +63,9 @@ Use synthetic families only.
 - [ ] Directory appears left of Search and Favorites appears right; both show an icon above their visible name without causing desktop or mobile overflow.
 - [ ] Starring a person search result persists across reloads, pins them above unstarred matches, and exposes an accessible pressed state without activating the person.
 - [ ] Favorites opens every starred person with an empty search, allows narrowing that list, and shows useful empty guidance; unstarred or deleted people disappear immediately.
-- [ ] Lineage preserves and two-digit-pads source ID order and bolds the selected person's final segment.
+- [ ] Lineage preserves the normalized person-to-root source order, two-digit-pads every segment, and bolds the selected person's first segment.
 - [ ] George McMillen (1745) reads Gen 0, James reads Gen 1, George (1818) reads Gen 2, and Albon/Newton/Lucian read Gen 3.
-- [ ] Adam's imported lineage is `03.05.05.05.01` with `01` bold, and its reading begins `Gen 7 · 1st Child of Melanie`, then `Gen 6 · 5th Child of Max`.
+- [ ] Adam's imported lineage is `01.05.05.05.03` with the first `01` bold, and its reading begins `Gen 7 · 1st Child of Melanie`, then `Gen 6 · 5th Child of Max`.
 - [ ] A Names heading introduces paired name/reading rows with equal row heights and vertically centered cells; the family totals span both columns on one line, and there is no visible Reading heading.
 - [ ] Every resolved name selects that person and focuses the tree; unknown positions read `Child of` without `Nth`.
 - [ ] Parents, Siblings, Partners, and Children are compact open groups containing names only in that order; Melanie's Parents group contains both Max and Martha through display-only co-parent inference.

@@ -202,8 +202,10 @@
   }
 
   function lineageParts(person) {
-    const raw = String(person && person.source && person.source.fields && person.source.fields.lineage_id || "").trim();
-    return raw ? raw.split(".").map(function (part) { return part.trim(); }).filter(Boolean) : [];
+    const fields = person && person.source && person.source.fields;
+    const raw = String(fields && fields.lineage_id || "").trim();
+    const parts = raw ? raw.split(".").map(function (part) { return part.trim(); }).filter(Boolean) : [];
+    return fields && Object.prototype.hasOwnProperty.call(fields, "lineage_parent_id") ? parts.reverse() : parts;
   }
 
   function compareLineage(a, b) {

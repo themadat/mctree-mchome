@@ -16,7 +16,7 @@
     "relationship_start_qualifier", "relationship_end_date", "relationship_end_qualifier", "relationship_place", "relationship_notes", "family_notes",
     "source_json", "settings_json"
   ];
-  const MCLINEAGE_REQUIRED = ["record_id", "lineage_id", "parent_lineage_id", "descendant_first_names", "descendant_last_name"];
+  const MCLINEAGE_REQUIRED = ["record_id", "lineage_id", "descendant_first_names", "descendant_last_name"];
   let pendingImport = null;
 
   function parseCsv(text) {
@@ -174,6 +174,16 @@
     return prefix + "-" + (cleaned || u.uid("source"));
   }
 
+  function sourceRecordKey(value) {
+    const cleaned = u.cleanLine(value, 100);
+    return /^P\d{3,}$/i.test(cleaned) ? cleaned.toUpperCase() : cleaned;
+  }
+
+  function sourcePersonId(row, index) {
+    const recordId = sourceRecordKey(row.record_id);
+    return /^P\d{3,}$/.test(recordId) ? recordId : stableId("person", recordId, "row-" + (index + 1));
+  }
+
   function sourceFields(row) {
     const fields = {};
     Object.keys(row).forEach(function (key) { fields[key] = u.cleanText(row[key], 4000).trim(); });
@@ -187,7 +197,7 @@
     if (u.cleanText(row.notes, 4000).trim()) notes.push(u.cleanText(row.notes, 4000).trim());
     if (u.cleanText(row.data_quality_notes, 4000).trim()) notes.push("Data quality: " + u.cleanText(row.data_quality_notes, 4000).trim());
     return {
-      id: stableId("person", row.record_id, "row-" + (index + 1)),
+      id: sourcePersonId(row, index),
       givenName: row.descendant_first_names,
       familyName: row.descendant_last_name,
       livingStatus: deathRaw ? "deceased" : "unknown",
@@ -242,30 +252,42 @@
 
   function prepareMcLineage(parsed, fileName) {
     const counters = { sourceRows: parsed.rows.length, orphanParents: 0, ambiguousParents: 0, unmappedDates: 0 };
+    const directParentReferences = parsed.headers.includes("lineage_parent_id");
     const people = [];
     const relationships = [];
     const primaryByRow = [];
+    const byRecordId = new Map();
     const byLineage = new Map();
     parsed.rows.forEach(function (row, index) {
+      if (directParentReferences && !/^P\d{3,}$/.test(sourceRecordKey(row.record_id))) throw new Error("McLineage record_id values must use P references such as P001.");
       const person = sourcePerson(row, index, counters);
       people.push(person);
       primaryByRow[index] = person;
+      const recordId = sourceRecordKey(row.record_id);
+      if (recordId) {
+        if (!byRecordId.has(recordId)) byRecordId.set(recordId, []);
+        byRecordId.get(recordId).push(person);
+      }
       const lineageId = u.cleanLine(row.lineage_id, 100);
       if (lineageId) {
         if (!byLineage.has(lineageId)) byLineage.set(lineageId, []);
         byLineage.get(lineageId).push(person);
       }
     });
+    const duplicateRecordId = Array.from(byRecordId.entries()).find(function (entry) { return entry[1].length > 1; });
+    if (duplicateRecordId) throw new Error("The McLineage CSV contains a duplicate record_id: " + duplicateRecordId[0] + ".");
     parsed.rows.forEach(function (row, index) {
       const primary = primaryByRow[index];
-      const parentLineageId = u.cleanLine(row.parent_lineage_id, 100);
-      if (parentLineageId) {
-        const candidates = byLineage.get(parentLineageId) || [];
+      const parentReference = directParentReferences ? sourceRecordKey(row.lineage_parent_id) : u.cleanLine(row.parent_lineage_id, 100);
+      if (parentReference) {
+        const candidates = directParentReferences ? byRecordId.get(parentReference) || [] : byLineage.get(parentReference) || [];
         if (candidates.length === 1) relationships.push({
           id: stableId("relationship", (row.record_id || index + 1) + "-parent", "parent-" + index),
           type: "parent-child", parentId: candidates[0].id, childId: primary.id, kind: "unknown",
-          notes: "Imported lineage parent " + parentLineageId,
-          source: { format: "mclineage-cleaned", fields: { child_record_id: row.record_id || "", parent_lineage_id: parentLineageId } },
+          notes: "Imported lineage parent " + parentReference,
+          source: { format: "mclineage-cleaned", fields: directParentReferences
+            ? { child_record_id: row.record_id || "", lineage_parent_id: parentReference, lineage_parent_name_full: row.lineage_parent_name_full || "" }
+            : { child_record_id: row.record_id || "", parent_lineage_id: parentReference } },
           order: relationships.length
         });
         else if (candidates.length > 1) counters.ambiguousParents += 1;
@@ -279,7 +301,7 @@
         relationships.push(spouse.relationship);
       });
     });
-    const firstRoot = parsed.rows.findIndex(function (row) { return !u.cleanLine(row.parent_lineage_id, 100); });
+    const firstRoot = parsed.rows.findIndex(function (row) { return !u.cleanLine(directParentReferences ? row.lineage_parent_id : row.parent_lineage_id, 100); });
     const now = u.isoNow();
     const rawState = {
       schemaVersion: config.schemaVersion,
@@ -292,8 +314,8 @@
     };
     const prepared = model.prepare(rawState);
     const warnings = [];
-    if (counters.orphanParents) warnings.push(counters.orphanParents + " parent lineage reference" + (counters.orphanParents === 1 ? " was" : "s were") + " not found and skipped.");
-    if (counters.ambiguousParents) warnings.push(counters.ambiguousParents + " ambiguous parent lineage reference" + (counters.ambiguousParents === 1 ? " was" : "s were") + " skipped.");
+    if (counters.orphanParents) warnings.push(counters.orphanParents + " lineage parent reference" + (counters.orphanParents === 1 ? " was" : "s were") + " not found and skipped.");
+    if (counters.ambiguousParents) warnings.push(counters.ambiguousParents + " ambiguous lineage parent reference" + (counters.ambiguousParents === 1 ? " was" : "s were") + " skipped.");
     if (counters.unmappedDates) warnings.push(counters.unmappedDates + " partial or invalid source date" + (counters.unmappedDates === 1 ? " is" : "s are") + " preserved in source fields but not shown as a normalized date.");
     prepared.validation.warnings = prepared.validation.warnings.concat(warnings);
     return Object.assign(prepared, { formatLabel: "McLineage cleaned CSV", sourceRows: parsed.rows.length, fileName: fileName });
@@ -374,7 +396,7 @@
   function prepareCsv(text, fileName) {
     const parsed = parseCsv(text);
     if (parsed.headers.includes("mcfamily_csv_version") && parsed.headers.includes("record_type")) return prepareNative(parsed, fileName);
-    if (MCLINEAGE_REQUIRED.every(function (header) { return parsed.headers.includes(header); })) return prepareMcLineage(parsed, fileName);
+    if (MCLINEAGE_REQUIRED.every(function (header) { return parsed.headers.includes(header); }) && (parsed.headers.includes("lineage_parent_id") || parsed.headers.includes("parent_lineage_id"))) return prepareMcLineage(parsed, fileName);
     throw new Error("That CSV is neither a McFamily export nor the supported McLineage-cleaned format.");
   }
 

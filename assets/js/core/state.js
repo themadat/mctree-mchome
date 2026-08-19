@@ -687,8 +687,22 @@
   }
 
   function assignReferences(people) {
-    people.slice().sort(function (a, b) { return sortName(a).localeCompare(sortName(b)) || a.id.localeCompare(b.id); }).forEach(function (person, index) {
-      person.reference = "P" + String(index + 1).padStart(3, "0");
+    const used = new Set();
+    people.forEach(function (person) {
+      const sourceReference = /^P\d{3,}$/i.test(person.id) ? person.id.toUpperCase() : "";
+      if (!sourceReference || used.has(sourceReference)) return;
+      person.reference = sourceReference;
+      used.add(sourceReference);
+    });
+    let nextReference = 1;
+    people.filter(function (person) { return !person.reference; }).sort(function (a, b) { return sortName(a).localeCompare(sortName(b)) || a.id.localeCompare(b.id); }).forEach(function (person) {
+      let reference = "";
+      do {
+        reference = "P" + String(nextReference).padStart(3, "0");
+        nextReference += 1;
+      } while (used.has(reference));
+      person.reference = reference;
+      used.add(reference);
     });
   }
 

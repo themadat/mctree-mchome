@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.16",
-      buildId: "0.0.1.16",
+      version: "0.0.1.17",
+      buildId: "0.0.1.17",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -84,6 +84,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.17",
+        date: "2026-08-19T14:25:55.000Z",
+        title: "Direct lineage references",
+        summary: "McLineage imports now use stable P record IDs, person-to-root lineage paths, and direct parent references instead of reconstructing ancestry from redundant names.",
+        features: ["Direct lineage-parent references", "Stable imported P references"],
+        improvements: ["Smaller 48-field cleaned-source schema", "Lineage readings follow referenced people instead of repeated name columns"],
+        fixes: ["Normalized lineage IDs are no longer reversed a second time", "Tree rows still sort by the root-to-person numeric hierarchy"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.16",
         date: "2026-08-19T07:30:00.000Z",
