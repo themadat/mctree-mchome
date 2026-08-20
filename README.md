@@ -4,7 +4,7 @@ McFamily is a private, local-first family atlas that runs as a static GitHub Pag
 
 There is no backend, account, cloud database, or runtime dependency. Family data stays in browser storage and moves only through an explicit CSV import or export. The published repository must never contain a real family CSV or private family data.
 
-Current version: `0.0.1.39` (`major.minor.patch.build`).
+Current version: `0.0.1.40` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -93,7 +93,7 @@ The primary maintainer owns the canonical private CSV file:
 
 Imports replace the current family after a summary and confirmation. McFamily creates a recovery snapshot first; it does not merge concurrent copies.
 
-`Print / Save PDF` builds a report with a cover, statistics, legend, compact generation-grouped family maps named for their top sibling, and a detailed profile for every person. Use the native print dialog's Save as PDF destination.
+`Print / Save PDF` builds a report whose cover, statistics, legend, and six-column Family Maps flow together without forced opening-page breaks. George McMillen (1745) leads the maps as Generation 0, and Generation 5 and later are grouped beneath Generation 4 family lines. The alphabetical Person Directory omits internal P references, individual Notes, and Imported Source fields. Use the native print dialog's Save as PDF destination; Developer Mode opens the same report in an in-app preview instead.
 
 ## Host on GitHub Pages
 

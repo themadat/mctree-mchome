@@ -593,6 +593,7 @@
     focusPeople: focusPeople,
     connectedComponents: connectedComponents,
     generationMap: generationMap,
+    compareLineage: compareLineage,
     isNeverMarriedPartnership: isNeverMarriedPartnership,
     partnerHasRecordedEnd: partnerHasRecordedEnd,
     partnerMaritalStatusId: partnerMaritalStatusId,

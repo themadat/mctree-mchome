@@ -25,8 +25,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 8,
   "meta": {
-    "appVersion": "0.0.1.39",
-    "buildId": "0.0.1.39",
+    "appVersion": "0.0.1.40",
+    "buildId": "0.0.1.40",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -83,9 +83,9 @@ The layout is deterministic and dependency-free. Desktop opens with a thin-gutte
 
 ## Print atlas
 
-The print action constructs hidden semantic HTML before calling `window.print()`. Print CSS suppresses application controls and exposes only the report. Stable `P` references identify people in detailed profiles and relationship cross-references only while Developer Mode is enabled.
+The print action constructs hidden semantic HTML before calling `window.print()`. Print CSS suppresses application controls and exposes only the report. Developer Mode copies the same generated report into a modal preview and deliberately skips `window.print()`.
 
-The report contains a cover and counts, relationship legend, compact generation-grouped maps for every component, alphabetical profiles with all stored person fields, and Family Notes. Each map is named for the top-generation person with the most direct children, falling back to name order; cards show names and years without identifiers. Cross-references avoid scaling one enormous SVG tree to illegible size. Page-break rules prefer intact profiles and repeat important section headings where supported.
+The compact cover, counts, relationship legend, and six-column Family Maps flow together without forced opening-page breaks. The George McMillen (1745) component is first and identifies him as Generation 0; other components retain their top-sibling label. Generation 5 and later are partitioned beneath Generation 4 descendants, including Non-Lineal partners assigned through their Lineal partner. Alphabetical profiles follow without internal P references, individual Notes, or Imported Source fields; Family Notes remain a separate final section. Cross-references avoid scaling one enormous SVG tree to illegible size. Page-break rules prefer intact profiles and repeat important section headings where supported.
 
 The browser owns PDF generation. McFamily does not create a binary PDF directly.
 
