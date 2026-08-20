@@ -455,10 +455,15 @@
     return "Choose a relationship type.";
   }
 
+  function eventYearLabel(person, kind) {
+    const value = person && person[kind] && person[kind].date && person[kind].date.value;
+    if (value) return String(value).slice(0, 4);
+    const year = sourceField(person, "person_date_" + kind + "_value").slice(0, 4);
+    return /^[\d?]{4}$/.test(year) ? year : "";
+  }
+
   function lifespan(person) {
-    const birth = person.birth && person.birth.date && person.birth.date.value ? person.birth.date.value.slice(0, 4) : "";
-    const death = person.death && person.death.date && person.death.date.value ? person.death.date.value.slice(0, 4) : "";
-    return (birth || "????") + " – " + (death || "????");
+    return (eventYearLabel(person, "birth") || "????") + " – " + (eventYearLabel(person, "death") || "????");
   }
 
   App.family = {
@@ -468,6 +473,7 @@
     descendantsOf: descendantsOf,
     familyUnits: familyUnits,
     lineageSummary: lineageSummary,
+    eventYearLabel: eventYearLabel,
     focusPeople: focusPeople,
     connectedComponents: connectedComponents,
     generationMap: generationMap,

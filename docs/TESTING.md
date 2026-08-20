@@ -65,6 +65,10 @@ Use synthetic families only.
 - [ ] A multi-partner lineage person is preceded by past partners from earliest to latest and followed by the current married partner.
 - [ ] Christine Perrietta McMillen renders with Ray Shanaman on her left using a divorced line and Howard David Weiss as the only partner on her right using a married line.
 - [ ] Affinal Lines is disabled by default and hides recorded `affinal` parent edges; enabling it draws them as accessible light dashed branches while consanguinity edges stay solid.
+- [ ] Only the current marriage draws a solid partner line; never-married partnerships are dashed, ended-unknown partnerships render as a `????` glyph line, and divorced, separated, and widowed links are dotted.
+- [ ] The floating Key sits at the lower right of the Family Tree module, collapses and reopens, stays inside the module at mobile widths, and does not block canvas drags.
+- [ ] Partial source dates appear in profiles and print as `December ??, 1979`, `August ??, 1943`, `June 2, 19??`, and `1981`; ages from a partial value carry `~` and an unknown year shows no age.
+- [ ] Marital Status reads Married, Widowed, Divorced, Separated, Never married, or Unknown from the most recent partnership, Unknown when no partnership is recorded, and each Partners row reads `(year :: Status)`.
 - [ ] Ancestors and Descendants accept 0 through 10 and clamp anything larger.
 - [ ] Selecting a person from global search or a filtered directory returns the Family Tree to Focus mode.
 - [ ] The desktop tree/profile divider resizes both modules with pointer drag and Left/Right/Home/End keys, persists locally, and disappears below 960px.
