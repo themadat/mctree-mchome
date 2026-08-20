@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.35",
-      buildId: "0.0.1.35",
+      version: "0.0.1.36",
+      buildId: "0.0.1.36",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -60,7 +60,7 @@
 
     parentKinds: [
       { id: "biological", label: "Biological parent" },
-      { id: "affinal", label: "Affinal parent" },
+      { id: "affinal", label: "Non-Lineal parent" },
       { id: "adoptive", label: "Adoptive parent" },
       { id: "step", label: "Step-parent" },
       { id: "foster", label: "Foster parent" },
@@ -101,8 +101,8 @@
       { id: "living", label: "Living", group: "status" },
       { id: "deceased", label: "Deceased", group: "status" },
       { id: "unknown", label: "Unknown status", group: "status" },
-      { id: "consanguineal", label: "Consanguineal (by Blood)", group: "kinship" },
-      { id: "affinal", label: "Affinal (by Partner)", group: "kinship" }
+      { id: "consanguineal", label: "Lineal", group: "kinship" },
+      { id: "affinal", label: "Non-Lineal", group: "kinship" }
     ],
 
     themes: [
@@ -113,6 +113,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.36",
+        date: "2026-08-20T04:00:00.000Z",
+        title: "Lineal tree emphasis",
+        summary: "Lineal relatives now carry a muted blood-red tree treatment, generation controls begin fully expanded, and the Family Tree title bar aligns its controls into clearer groups.",
+        features: ["Lineal and Non-Lineal family terminology", "Muted Lineal and blended Lineal-deceased tree cards", "Presumed-deceased inference for unknown-status partners"],
+        improvements: ["Ancestor and descendant defaults set to 10", "Grouped generation depths and equally tall toolbar controls", "Zoom actions right-aligned in the title bar"],
+        fixes: ["Developer divider percentages appear only during an active drag"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.35",
         date: "2026-08-20T03:05:00.000Z",
@@ -147,10 +157,10 @@
         version: "0.0.1.32",
         date: "2026-08-20T00:35:00.000Z",
         title: "Current schema only",
-        summary: "McFamily now reads only the current McLineage schema, records affinal parents as their own kind, and no longer presumes living people are deceased.",
-        features: ["Ancestor and descendant depths up to 10", "Affinal parent links drawn only by the Affinal Lines toggle"],
+        summary: "McFamily now reads only the current McLineage schema, records Non-Lineal parents as their own kind, and no longer presumes living people are deceased.",
+        features: ["Ancestor and descendant depths up to 10", "Non-Lineal parent links drawn only by the Non-Lineal Lines toggle"],
         improvements: ["Full Search Directory placeholder with a compact result pill", "Filter By and Sort By share one control size", "Legacy McLineage columns and spouse slots removed"],
-        fixes: ["A recorded death or an age past 100 marks someone deceased instead of an UNKNOWN descriptor or lineage position", "Solid tree edges follow the consanguinity bloodline again"],
+        fixes: ["A recorded death or an age past 100 marks someone deceased instead of an UNKNOWN descriptor or lineage position", "Solid tree edges follow the Lineal bloodline again"],
         knownIssues: []
       },
       {
@@ -188,9 +198,9 @@
         date: "2026-08-19T21:23:49.000Z",
         title: "Directory filter controls",
         summary: "Directory search and result count now share the title bar, with labelled sorting and combinable status and kinship filters.",
-        features: ["Checkbox multi-select directory filters", "Consanguineal and affinal directory scopes"],
+        features: ["Checkbox multi-select directory filters", "Lineal and Non-Lineal directory scopes"],
         improvements: ["Result count inside title-bar search", "Visible Filter By and Sort By labels"],
-        fixes: ["Legacy living-status selections migrate into the new filter menu", "Other parent lines is now labelled Affinal Lines"],
+        fixes: ["Legacy living-status selections migrate into the new filter menu", "Other parent lines is now labelled Non-Lineal Lines"],
         knownIssues: []
       },
       {
@@ -199,7 +209,7 @@
         title: "Relationship context",
         summary: "Profile and print relationships now show generation, parent role, birth order, birth year, and marriage year context.",
         features: ["Generation-labelled family groups", "Relationship context beside each person"],
-        improvements: ["Consanguinity and affinity parent designations", "Birth order and year for siblings and children"],
+        improvements: ["Lineal and Non-Lineal parent designations", "Birth order and year for siblings and children"],
         fixes: ["Marriage years remain visible in compact partner lists", "Screen and print relationship order now matches"],
         knownIssues: []
       },
@@ -210,7 +220,7 @@
         summary: "Current McLineage imports now read one structured partner relationship column instead of fixed spouse slots.",
         features: ["partner_relationships_json source records", "Relationship end reasons"],
         improvements: ["Stable relationship references", "Death, divorce, and unknown endings map to distinct partner states"],
-        fixes: ["Affinal parents validate against normalized partner pairs", "Legacy spouse-slot files remain importable"],
+        fixes: ["Non-Lineal parents validate against normalized partner pairs", "Legacy spouse-slot files remain importable"],
         knownIssues: []
       },
       {
@@ -228,9 +238,9 @@
         date: "2026-08-19T20:05:32.000Z",
         title: "Explicit parent roles",
         summary: "Current McLineage imports now distinguish the direct bloodline parent from an evidence-supported spouse-parent reference.",
-        features: ["Consanguineous parent references", "Explicit affinal parent links"],
-        improvements: ["Affinal parents become real parent relationships", "Bloodline lineage remains authoritative"],
-        fixes: ["Affinal references must resolve through the bloodline parent's spouse slots", "Older direct-parent and lineage-path schemas remain importable"],
+        features: ["Lineal parent references", "Explicit Non-Lineal parent links"],
+        improvements: ["Non-Lineal parents become real parent relationships", "Lineal lineage remains authoritative"],
+        fixes: ["Non-Lineal references must resolve through the Lineal parent's spouse slots", "Older direct-parent and lineage-path schemas remain importable"],
         knownIssues: []
       },
       {
@@ -464,8 +474,8 @@
 
     help: [
       { id: "start", title: "Getting started", section: "Basics", keywords: "start import csv backup seed first launch", html: "<p>McFamily opens after you import the cleaned McLineage CSV or a native McFamily CSV export. The file is mapped, validated, and previewed before it replaces local data. There is no demo-family or blank-family bypass.</p>" },
-      { id: "tree", title: "Exploring the Family Tree", section: "Family", keywords: "tree focus overview zoom pan scroll horizontal vertical generation ancestor descendant home person condensed detailed co-parent affinal resize", html: "<p>Focus view shows the selected person and nearby generations; choosing a person from search returns here automatically. Select any person to recenter the Family Tree, set separate Ancestor and Descendant depth numbers, or switch between condensed and detailed cards. Narrow cards place each name word on its own line, and deceased people use light-brown cards. <strong>Affinal Lines</strong> adds the lighter dashed branch from each recorded affinal parent to their child; the solid parent lines always follow the consanguinity bloodline. Partner lines reserve solid for the current marriage, dash a partnership that was never a marriage, draw <strong>????</strong> when a partnership ended for an unrecorded reason, and dot divorced, separated, or widowed links. The Key at the lower right of the module names each line and can be collapsed. <strong>Hide 99 Lineage</strong> removes people whose source lineage is 99, and anyone connected only to them, from the tree while leaving them in the directory and search. On desktop, drag the divider beside the selected person panel to resize both modules. Scroll horizontally or vertically to explore larger layouts; enter a zoom percentage or use Out, In, and Fit.</p>" },
-      { id: "people", title: "People and relationships", section: "Family", keywords: "people directory favorites star search sort filter blood consanguineal affinal alphabet address phone email parent child partner ancestry lineage generation", html: "<p>Use Directory to the left of Search to open or close the pane. Its title-bar search contains the current result count. Filter By combines any living-status, Consanguineal, and Affinal checkboxes; Sort By switches between first and last name; the A–Z rail follows the filtered results. Select the star beside a person search result to pin them above other matches. Favorites to the right of Search opens every starred person and can be narrowed with the search field. The person panel closes and deselects with its X; selecting a person in the Family Tree reopens it. Lineage uses a compact Family Line with each name followed by its lineage number and generation; readings use the generation and the parent's first name, such as Gen 6, 5th Child of Max. Lineage sits directly under identity details, above Relationships. Identity details show partial source dates such as December ??, 1979 with an approximate ~ age, plus a Marital Status row of Married, Widowed, Divorced, Separated, Never married, or Unknown taken from the most recent partnership. Relationship groups label parent, sibling, and child generations; each Partners row adds its year and status as 1912 :: Widowed; parents identify recorded consanguinity or affinity, siblings and children show birth order and year, and partners show marriage year. Partners puts the current partner first in bold before reverse-ordered prior partners. Notes follow Relationships, and Imported Source finishes the profile. Generations are rooted at George McMillen (1745) as G0.</p>" },
+      { id: "tree", title: "Exploring the Family Tree", section: "Family", keywords: "tree focus overview zoom pan scroll horizontal vertical generation ancestor descendant home person condensed detailed co-parent non-lineal resize", html: "<p>Focus view shows the selected person and nearby generations; choosing a person from search returns here automatically. Select any person to recenter the Family Tree, set the grouped Ancestor and Descendant depth numbers, or switch between condensed and detailed cards. Both generation depths default to 10. Narrow cards place each name word on its own line; Lineal people use muted blood-red cards, deceased Lineal people blend that red with the deceased brown, and other deceased people remain light brown. <strong>Non-Lineal Lines</strong> adds the lighter dashed branch from each recorded Non-Lineal parent to their child; the solid parent lines always follow the Lineal bloodline. Partner lines reserve solid for the current marriage, dash a partnership that was never a marriage, draw <strong>????</strong> when a partnership ended for an unrecorded reason, and dot divorced, separated, or widowed links. The Key at the lower right of the module names each line and can be collapsed. <strong>Hide 99 Lineage</strong> removes people whose source lineage is 99, and anyone connected only to them, from the tree while leaving them in the directory and search. On desktop, drag the divider beside the selected person panel to resize both modules; Developer Mode shows its percentage only while dragging. Scroll horizontally or vertically to explore larger layouts; enter a zoom percentage or use the right-aligned Out, In, and Fit actions.</p>" },
+      { id: "people", title: "People and relationships", section: "Family", keywords: "people directory favorites star search sort filter blood lineal non-lineal alphabet address phone email parent child partner ancestry lineage generation", html: "<p>Use Directory to the left of Search to open or close the pane. Its title-bar search contains the current result count. Filter By combines any living-status, Lineal, and Non-Lineal checkboxes; Sort By switches between first and last name; the A–Z rail follows the filtered results. Select the star beside a person search result to pin them above other matches. Favorites to the right of Search opens every starred person and can be narrowed with the search field. The person panel closes and deselects with its X; selecting a person in the Family Tree reopens it. Lineage uses a compact Family Line with each name followed by its lineage number and generation; readings use the generation and the parent's first name, such as Gen 6, 5th Child of Max. Lineage sits directly under identity details, above Relationships. Identity details show partial source dates such as December ??, 1979 with an approximate ~ age, plus a Marital Status row of Married, Widowed, Divorced, Separated, Never married, or Unknown taken from the most recent partnership. An unknown-status partner of someone already presumed deceased is also presumed deceased. Relationship groups label parent, sibling, and child generations; each Partners row adds its year and status as 1912 :: Widowed; parents identify recorded Lineal or Non-Lineal roles, siblings and children show birth order and year, and partners show marriage year. Partners puts the current partner first in bold before reverse-ordered prior partners. Notes follow Relationships, and Imported Source finishes the profile. Generations are rooted at George McMillen (1745) as G0.</p>" },
       { id: "print", title: "Print or save a PDF", section: "Family", keywords: "print pdf atlas directory lineage family maps generation", html: "<p>Choose <strong>Print / Save PDF</strong> to build the complete atlas and open the browser print dialog. Family maps are named for their top sibling and use compact name-and-years cards; detailed profiles follow alphabetically. Select Save as PDF to create a file.</p>" },
       { id: "notes", title: "Working with Notes", section: "Features", keywords: "notes text edit modal autosave", html: "<p>Notes is a single local plain-text scratchpad. Open it from the top bar or press <kbd>N</kbd>; it is included in McFamily backups.</p>" },
       { id: "backup", title: "CSV backup and restore", section: "Data", keywords: "csv export import backup restore recovery private", html: "<p>CSV export is the complete editable copy of the family and contains private contact information. Native exports use typed rows for people, contacts, relationships, Notes, and settings. Store them securely. Replacement imports are previewed and confirmed; the prior local copy becomes the recovery snapshot.</p>" },

@@ -234,6 +234,11 @@
     };
   }
 
+  function isLinealPerson(person) {
+    const fields = u.plainObject(person && person.source && person.source.fields);
+    return Boolean(u.cleanLine(fields.lineage_id, 200));
+  }
+
   function directoryFilterSummary() {
     const active = new Set(state().ui.directoryFilters);
     const labels = config.directoryFilters.filter(function (filter) { return active.has(filter.id); }).map(function (filter) { return filter.label; });
@@ -468,9 +473,9 @@
     const recordId = sourceField(parent, "record_id").toUpperCase();
     const consanguinityId = sourceField(child, CONSANGUINITY_FIELD).toUpperCase();
     const affinityId = sourceField(child, AFFINITY_FIELD).toUpperCase();
-    if (recordId && recordId === consanguinityId) return "(Consanguinity)";
-    if (recordId && recordId === affinityId) return "(Affinity)";
-    return entry.relationship && entry.relationship.kind === "biological" ? "(Consanguinity)" : "(Affinity)";
+    if (recordId && recordId === consanguinityId) return "(Lineal)";
+    if (recordId && recordId === affinityId) return "(Non-Lineal)";
+    return entry.relationship && entry.relationship.kind === "biological" ? "(Lineal)" : "(Non-Lineal)";
   }
 
   function maritalStatusLabel(id) {
@@ -817,7 +822,7 @@
       const selected = state().ui.selectedPersonId === person.id;
       const home = state().workspace.family.homePersonId === person.id;
       const name = model.displayName(person);
-      const shell = '<g class="tree-node' + (selected ? " selected" : "") + (home ? " home" : "") + (person.livingStatus === "deceased" ? " deceased" : "") + '" data-view="' + u.escapeHtml(currentTreeLayout.nodeView) + '" tabindex="0" role="button" aria-label="' + u.escapeHtml(name + ", " + family.lifespan(person) + ". Select to focus.") + '" data-tree-person="' + u.escapeHtml(person.id) + '" transform="translate(' + node.x + " " + node.y + ')"><rect width="' + node.width + '" height="' + node.height + '" rx="10"></rect>';
+      const shell = '<g class="tree-node' + (selected ? " selected" : "") + (home ? " home" : "") + (isLinealPerson(person) ? " lineal" : "") + (person.livingStatus === "deceased" ? " deceased" : "") + '" data-view="' + u.escapeHtml(currentTreeLayout.nodeView) + '" tabindex="0" role="button" aria-label="' + u.escapeHtml(name + ", " + family.lifespan(person) + ". Select to focus.") + '" data-tree-person="' + u.escapeHtml(person.id) + '" transform="translate(' + node.x + " " + node.y + ')"><rect width="' + node.width + '" height="' + node.height + '" rx="10"></rect>';
       const detailed = currentTreeLayout.nodeView === "detailed";
       const nameLines = family.treeNameLines(person, detailed);
       const nameHtml = nameLines.map(function (line, index) {
@@ -985,6 +990,7 @@
         if (event.button !== 0) return;
         drag = { x: event.clientX, width: panel.getBoundingClientRect().width };
         divider.setPointerCapture(event.pointerId);
+        divider.classList.add("is-dragging");
         document.body.classList.add("resizing-family");
         event.preventDefault();
       });
@@ -996,6 +1002,7 @@
         if (!drag) return;
         drag = null;
         if (divider.hasPointerCapture(event.pointerId)) divider.releasePointerCapture(event.pointerId);
+        divider.classList.remove("is-dragging");
         document.body.classList.remove("resizing-family");
         applyWidth(Number(divider.getAttribute("aria-valuenow")), true);
       }
@@ -1029,8 +1036,8 @@
       ['<svg class="tree-key-swatch" viewBox="0 0 30 8" aria-hidden="true"><path class="tree-edge partner" data-kind="partnered" data-partnership="true" d="M1 4 H29"></path></svg>', "Never married"],
       ['<span class="tree-key-marks" aria-hidden="true">????</span>', "Ended, reason unknown"],
       [treeKeySwatch("partner", "divorced"), "Divorced, separated, or widowed"],
-      [treeKeySwatch("parent-child", "biological"), "Consanguinity parent"],
-      [treeKeySwatch("parent-child", "affinal", "affinal-parent"), "Affinal parent"]
+      [treeKeySwatch("parent-child", "biological"), "Lineal parent"],
+      [treeKeySwatch("parent-child", "affinal", "affinal-parent"), "Non-Lineal parent"]
     ];
     return '<aside class="tree-key"><details open><summary>Key</summary><dl>' + rows.map(function (row) {
       return "<div><dt>" + row[0] + "</dt><dd>" + u.escapeHtml(row[1]) + "</dd></div>";
@@ -1048,7 +1055,17 @@
     const workspaceGrid = $(".family-workspace-grid", $("#mainContent"));
     workspaceGrid.style.setProperty("--directory-panel-width", state().ui.panelSizingCustomized ? state().ui.directoryPanelWidth + "px" : "20%");
     workspaceGrid.style.setProperty("--profile-panel-width", state().ui.panelSizingCustomized ? state().ui.profilePanelWidth + "px" : "30%");
-    $(".tree-view-controls", workspaceGrid).insertAdjacentHTML("beforeend", '<label class="tree-line-toggle check-field"><input id="inferredParentLinesToggle" type="checkbox"' + (state().ui.showInferredParentLines ? " checked" : "") + '><span>Affinal Lines</span></label><label class="tree-line-toggle check-field"><input id="hideUnplacedLineageToggle" type="checkbox"' + (state().ui.hideUnplacedLineage ? " checked" : "") + '><span>Hide 99 Lineage</span></label>');
+    const treeControls = $(".tree-view-controls", workspaceGrid);
+    const ancestorControl = $("#ancestorDepth", treeControls).closest(".depth-control");
+    const descendantControl = $("#descendantDepth", treeControls).closest(".depth-control");
+    const depthControls = document.createElement("div");
+    depthControls.className = "tree-depth-controls";
+    depthControls.setAttribute("role", "group");
+    depthControls.setAttribute("aria-label", "Visible generations");
+    ancestorControl.insertAdjacentElement("beforebegin", depthControls);
+    depthControls.append(ancestorControl, descendantControl);
+    const zoomControls = $(".zoom-controls", treeControls);
+    zoomControls.insertAdjacentHTML("beforebegin", '<label class="tree-line-toggle check-field"><input id="inferredParentLinesToggle" type="checkbox"' + (state().ui.showInferredParentLines ? " checked" : "") + '><span>Non-Lineal Lines</span></label><label class="tree-line-toggle check-field"><input id="hideUnplacedLineageToggle" type="checkbox"' + (state().ui.hideUnplacedLineage ? " checked" : "") + '><span>Hide 99 Lineage</span></label>');
     $("#directoryPanel", workspaceGrid).insertAdjacentHTML("afterend", '<button id="directoryTreeDivider" class="family-resize-handle" type="button" role="separator" aria-orientation="vertical" aria-label="Resize directory and Family Tree" aria-valuemin="220" aria-valuemax="480" aria-valuenow="' + state().ui.directoryPanelWidth + '"' + (directoryCollapsed ? " hidden" : "") + '><span aria-hidden="true"></span><output class="family-divider-percentage" aria-hidden="true"></output></button>');
     $(".tree-panel", workspaceGrid).insertAdjacentHTML("afterend", '<button id="treeProfileDivider" class="family-resize-handle" type="button" role="separator" aria-orientation="vertical" aria-label="Resize Family Tree and selected person" aria-valuemin="240" aria-valuemax="600" aria-valuenow="' + state().ui.profilePanelWidth + '"' + (profileCollapsed ? " hidden" : "") + '><span aria-hidden="true"></span><output class="family-divider-percentage" aria-hidden="true"></output></button>');
     $("#directorySort").value = state().ui.directorySort;
