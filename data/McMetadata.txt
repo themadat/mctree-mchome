@@ -4,14 +4,35 @@ McLineage Dataset Metadata
 Current dataset
 ---------------
 
-Version: 10.0.2
+Version: 10.0.3
 Updated: 2026-08-19
-File: McLineage-10-0-2-2026-08-19.csv
+File: McLineage-10-0-3-2026-08-19.csv
 Source: McLineage.xlsx legacy database export
 Status: Private family data; do not commit to a public or shared source repository.
 
 Changelog
 ---------
+
+10.0.3 — 2026-08-19 — [194 KB (±0) | 913 records (+1) | 23 fields (±0)]
+Author: Adam Lauer [Agent Claude Code | Model Opus 5 | Effort High | Speed Standard]
+Summary: Recorded an out-of-wedlock partnership and made relationship_order chronological.
+
+- Recorded the legacy spouse-slot meaning: slot 1 held the current or death-ended
+  relationship and slots 2 and 3 held earlier relationships in chronological order.
+- Renumbered relationship_order to a chronological 1..n per person, oldest first, so
+  order now sequences partnerships that have no start date. 74 values changed across
+  48 people; no other relationship field moved.
+- Added P913 Heather Munz as a partner-only row with a blank lineage_id, blank parent
+  references, and an UNKNOWN birth descriptor.
+- Added R306 on P012 Seann Phillip McCollum as his first relationship: partnership
+  type, order 1, no start date, and an UNKNOWN ending. Out-of-wedlock partnerships
+  use a partnership type with no start date and rely on order for sequence.
+- Set the parent_affinal_person_id of P244 Julia Anne McCollum to P913 instead of
+  P617 Tina Magri, matching the P244 note that her mother is Heather Munz. P489
+  Hannah Elizabeth McCollum keeps P617.
+- Verified 913 unique person IDs, 306 unique relationship IDs and person pairs,
+  1..n orders on every person, resolvable parent and partner references, the
+  affinal-parent/partner rule, and a clean McFamily import.
 
 10.0.2 — 2026-08-19 — [194 KB (±0) | 912 records (±0) | 23 fields (±0)]
 Author: Adam Lauer [Agent Claude Code | Model Opus 5 | Effort High | Speed Standard]

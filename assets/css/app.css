@@ -678,6 +678,7 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .tree-edge.partner[data-kind="married"] { stroke-dasharray: none; stroke-linecap: butt; stroke-width: 2.5; }
 .tree-edge.partner[data-kind="partnered"] { stroke-dasharray: 6 4; stroke-linecap: butt; }
 .tree-edge.partner[data-kind="former"], .tree-edge.partner[data-kind="unknown"] { stroke: none; }
+.tree-edge.partner[data-partnership="true"] { stroke: var(--accent-2); stroke-dasharray: 6 4; stroke-linecap: butt; stroke-width: 2; }
 .tree-edge-marks { fill: var(--accent-2); font-family: Helvetica, Arial, sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 1.4px; dominant-baseline: middle; pointer-events: none; user-select: none; }
 .tree-edge.affinal-parent { stroke: color-mix(in srgb, var(--accent) 58%, var(--line)); stroke-width: 1.5; stroke-dasharray: 4 5; opacity: .72; }
 .tree-edge[data-kind="adoptive"], .tree-edge[data-kind="step"], .tree-edge[data-kind="foster"], .tree-edge[data-kind="guardian"] { stroke-dasharray: 7 4; }
