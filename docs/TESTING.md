@@ -67,6 +67,8 @@ Use synthetic families only.
 - [ ] Affinal Lines is disabled by default and hides recorded `affinal` parent edges; enabling it draws them as accessible light dashed branches while consanguinity edges stay solid.
 - [ ] Only the current marriage draws a solid partner line; never-married partnerships are dashed, ended-unknown partnerships render as a `????` glyph line, and divorced, separated, and widowed links are dotted.
 - [ ] The floating Key sits at the lower right of the Family Tree module, collapses and reopens, stays inside the module at mobile widths, and does not block canvas drags.
+- [ ] Hide 99 Lineage is checked by default, removes `99`-lineage people and anyone linked only to them from both tree modes, keeps the focused person visible, and leaves the directory, search, and print counts unchanged.
+- [ ] A never-married partnership with no start date sorts by `relationship_order`, draws the dashed line, and reads Never married; P012 shows Heather Munz to the left of Tina Magri, and P244 lists Heather as her affinal parent.
 - [ ] Partial source dates appear in profiles and print as `December ??, 1979`, `August ??, 1943`, `June 2, 19??`, and `1981`; ages from a partial value carry `~` and an unknown year shows no age.
 - [ ] Marital Status reads Married, Widowed, Divorced, Separated, Never married, or Unknown from the most recent partnership, Unknown when no partnership is recorded, and each Partners row reads `(year :: Status)`.
 - [ ] Ancestors and Descendants accept 0 through 10 and clamp anything larger.
@@ -89,7 +91,7 @@ Use synthetic families only.
 - [ ] Every resolved first-name parent link selects that person and focuses the tree; unknown positions read `Gen #, Child of FirstName` without an ordinal.
 - [ ] Parents, Siblings, Partners, and Children are compact open groups in that order; the bloodline parent is first, siblings and children are in birth order, and Melanie's Parents group contains both Max and Martha through display-only co-parent inference.
 - [ ] Partners lists the current partner first in bold, followed by prior partners in reverse history order with de-emphasized styling.
-- [ ] Relationships appears immediately after identity details and before Lineage, Notes follows Relationships, and Imported Source is the final information section on screen and in each printable person profile; Albon shows both parents and all six siblings.
+- [ ] Lineage appears immediately after identity details and above Relationships, Notes follows Relationships, and Imported Source is the final information section on screen and in each printable person profile; Albon shows both parents and all six siblings.
 - [ ] The profile X closes the module, clears directory/tree selection, disables the empty mobile Person tab, and a Family Tree selection reopens the profile without a Show person button.
 - [ ] A child listed from a parent's profile is labelled `Child`, without a redundant parent-kind suffix.
 - [ ] Parents, Siblings, and Children headings show the correct `Gen #`; parents show `(Consanguinity)` or `(Affinity)`.
