@@ -25,8 +25,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 8,
   "meta": {
-    "appVersion": "0.0.1.36",
-    "buildId": "0.0.1.36",
+    "appVersion": "0.0.1.37",
+    "buildId": "0.0.1.37",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -79,7 +79,7 @@ The family workspace has three coordinated surfaces:
 
 The SVG contains semantic relationship labels in addition to visual lines. Pan and zoom use a view transform, touch uses pointer events, Fit calculates the graph bounds, and keyboard arrows move between rendered people. Reduced-motion settings suppress nonessential transitions.
 
-The layout is deterministic and dependency-free. Desktop opens with a thin-gutter 20/50/30 Directory/Tree/Profile balance; moving either separator persists explicit widths. Narrow cards stack each whitespace-separated name part on its own line, and generation rows expand vertically to the tallest card. People in the same generation are reordered around an imported lineage person: historical partners occupy the left and at most one current partner occupies the right. Partner status controls line treatment: married is solid, death-ended is solid and subdued, divorce is dotted, and other states are dashed. The optional co-parent overlay adds a lighter branch from a plausible recorded partner to the existing recorded parent-child path and never creates data. The layout favors readable generations and connected components rather than guaranteeing a traditional two-parent pedigree diagram in every pathological graph.
+The layout is deterministic and dependency-free. Desktop opens with a thin-gutter 20/50/30 Directory/Tree/Profile balance; moving either separator persists explicit widths. Narrow cards stack each whitespace-separated name part on its own line, and generation rows expand vertically to the tallest card. People in the same generation are reordered around an imported Lineal person: up to two historical partners occupy the left at 75% scale, oldest top-aligned and next bottom-aligned, while at most one current Non-Lineal spouse occupies the right at full size. A current marriage is solid, a never-married partnership is dotted, and every other partner history is dashed. The optional co-parent overlay adds a lighter branch from a plausible recorded partner to the existing recorded parent-child path and never creates data. The layout favors readable generations and connected components rather than guaranteeing a traditional two-parent pedigree diagram in every pathological graph.
 
 ## Print atlas
 
