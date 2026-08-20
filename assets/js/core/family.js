@@ -147,6 +147,18 @@
     return partnerSourceType(relationship) === "partnership" || Boolean(relationship && relationship.status === "partnered");
   }
 
+  function isUnknownPartnerRelationship(relationship) {
+    return partnerSourceType(relationship) === "UNKNOWN"
+      || partnerEndReason(relationship) === "UNKNOWN"
+      || Boolean(relationship && relationship.status === "unknown");
+  }
+
+  function isDeathEndedMarriage(relationship) {
+    if (isNeverMarriedPartnership(relationship) || isUnknownPartnerRelationship(relationship)) return false;
+    return (partnerEndReason(relationship) === "death" || Boolean(relationship && relationship.status === "widowed"))
+      && (partnerSourceType(relationship) === "marriage" || Boolean(relationship && relationship.status === "widowed"));
+  }
+
   function partnerHasRecordedEnd(relationship) {
     const fields = partnerSourceFields(relationship);
     const sourceDefinesEndReason = Object.prototype.hasOwnProperty.call(fields, "end_reason");
@@ -163,8 +175,11 @@
     const relationship = entry && entry.relationship || entry;
     const other = entry && entry.person;
     if (isNeverMarriedPartnership(relationship)) return "never-married";
-    const bothDeceased = person && other && person.livingStatus === "deceased" && other.livingStatus === "deceased";
-    if (bothDeceased && (partnerEndReason(relationship) === "death" || relationship && relationship.status === "widowed")) return "married";
+    if (isUnknownPartnerRelationship(relationship)) return "unknown";
+    if (isDeathEndedMarriage(relationship)) {
+      if (person && person.livingStatus === "deceased") return "married";
+      if (person && person.livingStatus === "living" && other && other.livingStatus === "deceased") return "widowed";
+    }
     if (entry && entry.current === true && !partnerHasRecordedEnd(relationship)) {
       const personLiving = person && person.livingStatus === "living";
       const personDeceased = person && person.livingStatus === "deceased";
@@ -178,9 +193,10 @@
 
   function partnerLineKind(relationship, current, first, second) {
     if (isNeverMarriedPartnership(relationship)) return "never-married";
+    if (isUnknownPartnerRelationship(relationship)) return "unknown";
     const sourceType = partnerSourceType(relationship);
     const knownMarriage = sourceType === "marriage" || relationship && ["married", "widowed", "divorced", "separated"].includes(relationship.status);
-    if (current && !partnerHasRecordedEnd(relationship)) {
+    if (current && (!partnerHasRecordedEnd(relationship) || isDeathEndedMarriage(relationship))) {
       const bothDeceased = first && second && first.livingStatus === "deceased" && second.livingStatus === "deceased";
       const deathSplit = first && second && ((first.livingStatus === "living" && second.livingStatus === "deceased") || (first.livingStatus === "deceased" && second.livingStatus === "living"));
       if (knownMarriage || bothDeceased || deathSplit) return "married";
@@ -201,7 +217,9 @@
     const histories = entries.slice().sort(comparePartnerHistory);
     const active = histories.filter(function (entry) { return !isPastPartnerRelationship(entry.relationship); });
     const preferredActive = active.filter(function (entry) { return ["marriage", "partnership"].includes(partnerSourceType(entry.relationship)) || entry.relationship.status === "married" || entry.relationship.status === "partnered"; });
-    const current = (preferredActive.length ? preferredActive : active).slice(-1)[0] || null;
+    const latestHistory = histories.slice(-1)[0] || null;
+    const latestDeathEndedMarriage = latestHistory && isDeathEndedMarriage(latestHistory.relationship) ? latestHistory : null;
+    const current = (preferredActive.length ? preferredActive : active).slice(-1)[0] || latestDeathEndedMarriage;
     return (current ? [current] : []).concat(histories.filter(function (entry) { return entry !== current; }).reverse()).map(function (entry) {
       return Object.assign({}, entry, { current: entry === current });
     });
@@ -371,11 +389,13 @@
       const histories = (links.get(anchorId) || []).filter(function (entry) { return !used.has(entry.id); }).sort(comparePartnerHistory);
       const active = histories.filter(function (entry) { return !isPastPartnerRelationship(entry.relationship); });
       const preferredActive = active.filter(function (entry) { return ["marriage", "partnership"].includes(partnerSourceType(entry.relationship)) || entry.relationship.status === "married" || entry.relationship.status === "partnered"; });
-      const current = (preferredActive.length ? preferredActive : active).slice(-1)[0] || null;
+      const latestHistory = histories.slice(-1)[0] || null;
+      const latestDeathEndedMarriage = latestHistory && isDeathEndedMarriage(latestHistory.relationship) ? latestHistory : null;
+      const current = (preferredActive.length ? preferredActive : active).slice(-1)[0] || latestDeathEndedMarriage;
       const leftPartners = histories.filter(function (entry) { return !current || entry.id !== current.id; });
       leftPartners.forEach(function (entry, index) {
         if (used.has(entry.id)) return;
-        placements.set(entry.id, { side: "left", anchorId: anchorId, scale: .75, align: index === 0 ? "top" : "bottom", count: leftPartners.length });
+        placements.set(entry.id, { side: "left", anchorId: anchorId, scale: 2 / 3, align: leftPartners.length === 1 ? "center" : index === 0 ? "top" : "bottom", count: leftPartners.length });
         arranged.push(peopleById.get(entry.id));
         used.add(entry.id);
       });
@@ -486,17 +506,10 @@
     const rowHeights = new Map();
     sortedLevels.forEach(function (level) {
       const lineCount = Math.max.apply(null, groups.get(level).map(function (person) { return treeNameLines(person, detailed).length; }));
-      rowHeights.set(level, (detailed ? 52 : 38) + Math.max(1, lineCount) * 14);
+      rowHeights.set(level, (detailed ? 45 : 31) + Math.max(1, lineCount) * 14);
     });
     const rowTrackHeights = new Map();
-    sortedLevels.forEach(function (level) {
-      const nodeHeight = rowHeights.get(level);
-      const staggered = groups.get(level).some(function (person) {
-        const placement = partnerPlacements.get(person.id);
-        return placement && placement.side === "left" && placement.count > 1;
-      });
-      rowTrackHeights.set(level, staggered ? nodeHeight * 1.5 : nodeHeight);
-    });
+    sortedLevels.forEach(function (level) { rowTrackHeights.set(level, rowHeights.get(level)); });
     const rowWidths = new Map();
     sortedLevels.forEach(function (level) {
       const items = groups.get(level);
@@ -525,7 +538,7 @@
           id: person.id,
           person: person,
           x: cursorX,
-          y: rowY + (placement && placement.align === "bottom" ? trackHeight - height : placement && placement.align === "top" ? 0 : (trackHeight - nodeHeight) / 2),
+          y: rowY + (placement && placement.align === "bottom" ? trackHeight - height : placement && placement.align === "top" ? 0 : (trackHeight - height) / 2),
           width: width,
           height: height,
           renderWidth: nodeWidth,

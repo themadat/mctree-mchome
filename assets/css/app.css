@@ -24,6 +24,7 @@
   --deceased-card-text: #3f3025;
   --deceased-card-muted: #6c5847;
   --lineal-mark: #8f5b5d;
+  --partner-line: #a77b23;
   --focus: #176e9a;
   --radius: 14px;
   --radius-small: 9px;
@@ -52,6 +53,7 @@
   --shadow-small: 0 6px 22px rgba(0, 0, 0, .3);
   --danger-soft: #3a2323;
   --lineal-mark: #c48f91;
+  --partner-line: #d6b462;
   --focus: #69bee6;
 }
 
@@ -687,12 +689,12 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 #familyTreeSvg { display: block; width: 100%; height: 100%; min-width: 100%; min-height: 380px; cursor: grab; touch-action: none; user-select: none; }
 #familyTreeSvg.dragging { cursor: grabbing; }
 .tree-edge { fill: none; stroke: var(--line-strong); stroke-width: 2; vector-effect: non-scaling-stroke; }
-.tree-edge.partner { stroke: var(--accent-2); stroke-dasharray: 7 4; stroke-linecap: butt; }
+.tree-edge.partner { stroke: var(--partner-line); stroke-dasharray: 7 4; stroke-linecap: butt; }
 .tree-edge.partner[data-kind="married"] { stroke-dasharray: none; stroke-linecap: butt; stroke-width: 2.5; }
 .tree-edge.partner[data-kind="never-married"] { stroke-dasharray: 1 5; stroke-linecap: round; }
 .tree-edge.partner[data-kind="previous-marriage"] { stroke-dasharray: 7 4; stroke-linecap: butt; }
 .tree-edge.partner[data-kind="unknown"] { stroke: none; }
-.tree-edge-marks { fill: var(--accent-2); font-family: Helvetica, Arial, sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 1.4px; dominant-baseline: middle; pointer-events: none; user-select: none; }
+.tree-edge-marks { fill: var(--partner-line); font-family: Helvetica, Arial, sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 1.4px; dominant-baseline: middle; pointer-events: none; user-select: none; }
 .tree-edge.parent-child[data-kind="biological"] { stroke: color-mix(in srgb, var(--lineal-mark) 52%, var(--line)); }
 .tree-edge.affinal-parent { stroke: color-mix(in srgb, var(--accent) 58%, var(--line)); stroke-width: 1.5; stroke-dasharray: 4 5; opacity: .72; }
 .tree-edge[data-kind="adoptive"], .tree-edge[data-kind="step"], .tree-edge[data-kind="foster"], .tree-edge[data-kind="guardian"] { stroke-dasharray: 7 4; }
@@ -706,7 +708,7 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .tree-key dt { flex: 0 0 auto; width: 30px; margin: 0; }
 .tree-key dd { margin: 0; color: var(--text); font-size: .62rem; font-weight: 650; line-height: 1.25; }
 .tree-key-swatch { display: block; width: 30px; height: 8px; overflow: visible; }
-.tree-key-marks { display: block; width: 30px; color: var(--accent-2); font-size: .6rem; font-weight: 800; letter-spacing: 1.2px; }
+.tree-key-marks { display: block; width: 30px; color: var(--partner-line); font-size: .6rem; font-weight: 800; letter-spacing: 1.2px; }
 .tree-node { cursor: pointer; outline: none; }
 .tree-node rect { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.5; vector-effect: non-scaling-stroke; filter: drop-shadow(0 3px 5px rgba(20, 28, 25, .12)); }
 .tree-node text { fill: var(--text); font-family: Helvetica, Arial, sans-serif; pointer-events: none; }
@@ -722,7 +724,7 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .tree-node.deceased .tree-life, .tree-node.deceased .tree-reference { fill: var(--deceased-card-muted); }
 .tree-node.lineal > rect { stroke: var(--lineal-mark); stroke-width: 3; }
 .tree-node.lineal.selected > rect { stroke: var(--accent); stroke-width: 3; }
-.tree-lineal-mark { width: 10px; height: 15px; color: var(--lineal-mark); }
+.tree-lineal-mark { width: 7px; height: 10px; color: var(--lineal-mark); }
 .tree-node:focus rect { stroke: var(--focus); stroke-width: 4; }
 .tree-empty-text { fill: var(--text); font-size: 20px; font-weight: 800; }
 .tree-empty-subtext { fill: var(--muted); font-size: 13px; }

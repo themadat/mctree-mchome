@@ -720,20 +720,20 @@
   }
 
   function unknownPartnerMarks(edge, pathId) {
-    const width = Math.abs((edge.to.x + edge.to.width / 2) - (edge.from.x + edge.from.width / 2));
-    const height = Math.abs((edge.to.y + edge.to.height / 2) - (edge.from.y + edge.from.height / 2));
-    const length = Math.sqrt(width * width + height * height);
+    const left = edge.from.x <= edge.to.x ? edge.from : edge.to;
+    const right = left === edge.from ? edge.to : edge.from;
+    const length = Math.max(0, right.x - (left.x + left.width));
     const marks = new Array(Math.max(3, Math.round(length / 9))).fill("?").join("");
     return '<text class="tree-edge-marks" aria-hidden="true"><textPath href="#' + pathId + '" startOffset="0">' + marks + "</textPath></text>";
   }
 
   function edgePath(edge) {
     if (edge.relationship.type === "partner") {
-      const x1 = edge.from.x + edge.from.width / 2;
-      const y1 = edge.from.y + edge.from.height / 2;
-      const x2 = edge.to.x + edge.to.width / 2;
-      const y2 = edge.to.y + edge.to.height / 2;
-      return "M" + x1 + " " + y1 + " L" + x2 + " " + y2;
+      const left = edge.from.x <= edge.to.x ? edge.from : edge.to;
+      const right = left === edge.from ? edge.to : edge.from;
+      const alignedPartner = left.partnerPlacement === "left" ? left : right.partnerPlacement === "right" ? right : null;
+      const y = alignedPartner ? alignedPartner.y + alignedPartner.height / 2 : ((left.y + left.height / 2) + (right.y + right.height / 2)) / 2;
+      return "M" + (left.x + left.width) + " " + y + " L" + right.x + " " + y;
     }
     const x1 = edge.from.x + edge.from.width / 2;
     const y1 = edge.from.y + edge.from.height;
@@ -838,7 +838,7 @@
       }).join("");
       const lifeY = 21 + nameLines.length * 14;
       const reference = detailed && developerReferencesEnabled() ? '<text class="tree-reference" x="' + (renderWidth / 2) + '" y="' + (lifeY + 13) + '" text-anchor="middle">' + u.escapeHtml(person.reference) + "</text>" : "";
-      const linealMark = isLinealPerson(person) ? icons.markup("lineal").replace('<svg class="sf-symbol"', '<svg class="sf-symbol tree-lineal-mark" x="' + (renderWidth - 16) + '" y="' + (renderHeight - 20) + '" width="10" height="15"') : "";
+      const linealMark = isLinealPerson(person) ? icons.markup("lineal").replace('<svg class="sf-symbol"', '<svg class="sf-symbol tree-lineal-mark" x="' + (renderWidth - 14) + '" y="' + (lifeY - 9) + '" width="7" height="10"') : "";
       return shell + nameHtml + '<text class="tree-life" x="' + (renderWidth / 2) + '" y="' + lifeY + '" text-anchor="middle">' + u.escapeHtml(family.lifespan(person) + (detailed && home ? " · home" : "")) + "</text>" + reference + linealMark + "</g>";
     }).join("");
     svg.innerHTML = '<g id="treeViewport"><g class="tree-edges">' + edges + '</g><g class="tree-nodes">' + nodes + "</g></g>";
