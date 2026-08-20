@@ -72,8 +72,8 @@ Use synthetic families only.
 - [ ] Both spouses in a marriage ended by death read Married when both are deceased; a living spouse with a deceased current partner reads Widowed.
 - [ ] Lineal parent edges use faded muted red, and selecting a Lineal person replaces its lineage outline with the normal selected-person accent border.
 - [ ] The floating Key sits at the lower right of the Family Tree module, collapses and reopens, stays inside the module at mobile widths, and does not block canvas drags.
-- [ ] Show ?? Lineal is unchecked by default, keeps stored `99`-lineage people and anyone linked only to them out of both tree modes, keeps the focused person visible, and leaves the directory, search, and print counts unchanged; enabling it reveals them and fills its question-person symbol.
-- [ ] Stored lineage segment `99` displays as `??` in the directory, profile Lineage block, imported-source details, and print output.
+- [ ] Show ?? Lineal is unchecked by default, keeps stored `99`-lineage people and anyone linked only to them out of both tree modes, keeps the focused person visible, and leaves directory and search counts unchanged; enabling it reveals them and fills its question-person symbol.
+- [ ] Stored lineage segment `99` displays as `??` in the directory, profile Lineage block, and imported-source details, while PDF output omits those people and their isolated branches.
 - [ ] A never-married partnership with no start date sorts by `relationship_order`, draws the dotted line, and reads Never married; P012 shows Heather Munz to the left of Tina Magri, and P244 lists Heather as her Non-Lineal parent.
 - [ ] Partial source dates appear in profiles and print as `December ??, 1979`, `August ??, 1943`, `June 2, 19??`, and `1981`; ages from a partial value begin with `About` and an unknown year shows no age.
 - [ ] Marital Status reads Married, Widowed, Divorced, Separated, Never married, or Unknown from the most recent partnership, Unknown when no partnership is recorded, and each Partners row reads `(year :: Status)`. With no recorded ending, two deceased spouses remain Married; if one current spouse is living and the other deceased, the living spouse reads Widowed and their tree line remains solid.
@@ -120,9 +120,11 @@ Use synthetic families only.
 
 - [ ] Report includes compact combined opening content, statistics, relationship legend, every family map, every person profile, and Family Notes, with no alphabetical person index.
 - [ ] Person profiles include recorded contact, life, heritage, and relationship values while omitting P references, individual Notes, and Imported Source fields.
-- [ ] The first map names George McMillen (1745) as the root ancestor at Generation 0; other maps retain their top-sibling labels.
+- [ ] The first map names George McMillen (1745) as the root ancestor at Generation 0, and every component uses the Root Ancestor label.
 - [ ] Family-map rows use six compact columns and contain only names and years.
-- [ ] Generation 5 and later people, including Non-Lineal partners, are grouped beneath their Generation 4 family line with no unassigned branch when lineage can be resolved.
+- [ ] Generation 4 and later people, including Non-Lineal partners, are grouped beneath a `Generation 3 Line` header with no unassigned branch when lineage can be resolved.
+- [ ] Lineal map cards use a faded-red outline; Theophilus, Albon, and Lucian use the stronger orientation highlight; every map name fits within two lines.
+- [ ] Stored `99`/`??` lineage people and their isolated branches do not appear in Family Maps, Person Directory profiles, or PDF statistics.
 - [ ] Developer Mode opens the report in a modal without invoking the native print dialog; closing it restores focus. Ordinary mode retains native printing.
 - [ ] Application controls are suppressed and print colors remain legible.
 - [ ] Profiles and section headings use sensible page breaks; long addresses and URLs remain complete.

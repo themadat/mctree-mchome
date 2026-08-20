@@ -48,7 +48,7 @@ Family-record mutation controls remain visible but disabled while `features.fami
 
 ## Print report
 
-The print host remains hidden and inaccessible during normal operation. Print / Save PDF builds it from normalized state and normally invokes the native dialog; in Developer Mode it instead copies the report into a closable in-app preview. Compact opening content flows into six-column family maps. George McMillen (1745) is the first root at Generation 0, and Generation 5 and later are grouped beneath Generation 4 family lines. Each generation begins on its own row and contains name-and-years cards without IDs. Detailed alphabetical profiles follow without P references, individual Notes, or Imported Source fields.
+The print host remains hidden and inaccessible during normal operation. Print / Save PDF builds it from normalized state and normally invokes the native dialog; in Developer Mode it instead copies the report into a closable in-app preview. Compact opening content flows into six-column family maps. George McMillen (1745) is the first root at Generation 0, and Generation 4 and later are grouped beneath Generation 3 family lines. Every component is labelled by its root ancestor, while unresolved `99`/`??` lineage branches are omitted. Each generation begins on its own row and contains name-and-years cards without IDs. Lineal cards have faded-red outlines; Theophilus, Albon, and Lucian are specially highlighted, and adaptive name type keeps names to two lines. Detailed alphabetical profiles follow without P references, individual Notes, or Imported Source fields.
 
 ## Icon conventions
 
