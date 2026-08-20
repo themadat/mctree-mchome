@@ -542,6 +542,11 @@
     return Object.entries(u.plainObject(source && source.fields)).filter(function (entry) { return String(entry[1] || "").trim(); });
   }
 
+  function sourceDisplayValue(entry) {
+    if (entry[0] !== "lineage_id") return entry[1];
+    return String(entry[1] || "").split(".").map(displayLineageSegment).join(".");
+  }
+
   function sourceLabel(key) {
     return String(key || "").replace(/_/g, " ").replace(/\b\w/g, function (character) { return character.toUpperCase(); });
   }
@@ -561,13 +566,17 @@
     });
   }
 
+  function displayLineageSegment(segment) {
+    return String(segment || "") === "99" ? "??" : String(segment || "");
+  }
+
   function lineageId(person) {
-    return lineageSegments(person);
+    return lineageSegments(person).map(displayLineageSegment);
   }
 
   function lineageOwnNumber(person) {
     const segments = lineageSegments(person);
-    return segments[segments.length - 1] || "";
+    return displayLineageSegment(segments[segments.length - 1] || "");
   }
 
   function ordinalLineageNumber(value) {
@@ -580,7 +589,7 @@
 
   function lineageChain(person) {
     const current = state();
-    const numbers = lineageSegments(person);
+    const numbers = lineageId(person);
     const byRecordId = new Map();
     current.workspace.people.forEach(function (candidate) {
       const recordId = sourceField(candidate, "record_id").toUpperCase();
@@ -654,13 +663,13 @@
   function profileSource(person) {
     const entries = sourceEntries(person.source);
     if (!entries.length) return "";
-    return '<section class="profile-section source-section"><details><summary>Imported Source · ' + entries.length + ' populated fields</summary><p class="source-format">' + u.escapeHtml(person.source.format || "Imported CSV") + '</p><dl class="profile-list source-list">' + entries.map(function (entry) { return '<div><dt>' + u.escapeHtml(sourceLabel(entry[0])) + '</dt><dd>' + u.escapeHtml(entry[1]) + "</dd></div>"; }).join("") + "</dl></details></section>";
+    return '<section class="profile-section source-section"><details><summary>Imported Source · ' + entries.length + ' populated fields</summary><p class="source-format">' + u.escapeHtml(person.source.format || "Imported CSV") + '</p><dl class="profile-list source-list">' + entries.map(function (entry) { return '<div><dt>' + u.escapeHtml(sourceLabel(entry[0])) + '</dt><dd>' + u.escapeHtml(sourceDisplayValue(entry)) + "</dd></div>"; }).join("") + "</dl></details></section>";
   }
 
   function printSource(person) {
     const entries = sourceEntries(person.source);
     if (!entries.length) return "";
-    return '<section class="print-wide print-source"><h3>Imported Source Fields</h3><p>' + u.escapeHtml(person.source.format || "Imported CSV") + '</p><dl>' + entries.map(function (entry) { return '<div><dt>' + u.escapeHtml(sourceLabel(entry[0])) + '</dt><dd>' + u.escapeHtml(entry[1]) + "</dd></div>"; }).join("") + "</dl></section>";
+    return '<section class="print-wide print-source"><h3>Imported Source Fields</h3><p>' + u.escapeHtml(person.source.format || "Imported CSV") + '</p><dl>' + entries.map(function (entry) { return '<div><dt>' + u.escapeHtml(sourceLabel(entry[0])) + '</dt><dd>' + u.escapeHtml(sourceDisplayValue(entry)) + "</dd></div>"; }).join("") + "</dl></section>";
   }
 
   function printLineage(person) {
@@ -810,7 +819,8 @@
       }).join("");
       const lifeY = 21 + nameLines.length * 14;
       const reference = detailed && developerReferencesEnabled() ? '<text class="tree-reference" x="' + (renderWidth / 2) + '" y="' + (lifeY + 13) + '" text-anchor="middle">' + u.escapeHtml(person.reference) + "</text>" : "";
-      return shell + nameHtml + '<text class="tree-life" x="' + (renderWidth / 2) + '" y="' + lifeY + '" text-anchor="middle">' + u.escapeHtml(family.lifespan(person) + (detailed && home ? " · home" : "")) + "</text>" + reference + "</g>";
+      const linealMark = isLinealPerson(person) ? icons.markup("lineal").replace('<svg class="sf-symbol"', '<svg class="sf-symbol tree-lineal-mark" x="' + (renderWidth - 16) + '" y="' + (renderHeight - 20) + '" width="10" height="15"') : "";
+      return shell + nameHtml + '<text class="tree-life" x="' + (renderWidth / 2) + '" y="' + lifeY + '" text-anchor="middle">' + u.escapeHtml(family.lifespan(person) + (detailed && home ? " · home" : "")) + "</text>" + reference + linealMark + "</g>";
     }).join("");
     svg.innerHTML = '<g id="treeViewport"><g class="tree-edges">' + edges + '</g><g class="tree-nodes">' + nodes + "</g></g>";
     bindTreeInteractions(svg);
@@ -1043,7 +1053,7 @@
     ancestorControl.insertAdjacentElement("beforebegin", depthControls);
     depthControls.append(ancestorControl, descendantControl);
     const zoomControls = $(".zoom-controls", treeControls);
-    zoomControls.insertAdjacentHTML("beforebegin", '<label class="tree-line-toggle check-field"><input id="inferredParentLinesToggle" type="checkbox"' + (state().ui.showInferredParentLines ? " checked" : "") + '><span>Non-Lineal Lines</span></label><label class="tree-line-toggle check-field"><input id="hideUnplacedLineageToggle" type="checkbox"' + (state().ui.hideUnplacedLineage ? " checked" : "") + '><span>Hide 99 Lineage</span></label>');
+    zoomControls.insertAdjacentHTML("beforebegin", '<label class="tree-line-toggle check-field"><input id="inferredParentLinesToggle" type="checkbox"' + (state().ui.showInferredParentLines ? " checked" : "") + '><span class="tree-toggle-symbol" data-symbol="' + (state().ui.showInferredParentLines ? "nonLinealLinesFill" : "nonLinealLines") + '" aria-hidden="true"></span><span>Non-Lineal Lines</span></label><label class="tree-line-toggle check-field"><input id="showUnplacedLineageToggle" type="checkbox"' + (!state().ui.hideUnplacedLineage ? " checked" : "") + '><span class="tree-toggle-symbol" data-symbol="' + (!state().ui.hideUnplacedLineage ? "unknownLinealFill" : "unknownLineal") + '" aria-hidden="true"></span><span>Show ?? Lineal</span></label>');
     $("#directoryPanel", workspaceGrid).insertAdjacentHTML("afterend", '<button id="directoryTreeDivider" class="family-resize-handle" type="button" role="separator" aria-orientation="vertical" aria-label="Resize directory and Family Tree" aria-valuemin="220" aria-valuemax="480" aria-valuenow="' + state().ui.directoryPanelWidth + '"' + (directoryCollapsed ? " hidden" : "") + '><span aria-hidden="true"></span><output class="family-divider-percentage" aria-hidden="true"></output></button>');
     $(".tree-panel", workspaceGrid).insertAdjacentHTML("afterend", '<button id="treeProfileDivider" class="family-resize-handle" type="button" role="separator" aria-orientation="vertical" aria-label="Resize Family Tree and selected person" aria-valuemin="240" aria-valuemax="600" aria-valuenow="' + state().ui.profilePanelWidth + '"' + (profileCollapsed ? " hidden" : "") + '><span aria-hidden="true"></span><output class="family-divider-percentage" aria-hidden="true"></output></button>');
     $("#directorySort").value = state().ui.directorySort;
@@ -1913,10 +1923,12 @@
       else if (event.target.id === "directorySort") { storage.mutate(function (next) { next.ui.directorySort = event.target.value; }, { touch: false, reason: "directory-sort" }); renderDirectoryList(); }
       else if (event.target.id === "inferredParentLinesToggle") {
         storage.mutate(function (next) { next.ui.showInferredParentLines = event.target.checked; }, { touch: false, reason: "tree-parent-lines" });
+        icons.set(event.target.parentElement.querySelector(".tree-toggle-symbol"), event.target.checked ? "nonLinealLinesFill" : "nonLinealLines");
         renderTree();
       }
-      else if (event.target.id === "hideUnplacedLineageToggle") {
-        storage.mutate(function (next) { next.ui.hideUnplacedLineage = event.target.checked; }, { touch: false, reason: "tree-unplaced-lineage" });
+      else if (event.target.id === "showUnplacedLineageToggle") {
+        storage.mutate(function (next) { next.ui.hideUnplacedLineage = !event.target.checked; }, { touch: false, reason: "tree-unplaced-lineage" });
+        icons.set(event.target.parentElement.querySelector(".tree-toggle-symbol"), event.target.checked ? "unknownLinealFill" : "unknownLineal");
         treeNeedsFit = true;
         renderTree();
       }

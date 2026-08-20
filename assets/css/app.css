@@ -23,12 +23,7 @@
   --deceased-card: #eadcc9;
   --deceased-card-text: #3f3025;
   --deceased-card-muted: #6c5847;
-  --lineal-card: #ead8d7;
-  --lineal-card-text: #512f30;
-  --lineal-card-muted: #76585a;
-  --lineal-deceased-card: #e4d1c4;
-  --lineal-deceased-card-text: #4b312a;
-  --lineal-deceased-card-muted: #73584c;
+  --lineal-mark: #8f5b5d;
   --focus: #176e9a;
   --radius: 14px;
   --radius-small: 9px;
@@ -56,12 +51,7 @@
   --shadow: 0 20px 60px rgba(0, 0, 0, .38);
   --shadow-small: 0 6px 22px rgba(0, 0, 0, .3);
   --danger-soft: #3a2323;
-  --lineal-card: #392727;
-  --lineal-card-text: #f2dfdc;
-  --lineal-card-muted: #c0a5a0;
-  --lineal-deceased-card: #3b2d29;
-  --lineal-deceased-card-text: #f0ded7;
-  --lineal-deceased-card-muted: #bda49a;
+  --lineal-mark: #c48f91;
   --focus: #69bee6;
 }
 
@@ -675,6 +665,9 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .tree-view-controls > .segmented button { min-height: 100%; }
 .tree-depth-controls { display: flex; align-items: stretch; gap: .15rem; height: var(--tree-toolbar-control-height); padding: .18rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
 .tree-line-toggle { height: var(--tree-toolbar-control-height); min-height: var(--tree-toolbar-control-height); margin-left: 0; padding: .25rem .55rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); color: var(--muted); font-size: .68rem; font-weight: 750; }
+.tree-toggle-symbol { display: grid; place-items: center; width: 1.2rem; height: 1.2rem; color: var(--muted); }
+.tree-toggle-symbol .sf-symbol { width: 1.15rem; height: 1.15rem; }
+.tree-line-toggle input:checked + .tree-toggle-symbol { color: var(--accent-strong); }
 .depth-control { display: grid; min-width: 76px; height: 100%; justify-items: center; align-content: center; gap: .08rem; padding: .08rem .22rem; border-radius: 7px; color: var(--muted); font-size: .64rem; font-weight: 700; }
 .depth-control > span { line-height: 1; }
 .depth-control input { width: 58px; min-height: 27px; padding: .18rem .22rem .18rem .4rem; color: var(--text); font-weight: 800; text-align: center; }
@@ -718,12 +711,8 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .tree-node.deceased rect { fill: var(--deceased-card); }
 .tree-node.deceased text, .tree-node.deceased .tree-family { fill: var(--deceased-card-text); }
 .tree-node.deceased .tree-life, .tree-node.deceased .tree-reference { fill: var(--deceased-card-muted); }
-.tree-node.lineal rect { fill: var(--lineal-card); }
-.tree-node.lineal text, .tree-node.lineal .tree-family { fill: var(--lineal-card-text); }
-.tree-node.lineal .tree-life, .tree-node.lineal .tree-reference { fill: var(--lineal-card-muted); }
-.tree-node.lineal.deceased rect { fill: var(--lineal-deceased-card); }
-.tree-node.lineal.deceased text, .tree-node.lineal.deceased .tree-family { fill: var(--lineal-deceased-card-text); }
-.tree-node.lineal.deceased .tree-life, .tree-node.lineal.deceased .tree-reference { fill: var(--lineal-deceased-card-muted); }
+.tree-node.lineal > rect { stroke: var(--lineal-mark); stroke-width: 3; }
+.tree-lineal-mark { width: 10px; height: 15px; color: var(--lineal-mark); }
 .tree-node:focus rect { stroke: var(--focus); stroke-width: 4; }
 .tree-empty-text { fill: var(--text); font-size: 20px; font-weight: 800; }
 .tree-empty-subtext { fill: var(--muted); font-size: 13px; }

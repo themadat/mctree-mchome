@@ -4,14 +4,21 @@ McLineage Dataset Metadata
 Current dataset
 ---------------
 
-Version: 10.0.3
-Updated: 2026-08-19
-File: McLineage-10-0-3-2026-08-19.csv
+Version: 10.0.4
+Updated: 2026-08-20
+File: McLineage-10-0-4-2026-08-20.csv
 Source: McLineage.xlsx legacy database export
 Status: Private family data; do not commit to a public or shared source repository.
 
 Changelog
 ---------
+
+10.0.4 — 2026-08-20 — [194 KB (±0) | 913 records (±0) | 23 fields (±0)]
+Author: Adam Lauer [Agent GPT-5-based Codex | Model 5.6 Sol | Effort High | Speed Standard]
+Summary: Marked the recorded P014 and P620 marriage as divorced.
+
+- Records: 1 changed | 0 added | 0 deleted.
+- Changed R013 on P014 from an UNKNOWN ending to divorce while preserving its unknown end date and every other relationship field.
 
 10.0.3 — 2026-08-19 — [194 KB (±0) | 913 records (+1) | 23 fields (±0)]
 Author: Adam Lauer [Agent Claude Code | Model Opus 5 | Effort High | Speed Standard]

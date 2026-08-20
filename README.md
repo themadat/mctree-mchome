@@ -4,7 +4,7 @@ McFamily is a private, local-first family atlas that runs as a static GitHub Pag
 
 There is no backend, account, cloud database, or runtime dependency. Family data stays in browser storage and moves only through an explicit CSV import or export. The published repository must never contain a real family CSV or private family data.
 
-Current version: `0.0.1.37` (`major.minor.patch.build`).
+Current version: `0.0.1.38` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -13,7 +13,7 @@ Current version: `0.0.1.37` (`major.minor.patch.build`).
 - Supports two-axis scrolling, pan, directly editable zoom and 0-10 depth numbers, fit, keyboard selection, touch, and accessible relationship descriptions.
 - Orders each Family Tree generation by numeric lineage ID; up to two prior partners appear chronologically at 75% size to the left of the Lineal person, with the oldest top-aligned and the next bottom-aligned, while the current Non-Lineal spouse remains full-size on the right. Current marriages are solid, never-married partnerships are dotted, and every other partner history is dashed, with a floating key in the corner of the tree.
 - Draws recorded Non-Lineal parent links as dashed branches only while Non-Lineal Lines is on, leaving solid edges for the Lineal bloodline and never changing relationship records.
-- Colors Lineal tree cards a muted blood red and blends that color with brown for deceased Lineal people.
+- Marks Lineal tree cards with a bold muted-red outline and bottom-right lineage symbol while preserving the standard living or deceased fill.
 - Can hide `99`-lineage people from the Family Tree with a persisted checkbox while keeping them in the directory, search, and print.
 - Records out-of-wedlock partnerships as never-married relationships with no start date, sequenced by relationship order.
 - Provides a header-toggled directory with title-bar search and result count, visible Filter By and Sort By controls, combinable status and Lineal/Non-Lineal checkbox filters, A–Z quick jumps, lifespan and lineage context, and broad search across names, contact details, places, heritage, and notes.
