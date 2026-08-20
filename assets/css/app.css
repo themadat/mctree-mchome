@@ -620,6 +620,7 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .tree-heading { display: grid; align-content: start; gap: .15rem; }
 .pane-reopen-controls:empty { display: none; }
 .directory-panel, .tree-panel, .profile-panel { display: flex; flex-direction: column; }
+.tree-panel { position: relative; }
 .directory-module-bar { display: flex; flex: 0 0 auto; align-items: center; gap: .35rem; min-height: 46px; padding: .35rem .45rem; border-bottom: 1px solid var(--line); }
 .directory-search-field { display: flex; flex: 1 1 auto; align-items: center; gap: .3rem; min-width: 0; padding-right: .3rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
 .directory-search-field:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
@@ -673,12 +674,24 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 #familyTreeSvg { display: block; width: 100%; height: 100%; min-width: 100%; min-height: 380px; cursor: grab; touch-action: none; user-select: none; }
 #familyTreeSvg.dragging { cursor: grabbing; }
 .tree-edge { fill: none; stroke: var(--line-strong); stroke-width: 2; vector-effect: non-scaling-stroke; }
-.tree-edge.partner { stroke: var(--accent-2); stroke-dasharray: 6 4; }
-.tree-edge.partner[data-kind="married"] { stroke-dasharray: none; stroke-width: 2.5; }
-.tree-edge.partner[data-kind="widowed"] { stroke-dasharray: none; stroke-width: 2; opacity: .72; }
-.tree-edge.partner[data-kind="divorced"] { stroke-dasharray: 1 5; stroke-linecap: round; }
+.tree-edge.partner { stroke: var(--accent-2); stroke-dasharray: 1 5; stroke-linecap: round; }
+.tree-edge.partner[data-kind="married"] { stroke-dasharray: none; stroke-linecap: butt; stroke-width: 2.5; }
+.tree-edge.partner[data-kind="partnered"] { stroke-dasharray: 6 4; stroke-linecap: butt; }
+.tree-edge.partner[data-kind="former"], .tree-edge.partner[data-kind="unknown"] { stroke: none; }
+.tree-edge-marks { fill: var(--accent-2); font-family: Helvetica, Arial, sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 1.4px; dominant-baseline: middle; pointer-events: none; user-select: none; }
 .tree-edge.affinal-parent { stroke: color-mix(in srgb, var(--accent) 58%, var(--line)); stroke-width: 1.5; stroke-dasharray: 4 5; opacity: .72; }
 .tree-edge[data-kind="adoptive"], .tree-edge[data-kind="step"], .tree-edge[data-kind="foster"], .tree-edge[data-kind="guardian"] { stroke-dasharray: 7 4; }
+.tree-key { position: absolute; z-index: 5; right: .55rem; bottom: .55rem; pointer-events: none; max-width: min(15rem, 62%); border: 1px solid var(--line); border-radius: 10px; background: color-mix(in srgb, var(--surface) 92%, transparent); box-shadow: var(--shadow-small); backdrop-filter: blur(3px); }
+.tree-key > details { margin: 0; }
+.tree-key summary { pointer-events: auto; padding: .3rem .5rem; border-radius: 9px; color: var(--muted); font-size: .62rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; cursor: pointer; }
+.tree-key summary:focus-visible { outline: 0; box-shadow: 0 0 0 3px var(--accent-soft); }
+.tree-key details[open] summary { border-bottom: 1px solid var(--line); border-radius: 9px 9px 0 0; }
+.tree-key dl { display: grid; gap: .18rem; margin: 0; padding: .35rem .5rem .42rem; }
+.tree-key dl > div { display: flex; align-items: center; gap: .4rem; }
+.tree-key dt { flex: 0 0 auto; width: 30px; margin: 0; }
+.tree-key dd { margin: 0; color: var(--text); font-size: .62rem; font-weight: 650; line-height: 1.25; }
+.tree-key-swatch { display: block; width: 30px; height: 8px; overflow: visible; }
+.tree-key-marks { display: block; width: 30px; color: var(--accent-2); font-size: .6rem; font-weight: 800; letter-spacing: 1.2px; }
 .tree-node { cursor: pointer; outline: none; }
 .tree-node rect { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.5; vector-effect: non-scaling-stroke; filter: drop-shadow(0 3px 5px rgba(20, 28, 25, .12)); }
 .tree-node text { fill: var(--text); font-family: Helvetica, Arial, sans-serif; pointer-events: none; }
