@@ -63,9 +63,9 @@
         treeFocusId: "",
         treeMode: "focus",
         treeNodeView: "condensed",
-        generationDepth: 2,
-        ancestorDepth: 2,
-        descendantDepth: 2,
+        generationDepth: 10,
+        ancestorDepth: 10,
+        descendantDepth: 10,
         directoryCollapsed: true,
         profileCollapsed: false,
         showInferredParentLines: false,
@@ -164,6 +164,37 @@
     if (!birthMatch) return "unknown";
     const hundredthBirthday = new Date(Number(birthMatch[1]) + 100, birthMatch[2] ? Number(birthMatch[2]) - 1 : 6, birthMatch[3] ? Number(birthMatch[3]) : 1);
     return new Date() > hundredthBirthday ? "deceased" : "living";
+  }
+
+  function hasRecordedDeath(person) {
+    const source = u.plainObject(person);
+    const fields = u.plainObject(u.plainObject(source.source).fields);
+    return Boolean(u.cleanLine(fields.person_date_death_value, 40) || u.cleanLine(source.death && source.death.date && source.death.date.value, 40));
+  }
+
+  function presumeUnknownPartnersDeceased(people, relationships) {
+    const peopleById = new Map(people.map(function (person) { return [person.id, person]; }));
+    const presumedIds = new Set(people.filter(function (person) {
+      return person.livingStatus === "deceased" && !hasRecordedDeath(person);
+    }).map(function (person) { return person.id; }));
+    let changed = true;
+    while (changed) {
+      changed = false;
+      relationships.filter(function (relationship) { return relationship.type === "partner"; }).forEach(function (relationship) {
+        const first = peopleById.get(relationship.person1Id);
+        const second = peopleById.get(relationship.person2Id);
+        if (first && presumedIds.has(first.id) && second && second.livingStatus === "unknown") {
+          second.livingStatus = "deceased";
+          presumedIds.add(second.id);
+          changed = true;
+        }
+        if (second && presumedIds.has(second.id) && first && first.livingStatus === "unknown") {
+          first.livingStatus = "deceased";
+          presumedIds.add(first.id);
+          changed = true;
+        }
+      });
+    }
   }
 
   function migrate7to8(input) {
@@ -445,6 +476,7 @@
     people.forEach(function (person) { person.livingStatus = mcLineageLivingStatus(person, person.livingStatus); });
     const relationshipIds = new Set();
     const relationships = (Array.isArray(sourceWorkspace.relationships) ? sourceWorkspace.relationships : []).slice(0, config.controls.maxRelationships).map(function (relationship, index) { return normalizeRelationship(relationship, index, relationshipIds, personIds, now); }).filter(Boolean);
+    presumeUnknownPartnersDeceased(people, relationships);
     const documentIds = new Set();
     const documents = consolidateDocuments((Array.isArray(sourceWorkspace.documents) ? sourceWorkspace.documents : []).map(function (document, index) { return normalizeDocument(document, index, documentIds, now); }), now);
     const recordIds = new Set();
@@ -512,9 +544,9 @@
         treeFocusId: personIds.has(sourceUi.treeFocusId) ? sourceUi.treeFocusId : selectedPersonId,
         treeMode: sourceUi.treeMode === "overview" ? "overview" : "focus",
         treeNodeView: sourceUi.treeNodeView === "detailed" ? "detailed" : "condensed",
-        generationDepth: Math.round(u.clamp(sourceUi.generationDepth, 1, config.controls.maxTreeDepth, 2)),
-        ancestorDepth: Math.round(u.clamp(sourceUi.ancestorDepth, 0, config.controls.maxTreeDepth, sourceUi.generationDepth == null ? 2 : sourceUi.generationDepth)),
-        descendantDepth: Math.round(u.clamp(sourceUi.descendantDepth, 0, config.controls.maxTreeDepth, sourceUi.generationDepth == null ? 2 : sourceUi.generationDepth)),
+        generationDepth: Math.round(u.clamp(sourceUi.generationDepth, 1, config.controls.maxTreeDepth, 10)),
+        ancestorDepth: Math.round(u.clamp(sourceUi.ancestorDepth, 0, config.controls.maxTreeDepth, sourceUi.generationDepth == null ? 10 : sourceUi.generationDepth)),
+        descendantDepth: Math.round(u.clamp(sourceUi.descendantDepth, 0, config.controls.maxTreeDepth, sourceUi.generationDepth == null ? 10 : sourceUi.generationDepth)),
         directoryCollapsed: sourceUi.directoryCollapsed === true,
         profileCollapsed: sourceUi.profileCollapsed === true,
         showInferredParentLines: sourceUi.showInferredParentLines === true,
