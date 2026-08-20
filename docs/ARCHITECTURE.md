@@ -25,8 +25,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 8,
   "meta": {
-    "appVersion": "0.0.1.30",
-    "buildId": "0.0.1.30",
+    "appVersion": "0.0.1.36",
+    "buildId": "0.0.1.36",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -61,7 +61,7 @@ The compatibility `records`, `documents`, tombstone, UI, and module fields remai
 
 A fresh default has no `initializedAt` value and no people. `app.js` renders only the introduction and file input in that state. `portability.js` accepts the documented cleaned McLineage columns or native `mcfamily-csv-v1` rows and requires at least one valid person before the first local state is stored.
 
-Current cleaned McLineage rows represent every person and partner as a stable P-referenced row. Lineage people use complete root-to-person paths that extend each direct parent's path by one two-digit segment; partner-only rows intentionally leave lineage fields blank. The originating person's `partner_relationships_json` array expands into authoritative app relationship records with stable R IDs, partner P references, relationship types, ordering, dates, and ending reasons. Affinal parent references must resolve through those normalized partner pairs. Known and question-mark partial source date values share the `person_*` identity/date columns. A known death value or explicit `UNKNOWN` death descriptor imports as deceased; G0-G4 lineage people and people whose known birth year makes them older than 100 are also presumed deceased. Partial source dates remain in source details because the editable/native date model accepts only normalized known values. Older spouse-slot, embedded-spouse, person-to-root lineage, and descendant-date sources remain compatible.
+Current cleaned McLineage rows represent every person and partner as a stable P-referenced row. Lineal people use complete root-to-person paths that extend each direct parent's path by one two-digit segment; Non-Lineal partner-only rows intentionally leave lineage fields blank. The originating person's `partner_relationships_json` array expands into authoritative app relationship records with stable R IDs, partner P references, relationship types, ordering, dates, and ending reasons. The technical `parent_affinal_person_id` reference must resolve through those normalized partner pairs. Known and question-mark partial source date values share the `person_*` identity/date columns. A known death value or known birth date beyond age 100 marks a person deceased or presumed deceased; an otherwise unknown-status partner of a presumed-deceased person is also presumed deceased, while a person whose birth date indicates an age of 100 or less remains living. Partial source dates remain in source details because the editable/native date model accepts only normalized known values.
 
 After initialization, deleting the last person does not clear `initializedAt`; the workspace remains open and offers Add Person. Subsequent imports may contain an initialized empty family, but replacement always shows a summary, asks for confirmation, and writes the current state to recovery first.
 
@@ -73,8 +73,8 @@ Person deletion also writes recovery before removing that person's relationship 
 
 The family workspace has three coordinated surfaces:
 
-- Directory: header-toggled people with title-bar search and result count, first/last-name sorting, combinable checkbox filters for living status and consanguineal/affinal scope, lifespan/lineage metadata, and A–Z quick jumps.
-- Family Tree: a two-axis-scrollable SVG focus view with directly labelled numeric ancestor and descendant depths around the home or selected person, editable numeric zoom plus grouped Out/In/Fit actions, an optional display-only Affinal Lines overlay, or an overview containing all connected components and isolated people.
+- Directory: header-toggled people with title-bar search and result count, first/last-name sorting, combinable checkbox filters for living status and Lineal/Non-Lineal scope, lifespan/lineage metadata, and A–Z quick jumps.
+- Family Tree: a two-axis-scrollable SVG focus view with grouped numeric ancestor and descendant depths defaulting to 10, a right-aligned editable zoom and Out/In/Fit group, an optional display-only Non-Lineal Lines overlay, muted blood-red Lineal cards, or an overview containing all connected components and isolated people.
 - Profile: a selected person's complete information and derived relationship groups. Closing it clears selection; choosing a Family Tree node reopens it.
 
 The SVG contains semantic relationship labels in addition to visual lines. Pan and zoom use a view transform, touch uses pointer events, Fit calculates the graph bounds, and keyboard arrows move between rendered people. Reduced-motion settings suppress nonessential transitions.

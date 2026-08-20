@@ -422,12 +422,12 @@
       const primary = primaryByRow[index];
       const parentReference = sourceRecordKey(row[CONSANGUINITY_FIELD]);
       if (parentReference) {
-        if (!/^P\d{3,}$/.test(parentReference)) throw new Error("McLineage consanguinity parent references must use P references such as P001.");
+        if (!/^P\d{3,}$/.test(parentReference)) throw new Error("McLineage Lineal parent references must use P references such as P001.");
         const candidates = byRecordId.get(parentReference) || [];
         if (candidates.length === 1) relationships.push({
           id: stableId("relationship", row.record_id + "-parent", "parent-" + index),
           type: "parent-child", parentId: candidates[0].id, childId: primary.id, kind: "biological",
-          notes: "Imported consanguinity parent " + parentReference,
+          notes: "Imported Lineal parent " + parentReference,
           source: { format: "mclineage-cleaned", fields: { child_record_id: row.record_id, [CONSANGUINITY_FIELD]: parentReference } },
           order: relationships.length
         });
@@ -435,15 +435,15 @@
       }
       const affinalParentReference = sourceRecordKey(row[AFFINITY_FIELD]);
       if (affinalParentReference) {
-        if (!parentReference) throw new Error("A McLineage affinal parent requires a consanguinity parent: " + row.record_id + ".");
-        if (!/^P\d{3,}$/.test(affinalParentReference)) throw new Error("McLineage affinal parent references must use P references such as P001.");
-        if (affinalParentReference === sourceRecordKey(row.record_id) || affinalParentReference === parentReference) throw new Error("McLineage affinal parents must differ from the child and consanguinity parent: " + row.record_id + ".");
+        if (!parentReference) throw new Error("A McLineage Non-Lineal parent requires a Lineal parent: " + row.record_id + ".");
+        if (!/^P\d{3,}$/.test(affinalParentReference)) throw new Error("McLineage Non-Lineal parent references must use P references such as P001.");
+        if (affinalParentReference === sourceRecordKey(row.record_id) || affinalParentReference === parentReference) throw new Error("McLineage Non-Lineal parents must differ from the child and Lineal parent: " + row.record_id + ".");
         const affinalCandidates = byRecordId.get(affinalParentReference) || [];
-        if (!partnerPairs.has([parentReference, affinalParentReference].sort().join("|"))) throw new Error("McLineage affinal parent " + affinalParentReference + " is not a recorded partner of " + parentReference + ".");
+        if (!partnerPairs.has([parentReference, affinalParentReference].sort().join("|"))) throw new Error("McLineage Non-Lineal parent " + affinalParentReference + " is not a recorded partner of " + parentReference + ".");
         if (affinalCandidates.length === 1) relationships.push({
           id: stableId("relationship", row.record_id + "-affinal-parent", "affinal-parent-" + index),
           type: "parent-child", parentId: affinalCandidates[0].id, childId: primary.id, kind: "affinal",
-          notes: "Imported affinal parent " + affinalParentReference,
+          notes: "Imported Non-Lineal parent " + affinalParentReference,
           source: { format: "mclineage-cleaned", fields: { child_record_id: row.record_id, [AFFINITY_FIELD]: affinalParentReference } },
           order: relationships.length
         });
@@ -465,7 +465,7 @@
     const warnings = [];
     if (counters.orphanParents) warnings.push(counters.orphanParents + " lineage parent reference" + (counters.orphanParents === 1 ? " was" : "s were") + " not found and skipped.");
     if (counters.ambiguousParents) warnings.push(counters.ambiguousParents + " ambiguous lineage parent reference" + (counters.ambiguousParents === 1 ? " was" : "s were") + " skipped.");
-    if (counters.orphanAffinalParents) warnings.push(counters.orphanAffinalParents + " affinal parent reference" + (counters.orphanAffinalParents === 1 ? " was" : "s were") + " not found and skipped.");
+    if (counters.orphanAffinalParents) warnings.push(counters.orphanAffinalParents + " Non-Lineal parent reference" + (counters.orphanAffinalParents === 1 ? " was" : "s were") + " not found and skipped.");
     if (counters.partialDates) warnings.push(counters.partialDates + " partial source date" + (counters.partialDates === 1 ? " is" : "s are") + " preserved in source fields but not shown as a normalized date.");
     if (counters.unmappedDates) warnings.push(counters.unmappedDates + " unrecognized source date" + (counters.unmappedDates === 1 ? " is" : "s are") + " preserved in source fields but not shown as a normalized date.");
     prepared.validation.warnings = prepared.validation.warnings.concat(warnings);

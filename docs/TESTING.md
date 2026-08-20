@@ -25,7 +25,7 @@ Use synthetic families only.
 - [ ] A McLineage CSV missing any current column is rejected by name, and `descendant_*`, `spouse_#_*`, `lineage_parent_id`, `parent_lineage_id`, `lineage_level_##_name`, `root_ancestor_##_name`, and `legacy_page_reference` files no longer import.
 - [ ] Every current non-root lineage path extends its direct parent's path by exactly one segment; blank unlineaged people are accepted, while malformed, duplicate, or parent-mismatched paths are rejected.
 - [ ] Current source date values accept blank, `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, or the same shapes with `?` in unknown digit positions; question-mark values require `partial`, `invalid` descriptors are rejected, and birth descriptors reject blank.
-- [ ] Current `person_*` identity/date columns import lineage and partner rows consistently: a known death value imports as deceased, a birth date beyond age 100 without a death value imports as presumed deceased, a birth date within 100 years imports as living, and a missing birth value imports as unknown. An `UNKNOWN` death descriptor and lineage position alone never mark anyone deceased, so people such as Adam (1991) and Melanie (1961) are Living.
+- [ ] Current `person_*` identity/date columns import lineage and partner rows consistently: a known death value imports as deceased, a birth date beyond age 100 without a death value imports as presumed deceased, an otherwise unknown-status partner of a presumed-deceased person is also presumed deceased, a birth date within 100 years remains living, and an unconnected missing birth value remains unknown.
 - [ ] Profile and print life details use one `Age` row: living ages are compact, ages below two include months, and deceased ages read `#y | Would be #y today` or `??? | Would be #y today` when the death date is unknown.
 - [ ] Desktop defaults to a thin-gutter 20/50/30 Directory/Tree/Profile split, both separators resize with pointer and keyboard input, the first resize persists both widths, a usable tree width remains, and live position percentages appear only in Developer Mode.
 - [ ] Loading schema v7 state migrates the same cleaned-source life statuses to schema v8 and saves them under the v8 storage key without losing family data.
@@ -55,16 +55,16 @@ Use synthetic families only.
 - [ ] Focus mode shows the selected/home person's configured ancestor and descendant depth plus partners and siblings.
 - [ ] Overview contains every connected component and isolated person.
 - [ ] Single-person, multi-partner, adopted, disconnected, pedigree-collapse, and 1,500-person synthetic families render without exceptions.
-- [ ] Pan, Ctrl/Command-wheel and pinch zoom, grouped icon-over-label Out/In/Fit buttons, direct zoom percentage entry, node click, and independent numeric ancestor/descendant steppers with labels above their inputs work.
+- [ ] Pan, Ctrl/Command-wheel and pinch zoom, right-aligned grouped icon-over-label Out/In/Fit buttons, direct zoom percentage entry, node click, and grouped numeric ancestor/descendant steppers with labels above their inputs work; both depths default to 10.
 - [ ] Natural-size Family Tree layouts expose horizontal and vertical scrolling when needed; ordinary wheel input scrolls and Ctrl/Command-wheel zooms.
 - [ ] Arrow keys move between rendered nodes and Enter/Space selects.
 - [ ] Every node and relationship has an understandable accessible label.
-- [ ] Condensed cards are the default; both card modes are narrow, put every whitespace-separated name part on its own line, grow generation rows for taller names, show birth/death years with `????` for either unknown year, and keep deceased cards light brown.
+- [ ] Condensed cards are the default; both card modes are narrow, put every whitespace-separated name part on its own line, grow generation rows for taller names, and show birth/death years with `????` for either unknown year. Lineal cards are muted blood red, deceased Lineal cards blend red and brown, and other deceased cards remain light brown.
 - [ ] Partner pairs are adjacent when possible; married lines are solid, death-ended lines are solid and subdued, divorced lines are dotted, and other partner states remain distinguishable.
 - [ ] Family Tree rows use numeric lineage order rather than alphabetical names; Seth Lauer appears before Jared Lauer.
 - [ ] A multi-partner lineage person is preceded by past partners from earliest to latest and followed by the current married partner.
 - [ ] Christine Perrietta McMillen renders with Ray Shanaman on her left using a divorced line and Howard David Weiss as the only partner on her right using a married line.
-- [ ] Affinal Lines is disabled by default and hides recorded `affinal` parent edges; enabling it draws them as accessible light dashed branches while consanguinity edges stay solid.
+- [ ] Non-Lineal Lines is disabled by default and hides internally `affinal` parent edges; enabling it draws them as accessible light dashed branches while Lineal edges stay solid.
 - [ ] Only the current marriage draws a solid partner line; never-married partnerships are dashed, ended-unknown partnerships render as a `????` glyph line, and divorced, separated, and widowed links are dotted.
 - [ ] The floating Key sits at the lower right of the Family Tree module, collapses and reopens, stays inside the module at mobile widths, and does not block canvas drags.
 - [ ] Hide 99 Lineage is checked by default, removes `99`-lineage people and anyone linked only to them from both tree modes, keeps the focused person visible, and leaves the directory, search, and print counts unchanged.
@@ -73,10 +73,10 @@ Use synthetic families only.
 - [ ] Marital Status reads Married, Widowed, Divorced, Separated, Never married, or Unknown from the most recent partnership, Unknown when no partnership is recorded, and each Partners row reads `(year :: Status)`.
 - [ ] Ancestors and Descendants accept 0 through 10 and clamp anything larger.
 - [ ] Selecting a person from global search or a filtered directory returns the Family Tree to Focus mode.
-- [ ] The desktop tree/profile divider resizes both modules with pointer drag and Left/Right/Home/End keys, persists locally, and disappears below 960px.
+- [ ] Desktop dividers resize modules with pointer drag and Left/Right/Home/End keys, persist locally, and disappear below 960px; their percentages are hidden unless Developer Mode is on and that exact divider is actively dragged.
 - [ ] Directory and selected-person panes collapse independently and can be reopened without losing selection or tree focus; the header Directory control toggles the directory both open and closed, including mobile routing back to the tree.
 - [ ] Directory search and its result-count pill share one bordered title-bar control, the full `Search Directory…` placeholder is visible at the default 20% width, and the pill shows only the total until a filter or search narrows it; Filter By and Sort By are visible labels on identically sized controls.
-- [ ] Filter By is a checkbox menu that supports multiple living/deceased/unknown and Consanguineal/Affinal selections; status choices combine within their facet, kinship choices combine within their facet, and the two facets intersect.
+- [ ] Filter By is a checkbox menu that supports multiple living/deceased/unknown and Lineal/Non-Lineal selections; status choices combine within their facet, kinship choices combine within their facet, and the two facets intersect.
 - [ ] Directory first/last-name sorting and A–Z quick jumps work on the filtered result set.
 - [ ] Directory rows show `[birth – death]` with `????` for unknown years followed by the lineage ID; other lifespan surfaces use the same four-character placeholder.
 - [ ] Internal stable `P` references are absent throughout ordinary app and print views and appear only in Developer Mode.
@@ -94,7 +94,7 @@ Use synthetic families only.
 - [ ] Lineage appears immediately after identity details and above Relationships, Notes follows Relationships, and Imported Source is the final information section on screen and in each printable person profile; Albon shows both parents and all six siblings.
 - [ ] The profile X closes the module, clears directory/tree selection, disables the empty mobile Person tab, and a Family Tree selection reopens the profile without a Show person button.
 - [ ] A child listed from a parent's profile is labelled `Child`, without a redundant parent-kind suffix.
-- [ ] Parents, Siblings, and Children headings show the correct `Gen #`; parents show `(Consanguinity)` or `(Affinity)`.
+- [ ] Parents, Siblings, and Children headings show the correct `Gen #`; parents show `(Lineal)` or `(Non-Lineal)`.
 - [ ] Siblings and children show two-digit birth order and birth year as `(01 :: 1991)`, including `????` for an unknown year.
 - [ ] Partners show the relationship start year as their marriage year, or `????` when no year is recorded.
 - [ ] Screen and print profiles use the same Parents, Siblings, Partners, Children order and relationship context.
