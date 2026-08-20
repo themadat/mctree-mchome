@@ -60,17 +60,17 @@ Use synthetic families only.
 - [ ] Arrow keys move between rendered nodes and Enter/Space selects.
 - [ ] Every node and relationship has an understandable accessible label.
 - [ ] Condensed cards are the default; both card modes are narrow, put every whitespace-separated name part on its own line, grow generation rows for taller names, and show birth/death years with `????` for either unknown year. Lineal cards are muted blood red, deceased Lineal cards blend red and brown, and other deceased cards remain light brown.
-- [ ] Partner pairs are adjacent when possible; married lines are solid, death-ended lines are solid and subdued, divorced lines are dotted, and other partner states remain distinguishable.
+- [ ] Partner pairs are adjacent when possible; the current marriage is solid, never married is dotted, and every other partner history is dashed.
 - [ ] Family Tree rows use numeric lineage order rather than alphabetical names; Seth Lauer appears before Jared Lauer.
-- [ ] A multi-partner lineage person is preceded by past partners from earliest to latest and followed by the current married partner.
+- [ ] A multi-partner Lineal person is preceded by up to two 75%-scale past partners from earliest to latest and followed by the full-size current Non-Lineal spouse; the furthest-left card is top-aligned and the next is bottom-aligned so their lines do not cross through cards.
 - [ ] Christine Perrietta McMillen renders with Ray Shanaman on her left using a divorced line and Howard David Weiss as the only partner on her right using a married line.
 - [ ] Non-Lineal Lines is disabled by default and hides internally `affinal` parent edges; enabling it draws them as accessible light dashed branches while Lineal edges stay solid.
-- [ ] Only the current marriage draws a solid partner line; never-married partnerships are dashed, ended-unknown partnerships render as a `????` glyph line, and divorced, separated, and widowed links are dotted.
+- [ ] Only the current marriage draws a solid partner line; never-married partnerships are dotted, and ended-unknown, divorced, separated, widowed, and all other partner histories are dashed.
 - [ ] The floating Key sits at the lower right of the Family Tree module, collapses and reopens, stays inside the module at mobile widths, and does not block canvas drags.
 - [ ] Hide 99 Lineage is checked by default, removes `99`-lineage people and anyone linked only to them from both tree modes, keeps the focused person visible, and leaves the directory, search, and print counts unchanged.
-- [ ] A never-married partnership with no start date sorts by `relationship_order`, draws the dashed line, and reads Never married; P012 shows Heather Munz to the left of Tina Magri, and P244 lists Heather as her affinal parent.
+- [ ] A never-married partnership with no start date sorts by `relationship_order`, draws the dotted line, and reads Never married; P012 shows Heather Munz to the left of Tina Magri, and P244 lists Heather as her Non-Lineal parent.
 - [ ] Partial source dates appear in profiles and print as `December ??, 1979`, `August ??, 1943`, `June 2, 19??`, and `1981`; ages from a partial value carry `~` and an unknown year shows no age.
-- [ ] Marital Status reads Married, Widowed, Divorced, Separated, Never married, or Unknown from the most recent partnership, Unknown when no partnership is recorded, and each Partners row reads `(year :: Status)`.
+- [ ] Marital Status reads Married, Widowed, Divorced, Separated, Never married, or Unknown from the most recent partnership, Unknown when no partnership is recorded, and each Partners row reads `(year :: Status)`. With no recorded ending, two deceased spouses remain Married; if one current spouse is living and the other deceased, the living spouse reads Widowed and their tree line remains solid.
 - [ ] Ancestors and Descendants accept 0 through 10 and clamp anything larger.
 - [ ] Selecting a person from global search or a filtered directory returns the Family Tree to Focus mode.
 - [ ] Desktop dividers resize modules with pointer drag and Left/Right/Home/End keys, persist locally, and disappear below 960px; their percentages are hidden unless Developer Mode is on and that exact divider is actively dragged.

@@ -2,6 +2,7 @@
   "use strict";
 
   const App = window.LocalApp;
+  const config = App.config;
   const model = App.stateModel;
   const CONSANGUINITY_FIELD = "parent_consanguinity_person_id";
 
@@ -130,6 +131,59 @@
     return String(person && person.source && person.source.fields && person.source.fields[key] || "").trim();
   }
 
+  function partnerSourceFields(relationship) {
+    return relationship && relationship.source && relationship.source.fields || {};
+  }
+
+  function partnerSourceType(relationship) {
+    return String(partnerSourceFields(relationship).relationship_type || "").trim();
+  }
+
+  function partnerEndReason(relationship) {
+    return String(partnerSourceFields(relationship).end_reason || "").trim();
+  }
+
+  function isNeverMarriedPartnership(relationship) {
+    return partnerSourceType(relationship) === "partnership" || Boolean(relationship && relationship.status === "partnered");
+  }
+
+  function partnerHasRecordedEnd(relationship) {
+    const fields = partnerSourceFields(relationship);
+    const sourceDefinesEndReason = Object.prototype.hasOwnProperty.call(fields, "end_reason");
+    const endDate = String(fields.date_end_value || relationship && relationship.endDate && relationship.endDate.value || "").trim();
+    if (sourceDefinesEndReason) return Boolean(partnerEndReason(relationship) || endDate);
+    return Boolean(endDate || relationship && ["divorced", "former", "separated", "widowed"].includes(relationship.status));
+  }
+
+  function isPastPartnerRelationship(relationship) {
+    return partnerHasRecordedEnd(relationship);
+  }
+
+  function partnerMaritalStatusId(person, entry) {
+    const relationship = entry && entry.relationship || entry;
+    const other = entry && entry.person;
+    if (isNeverMarriedPartnership(relationship)) return "never-married";
+    if (entry && entry.current === true && !partnerHasRecordedEnd(relationship)) {
+      const personLiving = person && person.livingStatus === "living";
+      const personDeceased = person && person.livingStatus === "deceased";
+      const otherLiving = other && other.livingStatus === "living";
+      const otherDeceased = other && other.livingStatus === "deceased";
+      if (personLiving && otherDeceased) return "widowed";
+      if (partnerSourceType(relationship) === "marriage" || relationship && relationship.status === "married" || (personDeceased && otherDeceased) || (personDeceased && otherLiving)) return "married";
+    }
+    return config.maritalStatusByPartnerStatus[relationship && relationship.status] || "unknown";
+  }
+
+  function partnerLineKind(relationship, current, first, second) {
+    if (isNeverMarriedPartnership(relationship)) return "never-married";
+    if (current && !partnerHasRecordedEnd(relationship)) {
+      const bothDeceased = first && second && first.livingStatus === "deceased" && second.livingStatus === "deceased";
+      const deathSplit = first && second && ((first.livingStatus === "living" && second.livingStatus === "deceased") || (first.livingStatus === "deceased" && second.livingStatus === "living"));
+      if (partnerSourceType(relationship) === "marriage" || relationship && relationship.status === "married" || bothDeceased || deathSplit) return "married";
+    }
+    return "ended";
+  }
+
   function bloodlineParentRank(person, entry) {
     const parent = relationPerson(entry);
     const consanguinityId = sourceField(person, CONSANGUINITY_FIELD).toUpperCase();
@@ -141,9 +195,8 @@
 
   function orderPartnerHistory(entries) {
     const histories = entries.slice().sort(comparePartnerHistory);
-    const pastStatuses = new Set(["divorced", "former", "separated", "widowed"]);
-    const active = histories.filter(function (entry) { return !pastStatuses.has(entry.relationship.status); });
-    const preferredActive = active.filter(function (entry) { return entry.relationship.status === "married" || entry.relationship.status === "partnered"; });
+    const active = histories.filter(function (entry) { return !isPastPartnerRelationship(entry.relationship); });
+    const preferredActive = active.filter(function (entry) { return ["marriage", "partnership"].includes(partnerSourceType(entry.relationship)) || entry.relationship.status === "married" || entry.relationship.status === "partnered"; });
     const current = (preferredActive.length ? preferredActive : active).slice(-1)[0] || null;
     return (current ? [current] : []).concat(histories.filter(function (entry) { return entry !== current; }).reverse()).map(function (entry) {
       return Object.assign({}, entry, { current: entry === current });
@@ -277,9 +330,8 @@
     return relationshipOrderValue(a.relationship) - relationshipOrderValue(b.relationship);
   }
 
-  function arrangePartners(items, relationships) {
+  function arrangePartners(items, relationships, placements, currentRelationshipIds) {
     const peopleById = new Map(items.map(function (person) { return [person.id, person]; }));
-    const pastStatuses = new Set(["divorced", "former", "separated", "widowed"]);
     const itemOrder = new Map(items.map(function (person, index) { return [person.id, index]; }));
     const links = new Map(items.map(function (person) { return [person.id, []]; }));
     relationships.filter(function (relationship) {
@@ -313,17 +365,24 @@
       })[0];
       const anchor = peopleById.get(anchorId);
       const histories = (links.get(anchorId) || []).filter(function (entry) { return !used.has(entry.id); }).sort(comparePartnerHistory);
-      const active = histories.filter(function (entry) { return !pastStatuses.has(entry.relationship.status); });
-      const preferredActive = active.filter(function (entry) { return entry.relationship.status === "married" || entry.relationship.status === "partnered"; });
+      const active = histories.filter(function (entry) { return !isPastPartnerRelationship(entry.relationship); });
+      const preferredActive = active.filter(function (entry) { return ["marriage", "partnership"].includes(partnerSourceType(entry.relationship)) || entry.relationship.status === "married" || entry.relationship.status === "partnered"; });
       const current = (preferredActive.length ? preferredActive : active).slice(-1)[0] || null;
-      histories.filter(function (entry) { return !current || entry.id !== current.id; }).forEach(function (entry) {
+      const leftPartners = histories.filter(function (entry) { return !current || entry.id !== current.id; });
+      leftPartners.forEach(function (entry, index) {
         if (used.has(entry.id)) return;
+        placements.set(entry.id, { side: "left", anchorId: anchorId, scale: .75, align: index === 0 ? "top" : "bottom", count: leftPartners.length });
         arranged.push(peopleById.get(entry.id));
         used.add(entry.id);
       });
       arranged.push(anchor);
       used.add(anchorId);
-      if (current && !used.has(current.id)) { arranged.push(peopleById.get(current.id)); used.add(current.id); }
+      if (current && !used.has(current.id)) {
+        placements.set(current.id, { side: "right", anchorId: anchorId, scale: 1, align: "top" });
+        currentRelationshipIds.add(current.relationship.id);
+        arranged.push(peopleById.get(current.id));
+        used.add(current.id);
+      }
       componentIds.filter(function (id) { return !used.has(id); }).sort(function (a, b) { return itemOrder.get(a) - itemOrder.get(b); }).forEach(function (id) { arranged.push(peopleById.get(id)); used.add(id); });
     });
     return arranged;
@@ -398,6 +457,8 @@
     });
     const sortedLevels = Array.from(groups.keys()).sort(function (a, b) { return a - b; });
     const positions = new Map();
+    const partnerPlacements = new Map();
+    const currentPartnerRelationshipIds = new Set();
     sortedLevels.forEach(function (level, levelIndex) {
       let items = groups.get(level).sort(function (a, b) {
         const lineageOrder = compareLineage(a, b);
@@ -410,7 +471,7 @@
         return model.sortName(a).localeCompare(model.sortName(b));
       });
       if (levelIndex === 0) items = items.sort(function (a, b) { return compareLineage(a, b) || model.sortName(a).localeCompare(model.sortName(b)); });
-      items = arrangePartners(items, visibleRelationships);
+      items = arrangePartners(items, visibleRelationships, partnerPlacements, currentPartnerRelationshipIds);
       groups.set(level, items);
       items.forEach(function (person, index) { positions.set(person.id, index); });
     });
@@ -423,33 +484,61 @@
       const lineCount = Math.max.apply(null, groups.get(level).map(function (person) { return treeNameLines(person, detailed).length; }));
       rowHeights.set(level, (detailed ? 52 : 38) + Math.max(1, lineCount) * 14);
     });
-    const maxCount = Math.max.apply(null, Array.from(groups.values()).map(function (items) { return items.length; }));
-    const contentWidth = Math.max(680, maxCount * (nodeWidth + horizontalGap) - horizontalGap + 80);
+    const rowTrackHeights = new Map();
+    sortedLevels.forEach(function (level) {
+      const nodeHeight = rowHeights.get(level);
+      const staggered = groups.get(level).some(function (person) {
+        const placement = partnerPlacements.get(person.id);
+        return placement && placement.side === "left" && placement.count > 1;
+      });
+      rowTrackHeights.set(level, staggered ? nodeHeight * 1.5 : nodeHeight);
+    });
+    const rowWidths = new Map();
+    sortedLevels.forEach(function (level) {
+      const items = groups.get(level);
+      const width = items.reduce(function (total, person) {
+        const placement = partnerPlacements.get(person.id);
+        return total + nodeWidth * (placement && placement.scale || 1);
+      }, 0) + Math.max(0, items.length - 1) * horizontalGap;
+      rowWidths.set(level, width);
+    });
+    const contentWidth = Math.max(680, Math.max.apply(null, Array.from(rowWidths.values())) + 80);
     const nodes = [];
     let rowY = 40;
     sortedLevels.forEach(function (level) {
       const items = groups.get(level);
       const nodeHeight = rowHeights.get(level);
-      const rowWidth = items.length * (nodeWidth + horizontalGap) - horizontalGap;
+      const trackHeight = rowTrackHeights.get(level);
+      const rowWidth = rowWidths.get(level);
       const startX = (contentWidth - rowWidth) / 2;
+      let cursorX = startX;
       items.forEach(function (person, index) {
+        const placement = partnerPlacements.get(person.id);
+        const scale = placement && placement.scale || 1;
+        const width = nodeWidth * scale;
+        const height = nodeHeight * scale;
         nodes.push({
           id: person.id,
           person: person,
-          x: startX + index * (nodeWidth + horizontalGap),
-          y: rowY,
-          width: nodeWidth,
-          height: nodeHeight,
+          x: cursorX,
+          y: rowY + (placement && placement.align === "bottom" ? trackHeight - height : placement && placement.align === "top" ? 0 : (trackHeight - nodeHeight) / 2),
+          width: width,
+          height: height,
+          renderWidth: nodeWidth,
+          renderHeight: nodeHeight,
+          scale: scale,
+          partnerPlacement: placement && placement.side || "",
           generation: level
         });
+        cursorX += width + horizontalGap;
       });
-      rowY += nodeHeight + verticalGap;
+      rowY += trackHeight + verticalGap;
     });
     const nodeById = new Map(nodes.map(function (node) { return [node.id, node]; }));
     const edges = visibleRelationships.map(function (relationship) {
       const aId = relationship.type === "parent-child" ? relationship.parentId : relationship.person1Id;
       const bId = relationship.type === "parent-child" ? relationship.childId : relationship.person2Id;
-      return { relationship: relationship, from: nodeById.get(aId), to: nodeById.get(bId) };
+      return { relationship: relationship, from: nodeById.get(aId), to: nodeById.get(bId), current: relationship.type === "partner" && currentPartnerRelationshipIds.has(relationship.id) };
     }).filter(function (edge) { return edge.from && edge.to; });
     const height = rowY - verticalGap + 40;
     return { nodes: nodes, edges: edges, width: contentWidth, height: Math.max(360, height), bounds: { x: 0, y: 0, width: contentWidth, height: Math.max(360, height) }, peopleById: peopleById, nodeView: detailed ? "detailed" : "condensed" };
@@ -504,6 +593,10 @@
     focusPeople: focusPeople,
     connectedComponents: connectedComponents,
     generationMap: generationMap,
+    isNeverMarriedPartnership: isNeverMarriedPartnership,
+    partnerHasRecordedEnd: partnerHasRecordedEnd,
+    partnerMaritalStatusId: partnerMaritalStatusId,
+    partnerLineKind: partnerLineKind,
     treeNameLines: treeNameLines,
     layout: layout,
     validateRelationshipDraft: validateRelationshipDraft,
