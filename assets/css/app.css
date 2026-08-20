@@ -843,7 +843,12 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .print-preview-document .print-generation h4, .print-preview-document .print-generation-branch h4 { margin: 0 0 .035in; font: 800 7pt Helvetica, Arial, sans-serif; letter-spacing: .04em; text-transform: uppercase; }
 .print-preview-document .print-generation > div { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .035in; }
 .print-preview-document .print-generation span { display: grid; min-width: 0; padding: .035in .045in; border: 1px solid #bbb; font-size: 8pt; line-height: 1.15; }
-.print-preview-document .print-generation strong { overflow-wrap: anywhere; }
+.print-preview-document .print-generation span.print-lineal { border-color: #b98b8d; box-shadow: inset 0 0 0 1px #e0c7c8; }
+.print-preview-document .print-generation span.print-lineage-highlight { border-color: #8f5b5d; background: #f2e2df; box-shadow: inset 0 0 0 1px #8f5b5d; }
+.print-preview-document .print-generation strong { overflow-wrap: anywhere; font-size: 6.5pt; line-height: 1.05; }
+.print-preview-document .print-generation .print-name-smaller strong { font-size: 5pt; }
+.print-preview-document .print-generation .print-name-smallest strong { font-size: 3.8pt; }
+.print-preview-document .print-generation .print-name-tiniest strong { font-size: 3.1pt; }
 .print-preview-document .print-generation small { color: #555; font: 7pt Helvetica, Arial, sans-serif; }
 .print-preview-document .print-generation-branch > header { padding: .04in .055in; border-left: 3px solid #7b4e16; background: #f3efe8; }
 .print-preview-document .print-directory { padding: 0; background: transparent; box-shadow: none; }
@@ -951,7 +956,12 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
   .print-generation h4 { margin: 0 0 .035in; font: 800 7pt Helvetica, Arial, sans-serif; letter-spacing: .04em; text-transform: uppercase; }
   .print-generation > div { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .035in; }
   .print-generation span { display: grid; min-width: 0; padding: .035in .045in; border: 1px solid #bbb; font-size: 8pt; line-height: 1.15; break-inside: avoid; }
-  .print-generation strong { overflow-wrap: anywhere; }
+  .print-generation span.print-lineal { border-color: #b98b8d; box-shadow: inset 0 0 0 1px #e0c7c8; }
+  .print-generation span.print-lineage-highlight { border-color: #8f5b5d; background: #f2e2df; box-shadow: inset 0 0 0 1px #8f5b5d; }
+  .print-generation strong { overflow-wrap: anywhere; font-size: 6.5pt; line-height: 1.05; }
+  .print-generation .print-name-smaller strong { font-size: 5pt; }
+  .print-generation .print-name-smallest strong { font-size: 3.8pt; }
+  .print-generation .print-name-tiniest strong { font-size: 3.1pt; }
   .print-generation small { color: #555; font: 7pt Helvetica, Arial, sans-serif; }
   .print-generation-branch { padding: .055in 0; border-top: 1px solid #999; break-before: auto; }
   .print-generation-branch > header { padding: .04in .055in; border-left: 3px solid #7b4e16; background: #f3efe8; break-after: avoid; }
