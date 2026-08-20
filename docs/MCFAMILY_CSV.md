@@ -15,6 +15,8 @@ Every header above is required. McFamily reads only this current schema: earlier
 
 Current McLineage rows use stable `P` record references such as `P001`, and every row represents exactly one person. `record_id` is the first column. `lineage_id` is the complete lineage path from the oldest recorded ancestor to that person, with every child position stored as a two-digit dotted segment. For example, P044 is `01`, P228 is `01.01`, and P501 is `01.01.01.03.02.02.04.02.01.01`. `parent_consanguinity_person_id` directly references the bloodline parent row's `record_id`; `parent_affinal_person_id` optionally references the recorded partner row that is also a parent. Partner-only rows intentionally leave `source_row_number`, `lineage_id`, and both parent fields blank. `person_name_sort` follows `person_last_name`, and `source_row_number` is the penultimate source column immediately before `data_quality_notes`. Former legacy page references are prefixed to `data_quality_notes` and are no longer a separate column.
 
+The compatibility lineage value `99` remains stored in CSV for unplaced Lineal records. McFamily displays that segment as `??`; the Family Tree hides those records by default and exposes them with Show ?? Lineal.
+
 `partner_relationships_json` is blank when the person has no recorded partners; otherwise it contains one JSON array. Each relationship is stored exactly once, on its originating person's row. A current object has this shape:
 
 ```json
