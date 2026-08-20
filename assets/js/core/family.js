@@ -264,8 +264,8 @@
   }
 
   function relationshipOrderValue(relationship) {
-    const sourceSlot = Number(relationship && relationship.source && relationship.source.fields && relationship.source.fields.spouse_slot);
-    if (Number.isFinite(sourceSlot) && sourceSlot > 0) return sourceSlot;
+    const sourceOrder = Number(relationship && relationship.source && relationship.source.fields && relationship.source.fields.relationship_order);
+    if (Number.isFinite(sourceOrder) && sourceOrder > 0) return sourceOrder;
     const order = Number(relationship && relationship.order);
     return Number.isFinite(order) ? order : Number.MAX_SAFE_INTEGER;
   }
@@ -274,7 +274,6 @@
     const aDate = String(a.relationship.startDate && a.relationship.startDate.value || a.relationship.endDate && a.relationship.endDate.value || "");
     const bDate = String(b.relationship.startDate && b.relationship.startDate.value || b.relationship.endDate && b.relationship.endDate.value || "");
     if (aDate && bDate && aDate !== bDate) return aDate.localeCompare(bDate);
-    if (aDate !== bDate) return aDate ? -1 : 1;
     return relationshipOrderValue(a.relationship) - relationshipOrderValue(b.relationship);
   }
 
@@ -330,6 +329,29 @@
     return arranged;
   }
 
+  function unplacedLineageIds(state) {
+    const hidden = new Set();
+    state.workspace.people.forEach(function (person) {
+      if (sourceField(person, "lineage_id") === "99") hidden.add(person.id);
+    });
+    if (!hidden.size) return hidden;
+    const total = new Map();
+    const toHidden = new Map();
+    state.workspace.relationships.forEach(function (relationship) {
+      const pair = relationship.type === "parent-child" ? [relationship.parentId, relationship.childId] : [relationship.person1Id, relationship.person2Id];
+      pair.forEach(function (id, index) {
+        total.set(id, (total.get(id) || 0) + 1);
+        if (hidden.has(pair[index === 0 ? 1 : 0])) toHidden.set(id, (toHidden.get(id) || 0) + 1);
+      });
+    });
+    state.workspace.people.forEach(function (person) {
+      if (hidden.has(person.id) || sourceField(person, "lineage_id")) return;
+      const links = total.get(person.id) || 0;
+      if (links && links === (toHidden.get(person.id) || 0)) hidden.add(person.id);
+    });
+    return hidden;
+  }
+
   function treeNameLines(person, detailed) {
     const names = person && person.names || {};
     const fullName = model.displayName(person);
@@ -340,12 +362,16 @@
   }
 
   function layout(state, options) {
-    const settings = Object.assign({ mode: "focus", focusId: "", ancestorDepth: 2, descendantDepth: 2, nodeView: "condensed" }, options || {});
+    const settings = Object.assign({ mode: "focus", focusId: "", ancestorDepth: 2, descendantDepth: 2, nodeView: "condensed", hideUnplacedLineage: false }, options || {});
     if (options && options.depth != null) {
       if (options.ancestorDepth == null) settings.ancestorDepth = options.depth;
       if (options.descendantDepth == null) settings.descendantDepth = options.depth;
     }
-    const visiblePeople = settings.mode === "overview" ? state.workspace.people.slice() : focusPeople(state, settings.focusId, settings.ancestorDepth, settings.descendantDepth);
+    const hidden = settings.hideUnplacedLineage ? unplacedLineageIds(state) : new Set();
+    hidden.delete(settings.focusId);
+    const visiblePeople = (settings.mode === "overview" ? state.workspace.people.slice() : focusPeople(state, settings.focusId, settings.ancestorDepth, settings.descendantDepth)).filter(function (person) {
+      return !hidden.has(person.id);
+    });
     const visibleIds = new Set(visiblePeople.map(function (person) { return person.id; }));
     const visibleRelationships = state.workspace.relationships.filter(function (relationship) {
       return relationship.type === "parent-child"
@@ -474,6 +500,7 @@
     familyUnits: familyUnits,
     lineageSummary: lineageSummary,
     eventYearLabel: eventYearLabel,
+    unplacedLineageIds: unplacedLineageIds,
     focusPeople: focusPeople,
     connectedComponents: connectedComponents,
     generationMap: generationMap,

@@ -13,6 +13,8 @@ Current version: `0.0.1.30` (`major.minor.patch.build`).
 - Supports two-axis scrolling, pan, directly editable zoom and 0-10 depth numbers, fit, keyboard selection, touch, and accessible relationship descriptions.
 - Orders each Family Tree generation by numeric lineage ID; past partners appear chronologically to the left of the lineage person and exactly one current spouse appears to the right. Only the current marriage is solid, never-married partnerships are dashed, partnerships that ended for an unrecorded reason are drawn as `????`, and divorced, separated, or widowed links are dotted, with a floating key in the corner of the tree.
 - Draws recorded affinal-parent links as dashed branches only while the Affinal Lines control is on, leaving solid edges for the consanguinity bloodline and never changing relationship records.
+- Can hide `99`-lineage people from the Family Tree with a persisted checkbox while keeping them in the directory, search, and print.
+- Records out-of-wedlock partnerships as never-married relationships with no start date, sequenced by relationship order.
 - Provides a header-toggled directory with title-bar search and result count, visible Filter By and Sort By controls, combinable status and consanguineal/affinal checkbox filters, A–Z quick jumps, lifespan and lineage context, and broad search across names, contact details, places, heritage, and notes.
 - Lets people be starred directly in search, pins favorites above other matches, and provides a Favorites-only search control beside the search field.
 - Supports partial/fuzzy matches that return the tree to Focus, collapsible side panels, compact 20/50/30 default desktop splits with persistent resizing, and compact tree cards that stack each name word on its own line.

@@ -69,6 +69,7 @@
         directoryCollapsed: true,
         profileCollapsed: false,
         showInferredParentLines: false,
+        hideUnplacedLineage: true,
         panelSizingCustomized: false,
         directoryPanelWidth: 0,
         profilePanelWidth: 0,
@@ -517,6 +518,7 @@
         directoryCollapsed: sourceUi.directoryCollapsed === true,
         profileCollapsed: sourceUi.profileCollapsed === true,
         showInferredParentLines: sourceUi.showInferredParentLines === true,
+        hideUnplacedLineage: sourceUi.hideUnplacedLineage !== false,
         panelSizingCustomized: sourceUi.panelSizingCustomized === true,
         directoryPanelWidth: sourceUi.panelSizingCustomized === true ? Math.round(u.clamp(sourceUi.directoryPanelWidth, 220, 480, 280)) : 0,
         profilePanelWidth: sourceUi.panelSizingCustomized === true ? Math.round(u.clamp(sourceUi.profilePanelWidth, 240, 600, 300)) : 0,
@@ -662,6 +664,8 @@
     next.ui.descendantDepth = defaults.ui.descendantDepth;
     next.ui.directoryCollapsed = defaults.ui.directoryCollapsed;
     next.ui.profileCollapsed = defaults.ui.profileCollapsed;
+    next.ui.showInferredParentLines = defaults.ui.showInferredParentLines;
+    next.ui.hideUnplacedLineage = defaults.ui.hideUnplacedLineage;
     next.ui.panelSizingCustomized = defaults.ui.panelSizingCustomized;
     next.ui.directoryPanelWidth = defaults.ui.directoryPanelWidth;
     next.ui.profilePanelWidth = defaults.ui.profilePanelWidth;
