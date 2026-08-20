@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.32",
-      buildId: "0.0.1.32",
+      version: "0.0.1.33",
+      buildId: "0.0.1.33",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -94,6 +94,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.33",
+        date: "2026-08-20T01:20:00.000Z",
+        title: "Ended partnerships read as past",
+        summary: "A partnership with an unknown end reason is now a former partnership, so nobody who is single keeps a current partner.",
+        features: [],
+        improvements: ["Unknown end reasons map to former rather than an open-ended state"],
+        fixes: ["People whose partnerships all ended no longer show a current partner in the tree or profile"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.32",
         date: "2026-08-20T00:35:00.000Z",

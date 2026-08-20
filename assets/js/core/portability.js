@@ -331,7 +331,7 @@
     if (endReason === "divorce") return "divorced";
     if (endReason === "separation") return "separated";
     if (endReason === "annulment") return "former";
-    if (endReason === "UNKNOWN") return "unknown";
+    if (endReason === "UNKNOWN") return "former";
     if (type === "marriage") return "married";
     if (type === "partnership") return "partnered";
     return "unknown";

@@ -4,14 +4,37 @@ McLineage Dataset Metadata
 Current dataset
 ---------------
 
-Version: 10.0.1
+Version: 10.0.2
 Updated: 2026-08-19
-File: McLineage-10-0-1-2026-08-19.csv
+File: McLineage-10-0-2-2026-08-19.csv
 Source: McLineage.xlsx legacy database export
 Status: Private family data; do not commit to a public or shared source repository.
 
 Changelog
 ---------
+
+10.0.2 — 2026-08-19 — [194 KB (±0) | 912 records (±0) | 23 fields (±0)]
+Author: Adam Lauer [Agent Claude Code | Model Opus 5 | Effort High | Speed Standard]
+Summary: Corrected partner end reasons misread from the legacy relationship status code.
+
+- Recorded the authoritative legacy_relationship_status_code meanings: M is currently
+  married, D is a marriage ended by a death, and SF and SM are a currently single
+  female or male whose earlier partnerships the code does not describe.
+- Removed all 68 divorce end reasons; the legacy database never recorded a divorce.
+  42 D relationships became death, and 26 became UNKNOWN because the code says only
+  that the partnership ended.
+- Corrected the current-partner slot for remarried people: spouse slot 1 is the
+  current or death-ended marriage and higher slots are earlier marriages, so 18
+  slot-1 relationships lost their invented divorce and 16 slot-2 relationships
+  became UNKNOWN.
+- Preserved all 30 death end reasons that a recorded death date already supported,
+  all 183 unended marriages, and the two relationships whose owner row has no legacy
+  code.
+- Normalized date_end_descriptor to UNKNOWN on every relationship with an end reason
+  and blank on every relationship without one; no end date values were invented.
+- Verified 912 rows, 23 fields, unique person and relationship IDs, unchanged values
+  in every other column and JSON field, key order, and a clean McFamily import
+  producing 185 married, 72 widowed, and 48 former partnerships.
 
 10.0.1 — 2026-08-19 — [194 KB (±0) | 912 records (±0) | 23 fields (±0)]
 Author: Adam Lauer [Agent GPT-5-based Codex | Model 5.6 Sol | Effort High | Speed Standard]
