@@ -719,6 +719,14 @@
     return Boolean(edge && edge.relationship && edge.relationship.type === "parent-child" && edge.relationship.kind === "affinal");
   }
 
+  function unknownPartnerMarks(edge, pathId) {
+    const width = Math.abs((edge.to.x + edge.to.width / 2) - (edge.from.x + edge.from.width / 2));
+    const height = Math.abs((edge.to.y + edge.to.height / 2) - (edge.from.y + edge.from.height / 2));
+    const length = Math.sqrt(width * width + height * height);
+    const marks = new Array(Math.max(3, Math.round(length / 9))).fill("?").join("");
+    return '<text class="tree-edge-marks" aria-hidden="true"><textPath href="#' + pathId + '" startOffset="0">' + marks + "</textPath></text>";
+  }
+
   function edgePath(edge) {
     if (edge.relationship.type === "partner") {
       const x1 = edge.from.x + edge.from.width / 2;
@@ -810,7 +818,8 @@
       const description = relationshipDescription(edge);
       const affinal = isAffinalParentEdge(edge) ? " affinal-parent" : "";
       const pathId = "tree-edge-" + u.escapeHtml(relationship.id);
-      return '<path id="' + pathId + '" class="tree-edge ' + u.escapeHtml(relationship.type) + affinal + '" role="img" aria-label="' + u.escapeHtml(description) + '" data-kind="' + u.escapeHtml(kind) + '" d="' + edgePath(edge) + '"><title>' + u.escapeHtml(description) + "</title></path>";
+      const path = '<path id="' + pathId + '" class="tree-edge ' + u.escapeHtml(relationship.type) + affinal + '" role="img" aria-label="' + u.escapeHtml(description) + '" data-kind="' + u.escapeHtml(kind) + '" d="' + edgePath(edge) + '"><title>' + u.escapeHtml(description) + "</title></path>";
+      return path + (relationship.type === "partner" && kind === "unknown" ? unknownPartnerMarks(edge, pathId) : "");
     }).join("");
     const nodes = currentTreeLayout.nodes.map(function (node) {
       const person = node.person;
@@ -1032,8 +1041,9 @@
   function treeKeyHtml() {
     const rows = [
       [treeKeySwatch("partner", "married"), "Current marriage"],
+      [treeKeySwatch("partner", "previous-marriage"), "Previous marriage"],
       [treeKeySwatch("partner", "never-married"), "Never married"],
-      [treeKeySwatch("partner", "ended"), "Other partner history"],
+      ['<span class="tree-key-marks" aria-hidden="true">????</span>', "Unknown status"],
       [treeKeySwatch("parent-child", "biological"), "Lineal parent"],
       [treeKeySwatch("parent-child", "affinal", "affinal-parent"), "Non-Lineal parent"]
     ];

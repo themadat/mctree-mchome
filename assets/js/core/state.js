@@ -166,16 +166,10 @@
     return new Date() > hundredthBirthday ? "deceased" : "living";
   }
 
-  function hasRecordedDeath(person) {
-    const source = u.plainObject(person);
-    const fields = u.plainObject(u.plainObject(source.source).fields);
-    return Boolean(u.cleanLine(fields.person_date_death_value, 40) || u.cleanLine(source.death && source.death.date && source.death.date.value, 40));
-  }
-
   function presumeUnknownPartnersDeceased(people, relationships) {
     const peopleById = new Map(people.map(function (person) { return [person.id, person]; }));
-    const presumedIds = new Set(people.filter(function (person) {
-      return person.livingStatus === "deceased" && !hasRecordedDeath(person);
+    const deceasedIds = new Set(people.filter(function (person) {
+      return person.livingStatus === "deceased";
     }).map(function (person) { return person.id; }));
     let changed = true;
     while (changed) {
@@ -183,14 +177,14 @@
       relationships.filter(function (relationship) { return relationship.type === "partner"; }).forEach(function (relationship) {
         const first = peopleById.get(relationship.person1Id);
         const second = peopleById.get(relationship.person2Id);
-        if (first && presumedIds.has(first.id) && second && second.livingStatus === "unknown") {
+        if (first && deceasedIds.has(first.id) && second && second.livingStatus === "unknown") {
           second.livingStatus = "deceased";
-          presumedIds.add(second.id);
+          deceasedIds.add(second.id);
           changed = true;
         }
-        if (second && presumedIds.has(second.id) && first && first.livingStatus === "unknown") {
+        if (second && deceasedIds.has(second.id) && first && first.livingStatus === "unknown") {
           first.livingStatus = "deceased";
-          presumedIds.add(first.id);
+          deceasedIds.add(first.id);
           changed = true;
         }
       });
