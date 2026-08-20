@@ -4,12 +4,12 @@ McFamily is a private, local-first family atlas that runs as a static GitHub Pag
 
 There is no backend, account, cloud database, or runtime dependency. Family data stays in browser storage and moves only through an explicit CSV import or export. The published repository must never contain a real family CSV or private family data.
 
-Current version: `0.0.1.38` (`major.minor.patch.build`).
+Current version: `0.0.1.39` (`major.minor.patch.build`).
 
 ## What it does
 
 - Opens only after importing the cleaned McLineage CSV or a native McFamily CSV with at least one person on first launch.
-- Shows a focus tree around a home person and a whole-family overview of connected and isolated people.
+- Shows a Lineage tree around a selected person and a Full Tree view of connected and isolated people.
 - Supports two-axis scrolling, pan, directly editable zoom and 0-10 depth numbers, fit, keyboard selection, touch, and accessible relationship descriptions.
 - Orders each Family Tree generation by numeric lineage ID; up to two prior partners appear chronologically at 75% size to the left of the Lineal person, with the oldest top-aligned and the next bottom-aligned, while the current Non-Lineal spouse remains full-size on the right. Current marriages are solid, never-married partnerships are dotted, and every other partner history is dashed, with a floating key in the corner of the tree.
 - Draws recorded Non-Lineal parent links as dashed branches only while Non-Lineal Lines is on, leaving solid edges for the Lineal bloodline and never changing relationship records.
@@ -18,16 +18,16 @@ Current version: `0.0.1.38` (`major.minor.patch.build`).
 - Records out-of-wedlock partnerships as never-married relationships with no start date, sequenced by relationship order.
 - Provides a header-toggled directory with title-bar search and result count, visible Filter By and Sort By controls, combinable status and Lineal/Non-Lineal checkbox filters, A–Z quick jumps, lifespan and lineage context, and broad search across names, contact details, places, heritage, and notes.
 - Lets people be starred directly in search, pins favorites above other matches, and provides a Favorites-only search control beside the search field.
-- Supports partial/fuzzy matches that return the tree to Focus, collapsible side panels, compact 20/50/30 default desktop splits with persistent resizing, and compact tree cards that stack each name word on its own line.
+- Supports partial/fuzzy matches that return the tree to Lineage, collapsible side panels, compact 20/50/30 default desktop splits with persistent resizing, and Summary tree cards that stack each name word on its own line.
 - Keeps portrait placeholders and internal person references out of the ordinary workspace; Developer Mode reveals references for troubleshooting.
 - Presents complete oldest-to-newest, two-digit Lineage IDs with the first three ancestral segments italicized and the selected person's final segment bold, followed by a compact direct-parent-linked Family Line with each name's lineage number and generation.
 - Imports every current McLineage row as one stable person and expands `partner_relationships_json` into explicit partner records; only the current McLineage schema is accepted, and a file missing a required column names it.
 - Imports known and question-mark partial source dates; a recorded death or a birth date beyond age 100 marks someone deceased or presumed deceased, an unknown-status partner of a presumed-deceased person is also presumed deceased, a birth date within 100 years means living, and a missing birth date means unknown, with a concise Age row in profiles and print when birth data permits.
-- Shows partial source dates such as `December ??, 1979` with approximate `~` ages, and a perspective-aware Marital Status row: an unended deceased couple remains married, while the living spouse of an unended deceased partner reads widowed.
+- Shows partial source dates such as `December ??, 1979` with naturally written ages, and orders identity properties as Born, Died, Age, Living Status, and perspective-aware Marital Status.
 - Uses compact open Parents, Siblings, Partners, and Children groups near the top of each profile, with generation labels, Lineal/Non-Lineal parent roles, birth order and year for siblings and children, marriage years for partners, and current-first partner history; Imported Source finishes each profile.
 - Uses absolute lineage generations rooted at George McMillen (1745) as Gen 0; readings use concise forms such as `Gen 6, 5th Child of Max`.
 - Lets the person panel close and clear selection; choosing any Family Tree person reopens it without a separate Show person control.
-- Keeps family-record add, edit, relationship, home-person, and deletion controls visibly paused during the current build-out.
+- Keeps family-record Add, Connect, Edit, and Delete controls visibly paused during the current build-out; profile actions use icon-over-label controls in their relevant sections.
 - Retains structured profiles for people, multiple addresses, phones, emails, life events, and typed parent or partner relationships.
 - Rejects missing references, duplicate relationships, self-links, and ancestry cycles.
 - Keeps a recovery snapshot before destructive replacement or deletion.

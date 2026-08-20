@@ -39,7 +39,9 @@ Use synthetic families only.
 
 ## Editing and derived relationships
 
-- [ ] Family-record add, edit, relationship, home-person, remove, and delete controls are disabled and greyed while `features.familyEditing` is false.
+- [ ] Selected-person Add, Connect, Edit, and Delete controls are disabled and greyed while `features.familyEditing` is false; Set as home is absent.
+- [ ] The selected-person header orders Delete, Edit, and X; Relationships owns Add and Connect. All four mutation controls use the supplied icon-over-label symbols.
+- [ ] Identity properties appear as Born, Died, Age, Living Status, and Marital Status before optional identity fields; ages use natural words, prominent tabular numbers, `About` for approximations, and quieter present-day context for deceased people.
 - The remaining mutation checks in this section apply when a developer temporarily enables `features.familyEditing` for regression testing.
 - [ ] Add and remove repeated contacts without losing adjacent entries.
 - [ ] Connect biological, adoptive, step, foster, guardian, and unknown parents.
@@ -52,14 +54,15 @@ Use synthetic families only.
 
 ## Tree and directory
 
-- [ ] Focus mode shows the selected/home person's configured ancestor and descendant depth plus partners and siblings.
-- [ ] Overview contains every connected component and isolated person.
+- [ ] Lineage mode shows the selected/home person's configured ancestor and descendant depth plus partners and siblings.
+- [ ] Full Tree contains every connected component and isolated person.
+- [ ] The toolbar orders Full Tree before Lineage and Details before Summary, mounts the supplied view icons above each label, and places the supplied directional symbol to the left of each depth number.
 - [ ] Single-person, multi-partner, adopted, disconnected, pedigree-collapse, and 1,500-person synthetic families render without exceptions.
 - [ ] Pan, Ctrl/Command-wheel and pinch zoom, right-aligned grouped icon-over-label Out/In/Fit buttons, direct zoom percentage entry, node click, and grouped numeric ancestor/descendant steppers with labels above their inputs work; both depths default to 10.
 - [ ] Natural-size Family Tree layouts expose horizontal and vertical scrolling when needed; ordinary wheel input scrolls and Ctrl/Command-wheel zooms.
 - [ ] Arrow keys move between rendered nodes and Enter/Space selects.
 - [ ] Every node and relationship has an understandable accessible label.
-- [ ] Condensed cards are the default; both card modes are narrow, put every whitespace-separated name part on its own line, grow generation rows for taller names, and show birth/death years with `????` for either unknown year. Lineal cards retain the standard living or deceased fill and use a bold muted-red outline plus a bottom-right lineage symbol.
+- [ ] Summary cards are the default; both Summary and Details are narrow, put every whitespace-separated name part on its own line, grow generation rows for taller names, and show birth/death years with `????` for either unknown year. Lineal cards retain the standard living or deceased fill and use a bold muted-red outline plus a bottom-right lineage symbol.
 - [ ] Partner pairs are adjacent when possible; the current marriage is solid, never married is dotted, and every other partner history is dashed.
 - [ ] Family Tree rows use numeric lineage order rather than alphabetical names; Seth Lauer appears before Jared Lauer.
 - [ ] A multi-partner Lineal person is preceded by up to two 75%-scale past partners from earliest to latest and followed by the full-size current Non-Lineal spouse; the furthest-left card is top-aligned and the next is bottom-aligned so their lines do not cross through cards.
@@ -70,10 +73,10 @@ Use synthetic families only.
 - [ ] Show ?? Lineal is unchecked by default, keeps stored `99`-lineage people and anyone linked only to them out of both tree modes, keeps the focused person visible, and leaves the directory, search, and print counts unchanged; enabling it reveals them and fills its question-person symbol.
 - [ ] Stored lineage segment `99` displays as `??` in the directory, profile Lineage block, imported-source details, and print output.
 - [ ] A never-married partnership with no start date sorts by `relationship_order`, draws the dotted line, and reads Never married; P012 shows Heather Munz to the left of Tina Magri, and P244 lists Heather as her Non-Lineal parent.
-- [ ] Partial source dates appear in profiles and print as `December ??, 1979`, `August ??, 1943`, `June 2, 19??`, and `1981`; ages from a partial value carry `~` and an unknown year shows no age.
+- [ ] Partial source dates appear in profiles and print as `December ??, 1979`, `August ??, 1943`, `June 2, 19??`, and `1981`; ages from a partial value begin with `About` and an unknown year shows no age.
 - [ ] Marital Status reads Married, Widowed, Divorced, Separated, Never married, or Unknown from the most recent partnership, Unknown when no partnership is recorded, and each Partners row reads `(year :: Status)`. With no recorded ending, two deceased spouses remain Married; if one current spouse is living and the other deceased, the living spouse reads Widowed and their tree line remains solid.
 - [ ] Ancestors and Descendants accept 0 through 10 and clamp anything larger.
-- [ ] Selecting a person from global search or a filtered directory returns the Family Tree to Focus mode.
+- [ ] Selecting a person from global search or a filtered directory returns the Family Tree to Lineage mode.
 - [ ] Desktop dividers resize modules with pointer drag and Left/Right/Home/End keys, persist locally, and disappear below 960px; their percentages are hidden unless Developer Mode is on and that exact divider is actively dragged.
 - [ ] Directory and selected-person panes collapse independently and can be reopened without losing selection or tree focus; the header Directory control toggles the directory both open and closed, including mobile routing back to the tree.
 - [ ] Directory search and its result-count pill share one bordered title-bar control, the full `Search Directory…` placeholder is visible at the default 20% width, and the pill shows only the total until a filter or search narrows it; Filter By and Sort By are visible labels on identically sized controls.

@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.38",
-      buildId: "0.0.1.38",
+      version: "0.0.1.39",
+      buildId: "0.0.1.39",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -113,6 +113,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.39",
+        date: "2026-08-20T17:12:48.000Z",
+        title: "Clearer profile and tree controls",
+        summary: "Selected-person actions and Family Tree display controls now use consistent icon-over-label controls with clearer names and profile details.",
+        features: ["Profile actions use supplied person symbols in their relevant sections", "Full Tree, Lineage, Details, and Summary controls use supplied view symbols", "Ancestor and descendant depth fields have directional symbols"],
+        improvements: ["Age values use natural language and readable number typography", "Identity details follow Born, Died, Age, Living Status, and Marital Status order"],
+        fixes: ["Set as home person is no longer offered in the selected-person profile"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.38",
         date: "2026-08-20T06:06:59.000Z",
@@ -504,6 +514,14 @@
       { id: "shortcuts", title: "Keyboard access", section: "Accessibility", keywords: "keyboard shortcuts search add print notes settings", html: "<p>Press <kbd>/</kbd> for search, <kbd>A</kbd> to add a person, <kbd>P</kbd> to print, <kbd>N</kbd> for Notes, <kbd>T</kbd> for theme, and <kbd>?</kbd> for Help. Visible controls provide every shortcut action.</p>" }
     ]
   };
+
+  const treeHelp = CONFIG.help.find(function (item) { return item.id === "tree"; });
+  treeHelp.html = treeHelp.html
+    .replace("Focus view shows", "Lineage view shows")
+    .replace("the grouped Ancestor and Descendant depth numbers", "the symbol-labelled Ancestors and Descendants depth numbers")
+    .replace("condensed and detailed cards", "Summary and Details cards");
+  const peopleHelp = CONFIG.help.find(function (item) { return item.id === "people"; });
+  peopleHelp.html = peopleHelp.html.replace("with an approximate ~ age, plus a Marital Status row", "with a naturally written Age row, followed by Living Status and Marital Status");
 
   window.LocalApp.config = Object.freeze(CONFIG);
 })();

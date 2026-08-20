@@ -663,13 +663,18 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .tree-view-controls { display: flex; align-items: center; justify-content: flex-start; gap: .45rem; width: 100%; flex-wrap: wrap; }
 .tree-view-controls > .segmented { align-items: stretch; height: var(--tree-toolbar-control-height); }
 .tree-view-controls > .segmented button { min-height: 100%; }
+.tree-option-action { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: .08rem; min-width: 62px; padding: .2rem .42rem; font-size: .62rem; font-weight: 750; line-height: 1; }
+.tree-option-icon { display: grid; place-items: center; width: 1.1rem; height: 1.1rem; }
+.tree-option-icon .sf-symbol { width: 1.1rem; height: 1.1rem; }
 .tree-depth-controls { display: flex; align-items: stretch; gap: .15rem; height: var(--tree-toolbar-control-height); padding: .18rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
 .tree-line-toggle { height: var(--tree-toolbar-control-height); min-height: var(--tree-toolbar-control-height); margin-left: 0; padding: .25rem .55rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); color: var(--muted); font-size: .68rem; font-weight: 750; }
 .tree-toggle-symbol { display: grid; place-items: center; width: 1.2rem; height: 1.2rem; color: var(--muted); }
 .tree-toggle-symbol .sf-symbol { width: 1.15rem; height: 1.15rem; }
 .tree-line-toggle input:checked + .tree-toggle-symbol { color: var(--accent-strong); }
-.depth-control { display: grid; min-width: 76px; height: 100%; justify-items: center; align-content: center; gap: .08rem; padding: .08rem .22rem; border-radius: 7px; color: var(--muted); font-size: .64rem; font-weight: 700; }
-.depth-control > span { line-height: 1; }
+.depth-control { display: flex; min-width: 106px; height: 100%; align-items: center; justify-content: center; gap: .28rem; padding: .08rem .3rem; border-radius: 7px; color: var(--muted); font-size: .64rem; font-weight: 700; }
+.depth-control-icon { display: grid; flex: 0 0 auto; place-items: center; width: 1.15rem; height: 1.15rem; }
+.depth-control-icon .sf-symbol { width: 1.15rem; height: 1.15rem; }
+.depth-control-copy { display: grid; justify-items: center; gap: .08rem; line-height: 1; }
 .depth-control input { width: 58px; min-height: 27px; padding: .18rem .22rem .18rem .4rem; color: var(--text); font-weight: 800; text-align: center; }
 .zoom-controls { display: flex; align-items: stretch; gap: .15rem; height: var(--tree-toolbar-control-height); margin-left: auto; padding: .18rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
 .zoom-action { appearance: none; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: .08rem; min-width: 42px; min-height: 42px; padding: .2rem .32rem; border: 1px solid transparent; border-radius: 7px; background: transparent; color: var(--muted); font-size: .62rem; font-weight: 750; line-height: 1; }
@@ -723,15 +728,28 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .profile-title { display: grid; min-width: 0; }
 .profile-header h2 { margin: .08rem 0; font-size: 1.2rem; line-height: 1.15; }
 .profile-header p { margin: 0; color: var(--muted); }
-.profile-action-bar { display: flex; flex-wrap: wrap; gap: .35rem; padding: .7rem 0; }
-.profile-action-bar .button { flex: 1 1 auto; }
+.profile-header-actions, .relationship-actions { display: flex; flex: 0 0 auto; align-items: flex-start; justify-content: flex-end; gap: .12rem; }
+.profile-action { appearance: none; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: .1rem; min-width: 42px; min-height: 42px; padding: .2rem .28rem; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--muted); font-size: .6rem; font-weight: 750; line-height: 1; }
+.profile-action:hover, .profile-action:focus-visible { border-color: var(--line); background: var(--surface-2); color: var(--accent-strong); }
+.profile-action:disabled { cursor: not-allowed; opacity: .38; }
+.profile-action-icon { display: grid; place-items: center; width: 1.1rem; height: 1.1rem; }
+.profile-action-icon .sf-symbol { width: 1.1rem; height: 1.1rem; }
+.profile-close { margin-left: .1rem; }
 .profile-list { display: grid; margin: 0; }
 .profile-list > div, .print-person dl > div, .print-rel-group { display: grid; grid-template-columns: minmax(70px, .42fr) minmax(0, 1fr); gap: .55rem; padding: .34rem 0; border-top: 1px solid var(--line); }
 .profile-list > div:first-child { border-top: 0; }
 .profile-list dt { color: var(--muted); font-size: .7rem; font-weight: 750; }
 .profile-list dd { margin: 0; overflow-wrap: anywhere; }
+.age-row dd { display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .45rem; }
+.age-value { display: inline-flex; align-items: baseline; gap: .2rem; white-space: nowrap; }
+.age-number { color: var(--text); font-size: 1.08rem; font-variant-numeric: tabular-nums; line-height: 1; }
+.age-unit { color: var(--text); font-size: .74rem; font-weight: 700; }
+.age-qualifier, .age-context { color: var(--muted); font-size: .66rem; font-weight: 650; }
+.age-context { flex: 1 1 100%; }
 .profile-section { padding: .75rem 0; border-top: 1px solid var(--line); }
 .profile-section h3 { margin: 0 0 .45rem; font-size: .84rem; }
+.relationship-section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: .65rem; }
+.relationship-section-heading h3 { margin-top: .35rem; }
 .preserve-lines { margin: 0; white-space: pre-line; }
 .source-section details { margin: 0; }
 .source-section summary { min-height: 36px; padding: .4rem 0; }
@@ -774,7 +792,6 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .relationship-name.previous-partner { color: var(--muted); font-weight: 550; opacity: .76; }
 .relationship-name.previous-partner:hover, .relationship-name.previous-partner:focus-visible { color: var(--accent-strong); opacity: 1; }
 .relationship-empty { padding: .25rem .35rem; color: var(--muted); font-size: .7rem; }
-.profile-footer { display: flex; align-items: center; justify-content: space-between; gap: .45rem; flex-wrap: wrap; padding-top: .8rem; border-top: 1px solid var(--line); }
 .mobile-workspace-tabs { display: none; margin-bottom: .55rem; }
 
 .person-dialog { width: min(900px, calc(100vw - 2rem)); height: min(92svh, 900px); max-height: 92svh; }
