@@ -25,7 +25,7 @@ Use synthetic families only.
 - [ ] A McLineage CSV missing any current column is rejected by name, and `descendant_*`, `spouse_#_*`, `lineage_parent_id`, `parent_lineage_id`, `lineage_level_##_name`, `root_ancestor_##_name`, and `legacy_page_reference` files no longer import.
 - [ ] Every current non-root lineage path extends its direct parent's path by exactly one segment; blank unlineaged people are accepted, while malformed, duplicate, or parent-mismatched paths are rejected.
 - [ ] Current source date values accept blank, `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, or the same shapes with `?` in unknown digit positions; question-mark values require `partial`, `invalid` descriptors are rejected, and birth descriptors reject blank.
-- [ ] Current `person_*` identity/date columns import lineage and partner rows consistently: a known death value imports as deceased, a birth date beyond age 100 without a death value imports as presumed deceased, an otherwise unknown-status partner of a presumed-deceased person is also presumed deceased, a birth date within 100 years remains living, and an unconnected missing birth value remains unknown.
+- [ ] Current `person_*` identity/date columns import lineage and partner rows consistently: a known death value imports as deceased, a birth date beyond age 100 without a death value imports as presumed deceased, an otherwise unknown-status partner of any deceased person is also presumed deceased, a birth date within 100 years remains living, and an unconnected missing birth value remains unknown.
 - [ ] Profile and print life details use one `Age` row: living ages are compact, ages below two include months, and deceased ages read `#y | Would be #y today` or `??? | Would be #y today` when the death date is unknown.
 - [ ] Desktop defaults to a thin-gutter 20/50/30 Directory/Tree/Profile split, both separators resize with pointer and keyboard input, the first resize persists both widths, a usable tree width remains, and live position percentages appear only in Developer Mode.
 - [ ] Loading schema v7 state migrates the same cleaned-source life statuses to schema v8 and saves them under the v8 storage key without losing family data.
@@ -63,12 +63,14 @@ Use synthetic families only.
 - [ ] Arrow keys move between rendered nodes and Enter/Space selects.
 - [ ] Every node and relationship has an understandable accessible label.
 - [ ] Summary cards are the default; both Summary and Details are narrow, put every whitespace-separated name part on its own line, grow generation rows for taller names, and show birth/death years with `????` for either unknown year. Lineal cards retain the standard living or deceased fill and use a bold muted-red outline plus a bottom-right lineage symbol.
-- [ ] Partner pairs are adjacent when possible; the current marriage is solid, never married is dotted, and every other partner history is dashed.
+- [ ] Partner pairs are adjacent when possible; the current marriage is solid, a previous marriage is dashed, never married is dotted, and unknown status uses repeated question marks.
 - [ ] Family Tree rows use numeric lineage order rather than alphabetical names; Seth Lauer appears before Jared Lauer.
 - [ ] A multi-partner Lineal person is preceded by up to two 75%-scale past partners from earliest to latest and followed by the full-size current Non-Lineal spouse; the furthest-left card is top-aligned and the next is bottom-aligned so their lines do not cross through cards.
 - [ ] Christine Perrietta McMillen renders with Ray Shanaman on her left using a divorced line and Howard David Weiss as the only partner on her right using a married line.
 - [ ] Non-Lineal Lines is disabled by default and hides internally `affinal` parent edges; enabling it draws them as accessible light dashed branches while Lineal edges stay solid, and its slash-drop symbol switches from outline to fill.
-- [ ] Only the current marriage draws a solid partner line; never-married partnerships are dotted, and ended-unknown, divorced, separated, widowed, and all other partner histories are dashed.
+- [ ] Only the current marriage draws a solid partner line; previous marriages are dashed, never-married partnerships are dotted, and unknown relationships use repeated question marks.
+- [ ] Both spouses in a marriage ended by death read Married when both are deceased; a living spouse with a deceased current partner reads Widowed.
+- [ ] Lineal parent edges use faded muted red, and selecting a Lineal person replaces its lineage outline with the normal selected-person accent border.
 - [ ] The floating Key sits at the lower right of the Family Tree module, collapses and reopens, stays inside the module at mobile widths, and does not block canvas drags.
 - [ ] Show ?? Lineal is unchecked by default, keeps stored `99`-lineage people and anyone linked only to them out of both tree modes, keeps the focused person visible, and leaves the directory, search, and print counts unchanged; enabling it reveals them and fills its question-person symbol.
 - [ ] Stored lineage segment `99` displays as `??` in the directory, profile Lineage block, imported-source details, and print output.

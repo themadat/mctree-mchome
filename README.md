@@ -4,15 +4,15 @@ McFamily is a private, local-first family atlas that runs as a static GitHub Pag
 
 There is no backend, account, cloud database, or runtime dependency. Family data stays in browser storage and moves only through an explicit CSV import or export. The published repository must never contain a real family CSV or private family data.
 
-Current version: `0.0.1.40` (`major.minor.patch.build`).
+Current version: `0.0.1.41` (`major.minor.patch.build`).
 
 ## What it does
 
 - Opens only after importing the cleaned McLineage CSV or a native McFamily CSV with at least one person on first launch.
 - Shows a Lineage tree around a selected person and a Full Tree view of connected and isolated people.
 - Supports two-axis scrolling, pan, directly editable zoom and 0-10 depth numbers, fit, keyboard selection, touch, and accessible relationship descriptions.
-- Orders each Family Tree generation by numeric lineage ID; up to two prior partners appear chronologically at 75% size to the left of the Lineal person, with the oldest top-aligned and the next bottom-aligned, while the current Non-Lineal spouse remains full-size on the right. Current marriages are solid, never-married partnerships are dotted, and every other partner history is dashed, with a floating key in the corner of the tree.
-- Draws recorded Non-Lineal parent links as dashed branches only while Non-Lineal Lines is on, leaving solid edges for the Lineal bloodline and never changing relationship records.
+- Orders each Family Tree generation by numeric lineage ID; up to two prior partners appear chronologically at 75% size to the left of the Lineal person, with the oldest top-aligned and the next bottom-aligned, while the current Non-Lineal spouse remains full-size on the right. Current marriages are solid, previous marriages are dashed, never-married partnerships are dotted, and unknown relationships use question marks, with a floating key in the corner of the tree.
+- Draws recorded Non-Lineal parent links as dashed branches only while Non-Lineal Lines is on, leaving faded muted-red edges for the Lineal bloodline and never changing relationship records. Selected Lineal and Non-Lineal cards share the same accent border.
 - Marks Lineal tree cards with a bold muted-red outline and bottom-right lineage symbol while preserving the standard living or deceased fill.
 - Can hide `99`-lineage people from the Family Tree with a persisted checkbox while keeping them in the directory, search, and print.
 - Records out-of-wedlock partnerships as never-married relationships with no start date, sequenced by relationship order.
@@ -22,7 +22,7 @@ Current version: `0.0.1.40` (`major.minor.patch.build`).
 - Keeps portrait placeholders and internal person references out of the ordinary workspace; Developer Mode reveals references for troubleshooting.
 - Presents complete oldest-to-newest, two-digit Lineage IDs with the first three ancestral segments italicized and the selected person's final segment bold, followed by a compact direct-parent-linked Family Line with each name's lineage number and generation.
 - Imports every current McLineage row as one stable person and expands `partner_relationships_json` into explicit partner records; only the current McLineage schema is accepted, and a file missing a required column names it.
-- Imports known and question-mark partial source dates; a recorded death or a birth date beyond age 100 marks someone deceased or presumed deceased, an unknown-status partner of a presumed-deceased person is also presumed deceased, a birth date within 100 years means living, and a missing birth date means unknown, with a concise Age row in profiles and print when birth data permits.
+- Imports known and question-mark partial source dates; a recorded death or a birth date beyond age 100 marks someone deceased or presumed deceased, an unknown-status partner of any deceased person is also presumed deceased, a birth date within 100 years means living, and a missing birth date means unknown, with a concise Age row in profiles and print when birth data permits.
 - Shows partial source dates such as `December ??, 1979` with naturally written ages, and orders identity properties as Born, Died, Age, Living Status, and perspective-aware Marital Status.
 - Uses compact open Parents, Siblings, Partners, and Children groups near the top of each profile, with generation labels, Lineal/Non-Lineal parent roles, birth order and year for siblings and children, marriage years for partners, and current-first partner history; Imported Source finishes each profile.
 - Uses absolute lineage generations rooted at George McMillen (1745) as Gen 0; readings use concise forms such as `Gen 6, 5th Child of Max`.

@@ -163,6 +163,8 @@
     const relationship = entry && entry.relationship || entry;
     const other = entry && entry.person;
     if (isNeverMarriedPartnership(relationship)) return "never-married";
+    const bothDeceased = person && other && person.livingStatus === "deceased" && other.livingStatus === "deceased";
+    if (bothDeceased && (partnerEndReason(relationship) === "death" || relationship && relationship.status === "widowed")) return "married";
     if (entry && entry.current === true && !partnerHasRecordedEnd(relationship)) {
       const personLiving = person && person.livingStatus === "living";
       const personDeceased = person && person.livingStatus === "deceased";
@@ -176,12 +178,14 @@
 
   function partnerLineKind(relationship, current, first, second) {
     if (isNeverMarriedPartnership(relationship)) return "never-married";
+    const sourceType = partnerSourceType(relationship);
+    const knownMarriage = sourceType === "marriage" || relationship && ["married", "widowed", "divorced", "separated"].includes(relationship.status);
     if (current && !partnerHasRecordedEnd(relationship)) {
       const bothDeceased = first && second && first.livingStatus === "deceased" && second.livingStatus === "deceased";
       const deathSplit = first && second && ((first.livingStatus === "living" && second.livingStatus === "deceased") || (first.livingStatus === "deceased" && second.livingStatus === "living"));
-      if (partnerSourceType(relationship) === "marriage" || relationship && relationship.status === "married" || bothDeceased || deathSplit) return "married";
+      if (knownMarriage || bothDeceased || deathSplit) return "married";
     }
-    return "ended";
+    return knownMarriage ? "previous-marriage" : "unknown";
   }
 
   function bloodlineParentRank(person, entry) {
