@@ -116,10 +116,12 @@ Use synthetic families only.
 
 ## Print / Save PDF
 
-- [ ] Report includes cover, statistics, relationship legend, every family map, every person profile, and Family Notes, with no alphabetical person index.
-- [ ] Every recorded contact, life, heritage, note, and relationship value appears.
-- [ ] Family maps are named for their top sibling; compact map items contain only names and years, while detailed relationship cross-references show stable person `P` references only in Developer Mode.
-- [ ] Large components split by generation instead of shrinking one giant tree.
+- [ ] Report includes compact combined opening content, statistics, relationship legend, every family map, every person profile, and Family Notes, with no alphabetical person index.
+- [ ] Person profiles include recorded contact, life, heritage, and relationship values while omitting P references, individual Notes, and Imported Source fields.
+- [ ] The first map names George McMillen (1745) as the root ancestor at Generation 0; other maps retain their top-sibling labels.
+- [ ] Family-map rows use six compact columns and contain only names and years.
+- [ ] Generation 5 and later people, including Non-Lineal partners, are grouped beneath their Generation 4 family line with no unassigned branch when lineage can be resolved.
+- [ ] Developer Mode opens the report in a modal without invoking the native print dialog; closing it restores focus. Ordinary mode retains native printing.
 - [ ] Application controls are suppressed and print colors remain legible.
 - [ ] Profiles and section headings use sensible page breaks; long addresses and URLs remain complete.
 - [ ] Representative browser Save as PDF output is visually inspected.
