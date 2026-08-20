@@ -24,7 +24,7 @@
   --deceased-card-text: #3f3025;
   --deceased-card-muted: #6c5847;
   --lineal-mark: #8f5b5d;
-  --partner-line: #a77b23;
+  --partner-line: #db9400;
   --focus: #176e9a;
   --radius: 14px;
   --radius-small: 9px;
@@ -53,7 +53,7 @@
   --shadow-small: 0 6px 22px rgba(0, 0, 0, .3);
   --danger-soft: #3a2323;
   --lineal-mark: #c48f91;
-  --partner-line: #d6b462;
+  --partner-line: #ffd85e;
   --focus: #69bee6;
 }
 
@@ -700,8 +700,8 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 #familyTreeSvg { display: block; width: 100%; height: 100%; min-width: 100%; min-height: 380px; cursor: grab; touch-action: none; user-select: none; }
 #familyTreeSvg.dragging { cursor: grabbing; }
 .tree-edge { fill: none; stroke: var(--line-strong); stroke-width: 2; vector-effect: non-scaling-stroke; }
-.tree-edge.partner { stroke: var(--partner-line); stroke-dasharray: 7 4; stroke-linecap: butt; }
-.tree-edge.partner[data-kind="married"] { stroke-dasharray: none; stroke-linecap: butt; stroke-width: 2.5; }
+.tree-edge.partner { stroke: var(--partner-line); stroke-width: 2.4; stroke-dasharray: 7 4; stroke-linecap: butt; }
+.tree-edge.partner[data-kind="married"] { stroke-dasharray: none; stroke-linecap: butt; stroke-width: 3; }
 .tree-edge.partner[data-kind="never-married"] { stroke-dasharray: 1 5; stroke-linecap: round; }
 .tree-edge.partner[data-kind="previous-marriage"] { stroke-dasharray: 7 4; stroke-linecap: butt; }
 .tree-edge.partner[data-kind="unknown"] { stroke: none; }
@@ -726,6 +726,10 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .tree-node .tree-name-line { font-size: 10px; font-weight: 800; }
 .tree-node .tree-life, .tree-node .tree-reference { fill: var(--muted); font-size: 8px; }
 .tree-node[data-view="condensed"] .tree-name-line { font-size: 11px; }
+.tree-node .tree-name-line.tree-name-compact { font-size: 8.5px; }
+.tree-node .tree-name-line.tree-name-tight { font-size: 7.5px; }
+.tree-node[data-view="condensed"] .tree-name-line.tree-name-compact { font-size: 9px; }
+.tree-node[data-view="condensed"] .tree-name-line.tree-name-tight { font-size: 8px; }
 .tree-node[data-view="condensed"] .tree-family { fill: var(--accent-strong); }
 .tree-node[data-view="condensed"] .tree-life { font-size: 8px; }
 .tree-node.selected rect { stroke: var(--accent); stroke-width: 3; }
@@ -736,6 +740,10 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .tree-node.lineal > rect { stroke: var(--lineal-mark); stroke-width: 3; }
 .tree-node.lineal.selected > rect { stroke: var(--accent); stroke-width: 3; }
 .tree-lineal-mark { width: 7px; height: 10px; color: var(--lineal-mark); }
+.tree-generation-scale { pointer-events: none; }
+.tree-generation-scale path { fill: none; stroke: var(--faint); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.tree-generation-scale text { fill: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 8px; dominant-baseline: middle; }
+.tree-generation-scale .tree-generation-scale-title { fill: var(--text); font-size: 8px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
 .tree-node:focus rect { stroke: var(--focus); stroke-width: 4; }
 .tree-empty-text { fill: var(--text); font-size: 20px; font-weight: 800; }
 .tree-empty-subtext { fill: var(--muted); font-size: 13px; }
