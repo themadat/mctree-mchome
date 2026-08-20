@@ -56,7 +56,7 @@ Use synthetic families only.
 
 - [ ] Lineage mode shows the selected/home person's configured ancestor and descendant depth plus partners and siblings.
 - [ ] Full Tree contains every connected component and isolated person.
-- [ ] The toolbar orders Full Tree before Lineage and Details before Summary, mounts the supplied view icons above each label, and places the supplied directional symbol to the left of each depth number.
+- [ ] The toolbar orders Full Tree before Lineage and Details before Summary, mounts the supplied view icons above each label, and places each Ancestors/Descendants title above a full-input-height directional symbol and narrow depth number.
 - [ ] Single-person, multi-partner, adopted, disconnected, pedigree-collapse, and 1,500-person synthetic families render without exceptions.
 - [ ] Pan, Ctrl/Command-wheel and pinch zoom, right-aligned grouped icon-over-label Out/In/Fit buttons, direct zoom percentage entry, node click, and grouped numeric ancestor/descendant steppers with labels above their inputs work; both depths default to 10.
 - [ ] Natural-size Family Tree layouts expose horizontal and vertical scrolling when needed; ordinary wheel input scrolls and Ctrl/Command-wheel zooms.
@@ -67,12 +67,12 @@ Use synthetic families only.
 - [ ] Family Tree rows use numeric lineage order rather than alphabetical names; Seth Lauer appears before Jared Lauer.
 - [ ] A multi-partner Lineal person is preceded by up to two two-thirds-scale past partners from earliest to latest and followed by the full-size current or latest death-ended Non-Lineal spouse. One left partner is vertically centered; two align with the full-size cards' top and bottom. Their straight horizontal links are parallel and equally spaced.
 - [ ] Christine Perrietta McMillen renders with Ray Shanaman on her left using a divorced line and Howard David Weiss as the only partner on her right using a married line.
-- [ ] Non-Lineal Lines is disabled by default and hides internally `affinal` parent edges; enabling it draws them as accessible light dashed branches while Lineal edges stay solid, and its slash-drop symbol switches from outline to fill.
+- [ ] Non-Lineal Lines is an icon-and-label button disabled by default and hides internally `affinal` parent edges; enabling it draws them as accessible light dashed branches while Lineal edges stay solid, and its slash-drop symbol switches from outline to fill.
 - [ ] Only the current or latest death-ended marriage draws a solid partner line; previous marriages are dashed, never-married partnerships are dotted, and unknown relationships use repeated question marks.
 - [ ] Both spouses in a marriage ended by death read Married when both are deceased; a surviving spouse reads Widowed while the deceased spouse reads Married. The latest death-ended spouse stays on the right with a solid line unless a later relationship exists.
 - [ ] Lineal parent edges use faded muted red, and selecting a Lineal person replaces its lineage outline with the normal selected-person accent border.
 - [ ] The floating Key sits at the lower right of the Family Tree module, collapses and reopens, stays inside the module at mobile widths, and does not block canvas drags.
-- [ ] Show ?? Lineal is unchecked by default, keeps stored `99`-lineage people and anyone linked only to them out of both tree modes, keeps the focused person visible, and leaves directory and search counts unchanged; enabling it reveals them and fills its question-person symbol.
+- [ ] Show ?? Lineal is an unpressed icon-and-label button by default, keeps stored `99`-lineage people and anyone linked only to them out of both tree modes, keeps the focused person visible, and leaves directory and search counts unchanged; enabling it reveals them and fills its question-person symbol.
 - [ ] Stored lineage segment `99` displays as `??` in the directory, profile Lineage block, and imported-source details, while PDF output omits those people and their isolated branches.
 - [ ] A never-married partnership with no start date sorts by `relationship_order`, draws the dotted line, and reads Never married; P012 shows Heather Munz to the left of Tina Magri, and P244 lists Heather as her Non-Lineal parent.
 - [ ] Partial source dates appear in profiles and print as `December ??, 1979`, `August ??, 1943`, `June 2, 19??`, and `1981`; ages from a partial value begin with `About` and an unknown year shows no age.
@@ -87,7 +87,7 @@ Use synthetic families only.
 - [ ] Directory rows show `[birth – death]` with `????` for unknown years followed by the lineage ID; other lifespan surfaces use the same four-character placeholder.
 - [ ] Internal stable `P` references are absent throughout ordinary app and print views and appear only in Developer Mode.
 - [ ] Partial and in-order fuzzy search finds name, address, phone, email, birth/death place, heritage, general notes, Notes, Help, releases, and Roadmap, but does not match a person solely through the imported `Source Last Modified By` value.
-- [ ] Directory appears left of Search and Favorites appears right; both show an icon above their visible name without causing desktop or mobile overflow.
+- [ ] Directory appears left of Search and Favorites appears right; both show an icon above their visible name, while local save/backup status sits immediately left of Add without causing desktop or mobile overflow.
 - [ ] Starring a person search result persists across reloads, pins them above unstarred matches, and exposes an accessible pressed state without activating the person.
 - [ ] Favorites opens every starred person with an empty search, allows narrowing that list, and shows useful empty guidance; unstarred or deleted people disappear immediately.
 - [ ] Lineage preserves the normalized root-to-person source order, two-digit-pads every segment, italicizes the first three segments, and bolds the final segment; overlapping emphasis is bold italic.
@@ -112,22 +112,22 @@ Use synthetic families only.
 - [ ] Mobile Directory/Family Tree/Person tabs are touch-sized; choosing a person opens Person.
 - [ ] Dialogs fit the mobile viewport with one usable scrolling surface.
 - [ ] Labels, landmarks, focus order, visible focus, live regions, and focus restoration are correct.
-- [ ] Escape closes temporary UI; `/`, `?`, `N`, `V`, `T`, and supported navigation keys work outside fields.
+- [ ] Escape closes temporary UI; `/`, `?`, `D`, `F`, `K`, `N`, `V`, `X`, `R`, `T`, and supported navigation keys work outside fields. X acts only while What's New is visible, and R acts only while the new-version reload action is visible.
 - [ ] Reduced-motion mode removes nonessential animation.
 - [ ] Light and dark themes retain readable contrast and status text.
 
 ## Print / Save PDF
 
-- [ ] Report includes compact combined opening content, statistics, relationship legend, every family map, every person profile, and Family Notes, with no alphabetical person index.
-- [ ] Person profiles include recorded contact, life, heritage, and relationship values while omitting P references, individual Notes, and Imported Source fields.
+- [ ] Report includes compact combined opening content, statistics, relationship legend, every family map, a compact Person Directory, and Family Notes, with no separate alphabetical person index.
+- [ ] Each Person Directory item contains only the full name, app-styled Lineage ID, and root-to-person first-name progression in the form `:: George -> James -> George -> Albon`.
 - [ ] The first map names George McMillen (1745) as the root ancestor at Generation 0, and every component uses the Root Ancestor label.
 - [ ] Family-map rows use six compact columns and contain only names and years.
 - [ ] Generation 4 and later people, including Non-Lineal partners, are grouped beneath a `Generation 3 Line` header with no unassigned branch when lineage can be resolved.
-- [ ] Lineal map cards use a faded-red outline; Theophilus, Albon, and Lucian use the stronger orientation highlight; every map name fits within two lines.
+- [ ] Lineal map cards use a faded-red outline; Lineal Theophilus, Albon, and Lucian members use the stronger orientation highlight while Lucian Lynn Kretzing does not; every map name fits within two lines.
 - [ ] Stored `99`/`??` lineage people and their isolated branches do not appear in Family Maps, Person Directory profiles, or PDF statistics.
 - [ ] Developer Mode opens the report in a modal without invoking the native print dialog; closing it restores focus. Ordinary mode retains native printing.
 - [ ] Application controls are suppressed and print colors remain legible.
-- [ ] Profiles and section headings use sensible page breaks; long addresses and URLs remain complete.
+- [ ] Compact directory entries avoid internal breaks and flow in three columns so many people fit on each page.
 - [ ] Representative browser Save as PDF output is visually inspected.
 
 ## Offline and installation

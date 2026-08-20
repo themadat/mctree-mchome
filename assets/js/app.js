@@ -29,12 +29,16 @@
     { keys: "/", label: "Focus global search", group: "Global" },
     { keys: "Esc", label: "Close a dialog or menu", group: "Global" },
     { keys: "?", label: "Open Help Center", group: "Global" },
+    { keys: "D", label: "Toggle the directory", group: "Family" },
+    { keys: "F", label: "Toggle favorite people search", group: "Family" },
+    { keys: "K", label: "Toggle the Family Tree key", group: "Family" },
     { keys: "P", label: "Print or save the family atlas as PDF", group: "Family" },
     { keys: "N", label: "Open Notes", group: "Actions" },
     { keys: "V", label: "Open What’s New", group: "Actions" },
+    { keys: "X", label: "Dismiss the What’s New banner", group: "Actions" },
+    { keys: "R", label: "Reload when a new version is available", group: "Actions" },
     { keys: "E", label: "Export a private CSV backup", group: "Actions" },
     { keys: "T", label: "Switch color theme", group: "Actions" },
-    { keys: "D", label: "Toggle hidden Developer Mode", group: "Developer" },
     { keys: "Arrow keys", label: "Move through tree relatives, tabs, menus, and choices", group: "Navigation" }
   ];
 
@@ -1047,7 +1051,7 @@
       [treeKeySwatch("parent-child", "biological"), "Lineal parent"],
       [treeKeySwatch("parent-child", "affinal", "affinal-parent"), "Non-Lineal parent"]
     ];
-    return '<aside class="tree-key"><details open><summary>Key</summary><dl>' + rows.map(function (row) {
+    return '<aside class="tree-key"><details open><summary aria-keyshortcuts="K" data-shortcut="K">Key</summary><dl>' + rows.map(function (row) {
       return "<div><dt>" + row[0] + "</dt><dd>" + u.escapeHtml(row[1]) + "</dd></div>";
     }).join("") + "</dl></details></aside>";
   }
@@ -1093,9 +1097,10 @@
       icon.className = "depth-control-icon";
       icon.dataset.symbol = entry[1];
       icon.setAttribute("aria-hidden", "true");
-      copy.className = "depth-control-copy";
-      copy.append(label, input);
-      control.replaceChildren(icon, copy);
+      label.className = "depth-control-title";
+      copy.className = "depth-control-body";
+      copy.append(icon, input);
+      control.replaceChildren(label, copy);
     });
     const depthControls = document.createElement("div");
     depthControls.className = "tree-depth-controls";
@@ -1104,7 +1109,7 @@
     ancestorControl.insertAdjacentElement("beforebegin", depthControls);
     depthControls.append(ancestorControl, descendantControl);
     const zoomControls = $(".zoom-controls", treeControls);
-    zoomControls.insertAdjacentHTML("beforebegin", '<label class="tree-line-toggle check-field"><input id="inferredParentLinesToggle" type="checkbox"' + (state().ui.showInferredParentLines ? " checked" : "") + '><span class="tree-toggle-symbol" data-symbol="' + (state().ui.showInferredParentLines ? "nonLinealLinesFill" : "nonLinealLines") + '" aria-hidden="true"></span><span>Non-Lineal Lines</span></label><label class="tree-line-toggle check-field"><input id="showUnplacedLineageToggle" type="checkbox"' + (!state().ui.hideUnplacedLineage ? " checked" : "") + '><span class="tree-toggle-symbol" data-symbol="' + (!state().ui.hideUnplacedLineage ? "unknownLinealFill" : "unknownLineal") + '" aria-hidden="true"></span><span>Show ?? Lineal</span></label>');
+    zoomControls.insertAdjacentHTML("beforebegin", '<button type="button" class="tree-line-toggle action-button" data-toggle-non-lineal aria-pressed="' + String(state().ui.showInferredParentLines) + '" title="Toggle Non-Lineal parent lines"><span class="tree-toggle-symbol" data-symbol="' + (state().ui.showInferredParentLines ? "nonLinealLinesFill" : "nonLinealLines") + '" aria-hidden="true"></span><span class="button-label">Non-Lineal Lines</span></button><button type="button" class="tree-line-toggle action-button" data-toggle-unplaced-lineage aria-pressed="' + String(!state().ui.hideUnplacedLineage) + '" title="Toggle unresolved Lineal people"><span class="tree-toggle-symbol" data-symbol="' + (!state().ui.hideUnplacedLineage ? "unknownLinealFill" : "unknownLineal") + '" aria-hidden="true"></span><span class="button-label">Show ?? Lineal</span></button>');
     $("#directoryPanel", workspaceGrid).insertAdjacentHTML("afterend", '<button id="directoryTreeDivider" class="family-resize-handle" type="button" role="separator" aria-orientation="vertical" aria-label="Resize directory and Family Tree" aria-valuemin="220" aria-valuemax="480" aria-valuenow="' + state().ui.directoryPanelWidth + '"' + (directoryCollapsed ? " hidden" : "") + '><span aria-hidden="true"></span><output class="family-divider-percentage" aria-hidden="true"></output></button>');
     $(".tree-panel", workspaceGrid).insertAdjacentHTML("afterend", '<button id="treeProfileDivider" class="family-resize-handle" type="button" role="separator" aria-orientation="vertical" aria-label="Resize Family Tree and selected person" aria-valuemin="240" aria-valuemax="600" aria-valuenow="' + state().ui.profilePanelWidth + '"' + (profileCollapsed ? " hidden" : "") + '><span aria-hidden="true"></span><output class="family-divider-percentage" aria-hidden="true"></output></button>');
     $("#directorySort").value = state().ui.directorySort;
@@ -1439,8 +1444,33 @@
     const sizeClass = nameLength > 64 ? " print-name-tiniest" : nameLength > 46 ? " print-name-smallest" : nameLength > 30 ? " print-name-smaller" : "";
     const linealClass = isLinealPerson(person) ? " print-lineal" : "";
     const givenName = String(person.givenName || model.displayName(person) || "").trim().split(/\s+/)[0].toLowerCase();
-    const highlightClass = ["theophilus", "albon", "lucian"].includes(givenName) ? " print-lineage-highlight" : "";
+    const isExcludedLucian = model.displayName(person).trim().toLowerCase() === "lucian lynn kretzing";
+    const highlightClass = linealClass && !isExcludedLucian && ["theophilus", "albon", "lucian"].includes(givenName) ? " print-lineage-highlight" : "";
     return linealClass + highlightClass + sizeClass;
+  }
+
+  function printLineageProgression(person, graph) {
+    const names = [];
+    const used = new Set();
+    let cursor = person;
+    while (cursor && !used.has(cursor.id) && names.length <= config.controls.maxPeople) {
+      used.add(cursor.id);
+      names.push(firstName(model.displayName(cursor)));
+      const linealReference = sourceField(cursor, CONSANGUINITY_FIELD).toUpperCase();
+      const parents = graph.parents.get(cursor.id) || [];
+      const linealParent = parents.find(function (entry) {
+        return linealReference && sourceField(entry.person, "record_id").toUpperCase() === linealReference;
+      }) || parents.find(function (entry) {
+        const relationshipReference = u.cleanLine(entry.relationship && entry.relationship.source && entry.relationship.source.fields && entry.relationship.source.fields[CONSANGUINITY_FIELD], 4000).toUpperCase();
+        return relationshipReference && relationshipReference === sourceField(entry.person, "record_id").toUpperCase();
+      }) || parents.find(function (entry) {
+        return entry.relationship && entry.relationship.kind === "biological";
+      }) || parents.find(function (entry) {
+        return !entry.relationship || entry.relationship.kind !== "affinal";
+      });
+      cursor = linealParent && linealParent.person;
+    }
+    return names.reverse().join(" -> ");
   }
 
   function printGenerationSection(generation, people) {
@@ -1539,11 +1569,9 @@
       return '<article class="print-component"><header><div><span>Root Ancestor</span><h3>' + u.escapeHtml(model.displayName(rootAncestor)) + '</h3></div><p>Gen ' + (printGenerations.get(rootAncestor.id) || 0) + " · " + componentPeople.length + " people</p></header>" + earlyGenerations + branchHtml + "</article>";
     }).join("");
     const profiles = people.map(function (person) {
-      const addressHtml = person.addresses.length ? '<section><h3>Addresses</h3>' + person.addresses.map(function (address) { return '<div class="print-address"><strong>' + u.escapeHtml(address.label + (address.current ? " · current" : " · former")) + '</strong><address>' + u.escapeHtml(model.formatAddress(address)).replace(/\n/g, "<br>") + '</address>' + ((model.formatFlexibleDate(address.startDate) || model.formatFlexibleDate(address.endDate)) ? '<small>' + u.escapeHtml([model.formatFlexibleDate(address.startDate), model.formatFlexibleDate(address.endDate)].filter(Boolean).join(" – ")) + "</small>" : "") + (address.notes ? "<p>" + u.escapeHtml(address.notes) + "</p>" : "") + "</div>"; }).join("") + "</section>" : "";
-      const contactHtml = person.phones.length || person.emails.length ? '<section><h3>Contact</h3><dl>' + person.phones.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + person.emails.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + "</dl></section>" : "";
-      return '<article id="print-' + u.escapeHtml(person.id) + '" class="print-person"><header><div><h2>' + u.escapeHtml(model.displayName(person)) + '</h2><p>' + u.escapeHtml(family.lifespan(person) + (current.workspace.family.homePersonId === person.id ? " · home person" : "")) + '</p></div></header><div class="print-profile-grid"><section><h3>Life Details</h3><dl>' + formatEvent("Born", person, "birth") + formatEvent("Died", person, "death") + statusDetails(person, true) + maritalStatusDetail(person, family.relationGroups(person.id, printState).partners) + (person.gender ? '<div><dt>Gender</dt><dd>' + u.escapeHtml(person.gender) + "</dd></div>" : "") + (person.pronouns ? '<div><dt>Pronouns</dt><dd>' + u.escapeHtml(person.pronouns) + "</dd></div>" : "") + '</dl></section>' + printLineage(person) + '<section><h3>Lineage References</h3><dl>' + printRelationshipList(person, printState) + "</dl></section>" + contactHtml + addressHtml + "</div></article>";
+      return '<article id="print-' + u.escapeHtml(person.id) + '" class="print-directory-person"><header><h2>' + u.escapeHtml(model.displayName(person)) + '</h2>' + lineageIdHtml(lineageId(person)) + '</header><p><span aria-hidden="true">::</span> ' + u.escapeHtml(printLineageProgression(person, graph)) + "</p></article>";
     }).join("");
-    $("#printReport").innerHTML = '<section class="print-front-matter"><article class="print-cover"><span class="eyebrow">Private family atlas</span><h1>' + u.escapeHtml(current.workspace.family.title) + '</h1><p>Prepared by McFamily on ' + u.escapeHtml(printDate()) + '</p><dl><div><dt>People</dt><dd>' + people.length + '</dd></div><div><dt>Relationships</dt><dd>' + relationships.length + '</dd></div><div><dt>Family Units</dt><dd>' + familyUnits.length + '</dd></div><div><dt>Addresses</dt><dd>' + addressCount + '</dd></div><div><dt>Family Maps</dt><dd>' + componentsList.length + '</dd></div></dl><aside><strong>Private document</strong><span>This atlas may contain home addresses, contact details, and family notes. Store and share it carefully.</span></aside></article><article class="print-legend"><h2>How to Use This Atlas</h2><p>Family maps begin with their root ancestor. George McMillen (1745) is Generation 0; Generation 4 and later are grouped under their Generation 3 family line. Lineal members have a faded-red outline, with Theophilus, Albon, and Lucian highlighted for orientation.</p><div><span><strong>Parent links</strong> Biological, adoptive, step, foster, guardian, or unspecified</span><span><strong>Partner links</strong> Married, partnered, separated, divorced, widowed, former, or unspecified</span></div></article></section><section class="print-atlas"><h2>Family Maps</h2>' + componentHtml + '</section><section class="print-directory"><h1>Person Directory</h1>' + profiles + "</section>" + (notes ? '<article class="print-family-notes"><h1>Family Notes</h1><p>' + u.escapeHtml(notes).replace(/\n/g, "<br>") + "</p></article>" : "");
+    $("#printReport").innerHTML = '<section class="print-front-matter"><article class="print-cover"><span class="eyebrow">Private family atlas</span><h1>' + u.escapeHtml(current.workspace.family.title) + '</h1><p>Prepared by McFamily on ' + u.escapeHtml(printDate()) + '</p><dl><div><dt>People</dt><dd>' + people.length + '</dd></div><div><dt>Relationships</dt><dd>' + relationships.length + '</dd></div><div><dt>Family Units</dt><dd>' + familyUnits.length + '</dd></div><div><dt>Addresses</dt><dd>' + addressCount + '</dd></div><div><dt>Family Maps</dt><dd>' + componentsList.length + '</dd></div></dl><aside><strong>Private document</strong><span>This atlas may contain home addresses, contact details, and family notes. Store and share it carefully.</span></aside></article><article class="print-legend"><h2>How to Use This Atlas</h2><p>Family maps begin with their root ancestor. George McMillen (1745) is Generation 0; Generation 4 and later are grouped under their Generation 3 family line. Lineal members have a faded-red outline, with Theophilus, Albon, and Lucian highlighted for orientation.</p><div><span><strong>Parent links</strong> Biological, adoptive, step, foster, guardian, or unspecified</span><span><strong>Partner links</strong> Married, partnered, separated, divorced, widowed, former, or unspecified</span></div></article></section><section class="print-atlas"><h2>Family Maps</h2>' + componentHtml + '</section><section class="print-directory"><h1>Person Directory</h1><div class="print-directory-entries">' + profiles + "</div></section>" + (notes ? '<article class="print-family-notes"><h1>Family Notes</h1><p>' + u.escapeHtml(notes).replace(/\n/g, "<br>") + "</p></article>" : "");
   }
 
   function openPrintPreview(trigger) {
@@ -1865,6 +1893,23 @@
     const target = event.target;
     const openDirectoryFilter = $(".directory-filter-menu[open]");
     if (openDirectoryFilter && !target.closest(".directory-filter-menu")) openDirectoryFilter.removeAttribute("open");
+    const nonLinealToggle = target.closest("[data-toggle-non-lineal]");
+    if (nonLinealToggle) {
+      storage.mutate(function (next) { next.ui.showInferredParentLines = !next.ui.showInferredParentLines; }, { touch: false, reason: "tree-parent-lines" });
+      nonLinealToggle.setAttribute("aria-pressed", String(state().ui.showInferredParentLines));
+      icons.set(nonLinealToggle.querySelector(".tree-toggle-symbol"), state().ui.showInferredParentLines ? "nonLinealLinesFill" : "nonLinealLines");
+      renderTree();
+      return;
+    }
+    const unplacedLineageToggle = target.closest("[data-toggle-unplaced-lineage]");
+    if (unplacedLineageToggle) {
+      storage.mutate(function (next) { next.ui.hideUnplacedLineage = !next.ui.hideUnplacedLineage; }, { touch: false, reason: "tree-unplaced-lineage" });
+      unplacedLineageToggle.setAttribute("aria-pressed", String(!state().ui.hideUnplacedLineage));
+      icons.set(unplacedLineageToggle.querySelector(".tree-toggle-symbol"), state().ui.hideUnplacedLineage ? "unknownLineal" : "unknownLinealFill");
+      treeNeedsFit = true;
+      renderTree();
+      return;
+    }
     if (target.closest("#firstImportButton")) { $("#onboardingImportInput").click(); return; }
     if (target.closest("[data-close-profile]")) {
       const previousId = state().ui.selectedPersonId;
@@ -2019,11 +2064,22 @@
     if (event.code === "Slash") { event.preventDefault(); if (event.shiftKey) openSupport("help", event.target); else if (initialized()) { $("#globalSearch").focus(); $("#globalSearch").select(); } return; }
     if (event.repeat || !initialized()) return;
     if (event.code === "KeyP") { event.preventDefault(); printAtlas(); }
+    else if (event.code === "KeyD") { event.preventDefault(); $("#directoryButton").click(); }
+    else if (event.code === "KeyF") { event.preventDefault(); $("#favoritesButton").click(); }
+    else if (event.code === "KeyK") {
+      const key = $(".tree-key details");
+      if (key) { event.preventDefault(); key.open = !key.open; announce(key.open ? "Opened the Family Tree key." : "Closed the Family Tree key."); }
+    }
     else if (event.code === "KeyN") { event.preventDefault(); openNotes(event.target); }
     else if (event.code === "KeyV") { event.preventDefault(); openSupport("releases", event.target); }
+    else if (event.code === "KeyX" && !$("#whatsNewBanner").hidden) { event.preventDefault(); $("[data-dismiss-release]").click(); }
+    else if (event.code === "KeyR") {
+      const toast = $("#appToast");
+      const action = $("[data-toast-action]", toast);
+      if (!toast.hidden && $("[data-toast-title]", toast).textContent === "New version available" && !action.hidden) { event.preventDefault(); action.click(); }
+    }
     else if (event.code === "KeyE") { event.preventDefault(); portability.exportCsv(); }
     else if (event.code === "KeyT") { event.preventDefault(); toggleThemeFromAppIcon(); }
-    else if (event.code === "KeyD") { event.preventDefault(); toggleDeveloperMode(undefined, { openPanel: true }); }
   }
 
   function bindGeneralEvents() {
@@ -2071,17 +2127,6 @@
         renderDirectoryList();
       }
       else if (event.target.id === "directorySort") { storage.mutate(function (next) { next.ui.directorySort = event.target.value; }, { touch: false, reason: "directory-sort" }); renderDirectoryList(); }
-      else if (event.target.id === "inferredParentLinesToggle") {
-        storage.mutate(function (next) { next.ui.showInferredParentLines = event.target.checked; }, { touch: false, reason: "tree-parent-lines" });
-        icons.set(event.target.parentElement.querySelector(".tree-toggle-symbol"), event.target.checked ? "nonLinealLinesFill" : "nonLinealLines");
-        renderTree();
-      }
-      else if (event.target.id === "showUnplacedLineageToggle") {
-        storage.mutate(function (next) { next.ui.hideUnplacedLineage = !event.target.checked; }, { touch: false, reason: "tree-unplaced-lineage" });
-        icons.set(event.target.parentElement.querySelector(".tree-toggle-symbol"), event.target.checked ? "unknownLinealFill" : "unknownLineal");
-        treeNeedsFit = true;
-        renderTree();
-      }
       else if (event.target.id === "ancestorDepth" || event.target.id === "descendantDepth") {
         updateTreeDepthControl(event.target, true);
       }

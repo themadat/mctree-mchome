@@ -69,6 +69,11 @@
       actionSymbol: "arrowClockwise",
       onAction: function () { forceRefresh(worker); }
     });
+    const action = document.querySelector("#appToast [data-toast-action]");
+    if (action) {
+      action.setAttribute("aria-keyshortcuts", "R");
+      action.dataset.shortcut = "R";
+    }
   }
 
   async function registerServiceWorker() {

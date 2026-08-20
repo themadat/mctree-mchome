@@ -4,7 +4,7 @@ McFamily is a private, local-first family atlas that runs as a static GitHub Pag
 
 There is no backend, account, cloud database, or runtime dependency. Family data stays in browser storage and moves only through an explicit CSV import or export. The published repository must never contain a real family CSV or private family data.
 
-Current version: `0.0.1.43` (`major.minor.patch.build`).
+Current version: `0.0.1.44` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -14,10 +14,11 @@ Current version: `0.0.1.43` (`major.minor.patch.build`).
 - Orders each Family Tree generation by numeric lineage ID; up to two prior partners appear chronologically at two-thirds size to the left of the Lineal person, while the current or latest death-ended spouse remains full-size on the right. One prior partner is vertically centered; two align to the full-size cards' top and bottom with evenly spaced parallel links. Gold partner lines distinguish current marriages (solid), previous marriages (dashed), never-married partnerships (dotted), and unknown relationships (question marks), with a floating key in the corner of the tree.
 - Draws recorded Non-Lineal parent links as dashed branches only while Non-Lineal Lines is on, leaving faded muted-red edges for the Lineal bloodline and never changing relationship records. Selected Lineal and Non-Lineal cards share the same accent border.
 - Marks Lineal tree cards with a bold muted-red outline and a compact lineage symbol beside the lifespan while preserving the standard living or deceased fill.
-- Can hide `99`-lineage people from the Family Tree with a persisted checkbox while keeping them in the directory and search; printable atlases omit unresolved `99`/`??` lineage branches.
+- Can hide `99`-lineage people from the Family Tree with a persisted icon-and-label control while keeping them in the directory and search; printable atlases omit unresolved `99`/`??` lineage branches.
 - Records out-of-wedlock partnerships as never-married relationships with no start date, sequenced by relationship order.
 - Provides a header-toggled directory with title-bar search and result count, visible Filter By and Sort By controls, combinable status and Lineal/Non-Lineal checkbox filters, A–Z quick jumps, lifespan and lineage context, and broad search across names, contact details, places, heritage, and notes.
 - Lets people be starred directly in search, pins favorites above other matches, and provides a Favorites-only search control beside the search field.
+- Keeps local save/backup status in the top toolbar and provides D, F, K, X, and R shortcuts for Directory, Favorites, the tree Key, What's New dismissal, and update reload.
 - Supports partial/fuzzy matches that return the tree to Lineage, collapsible side panels, compact 20/50/30 default desktop splits with persistent resizing, and Summary tree cards that stack each name word on its own line.
 - Keeps portrait placeholders and internal person references out of the ordinary workspace; Developer Mode reveals references for troubleshooting.
 - Presents complete oldest-to-newest, two-digit Lineage IDs with the first three ancestral segments italicized and the selected person's final segment bold, followed by a compact direct-parent-linked Family Line with each name's lineage number and generation.
@@ -93,7 +94,7 @@ The primary maintainer owns the canonical private CSV file:
 
 Imports replace the current family after a summary and confirmation. McFamily creates a recovery snapshot first; it does not merge concurrent copies.
 
-`Print / Save PDF` builds a report whose cover, statistics, legend, and six-column Family Maps flow together without forced opening-page breaks. George McMillen (1745) leads the maps as Generation 0, and Generation 4 and later are grouped beneath Generation 3 family lines. Every component is labelled by its root ancestor; unresolved `99`/`??` lineage branches are omitted. Lineal cards use a faded-red outline, Theophilus, Albon, and Lucian receive stronger orientation highlights, and adaptive name type keeps map names within two lines. The alphabetical Person Directory omits internal P references, individual Notes, and Imported Source fields. Use the native print dialog's Save as PDF destination; Developer Mode opens the same report in an in-app preview instead.
+`Print / Save PDF` builds a report whose cover, statistics, legend, and six-column Family Maps flow together without forced opening-page breaks. George McMillen (1745) leads the maps as Generation 0, and Generation 4 and later are grouped beneath Generation 3 family lines. Every component is labelled by its root ancestor; unresolved `99`/`??` lineage branches are omitted. Lineal cards use a faded-red outline, with stronger orientation highlights limited to Lineal Theophilus, Albon, and Lucian members, and adaptive name type keeps map names within two lines. The compact three-column Person Directory shows only each full name, styled Lineage ID, and root-to-person first-name progression. Use the native print dialog's Save as PDF destination; Developer Mode opens the same report in an in-app preview instead.
 
 ## Host on GitHub Pages
 
