@@ -108,6 +108,8 @@
     action.className = settings.actionSymbol ? "icon-button toast-action-icon" : "button small";
     action.setAttribute("aria-label", settings.actionLabel || "Notification action");
     action.title = settings.actionLabel || "";
+    action.removeAttribute("aria-keyshortcuts");
+    action.removeAttribute("data-shortcut");
     if (settings.actionSymbol && App.icons) App.icons.set(action, settings.actionSymbol);
     else action.textContent = settings.actionLabel || "";
     action.onclick = settings.onAction || null;
