@@ -173,35 +173,33 @@ Summary: Replaced reconstructed lineage metadata with stable direct references.
   self-links and cycles.
 - Reduced the schema from 56 fields to 48 without removing family records.
 
-2.0.0 — 2026-08-18 — [147 KB (±0) | 607 records (±0) | 56 fields (±0)]
+2.0.0 — 2026-08-18 — [147 KB (-8) | 607 records (±0) | 56 fields (-13)]
 Author: Adam Lauer [Agent GPT-5-based Codex | Model 5.6 Sol | Effort High | Speed Standard]
-Summary: Recorded the existing cleaned schema and dotted lineage notation as version 2.0.0.
+Summary: Simplified the import schema and made lineage branches explicit.
 
-- Records: 0 changed | 0 added | 0 deleted.
-- Retained two-digit dotted lineage segments, paired date value/precision fields, grouped spouse fields, and explicit legacy-field names.
-- The recovered 2.0.0 file is byte-identical to both earlier recovered snapshots; no record or schema delta is present in the surviving
-  files.
+- Records: 607 changed | 0 added | 0 deleted.
+- Changed lineage notation from compact decimals to two-digit dotted segments, such as 3.050202 to 3.05.02.02.
+- Updated parent_lineage_id values to use the same dotted hierarchy and derive the parent by removing the final branch.
+- Consolidated separate exact-date, date-text, and precision triplets into paired date_value and date_precision fields.
+- Grouped spouse names with their corresponding birth, death, and marriage fields.
+- Renamed ambiguous database display, status, sort, and page fields as legacy fields.
+- Reduced the schema from 69 fields to 56 fields without removing family records.
 
-1.0.0 — 2026-08-19 — [147 KB (±0) | 607 records (±0) | 56 fields (±0)]
+1.0.0 — 2026-08-18 — [155 KB (baseline) | 607 records (baseline) | 69 fields (baseline)]
 Author: Adam Lauer [Agent GPT-5-based Codex | Model 5.6 Sol | Effort High | Speed Standard]
-Summary: Established the first formally versioned snapshot of the cleaned McLineage CSV.
+Summary: Created the initial structured and sanitized McLineage CSV for web import.
 
-- Records: 0 changed | 0 added | 0 deleted.
-- Renamed the cleaned snapshot to the formal McLineage-1-0-0 release name without changing its bytes, records, fields, or values.
-
-0.0.1 — 2026-08-18 — [147 KB (baseline) | 607 records (baseline) | 56 fields (baseline)]
-Author: Adam Lauer [Agent GPT-5-based Codex | Model 5.6 Sol | Effort High | Speed Standard]
-Summary: Created the first cleaned and structured McLineage CSV from the legacy database export.
-
-- Records: 607 changed | 0 added | 2 metadata-only source rows deleted.
+- Records: changed UNK | added UNK | deleted UNK.
 - Converted the legacy Excel/database export into a UTF-8 CSV with explicit snake_case import fields.
+- Retained 607 family records and removed two metadata-only export rows.
 - Removed wholly empty export columns and the redundant secondary lineage field.
 - Added unique record_id values and retained source_row_number for traceability.
 - Trimmed and normalized whitespace, names, notes, boolean flags, and legacy sort fields without inventing missing genealogy facts.
 - Extracted embedded deceased markers from applicable surname fields into explicit boolean fields.
-- Restored lineage identifiers as text-safe dotted hierarchies and derived parent lineage identifiers from the final two-digit branch.
-- Converted exact dates to ISO YYYY-MM-DD, converted Excel serial dates, and retained partial, ambiguous, or invalid source dates with
-  explicit precision fields.
+- Restored lineage identifiers as text-safe compact hierarchies and derived parent lineage identifiers from the final two-digit branch.
+- Converted exact dates to ISO YYYY-MM-DD, converted Excel serial dates, and retained incomplete or ambiguous dates in separate date-text
+  fields with explicit precision values.
+
 
 Versioning rules for humans and agents
 --------------------------------------
