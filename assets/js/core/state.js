@@ -191,6 +191,17 @@
     }
   }
 
+  function presumeEarlyLinealGenerationsDeceased(people) {
+    people.forEach(function (person) {
+      if (person.livingStatus !== "unknown") return;
+      const fields = u.plainObject(person.source && person.source.fields);
+      const lineage = u.cleanLine(fields.lineage_id, 400);
+      if (!lineage || lineage.split(".").some(function (part) { return part === "99"; })) return;
+      const generation = lineage.split(".").filter(Boolean).length - 1;
+      if (generation >= 0 && generation <= 4) person.livingStatus = "deceased";
+    });
+  }
+
   function migrate7to8(input) {
     const source = u.plainObject(input);
     const workspace = u.plainObject(source.workspace);
@@ -470,6 +481,7 @@
     people.forEach(function (person) { person.livingStatus = mcLineageLivingStatus(person, person.livingStatus); });
     const relationshipIds = new Set();
     const relationships = (Array.isArray(sourceWorkspace.relationships) ? sourceWorkspace.relationships : []).slice(0, config.controls.maxRelationships).map(function (relationship, index) { return normalizeRelationship(relationship, index, relationshipIds, personIds, now); }).filter(Boolean);
+    presumeEarlyLinealGenerationsDeceased(people);
     presumeUnknownPartnersDeceased(people, relationships);
     const documentIds = new Set();
     const documents = consolidateDocuments((Array.isArray(sourceWorkspace.documents) ? sourceWorkspace.documents : []).map(function (document, index) { return normalizeDocument(document, index, documentIds, now); }), now);
