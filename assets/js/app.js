@@ -736,7 +736,10 @@
       const left = edge.from.x <= edge.to.x ? edge.from : edge.to;
       const right = left === edge.from ? edge.to : edge.from;
       const alignedPartner = left.partnerPlacement === "left" ? left : right.partnerPlacement === "right" ? right : null;
-      const y = alignedPartner ? alignedPartner.y + alignedPartner.height / 2 : ((left.y + left.height / 2) + (right.y + right.height / 2)) / 2;
+      let y = alignedPartner ? alignedPartner.y + alignedPartner.height / 2 : ((left.y + left.height / 2) + (right.y + right.height / 2)) / 2;
+      if (alignedPartner && alignedPartner.partnerPlacement === "left" && alignedPartner.partnerCount > 1) {
+        y = alignedPartner.y + alignedPartner.height * (alignedPartner.partnerAlign === "top" ? 0.25 : 0.75);
+      }
       return "M" + (left.x + left.width) + " " + y + " L" + right.x + " " + y;
     }
     const x1 = edge.from.x + edge.from.width / 2;
@@ -745,6 +748,16 @@
     const y2 = edge.to.y;
     const middle = (y1 + y2) / 2;
     return "M" + x1 + " " + y1 + " C" + x1 + " " + middle + " " + x2 + " " + middle + " " + x2 + " " + y2;
+  }
+
+  function developerTreeScaleHtml() {
+    if (!developerReferencesEnabled() || !currentTreeLayout || !currentTreeLayout.generationMetrics) return "";
+    return '<g class="tree-generation-scale" aria-hidden="true"><text class="tree-generation-scale-title" x="8" y="20">Bubble scale</text>' + currentTreeLayout.generationMetrics.map(function (metric) {
+      const top = metric.y;
+      const bottom = metric.y + metric.height;
+      const middle = top + metric.height / 2;
+      return '<path d="M10 ' + top + ' H20 M15 ' + top + ' V' + bottom + ' M10 ' + bottom + ' H20"></path><text x="26" y="' + middle + '">Gen ' + metric.generation + ' · ' + metric.nodeWidth + '×' + metric.nodeHeight + 'px</text>';
+    }).join("") + "</g>";
   }
 
   function sizeTreeSurface() {
@@ -808,7 +821,7 @@
     const svg = $("#familyTreeSvg");
     if (!svg) return;
     const focusId = state().ui.treeFocusId || state().workspace.family.homePersonId || (state().workspace.people[0] && state().workspace.people[0].id);
-    currentTreeLayout = family.layout(state(), { mode: state().ui.treeMode, focusId: focusId, ancestorDepth: state().ui.ancestorDepth, descendantDepth: state().ui.descendantDepth, nodeView: state().ui.treeNodeView, hideUnplacedLineage: state().ui.hideUnplacedLineage });
+    currentTreeLayout = family.layout(state(), { mode: state().ui.treeMode, focusId: focusId, ancestorDepth: state().ui.ancestorDepth, descendantDepth: state().ui.descendantDepth, nodeView: state().ui.treeNodeView, hideUnplacedLineage: state().ui.hideUnplacedLineage, showDeveloperScale: developerReferencesEnabled() });
     if (!currentTreeLayout.nodes.length) {
       svg.innerHTML = '<text class="tree-empty-text" x="50%" y="46%" text-anchor="middle">No people yet</text><text class="tree-empty-subtext" x="50%" y="54%" text-anchor="middle">Family editing is paused while McFamily is being built.</text>';
       return;
@@ -833,19 +846,21 @@
       const renderWidth = node.renderWidth || node.width;
       const renderHeight = node.renderHeight || node.height;
       const scale = node.scale || 1;
-      const shell = '<g class="tree-node' + (selected ? " selected" : "") + (home ? " home" : "") + (node.partnerPlacement === "left" ? " compact-partner" : "") + (isLinealPerson(person) ? " lineal" : "") + (person.livingStatus === "deceased" ? " deceased" : "") + '" data-view="' + u.escapeHtml(currentTreeLayout.nodeView) + '" tabindex="0" role="button" aria-label="' + u.escapeHtml(name + ", " + family.lifespan(person) + ". Select to focus.") + '" data-tree-person="' + u.escapeHtml(person.id) + '" transform="translate(' + node.x + " " + node.y + ") scale(" + scale + ')"><rect width="' + renderWidth + '" height="' + renderHeight + '" rx="10"></rect>';
       const detailed = currentTreeLayout.nodeView === "detailed";
       const nameLines = family.treeNameLines(person, detailed);
+      const shell = '<g class="tree-node' + (selected ? " selected" : "") + (home ? " home" : "") + (node.partnerPlacement === "left" ? " compact-partner" : "") + (isLinealPerson(person) ? " lineal" : "") + (person.livingStatus === "deceased" ? " deceased" : "") + '" data-view="' + u.escapeHtml(currentTreeLayout.nodeView) + '" tabindex="0" role="button" aria-label="' + u.escapeHtml(name + ", " + family.lifespan(person) + ". Select to focus.") + '" data-tree-person="' + u.escapeHtml(person.id) + '" transform="translate(' + node.x + " " + node.y + ") scale(" + scale + ')"><rect width="' + renderWidth + '" height="' + renderHeight + '" rx="10"></rect>';
       const nameHtml = nameLines.map(function (line, index) {
         const familyClass = !detailed && index === nameLines.length - 1 ? " tree-family" : "";
-        return '<text class="tree-name-line' + familyClass + '" x="' + (renderWidth / 2) + '" y="' + (16 + index * 14) + '" text-anchor="middle">' + u.escapeHtml(line) + "</text>";
+        const densityClass = line.length > 20 ? " tree-name-tight" : line.length > 14 ? " tree-name-compact" : "";
+        const fit = line.length > 18 ? ' textLength="' + (renderWidth - 14) + '" lengthAdjust="spacingAndGlyphs"' : "";
+        return '<text class="tree-name-line' + familyClass + densityClass + '" x="' + (renderWidth / 2) + '" y="' + (16 + index * 14) + '" text-anchor="middle"' + fit + '>' + u.escapeHtml(line) + "</text>";
       }).join("");
       const lifeY = 21 + nameLines.length * 14;
       const reference = detailed && developerReferencesEnabled() ? '<text class="tree-reference" x="' + (renderWidth / 2) + '" y="' + (lifeY + 13) + '" text-anchor="middle">' + u.escapeHtml(person.reference) + "</text>" : "";
       const linealMark = isLinealPerson(person) ? icons.markup("lineal").replace('<svg class="sf-symbol"', '<svg class="sf-symbol tree-lineal-mark" x="' + (renderWidth - 14) + '" y="' + (lifeY - 9) + '" width="7" height="10"') : "";
       return shell + nameHtml + '<text class="tree-life" x="' + (renderWidth / 2) + '" y="' + lifeY + '" text-anchor="middle">' + u.escapeHtml(family.lifespan(person) + (detailed && home ? " · home" : "")) + "</text>" + reference + linealMark + "</g>";
     }).join("");
-    svg.innerHTML = '<g id="treeViewport"><g class="tree-edges">' + edges + '</g><g class="tree-nodes">' + nodes + "</g></g>";
+    svg.innerHTML = '<g id="treeViewport">' + developerTreeScaleHtml() + '<g class="tree-edges">' + edges + '</g><g class="tree-nodes">' + nodes + "</g></g>";
     bindTreeInteractions(svg);
     if (treeNeedsFit) {
       treeNeedsFit = false;

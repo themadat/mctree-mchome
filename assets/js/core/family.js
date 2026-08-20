@@ -439,9 +439,22 @@
     const names = person && person.names || {};
     const fullName = model.displayName(person);
     const compactName = [names.preferred || names.given, names.family || names.birth].filter(Boolean).join(" ") || fullName;
-    return String(detailed ? fullName : compactName).trim().split(/\s+/).filter(Boolean).map(function (part) {
+    const parts = String(detailed ? fullName : compactName).trim().split(/\s+/).filter(Boolean).map(function (part) {
       return part.length > 14 ? part.slice(0, 13) + "…" : part;
     });
+    if (parts.length <= 3) return parts;
+    let best = null;
+    for (let firstBreak = 1; firstBreak < parts.length - 1; firstBreak += 1) {
+      for (let secondBreak = firstBreak + 1; secondBreak < parts.length; secondBreak += 1) {
+        const lines = [parts.slice(0, firstBreak).join(" "), parts.slice(firstBreak, secondBreak).join(" "), parts.slice(secondBreak).join(" ")];
+        const lengths = lines.map(function (line) { return line.length; });
+        const maximum = Math.max.apply(null, lengths);
+        const spread = Math.max.apply(null, lengths) - Math.min.apply(null, lengths);
+        const score = maximum * 100 + spread;
+        if (!best || score < best.score) best = { lines: lines, score: score };
+      }
+    }
+    return best ? best.lines : parts.slice(0, 3);
   }
 
   function layout(state, options) {
@@ -519,15 +532,19 @@
       }, 0) + Math.max(0, items.length - 1) * horizontalGap;
       rowWidths.set(level, width);
     });
-    const contentWidth = Math.max(680, Math.max.apply(null, Array.from(rowWidths.values())) + 80);
+    const developerScaleGutter = settings.showDeveloperScale ? 116 : 0;
+    const baseContentWidth = Math.max(680, Math.max.apply(null, Array.from(rowWidths.values())) + 80);
+    const contentWidth = baseContentWidth + developerScaleGutter;
     const nodes = [];
+    const generationMetrics = [];
     let rowY = 40;
     sortedLevels.forEach(function (level) {
       const items = groups.get(level);
       const nodeHeight = rowHeights.get(level);
       const trackHeight = rowTrackHeights.get(level);
       const rowWidth = rowWidths.get(level);
-      const startX = (contentWidth - rowWidth) / 2;
+      const startX = developerScaleGutter + (baseContentWidth - rowWidth) / 2;
+      generationMetrics.push({ generation: level, y: rowY, height: trackHeight, nodeWidth: nodeWidth, nodeHeight: nodeHeight });
       let cursorX = startX;
       items.forEach(function (person, index) {
         const placement = partnerPlacements.get(person.id);
@@ -545,6 +562,8 @@
           renderHeight: nodeHeight,
           scale: scale,
           partnerPlacement: placement && placement.side || "",
+          partnerAlign: placement && placement.align || "",
+          partnerCount: placement && placement.count || 0,
           generation: level
         });
         cursorX += width + horizontalGap;
@@ -558,7 +577,7 @@
       return { relationship: relationship, from: nodeById.get(aId), to: nodeById.get(bId), current: relationship.type === "partner" && currentPartnerRelationshipIds.has(relationship.id) };
     }).filter(function (edge) { return edge.from && edge.to; });
     const height = rowY - verticalGap + 40;
-    return { nodes: nodes, edges: edges, width: contentWidth, height: Math.max(360, height), bounds: { x: 0, y: 0, width: contentWidth, height: Math.max(360, height) }, peopleById: peopleById, nodeView: detailed ? "detailed" : "condensed" };
+    return { nodes: nodes, edges: edges, width: contentWidth, height: Math.max(360, height), bounds: { x: 0, y: 0, width: contentWidth, height: Math.max(360, height) }, peopleById: peopleById, nodeView: detailed ? "detailed" : "condensed", generationMetrics: generationMetrics };
   }
 
   function validateRelationshipDraft(draft, state, ignoreId) {

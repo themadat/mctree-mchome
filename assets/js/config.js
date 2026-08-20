@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.44",
-      buildId: "0.0.1.44",
+      version: "0.0.1.45",
+      buildId: "0.0.1.45",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -113,6 +113,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.45",
+        date: "2026-08-20T19:32:59.000Z",
+        title: "Clearer tree spacing and scale",
+        summary: "Past-partner lines now avoid name areas, long names fit more intelligently, and Developer Mode can display generation bubble measurements.",
+        features: ["Developer Mode bubble scale labels every visible generation with its card width and height"],
+        improvements: ["Four-or-more-part names balance across three fitted lines without widening cards", "Brighter, heavier gold partner lines stand apart from faded-red Lineal edges"],
+        fixes: ["Two prior-partner links attach one-quarter from the top or bottom of their compact cards instead of crossing name centers"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.44",
         date: "2026-08-20T18:35:02.000Z",
@@ -569,7 +579,11 @@
   treeHelp.html = treeHelp.html
     .replace("Focus view shows", "Lineage view shows")
     .replace("the grouped Ancestor and Descendant depth numbers", "the symbol-labelled Ancestors and Descendants depth numbers")
-    .replace("condensed and detailed cards", "Summary and Details cards");
+    .replace("condensed and detailed cards", "Summary and Details cards")
+    .replace("Narrow cards place each name word on its own line", "Narrow cards keep short names stacked while names with four or more parts balance across three fitted lines")
+    .replace("Gold partner links", "Bright gold partner links")
+    .replace("two align with the top and bottom of the full-size spouse and use evenly spaced parallel links", "two align with the top and bottom of the full-size spouse and attach their parallel links one-quarter from each compact card’s outer edge")
+    .replace("Developer Mode shows its percentage only while dragging", "Developer Mode adds a left-side generation bubble scale and shows divider percentages only while dragging");
   const peopleHelp = CONFIG.help.find(function (item) { return item.id === "people"; });
   peopleHelp.html = peopleHelp.html.replace("with an approximate ~ age, plus a Marital Status row", "with a naturally written Age row, followed by Living Status and Marital Status");
 
