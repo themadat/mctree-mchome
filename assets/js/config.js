@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.48",
-      buildId: "0.0.1.48",
+      version: "0.0.1.49",
+      buildId: "0.0.1.49",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -113,6 +113,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.49",
+        date: "2026-08-21T16:11:18.000Z",
+        title: "Aligned person properties",
+        summary: "Selected-person property values now share one compact, consistent starting position.",
+        features: [],
+        improvements: ["Profile labels use a narrower fixed column with a smaller gap before their values"],
+        fixes: ["Age now aligns horizontally with Born, Died, Living Status, and Marital Status"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.48",
         date: "2026-08-21T15:31:12.000Z",
