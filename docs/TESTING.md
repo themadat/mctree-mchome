@@ -41,7 +41,7 @@ Use synthetic families only.
 
 - [ ] Selected-person Add, Connect, Edit, and Delete controls are disabled and greyed while `features.familyEditing` is false; Set as home is absent.
 - [ ] The selected-person header orders Delete, Edit, and X; Relationships owns Add and Connect. All four mutation controls use the supplied icon-over-label symbols.
-- [ ] Identity properties always appear as Born, Died, Age, Living Status, Marital Status, Gender, and Pronouns; missing values read `UNKNOWN`, and compact ages use the same visual weight as adjacent property values.
+- [ ] Identity properties appear as Born, Died, Age, Living Status, and Marital Status; Gender and Pronouns remain hidden. Missing values read `UNKNOWN`, except a living person's Died value is `----`. Ages use the same visual weight as adjacent values and natural years/months wording.
 - The remaining mutation checks in this section apply when a developer temporarily enables `features.familyEditing` for regression testing.
 - [ ] Add and remove repeated contacts without losing adjacent entries.
 - [ ] Connect biological, adoptive, step, foster, guardian, and unknown parents.
@@ -72,10 +72,10 @@ Use synthetic families only.
 - [ ] Both spouses in a marriage ended by death read Married when both are deceased; a surviving spouse reads Widowed while the deceased spouse reads Married. The latest death-ended spouse stays on the right with a solid line unless a later relationship exists.
 - [ ] Lineal parent edges use faded muted red, and selecting a Lineal person replaces its lineage outline with the normal selected-person accent border.
 - [ ] The floating Key sits at the lower right of the Family Tree module, collapses and reopens, stays inside the module at mobile widths, does not block canvas drags, and includes brown deceased-card and red Bloodline-outline samples after the four marriage states.
-- [ ] ?? Lineal appears only in Full Tree, is unpressed by default, keeps stored `99`-lineage people and anyone linked only to them out of the tree, keeps the focused person visible, and leaves directory and search counts unchanged; its outlined question-person symbol remains unchanged when enabled.
+- [ ] ?? Lineal appears only in Full Tree, is unpressed by default, keeps stored `99`-lineage people and anyone linked only to them out of the tree, keeps the focused person visible, and leaves directory and search counts unchanged; its outlined question-person symbol remains unchanged when enabled, and enabling it centers the revealed people at natural scale.
 - [ ] Stored lineage segment `99` displays as `??` in the directory, profile Lineage block, and imported-source details, while PDF output omits those people and their isolated branches.
 - [ ] A never-married partnership with no start date sorts by `relationship_order`, draws the dotted line, and reads Never married; P012 shows Heather Munz to the left of Tina Magri, and P244 lists Heather as her Non-Lineal parent.
-- [ ] Partial source dates appear in profiles and print as `December ??, 1979`, `August ??, 1943`, `June 2, 19??`, and `1981`; compact ages from a partial value begin with `~` and an unknown year shows `UNKNOWN`.
+- [ ] Partial source dates appear in profiles and print as `December ??, 1979`, `August ??, 1943`, `June 2, 19??`, and `1981`; ages from a partial value begin with `~`, an unknown year shows `UNKNOWN`, living ages read like `45 years old` or `15 months old`, and deceased ages read like `80 years old at death · Would be 176 today` with the requested italic/bold emphasis.
 - [ ] Marital Status reads Married, Widowed, Divorced, Separated, Never married, or Unknown from the most recent partnership, Unknown when no partnership is recorded, and each Partners row reads `(year :: Status)`. With no recorded ending, two deceased spouses remain Married; if one current spouse is living and the other deceased, the living spouse reads Widowed and their tree line remains solid.
 - [ ] Ancestors and Descendants accept 0 through 10 and clamp anything larger.
 - [ ] Selecting a person from global search or a filtered directory returns the Family Tree to Lineage mode.
@@ -97,8 +97,8 @@ Use synthetic families only.
 - [ ] Every resolved first-name parent link selects that person and focuses the tree; unknown positions read `Gen #, Child of FirstName` without an ordinal.
 - [ ] Parents, Siblings, Partners, and Children are compact open groups in that order; the bloodline parent is first, siblings and children are in birth order, and Melanie's Parents group contains both Max and Martha through display-only co-parent inference.
 - [ ] Partners lists the current partner first in bold, followed by prior partners in reverse history order with de-emphasized styling.
-- [ ] Identity always shows Born, Died, Age, Living Status, Marital Status, Gender, and Pronouns with `UNKNOWN` fallbacks. Age uses ordinary one-line styling, and the configured home person is labelled Root Ancestor. Lineage appears immediately afterward and above Relationships; Notes follows Relationships, and Imported Source is final. Albon shows both parents and all six siblings.
-- [ ] The profile X closes the module, clears directory/tree selection, disables the empty mobile Person tab, and a Family Tree selection reopens the profile without a Show person button.
+- [ ] Identity shows Born, Died, Age, Living Status, and Marital Status with `UNKNOWN` fallbacks, except living Died is `----`; Gender and Pronouns are absent. Age uses ordinary one-line styling, and the configured home person is labelled Root Ancestor. Lineage appears immediately afterward and above Relationships; Notes follows Relationships, and Imported Source is final. Albon shows both parents and all six siblings.
+- [ ] The profile X closes the module, clears directory/tree selection, disables the empty mobile Person tab, and a Family Tree selection reopens the profile without a Show person button. Full Tree also closes and deselects the profile; Lineage is disabled until a person is selected.
 - [ ] A child listed from a parent's profile is labelled `Child`, without a redundant parent-kind suffix.
 - [ ] Parents, Siblings, and Children headings show the correct `Gen #`; parents show `(Lineal)` or `(Non-Lineal)`.
 - [ ] Siblings and children show two-digit birth order and birth year as `(01 :: 1991)`, including `????` for an unknown year.
@@ -123,7 +123,7 @@ Use synthetic families only.
 - [ ] The first map names George McMillen (1745) as the root ancestor at Generation 0, every retained component uses the Root Ancestor label, and Jon Couts remains in Person Directory but has no Family Map component.
 - [ ] Family-map rows use six compact columns and contain only names and years.
 - [ ] Generation 4 and later people, including Non-Lineal partners, are grouped beneath a `Generation 3 Line` header with no unassigned branch when lineage can be resolved.
-- [ ] Lineal map cards use a faded-red outline; Lineal Newton, Albon, and Lucian members use the stronger orientation highlight while Theophilus and Lucian Lynn Kretzing do not. Every deceased map and Person Directory entry uses brown shading, and every map name fits within two lines.
+- [ ] Lineal map cards use a clearly visible faded-red outline; Lineal Newton, Albon, and Lucian members use the stronger orientation highlight plus a Bloodline symbol, while Theophilus and Lucian Lynn Kretzing do not. Every deceased map and Person Directory entry uses brown shading, and every map name fits within two lines.
 - [ ] Stored `99`/`??` lineage people and their isolated branches do not appear in Family Maps, Person Directory profiles, or PDF statistics.
 - [ ] Developer Mode opens the report in a modal without invoking the native print dialog; closing it restores focus. Ordinary mode retains native printing.
 - [ ] Application controls are suppressed and print colors remain legible.
