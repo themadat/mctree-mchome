@@ -330,7 +330,8 @@
     const event = person && person[kind];
     const date = lifeDateLabel(person, kind);
     const place = event && event.place || "";
-    return '<div><dt>' + label + '</dt><dd>' + u.escapeHtml([date, place].filter(Boolean).join(" · ") || "UNKNOWN") + "</dd></div>";
+    const fallback = kind === "death" && person && person.livingStatus === "living" ? "----" : "UNKNOWN";
+    return '<div><dt>' + label + '</dt><dd>' + u.escapeHtml([date, place].filter(Boolean).join(" · ") || fallback) + "</dd></div>";
   }
 
   function knownDatePrefix(value) {
@@ -378,12 +379,15 @@
     const deceased = person.livingStatus === "deceased";
     const primary = ageValue(birthValue, deceased ? deathValue : new Date());
     const current = deceased ? ageValue(birthValue, new Date()) : null;
-    const compactAge = function (value) { return value ? (value.approximate ? "~" : "") + value.amount + (value.unit === "years" ? "y" : "mo") : ""; };
-    let primaryText = primary ? compactAge(primary) + (deceased ? " at death" : " old") : "";
+    const naturalAge = function (value) { return value ? (value.approximate ? "~" : "") + value.amount + " " + value.unit : ""; };
+    let primaryText = primary ? naturalAge(primary) + (deceased ? " old at death" : " old") : "";
     if (deceased && !primaryText) primaryText = "UNKNOWN at death";
-    const contextText = current ? compactAge(current) + " today" : "";
-    const text = [primaryText, contextText].filter(Boolean).join(" · ") || "UNKNOWN";
-    return '<div class="age-row"><dt>Age</dt><dd>' + u.escapeHtml(text) + "</dd></div>";
+    if (plainText) {
+      const currentText = current ? "Would be " + (current.approximate ? "~" : "") + current.amount + " today" : "";
+      return '<div class="age-row"><dt>Age</dt><dd>' + u.escapeHtml([primaryText, currentText].filter(Boolean).join(" · ") || "UNKNOWN") + "</dd></div>";
+    }
+    const context = current ? ' · <em>Would be</em> <strong><em>' + u.escapeHtml((current.approximate ? "~" : "") + current.amount) + '</em></strong> <em>today</em>' : "";
+    return '<div class="age-row"><dt>Age</dt><dd>' + u.escapeHtml(primaryText || "UNKNOWN") + context + "</dd></div>";
   }
 
   function livingStatusDetail(person) {
@@ -709,7 +713,7 @@
     const relationshipActions = '<div class="relationship-actions">' + actionButton("Add", "addRelative", 'data-add-relative="' + u.escapeHtml(person.id) + '"', false) + actionButton("Connect", "connectPerson", 'data-add-relationship="' + u.escapeHtml(person.id) + '"', false) + "</div>";
     const relationships = '<section class="profile-section"><div class="relationship-section-heading"><h3>Relationships</h3>' + relationshipActions + '</div><div class="relationship-list">' + relationshipRows(person) + "</div></section>";
     const headerActions = '<div class="profile-header-actions">' + actionButton("Delete", "deletePerson", 'data-delete-person="' + u.escapeHtml(person.id) + '"', true) + actionButton("Edit", "editPerson", 'data-edit-person="' + u.escapeHtml(person.id) + '"', false) + '<button type="button" class="icon-button profile-close" data-close-profile aria-controls="profilePanel" aria-label="Close and deselect person" title="Close and deselect person"><span data-symbol="close" aria-hidden="true"></span></button></div>';
-    container.innerHTML = '<article class="person-profile"><header class="profile-header"><div class="profile-title">' + profileEyebrow + '<h2>' + u.escapeHtml(model.displayName(person)) + '</h2><p>' + u.escapeHtml(family.lifespan(person)) + "</p></div>" + headerActions + '</header><dl class="profile-list identity-list">' + formatEvent("Born", person, "birth") + formatEvent("Died", person, "death") + ageDetail(person, false) + livingStatusDetail(person) + maritalStatusDetail(person, family.relationGroups(person.id, state()).partners) + '<div><dt>Gender</dt><dd>' + u.escapeHtml(person.gender || "UNKNOWN") + '</dd></div><div><dt>Pronouns</dt><dd>' + u.escapeHtml(person.pronouns || "UNKNOWN") + "</dd></div></dl>" + profileLineage(person) + relationships + contactBlocks.join("") + (person.notes ? '<section class="profile-section"><h3>Notes</h3><p class="preserve-lines">' + u.escapeHtml(person.notes) + "</p></section>" : "") + profileSource(person) + "</article>";
+    container.innerHTML = '<article class="person-profile"><header class="profile-header"><div class="profile-title">' + profileEyebrow + '<h2>' + u.escapeHtml(model.displayName(person)) + '</h2><p>' + u.escapeHtml(family.lifespan(person)) + "</p></div>" + headerActions + '</header><dl class="profile-list identity-list">' + formatEvent("Born", person, "birth") + formatEvent("Died", person, "death") + ageDetail(person, false) + livingStatusDetail(person) + maritalStatusDetail(person, family.relationGroups(person.id, state()).partners) + "</dl>" + profileLineage(person) + relationships + contactBlocks.join("") + (person.notes ? '<section class="profile-section"><h3>Notes</h3><p class="preserve-lines">' + u.escapeHtml(person.notes) + "</p></section>" : "") + profileSource(person) + "</article>";
     icons.mount(container);
   }
 
@@ -809,6 +813,25 @@
       canvas.scrollLeft = 0;
       canvas.scrollTop = 0;
     }
+  }
+
+  function centerUnplacedLineage() {
+    const svg = $("#familyTreeSvg");
+    const canvas = svg && svg.parentElement;
+    if (!svg || !canvas || !currentTreeLayout) return;
+    const unplacedIds = family.unplacedLineageIds(state());
+    const nodes = currentTreeLayout.nodes.filter(function (node) { return unplacedIds.has(node.id); });
+    if (!nodes.length) return;
+    treeSurfaceMode = "natural";
+    treeTransform = { x: 40, y: 40, scale: 1 };
+    applyTreeTransform();
+    const left = Math.min.apply(null, nodes.map(function (node) { return node.x; }));
+    const right = Math.max.apply(null, nodes.map(function (node) { return node.x + node.width; }));
+    const top = Math.min.apply(null, nodes.map(function (node) { return node.y; }));
+    const bottom = Math.max.apply(null, nodes.map(function (node) { return node.y + node.height; }));
+    canvas.scrollLeft = Math.max(0, (left + right) / 2 + treeTransform.x - canvas.clientWidth / 2);
+    canvas.scrollTop = Math.max(0, (top + bottom) / 2 + treeTransform.y - canvas.clientHeight / 2);
+    announce("Centered " + nodes.length + " unresolved Lineal " + (nodes.length === 1 ? "person." : "people."));
   }
 
   function renderTree() {
@@ -1075,10 +1098,11 @@
     const directoryCollapsed = state().ui.directoryCollapsed;
     const profileCollapsed = state().ui.profileCollapsed;
     const overviewDisabled = state().ui.treeMode === "overview" ? "disabled" : "";
+    const lineageDisabled = state().ui.selectedPersonId ? "" : " disabled";
     const personTabDisabled = state().ui.selectedPersonId ? "" : " disabled";
     const directoryHeader = '<header class="directory-module-bar"><label class="directory-search-field"><span class="visually-hidden">Search family directory</span><input id="directorySearch" type="search" aria-label="Search family directory" placeholder="Search Directory…" value="' + u.escapeHtml(state().ui.directorySearch) + '"><span id="directoryCount" class="count-pill" role="status" aria-live="polite"></span></label><button type="button" class="icon-button" data-toggle-pane="directory" aria-controls="directoryPanel" aria-expanded="true" aria-label="Close directory" title="Close directory"><span data-symbol="close" aria-hidden="true"></span></button></header>';
     const directoryControls = '<div class="directory-controls"><div class="directory-filter-row"><div class="field directory-filter-control"><span id="directoryFilterLabel">Filter By</span><details class="directory-filter-menu"><summary aria-labelledby="directoryFilterLabel directoryFilterSummary"><span id="directoryFilterSummary">' + u.escapeHtml(directoryFilterSummary()) + '</span></summary><div class="directory-filter-options" role="group" aria-label="Filter directory by">' + directoryFilterOptionsHtml() + '</div></details></div><label class="field"><span>Sort By</span><select id="directorySort"><option value="first">First name</option><option value="last">Last name</option></select></label></div></div>';
-    $("#mainContent").innerHTML = '<section class="family-workspace" aria-label="Family workspace"><nav class="mobile-workspace-tabs segmented" aria-label="Workspace views"><button type="button" data-mobile-view="directory" aria-pressed="' + String(state().ui.mobileView === "directory") + '">Directory</button><button type="button" data-mobile-view="tree" aria-pressed="' + String(state().ui.mobileView === "tree") + '">Family Tree</button><button type="button" data-mobile-view="profile" aria-pressed="' + String(state().ui.mobileView === "profile") + '"' + personTabDisabled + '>Person</button></nav><div class="family-workspace-grid" data-mobile-view="' + u.escapeHtml(state().ui.mobileView) + '" data-directory-collapsed="' + String(directoryCollapsed) + '" data-profile-collapsed="' + String(profileCollapsed) + '"><aside id="directoryPanel" class="directory-panel workspace-card' + (directoryCollapsed ? " is-collapsed" : "") + '" aria-label="Family directory">' + directoryHeader + directoryControls + '<div class="directory-body"><div id="directoryList" class="directory-list"></div><nav id="directoryAlphaRail" class="directory-alpha-rail" aria-label="Jump to directory letter"></nav></div></aside><section class="tree-panel workspace-card" aria-label="Family Tree"><header class="tree-toolbar"><div class="tree-view-controls"><div class="segmented" aria-label="Tree mode"><button type="button" data-tree-mode="focus" aria-pressed="' + String(state().ui.treeMode === "focus") + '">Focus</button><button type="button" data-tree-mode="overview" aria-pressed="' + String(state().ui.treeMode === "overview") + '">Overview</button></div><div class="segmented" aria-label="Person card detail"><button type="button" data-tree-node-view="condensed" aria-pressed="' + String(state().ui.treeNodeView === "condensed") + '">Condensed</button><button type="button" data-tree-node-view="detailed" aria-pressed="' + String(state().ui.treeNodeView === "detailed") + '">Detailed</button></div><label class="depth-control"><span>Ancestors</span><input id="ancestorDepth" type="number" min="0" max="' + config.controls.maxTreeDepth + '" step="1" value="' + state().ui.ancestorDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><label class="depth-control"><span>Descendants</span><input id="descendantDepth" type="number" min="0" max="' + config.controls.maxTreeDepth + '" step="1" value="' + state().ui.descendantDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><div class="zoom-controls" role="group" aria-label="Tree zoom controls"><button type="button" class="zoom-action" data-zoom="out" aria-label="Zoom out" title="Zoom out"><span class="zoom-action-icon" data-symbol="zoomOut" aria-hidden="true"></span><span>Out</span></button><label class="zoom-value-control"><span>Zoom %</span><input id="zoomValue" type="number" min="1" max="250" step="1" value="100" inputmode="numeric"></label><button type="button" class="zoom-action" data-zoom="in" aria-label="Zoom in" title="Zoom in"><span class="zoom-action-icon" data-symbol="zoomIn" aria-hidden="true"></span><span>In</span></button><button type="button" class="zoom-action" data-fit-tree aria-label="Fit tree" title="Fit tree"><span class="zoom-action-icon" data-symbol="fit" aria-hidden="true"></span><span>Fit</span></button><span id="zoomStatus" class="visually-hidden" aria-live="polite">100% zoom</span></div></div></header><div class="tree-canvas"><svg id="familyTreeSvg" role="group" aria-label="Interactive Family Tree. Scroll horizontally or vertically, drag to pan, use the zoom controls, and select a person to focus." tabindex="0"></svg></div>' + treeKeyHtml() + '</section><aside id="profilePanel" class="profile-panel workspace-card' + (profileCollapsed ? " is-collapsed" : "") + '" aria-label="Selected person profile"><div id="profilePanelContent" class="profile-panel-content"></div></aside></div></section>';
+    $("#mainContent").innerHTML = '<section class="family-workspace" aria-label="Family workspace"><nav class="mobile-workspace-tabs segmented" aria-label="Workspace views"><button type="button" data-mobile-view="directory" aria-pressed="' + String(state().ui.mobileView === "directory") + '">Directory</button><button type="button" data-mobile-view="tree" aria-pressed="' + String(state().ui.mobileView === "tree") + '">Family Tree</button><button type="button" data-mobile-view="profile" aria-pressed="' + String(state().ui.mobileView === "profile") + '"' + personTabDisabled + '>Person</button></nav><div class="family-workspace-grid" data-mobile-view="' + u.escapeHtml(state().ui.mobileView) + '" data-directory-collapsed="' + String(directoryCollapsed) + '" data-profile-collapsed="' + String(profileCollapsed) + '"><aside id="directoryPanel" class="directory-panel workspace-card' + (directoryCollapsed ? " is-collapsed" : "") + '" aria-label="Family directory">' + directoryHeader + directoryControls + '<div class="directory-body"><div id="directoryList" class="directory-list"></div><nav id="directoryAlphaRail" class="directory-alpha-rail" aria-label="Jump to directory letter"></nav></div></aside><section class="tree-panel workspace-card" aria-label="Family Tree"><header class="tree-toolbar"><div class="tree-view-controls"><div class="segmented" aria-label="Tree mode"><button type="button" data-tree-mode="focus" aria-pressed="' + String(state().ui.treeMode === "focus") + '"' + lineageDisabled + '>Focus</button><button type="button" data-tree-mode="overview" aria-pressed="' + String(state().ui.treeMode === "overview") + '">Overview</button></div><div class="segmented" aria-label="Person card detail"><button type="button" data-tree-node-view="condensed" aria-pressed="' + String(state().ui.treeNodeView === "condensed") + '">Condensed</button><button type="button" data-tree-node-view="detailed" aria-pressed="' + String(state().ui.treeNodeView === "detailed") + '">Detailed</button></div><label class="depth-control"><span>Ancestors</span><input id="ancestorDepth" type="number" min="0" max="' + config.controls.maxTreeDepth + '" step="1" value="' + state().ui.ancestorDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><label class="depth-control"><span>Descendants</span><input id="descendantDepth" type="number" min="0" max="' + config.controls.maxTreeDepth + '" step="1" value="' + state().ui.descendantDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><div class="zoom-controls" role="group" aria-label="Tree zoom controls"><button type="button" class="zoom-action" data-zoom="out" aria-label="Zoom out" title="Zoom out"><span class="zoom-action-icon" data-symbol="zoomOut" aria-hidden="true"></span><span>Out</span></button><label class="zoom-value-control"><span>Zoom %</span><input id="zoomValue" type="number" min="1" max="250" step="1" value="100" inputmode="numeric"></label><button type="button" class="zoom-action" data-zoom="in" aria-label="Zoom in" title="Zoom in"><span class="zoom-action-icon" data-symbol="zoomIn" aria-hidden="true"></span><span>In</span></button><button type="button" class="zoom-action" data-fit-tree aria-label="Fit tree" title="Fit tree"><span class="zoom-action-icon" data-symbol="fit" aria-hidden="true"></span><span>Fit</span></button><span id="zoomStatus" class="visually-hidden" aria-live="polite">100% zoom</span></div></div></header><div class="tree-canvas"><svg id="familyTreeSvg" role="group" aria-label="Interactive Family Tree. Scroll horizontally or vertically, drag to pan, use the zoom controls, and select a person to focus." tabindex="0"></svg></div>' + treeKeyHtml() + '</section><aside id="profilePanel" class="profile-panel workspace-card' + (profileCollapsed ? " is-collapsed" : "") + '" aria-label="Selected person profile"><div id="profilePanelContent" class="profile-panel-content"></div></aside></div></section>';
     const workspaceGrid = $(".family-workspace-grid", $("#mainContent"));
     workspaceGrid.style.setProperty("--directory-panel-width", state().ui.panelSizingCustomized ? state().ui.directoryPanelWidth + "px" : "20%");
     workspaceGrid.style.setProperty("--profile-panel-width", state().ui.panelSizingCustomized ? state().ui.profilePanelWidth + "px" : "30%");
@@ -1510,7 +1534,9 @@
     return '<section class="print-generation"><h4>Generation ' + generation + '</h4><div>' + people.slice().sort(function (a, b) {
       return family.compareLineage(a, b) || model.sortName(a).localeCompare(model.sortName(b));
     }).map(function (person) {
-      return '<span class="' + printMapPersonClasses(person).trim() + '"><strong>' + u.escapeHtml(model.displayName(person)) + '</strong><small>' + u.escapeHtml(family.lifespan(person)) + "</small></span>";
+      const classes = printMapPersonClasses(person).trim();
+      const bloodlineIcon = classes.includes("print-lineage-highlight") ? '<i class="print-bloodline-icon" aria-label="Special Bloodline member">' + icons.markup("lineal") + "</i>" : "";
+      return '<span class="' + classes + '"><div class="print-map-name-row"><strong>' + u.escapeHtml(model.displayName(person)) + "</strong>" + bloodlineIcon + '</div><small>' + u.escapeHtml(family.lifespan(person)) + "</small></span>";
     }).join("") + "</div></section>";
   }
 
@@ -1937,8 +1963,10 @@
     if (unplacedLineageToggle) {
       storage.mutate(function (next) { next.ui.hideUnplacedLineage = !next.ui.hideUnplacedLineage; }, { touch: false, reason: "tree-unplaced-lineage" });
       unplacedLineageToggle.setAttribute("aria-pressed", String(!state().ui.hideUnplacedLineage));
-      treeNeedsFit = true;
+      const showingUnplacedLineage = !state().ui.hideUnplacedLineage;
+      treeNeedsFit = !showingUnplacedLineage;
       renderTree();
+      if (showingUnplacedLineage) requestAnimationFrame(centerUnplacedLineage);
       return;
     }
     if (target.closest("#firstImportButton")) { $("#onboardingImportInput").click(); return; }
@@ -2016,7 +2044,21 @@
       return;
     }
     const modeButton = target.closest("[data-tree-mode]");
-    if (modeButton) { storage.mutate(function (next) { next.ui.treeMode = modeButton.dataset.treeMode; }, { touch: false, reason: "tree-mode" }); treeNeedsFit = true; renderWorkspace(); return; }
+    if (modeButton) {
+      storage.mutate(function (next) {
+        next.ui.treeMode = modeButton.dataset.treeMode;
+        if (next.ui.treeMode === "overview") {
+          next.ui.selectedPersonId = "";
+          next.ui.profileCollapsed = true;
+          if (next.ui.mobileView === "profile") next.ui.mobileView = "tree";
+        }
+      }, { touch: false, reason: "tree-mode" });
+      treeNeedsFit = true;
+      renderHeader();
+      renderWorkspace();
+      if (state().ui.treeMode === "overview") announce("Showing the full tree. Selected person closed.");
+      return;
+    }
     const nodeViewButton = target.closest("[data-tree-node-view]");
     if (nodeViewButton) { storage.mutate(function (next) { next.ui.treeNodeView = nodeViewButton.dataset.treeNodeView; }, { touch: false, reason: "tree-node-view" }); treeNeedsFit = true; renderWorkspace(); return; }
     const zoomButton = target.closest("[data-zoom]");
