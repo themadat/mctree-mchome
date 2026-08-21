@@ -14,6 +14,8 @@
   --accent: #315f73;
   --accent-strong: #274c5c;
   --accent-soft: #e2ebef;
+  --person-link: #006fa6;
+  --person-link-hover: #00537d;
   --accent-2: #b86b4b;
   --accent-2-soft: #f3e7e2;
   --success: #4f745f;
@@ -52,6 +54,8 @@
   --shadow: 0 20px 60px rgba(0, 0, 0, .38);
   --shadow-small: 0 6px 22px rgba(0, 0, 0, .3);
   --danger-soft: #3a2323;
+  --person-link: #78d3ff;
+  --person-link-hover: #a7e2ff;
   --lineal-mark: #c48f91;
   --partner-line: #ffd85e;
   --focus: #69bee6;
@@ -771,7 +775,10 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .profile-list > div:first-child { border-top: 0; }
 .profile-list dt { color: var(--muted); font-size: .7rem; font-weight: 750; }
 .profile-list dd { margin: 0; overflow-wrap: anywhere; }
-.age-row dd { white-space: nowrap; font-size: .72rem; font-variant-numeric: tabular-nums; }
+.profile-list > .age-row { grid-template-columns: 54px minmax(0, 1fr); }
+.age-row dd { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.age-row em { font-style: italic; }
+.age-row strong { font-weight: 850; }
 .profile-section { padding: .75rem 0; border-top: 1px solid var(--line); }
 .profile-section h3 { margin: 0 0 .45rem; font-size: .84rem; }
 .relationship-section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: .65rem; }
@@ -793,8 +800,8 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .lineage-paired-list li { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); align-items: stretch; gap: .3rem; min-height: 30px; }
 .lineage-name-cell, .lineage-reading-cell { display: flex; min-width: 0; align-items: center; }
 .lineage-reading-cell { padding-left: .45rem; border-left: 1px solid var(--line); }
-.lineage-person-link { min-height: 30px; margin: -.18rem -.28rem; padding: .18rem .28rem; border: 0; border-radius: 6px; background: transparent; color: var(--accent-strong); font: inherit; font-weight: 750; text-align: left; }
-.lineage-person-link:hover, .lineage-person-link:focus-visible { background: var(--accent-soft); text-decoration: underline; text-underline-offset: 2px; }
+.lineage-person-link { min-height: 30px; margin: -.18rem -.28rem; padding: .18rem .28rem; border: 0; border-radius: 6px; background: transparent; color: var(--person-link); font: inherit; font-weight: 750; text-align: left; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 42%, transparent); text-underline-offset: 2px; }
+.lineage-person-link:hover, .lineage-person-link:focus-visible { background: var(--accent-soft); color: var(--person-link-hover); text-decoration-color: currentColor; }
 .lineage-bracket { color: var(--muted); font-size: .72rem; font-weight: 700; white-space: nowrap; }
 .lineage-unlinked-name { font-weight: 700; }
 .lineage-root { color: var(--muted); font-size: .7rem; font-weight: 750; }
@@ -810,13 +817,13 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .relationship-group summary { display: flex; align-items: center; justify-content: space-between; gap: .45rem; min-height: 34px; padding: .32rem .45rem; color: var(--text); font-size: .72rem; font-weight: 800; cursor: pointer; }
 .relationship-group summary .count-pill { min-height: 20px; padding: .12rem .38rem; font-size: .62rem; }
 .relationship-names { display: grid; padding: 0 .3rem .3rem; }
-.relationship-name { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; min-height: 30px; padding: .28rem .35rem; border: 0; border-radius: 6px; background: transparent; color: var(--accent-strong); font-size: .75rem; font-weight: 750; text-align: left; }
+.relationship-name { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; min-height: 30px; padding: .28rem .35rem; border: 0; border-radius: 6px; background: transparent; color: var(--person-link); font-size: .75rem; font-weight: 750; text-align: left; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 42%, transparent); text-underline-offset: 2px; }
 .relationship-name > span { min-width: 0; overflow-wrap: anywhere; }
 .relationship-context { flex: 0 0 auto; color: var(--muted); font-size: .68rem; font-weight: 650; white-space: nowrap; }
-.relationship-name:hover, .relationship-name:focus-visible { background: var(--accent-soft); }
+.relationship-name:hover, .relationship-name:focus-visible { background: var(--accent-soft); color: var(--person-link-hover); text-decoration-color: currentColor; }
 .relationship-name.current-partner { font-weight: 850; }
-.relationship-name.previous-partner { color: var(--muted); font-weight: 550; opacity: .76; }
-.relationship-name.previous-partner:hover, .relationship-name.previous-partner:focus-visible { color: var(--accent-strong); opacity: 1; }
+.relationship-name.previous-partner { color: var(--person-link); font-weight: 550; opacity: .82; }
+.relationship-name.previous-partner:hover, .relationship-name.previous-partner:focus-visible { color: var(--person-link-hover); opacity: 1; }
 .relationship-empty { padding: .25rem .35rem; color: var(--muted); font-size: .7rem; }
 .mobile-workspace-tabs { display: none; margin-bottom: .55rem; }
 
@@ -864,11 +871,15 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .print-preview-document .print-generation h4, .print-preview-document .print-generation-branch h4 { margin: 0 0 .035in; font: 800 7pt Helvetica, Arial, sans-serif; letter-spacing: .04em; text-transform: uppercase; }
 .print-preview-document .print-generation > div { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .035in; }
 .print-preview-document .print-generation span { display: grid; min-width: 0; padding: .035in .045in; border: 1px solid #bbb; font-size: 8pt; line-height: 1.15; }
-.print-preview-document .print-generation span.print-lineal { border-color: #b98b8d; box-shadow: inset 0 0 0 1px #e0c7c8; }
+.print-preview-document .print-generation span.print-lineal { border-color: #9f686a; box-shadow: inset 0 0 0 1px #cba6a8; }
 .print-preview-document .print-generation span.print-lineage-highlight { border-color: #8f5b5d; background: #f2e2df; box-shadow: inset 0 0 0 1px #8f5b5d; }
 .print-preview-document .print-generation span.print-deceased { background: #eadcc9; color: #3f3025; }
 .print-preview-document .print-generation span.print-deceased small { color: #6c5847; }
 .print-preview-document .print-generation strong { overflow-wrap: anywhere; font-size: 6.5pt; line-height: 1.05; }
+.print-preview-document .print-map-name-row { display: flex; min-width: 0; align-items: flex-start; justify-content: space-between; gap: .025in; }
+.print-preview-document .print-map-name-row strong { min-width: 0; }
+.print-preview-document .print-bloodline-icon { display: grid; flex: 0 0 auto; width: .085in; height: .11in; color: #8f5b5d; }
+.print-preview-document .print-bloodline-icon .sf-symbol { width: 100%; height: 100%; }
 .print-preview-document .print-generation .print-name-smaller strong { font-size: 5pt; }
 .print-preview-document .print-generation .print-name-smallest strong { font-size: 3.8pt; }
 .print-preview-document .print-generation .print-name-tiniest strong { font-size: 3.1pt; }
@@ -987,11 +998,15 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
   .print-generation h4 { margin: 0 0 .035in; font: 800 7pt Helvetica, Arial, sans-serif; letter-spacing: .04em; text-transform: uppercase; }
   .print-generation > div { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .035in; }
   .print-generation span { display: grid; min-width: 0; padding: .035in .045in; border: 1px solid #bbb; font-size: 8pt; line-height: 1.15; break-inside: avoid; }
-  .print-generation span.print-lineal { border-color: #b98b8d; box-shadow: inset 0 0 0 1px #e0c7c8; }
+  .print-generation span.print-lineal { border-color: #9f686a; box-shadow: inset 0 0 0 1px #cba6a8; }
   .print-generation span.print-lineage-highlight { border-color: #8f5b5d; background: #f2e2df; box-shadow: inset 0 0 0 1px #8f5b5d; }
   .print-generation span.print-deceased { background: #eadcc9; color: #3f3025; }
   .print-generation span.print-deceased small { color: #6c5847; }
   .print-generation strong { overflow-wrap: anywhere; font-size: 6.5pt; line-height: 1.05; }
+  .print-map-name-row { display: flex; min-width: 0; align-items: flex-start; justify-content: space-between; gap: .025in; }
+  .print-map-name-row strong { min-width: 0; }
+  .print-bloodline-icon { display: grid; flex: 0 0 auto; width: .085in; height: .11in; color: #8f5b5d; }
+  .print-bloodline-icon .sf-symbol { width: 100%; height: 100%; }
   .print-generation .print-name-smaller strong { font-size: 5pt; }
   .print-generation .print-name-smallest strong { font-size: 3.8pt; }
   .print-generation .print-name-tiniest strong { font-size: 3.1pt; }
