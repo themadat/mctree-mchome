@@ -673,7 +673,7 @@
         treeFocusId: personIds.has(sourceUi.treeFocusId) ? sourceUi.treeFocusId : selectedPersonId,
         treeMode: sourceUi.treeMode === "overview" ? "overview" : "focus",
         treeNodeView: sourceUi.treeNodeView === "detailed" ? "detailed" : "condensed",
-        treeNameBasis: sourceUi.treeNameBasis === "legal" ? "legal" : "lineal",
+        treeNameBasis: ["preferred", "legal", "lineal"].includes(sourceUi.treeNameBasis) ? sourceUi.treeNameBasis : "lineal",
         treeNameLength: sourceUi.treeNameLength === "full" ? "full" : "short",
         generationDepth: Math.round(u.clamp(sourceUi.generationDepth, 1, config.controls.maxTreeDepth, 10)),
         ancestorDepth: Math.round(u.clamp(sourceUi.ancestorDepth, 0, config.controls.maxTreeDepth, sourceUi.generationDepth == null ? 10 : sourceUi.generationDepth)),
@@ -870,7 +870,8 @@
   function treeName(person, basis, length) {
     if (!person) return "Unknown person";
     const names = u.plainObject(person.names);
-    const selected = basis === "legal" ? names.current : names.birth;
+    const candidates = basis === "preferred" ? [names.preferred, names.current, names.birth] : basis === "legal" ? [names.current, names.birth] : [names.birth, names.current];
+    const selected = candidates.find(hasNameParts);
     return formatNameParts(selected, length === "full" ? "full" : "short") || displayName(person);
   }
 

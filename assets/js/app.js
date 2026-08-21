@@ -674,13 +674,19 @@
   }
 
   function profileNames(person) {
-    function group(label, kind) {
+    function fullName(kind) {
       const parts = model.nameParts(person, kind);
-      return '<article class="profile-name-group"><h4>' + u.escapeHtml(label) + '</h4><dl>' + [
-        ["Prefix", parts.prefix], ["First", parts.first], ["Middle", parts.middle], ["Last", parts.last], ["Suffix", parts.suffix]
-      ].map(function (entry) { return '<div><dt>' + entry[0] + '</dt><dd>' + u.escapeHtml(entry[1] || "UNKNOWN") + "</dd></div>"; }).join("") + "</dl></article>";
+      return [parts.prefix, parts.first, parts.middle, parts.last, parts.suffix].filter(Boolean).join(" ") || "----";
     }
-    return '<section class="profile-section names-section"><h3>Names</h3><div class="profile-name-groups">' + group("Birth Name", "birth") + group("Current Name", "current") + group("Preferred Name", "preferred") + '</div><dl class="profile-list maiden-name-row"><div><dt>Maiden Last Name</dt><dd>' + u.escapeHtml(person.names.maidenLast || "UNKNOWN") + "</dd></div></dl></section>";
+    const rows = [
+      ["Preferred (Display)", fullName("preferred")],
+      ["Legal (Current)", fullName("current")],
+      ["Lineal (Birth)", fullName("birth")],
+      ["Maiden", person.names.maidenLast || "----"]
+    ];
+    return '<section class="profile-section names-section"><h3>Names</h3><dl class="profile-list profile-names-list">' + rows.map(function (entry) {
+      return '<div><dt>' + u.escapeHtml(entry[0]) + '</dt><dd>' + u.escapeHtml(entry[1]) + "</dd></div>";
+    }).join("") + "</dl></section>";
   }
 
   function profileSource(person) {
@@ -718,6 +724,7 @@
       return;
     }
     const isHome = state().workspace.family.homePersonId === person.id;
+    const isFavorite = state().ui.favoritePersonIds.includes(person.id);
     const profileLabels = (developerReferencesEnabled() ? [person.reference] : []).concat(isHome ? ["Root Ancestor"] : []);
     const profileEyebrow = profileLabels.length ? '<span class="eyebrow">' + u.escapeHtml(profileLabels.join(" · ")) + "</span>" : "";
     const contactBlocks = [];
@@ -728,7 +735,9 @@
     };
     const relationshipActions = '<div class="relationship-actions">' + actionButton("Add", "addRelative", 'data-add-relative="' + u.escapeHtml(person.id) + '"', false) + actionButton("Connect", "connectPerson", 'data-add-relationship="' + u.escapeHtml(person.id) + '"', false) + "</div>";
     const relationships = '<section class="profile-section"><div class="relationship-section-heading"><h3>Relationships</h3>' + relationshipActions + '</div><div class="relationship-list">' + relationshipRows(person) + "</div></section>";
-    const headerActions = '<div class="profile-header-actions">' + actionButton("Delete", "deletePerson", 'data-delete-person="' + u.escapeHtml(person.id) + '"', true) + actionButton("Edit", "editPerson", 'data-edit-person="' + u.escapeHtml(person.id) + '"', false) + '<button type="button" class="icon-button profile-close" data-close-profile aria-controls="profilePanel" aria-label="Close and deselect person" title="Close and deselect person"><span data-symbol="close" aria-hidden="true"></span></button></div>';
+    const favoriteAction = (isFavorite ? "Remove " : "Add ") + model.displayName(person) + (isFavorite ? " from" : " to") + " favorites";
+    const favoriteButton = '<button type="button" class="profile-action profile-favorite-action" data-toggle-favorite="' + u.escapeHtml(person.id) + '" aria-pressed="' + String(isFavorite) + '" aria-label="' + u.escapeHtml(favoriteAction) + '" title="' + u.escapeHtml(favoriteAction) + '"><span class="profile-action-icon" data-symbol="favorite" aria-hidden="true"></span><span>Favorite</span></button>';
+    const headerActions = '<div class="profile-header-actions">' + favoriteButton + actionButton("Delete", "deletePerson", 'data-delete-person="' + u.escapeHtml(person.id) + '"', true) + actionButton("Edit", "editPerson", 'data-edit-person="' + u.escapeHtml(person.id) + '"', false) + '<button type="button" class="icon-button profile-close" data-close-profile aria-controls="profilePanel" aria-label="Close and deselect person" title="Close and deselect person"><span data-symbol="close" aria-hidden="true"></span></button></div>';
     container.innerHTML = '<article class="person-profile"><header class="profile-header"><div class="profile-title">' + profileEyebrow + '<h2>' + u.escapeHtml(model.displayName(person)) + '</h2><p>' + u.escapeHtml(family.lifespan(person)) + "</p></div>" + headerActions + '</header><dl class="profile-list identity-list">' + formatEvent("Born", person, "birth") + formatEvent("Died", person, "death") + ageDetail(person, false) + livingStatusDetail(person) + maritalStatusDetail(person, family.relationGroups(person.id, state()).partners) + "</dl>" + profileNames(person) + profileLineage(person) + relationships + contactBlocks.join("") + (person.notes ? '<section class="profile-section"><h3>Notes</h3><p class="preserve-lines">' + u.escapeHtml(person.notes) + "</p></section>" : "") + profileSource(person) + "</article>";
     icons.mount(container);
   }
@@ -1118,7 +1127,13 @@
     const personTabDisabled = state().ui.selectedPersonId ? "" : " disabled";
     const directoryHeader = '<header class="directory-module-bar"><label class="directory-search-field"><span class="visually-hidden">Search family directory</span><input id="directorySearch" type="search" aria-label="Search family directory" placeholder="Search Directory…" value="' + u.escapeHtml(state().ui.directorySearch) + '"><span id="directoryCount" class="count-pill" role="status" aria-live="polite"></span></label><button type="button" class="icon-button" data-toggle-pane="directory" aria-controls="directoryPanel" aria-expanded="true" aria-label="Close directory" title="Close directory"><span data-symbol="close" aria-hidden="true"></span></button></header>';
     const directoryControls = '<div class="directory-controls"><div class="directory-filter-row"><div class="field directory-filter-control"><span id="directoryFilterLabel">Filter By</span><details class="directory-filter-menu"><summary aria-labelledby="directoryFilterLabel directoryFilterSummary"><span id="directoryFilterSummary">' + u.escapeHtml(directoryFilterSummary()) + '</span></summary><div class="directory-filter-options" role="group" aria-label="Filter directory by">' + directoryFilterOptionsHtml() + '</div></details></div><label class="field"><span>Sort By</span><select id="directorySort"><option value="first">First name</option><option value="last">Last name</option></select></label></div></div>';
-    const treeNameControls = '<div class="tree-name-controls" role="group" aria-label="Tree name display"><div class="tree-name-setting"><span>Source</span><div class="segmented" aria-label="Tree name source"><button type="button" data-tree-name-basis="lineal" aria-pressed="' + String(state().ui.treeNameBasis === "lineal") + '">Lineal (Birth)</button><button type="button" data-tree-name-basis="legal" aria-pressed="' + String(state().ui.treeNameBasis === "legal") + '">Legal</button></div></div><div class="tree-name-setting"><span>Length</span><div class="segmented" aria-label="Tree name length"><button type="button" data-tree-name-length="short" aria-pressed="' + String(state().ui.treeNameLength === "short") + '">Short</button><button type="button" data-tree-name-length="full" aria-pressed="' + String(state().ui.treeNameLength === "full") + '">Full</button></div></div></div>';
+    const treeNameOption = function (basis, symbol, label, detail) {
+      return '<button type="button" class="tree-name-option" data-tree-name-basis="' + basis + '" aria-pressed="' + String(state().ui.treeNameBasis === basis) + '"><span class="tree-name-option-icon" data-symbol="' + symbol + '" aria-hidden="true"></span><span>' + label + (detail ? "<small>" + detail + "</small>" : "") + "</span></button>";
+    };
+    const treeLengthOption = function (length, symbol, label) {
+      return '<button type="button" class="tree-name-option" data-tree-name-length="' + length + '" aria-pressed="' + String(state().ui.treeNameLength === length) + '"><span class="tree-name-option-icon" data-symbol="' + symbol + '" aria-hidden="true"></span><span>' + label + "</span></button>";
+    };
+    const treeNameControls = '<div class="tree-name-controls" role="group" aria-label="Tree name display"><div class="tree-name-setting tree-name-source"><span>Source Name</span><div class="segmented" aria-label="Tree name source">' + treeNameOption("preferred", "preferredName", "Preferred", "Display") + treeNameOption("legal", "legalName", "Legal", "Current") + treeNameOption("lineal", "linealName", "Lineal", "Birth") + '</div></div><div class="tree-name-setting tree-name-length"><span>Length</span><div class="segmented" aria-label="Tree name length">' + treeLengthOption("short", "shortName", "Short") + treeLengthOption("full", "fullName", "Full") + "</div></div></div>";
     $("#mainContent").innerHTML = '<section class="family-workspace" aria-label="Family workspace"><nav class="mobile-workspace-tabs segmented" aria-label="Workspace views"><button type="button" data-mobile-view="directory" aria-pressed="' + String(state().ui.mobileView === "directory") + '">Directory</button><button type="button" data-mobile-view="tree" aria-pressed="' + String(state().ui.mobileView === "tree") + '">Family Tree</button><button type="button" data-mobile-view="profile" aria-pressed="' + String(state().ui.mobileView === "profile") + '"' + personTabDisabled + '>Person</button></nav><div class="family-workspace-grid" data-mobile-view="' + u.escapeHtml(state().ui.mobileView) + '" data-directory-collapsed="' + String(directoryCollapsed) + '" data-profile-collapsed="' + String(profileCollapsed) + '"><aside id="directoryPanel" class="directory-panel workspace-card' + (directoryCollapsed ? " is-collapsed" : "") + '" aria-label="Family directory">' + directoryHeader + directoryControls + '<div class="directory-body"><div id="directoryList" class="directory-list"></div><nav id="directoryAlphaRail" class="directory-alpha-rail" aria-label="Jump to directory letter"></nav></div></aside><section class="tree-panel workspace-card" aria-label="Family Tree"><header class="tree-toolbar"><div class="tree-view-controls"><div class="segmented" aria-label="Tree mode"><button type="button" data-tree-mode="focus" aria-pressed="' + String(state().ui.treeMode === "focus") + '"' + lineageDisabled + '>Focus</button><button type="button" data-tree-mode="overview" aria-pressed="' + String(state().ui.treeMode === "overview") + '">Overview</button></div><div class="segmented" aria-label="Person card detail"><button type="button" data-tree-node-view="condensed" aria-pressed="' + String(state().ui.treeNodeView === "condensed") + '">Condensed</button><button type="button" data-tree-node-view="detailed" aria-pressed="' + String(state().ui.treeNodeView === "detailed") + '">Detailed</button></div><label class="depth-control"><span>Ancestors</span><input id="ancestorDepth" type="number" min="0" max="' + config.controls.maxTreeDepth + '" step="1" value="' + state().ui.ancestorDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><label class="depth-control"><span>Descendants</span><input id="descendantDepth" type="number" min="0" max="' + config.controls.maxTreeDepth + '" step="1" value="' + state().ui.descendantDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><div class="zoom-controls" role="group" aria-label="Tree zoom controls"><button type="button" class="zoom-action" data-zoom="out" aria-label="Zoom out" title="Zoom out"><span class="zoom-action-icon" data-symbol="zoomOut" aria-hidden="true"></span><span>Out</span></button><label class="zoom-value-control"><span>Zoom %</span><input id="zoomValue" type="number" min="1" max="250" step="1" value="100" inputmode="numeric"></label><button type="button" class="zoom-action" data-zoom="in" aria-label="Zoom in" title="Zoom in"><span class="zoom-action-icon" data-symbol="zoomIn" aria-hidden="true"></span><span>In</span></button><button type="button" class="zoom-action" data-fit-tree aria-label="Fit tree" title="Fit tree"><span class="zoom-action-icon" data-symbol="fit" aria-hidden="true"></span><span>Fit</span></button><span id="zoomStatus" class="visually-hidden" aria-live="polite">100% zoom</span></div></div></header><div class="tree-canvas"><svg id="familyTreeSvg" role="group" aria-label="Interactive Family Tree. Scroll horizontally or vertically, drag to pan, use the zoom controls, and select a person to focus." tabindex="0"></svg></div>' + treeKeyHtml() + '</section><aside id="profilePanel" class="profile-panel workspace-card' + (profileCollapsed ? " is-collapsed" : "") + '" aria-label="Selected person profile"><div id="profilePanelContent" class="profile-panel-content"></div></aside></div></section>';
     const workspaceGrid = $(".family-workspace-grid", $("#mainContent"));
     workspaceGrid.style.setProperty("--directory-panel-width", state().ui.panelSizingCustomized ? state().ui.directoryPanelWidth + "px" : "20%");
@@ -1742,9 +1757,10 @@
     icons.mount(container);
   }
 
-  function toggleFavoritePerson(id) {
+  function toggleFavoritePerson(id, trigger) {
     const person = state().workspace.people.find(function (item) { return item.id === id; });
     if (!person) return;
+    const fromProfile = Boolean(trigger && trigger.closest("#profilePanel"));
     const wasFavorite = state().ui.favoritePersonIds.includes(id);
     storage.mutate(function (next) {
       const favorites = new Set(next.ui.favoritePersonIds);
@@ -1753,8 +1769,9 @@
     }, { reason: wasFavorite ? "favorite-remove" : "favorite-add" });
     renderHeader();
     renderGlobalSearchResults();
+    if (state().ui.selectedPersonId === id) renderProfile();
     requestAnimationFrame(function () {
-      const replacement = $("[data-toggle-favorite='" + CSS.escape(id) + "']", $("#globalSearchResults"));
+      const replacement = $("[data-toggle-favorite='" + CSS.escape(id) + "']", fromProfile ? $("#profilePanel") : $("#globalSearchResults"));
       (replacement || $("#globalSearch")).focus();
     });
   }
@@ -1976,6 +1993,11 @@
     const target = event.target;
     const openDirectoryFilter = $(".directory-filter-menu[open]");
     if (openDirectoryFilter && !target.closest(".directory-filter-menu")) openDirectoryFilter.removeAttribute("open");
+    const favoriteButton = target.closest("[data-toggle-favorite]");
+    if (favoriteButton) {
+      toggleFavoritePerson(favoriteButton.dataset.toggleFavorite, favoriteButton);
+      return;
+    }
     const nonLinealToggle = target.closest("[data-toggle-non-lineal]");
     if (nonLinealToggle) {
       storage.mutate(function (next) { next.ui.showInferredParentLines = !next.ui.showInferredParentLines; }, { touch: false, reason: "tree-parent-lines" });
@@ -2261,7 +2283,7 @@
     $("#globalSearch").addEventListener("input", function (event) { favoritesPreviewOpen = false; storage.mutate(function (next) { next.ui.search = u.cleanLine(event.target.value, 200); }, { touch: false, reason: "global-search" }); renderGlobalSearchResults(); });
     $("#globalSearch").addEventListener("focus", renderGlobalSearchResults);
     $("#globalSearch").addEventListener("keydown", function (event) { const results = $$(".global-search-result-main", $("#globalSearchResults")); if (event.key === "ArrowDown" && results.length) { event.preventDefault(); results[0].focus(); } if (event.key === "Escape") { favoritesPreviewOpen = false; $("#globalSearchResults").hidden = true; event.target.setAttribute("aria-expanded", "false"); $("#favoritesButton").setAttribute("aria-expanded", "false"); event.target.select(); } });
-    $("#globalSearchResults").addEventListener("click", function (event) { const favorite = event.target.closest("[data-toggle-favorite]"); if (favorite) { toggleFavoritePerson(favorite.dataset.toggleFavorite); return; } const result = event.target.closest("[data-search-type]"); if (result) activateGlobalSearchResult(result.dataset.searchType, result.dataset.searchId); });
+    $("#globalSearchResults").addEventListener("click", function (event) { const favorite = event.target.closest("[data-toggle-favorite]"); if (favorite) { toggleFavoritePerson(favorite.dataset.toggleFavorite, favorite); return; } const result = event.target.closest("[data-search-type]"); if (result) activateGlobalSearchResult(result.dataset.searchType, result.dataset.searchId); });
     $("#globalSearchResults").addEventListener("keydown", function (event) { const button = event.target.closest(".global-search-result-main"); const buttons = $$(".global-search-result-main", event.currentTarget); if (button && (event.key === "ArrowDown" || event.key === "ArrowUp")) { event.preventDefault(); const index = buttons.indexOf(button); buttons[(index + (event.key === "ArrowDown" ? 1 : -1) + buttons.length) % buttons.length]?.focus(); } else if (event.key === "Escape") { event.preventDefault(); favoritesPreviewOpen = false; $("#globalSearch").focus(); $("#globalSearchResults").hidden = true; $("#globalSearch").setAttribute("aria-expanded", "false"); $("#favoritesButton").setAttribute("aria-expanded", "false"); } });
     document.addEventListener("focusin", function (event) { if (!event.target.closest(".global-search-wrap") && !event.target.closest("#favoritesButton")) { favoritesPreviewOpen = false; $("#globalSearchResults").hidden = true; $("#globalSearch").setAttribute("aria-expanded", "false"); $("#favoritesButton").setAttribute("aria-expanded", "false"); } });
     bindSupportEvents();
