@@ -4,7 +4,7 @@ McFamily is a private, local-first family atlas that runs as a static GitHub Pag
 
 There is no backend, account, cloud database, or runtime dependency. Family data stays in browser storage and moves only through an explicit CSV import or export. The published repository must never contain a real family CSV or private family data.
 
-Current version: `0.0.1.49` (`major.minor.patch.build`).
+Current version: `0.0.1.50` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -17,7 +17,8 @@ Current version: `0.0.1.49` (`major.minor.patch.build`).
 - Can hide `99`-lineage people from Full Tree with a persisted `?? Lineal` control whose outlined symbol remains fixed; enabling it centers the revealed people. The control is hidden in Lineage view, while those people remain available in directory and search. Printable atlases omit unresolved `99`/`??` lineage branches.
 - Records out-of-wedlock partnerships as never-married relationships with no start date, sequenced by relationship order.
 - Provides a header-toggled directory with title-bar search and result count, visible Filter By and Sort By controls, combinable status and Lineal/Non-Lineal checkbox filters, A–Z quick jumps, lifespan and lineage context, and broad search across names, contact details, places, heritage, and notes.
-- Lets people be starred directly in search, pins favorites above other matches, and opens favorites as a one-time dropdown without changing or highlighting the ordinary search scope.
+- Lets people be starred directly in search or from the selected-person panel, pins favorites above other matches, and opens favorites as a one-time dropdown without changing or highlighting the ordinary search scope.
+- Shows Preferred (Display), Legal (Current), Lineal (Birth), and Maiden names as four compact profile rows; the Family Tree can use any of the first three as its name source and can show Short or Full names.
 - Keeps local save/backup status in the top toolbar and provides D, F, K, X, and R shortcuts for Directory, Favorites, the tree Key, What's New dismissal, and update reload.
 - Supports partial/fuzzy matches that return the tree to Lineage, collapsible side panels, compact 20/50/30 default desktop splits with persistent resizing, and Summary tree cards that balance names with four or more parts across three fitted lines without widening the card.
 - Keeps portrait placeholders and internal person references out of the ordinary workspace; Developer Mode reveals references and a left-side generation bubble scale for visual troubleshooting.

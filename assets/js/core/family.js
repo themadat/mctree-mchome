@@ -437,7 +437,10 @@
 
   function treeNameLines(person, options) {
     const settings = typeof options === "boolean" ? { length: options ? "full" : "short" } : Object.assign({ basis: "lineal", length: "short" }, options || {});
-    const nameParts = model.nameParts(person, settings.basis === "legal" ? "current" : "birth");
+    const kinds = settings.basis === "preferred" ? ["preferred", "current", "birth"] : settings.basis === "legal" ? ["current", "birth"] : ["birth", "current"];
+    const nameParts = kinds.map(function (kind) { return model.nameParts(person, kind); }).find(function (parts) {
+      return [parts.prefix, parts.first, parts.middle, parts.last, parts.suffix].some(Boolean);
+    }) || model.nameParts(person, "birth");
     const shortLines = [nameParts.first, [nameParts.last, nameParts.suffix].filter(Boolean).join(" ")].filter(Boolean);
     if (settings.length !== "full" && shortLines.length) return shortLines;
     const fullName = model.treeName(person, settings.basis, "full");
