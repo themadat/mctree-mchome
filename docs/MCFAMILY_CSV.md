@@ -7,13 +7,15 @@ McFamily accepts two private CSV shapes. Both contain sensitive plaintext and mu
 The initial source is selected through the first-launch file picker. McFamily recognizes it from these base headers:
 
 - `record_id`, `lineage_id`, `parent_consanguinity_person_id`, and `parent_affinal_person_id`
-- `person_first_names` and `person_last_name`
+- `person_first_names`, `person_last_name`, `person_name_sort`, and `retain_maiden_name`
 - `person_date_birth_value`, `person_date_birth_descriptor`, `person_date_death_value`, and `person_date_death_descriptor`
 - `partner_relationships_json`
 
 Every header above is required. McFamily reads only this current schema: earlier `descendant_*` date columns, `spouse_#_*` slots, `lineage_parent_id`, `parent_lineage_id`, `lineage_level_##_name`, `root_ancestor_##_name`, and `legacy_page_reference` sources are no longer importable, and a McLineage CSV missing any current column is rejected with the missing column names.
 
-Current McLineage rows use stable `P` record references such as `P001`, and every row represents exactly one person. `record_id` is the first column. `lineage_id` is the complete lineage path from the oldest recorded ancestor to that person, with every child position stored as a two-digit dotted segment. For example, P044 is `01`, P228 is `01.01`, and P501 is `01.01.01.03.02.02.04.02.01.01`. `parent_consanguinity_person_id` directly references the bloodline parent row's `record_id`; `parent_affinal_person_id` optionally references the recorded partner row that is also a parent. Partner-only rows intentionally leave `source_row_number`, `lineage_id`, and both parent fields blank. `person_name_sort` follows `person_last_name`, and `source_row_number` is the penultimate source column immediately before `data_quality_notes`. Former legacy page references are prefixed to `data_quality_notes` and are no longer a separate column.
+Current McLineage rows use stable `P` record references such as `P001`, and every row represents exactly one person. `record_id` is the first column. `lineage_id` is the complete lineage path from the oldest recorded ancestor to that person, with every child position stored as a two-digit dotted segment. For example, P044 is `01`, P228 is `01.01`, and P501 is `01.01.01.03.02.02.04.02.01.01`. `parent_consanguinity_person_id` directly references the bloodline parent row's `record_id`; `parent_affinal_person_id` optionally references the recorded partner row that is also a parent. Partner-only rows intentionally leave `source_row_number`, `lineage_id`, and both parent fields blank. `person_last_name` is the Birth Last name; `person_name_sort` is the Current/Legal Last name, including any recognized suffix. When `retain_maiden_name` is true, Birth and Current Last remain the same. `person_first_names` is split at its first word into First and Middle, while known prefixes and suffixes move into their dedicated name parts. `source_row_number` is the penultimate source column immediately before `data_quality_notes`. Former legacy page references are prefixed to `data_quality_notes` and are no longer a separate column.
+
+Every person stores three five-part names: Birth, Current, and Preferred. Each has Prefix, First, Middle, Last, and Suffix, and each part may itself contain multiple words. Maiden Last Name is stored separately when Current Last differs from Birth Last. McFamily displays Preferred first, then Current, then Birth. A missing required Birth or Current First/Last is written as `UNKNOWN`; optional name parts remain blank.
 
 The compatibility lineage value `99` remains stored in CSV for unplaced Lineal records. McFamily displays that segment as `??`; the Family Tree hides those records by default and exposes them with Show ?? Lineal.
 
@@ -38,13 +40,13 @@ McFamily does not overwrite or rewrite the selected source file. After edits, ex
 Native exports use UTF-8, RFC 4180-style quoting, and this fixed header row:
 
 ```text
-mcfamily_csv_version,record_type,id,person_id,family_title,initialized_at,home_person_id,created_at,updated_at,order,given_name,middle_name,family_name,birth_name,preferred_name,suffix,display_name,living_status,gender,pronouns,birth_date,birth_date_qualifier,birth_place,death_date,death_date_qualifier,death_place,heritage_note,person_notes,address_label,address_current,address_line_1,address_line_2,city,region,postal_code,country,address_start_date,address_start_qualifier,address_end_date,address_end_qualifier,address_notes,contact_label,contact_value,relationship_type,parent_id,child_id,parent_kind,person_1_id,person_2_id,partner_status,relationship_start_date,relationship_start_qualifier,relationship_end_date,relationship_end_qualifier,relationship_place,relationship_notes,family_notes,source_json,settings_json
+mcfamily_csv_version,record_type,id,person_id,family_title,initialized_at,home_person_id,created_at,updated_at,order,birth_prefix,birth_first,birth_middle,birth_last,birth_suffix,current_prefix,current_first,current_middle,current_last,current_suffix,preferred_prefix,preferred_first,preferred_middle,preferred_last,preferred_suffix,maiden_last_name,living_status,gender,pronouns,birth_date,birth_date_qualifier,birth_place,death_date,death_date_qualifier,death_place,heritage_note,person_notes,address_label,address_current,address_line_1,address_line_2,city,region,postal_code,country,address_start_date,address_start_qualifier,address_end_date,address_end_qualifier,address_notes,contact_label,contact_value,relationship_type,parent_id,child_id,parent_kind,person_1_id,person_2_id,partner_status,relationship_start_date,relationship_start_qualifier,relationship_end_date,relationship_end_qualifier,relationship_place,relationship_notes,family_notes,source_json,settings_json
 ```
 
-`mcfamily_csv_version` is `mcfamily-csv-v1` on every row. `record_type` determines which columns are used:
+`mcfamily_csv_version` is `mcfamily-csv-v2` on every row. `record_type` determines which columns are used:
 
 - `family`: family title, initialization time, and home person
-- `person`: one complete structured profile
+- `person`: one complete structured profile, including all 16 dedicated naming columns
 - `address`, `phone`, `email`: repeatable contact entries linked by person `id`
 - `relationship`: a parent-child or partner record
 - `note`: the single Family Notes document

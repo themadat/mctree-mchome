@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.47",
-      buildId: "0.0.1.47",
+      version: "0.0.1.48",
+      buildId: "0.0.1.48",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -27,11 +27,11 @@
       }
     },
 
-    schemaVersion: 8,
-    csvFormat: "mcfamily-csv-v1",
+    schemaVersion: 9,
+    csvFormat: "mcfamily-csv-v2",
     storage: {
-      stateKey: "mcfamily.state.v8",
-      legacyKeys: ["mcfamily.state.v7", "mcfamily.state.v6", "mcfamily.state.v5", "appTemplate.state.v4", "appTemplate.state.v3", "localWorkspace.state.v3", "localWorkspace.state.v2", "localWorkspace.state.v1"],
+      stateKey: "mcfamily.state.v9",
+      legacyKeys: ["mcfamily.state.v8", "mcfamily.state.v7", "mcfamily.state.v6", "mcfamily.state.v5", "appTemplate.state.v4", "appTemplate.state.v3", "localWorkspace.state.v3", "localWorkspace.state.v2", "localWorkspace.state.v1"],
       recoveryKey: "mcfamily.recovery.v1"
     },
 
@@ -113,6 +113,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.48",
+        date: "2026-08-21T15:31:12.000Z",
+        title: "Structured family names",
+        summary: "Birth, legal, and preferred names now retain distinct parts while the Family Tree can switch how names are shown.",
+        features: ["Structured Birth, Current, and Preferred names with Prefix, First, Middle, Last, and Suffix parts", "Family Tree controls for Lineal (Birth) or Legal names and Short or Full presentation"],
+        improvements: ["Selected-person profiles place a complete Names section before Lineage", "Native private CSV v2 stores every name part plus Maiden Last Name in dedicated columns", "Display names consistently prefer Preferred, then Current, then Birth names"],
+        fixes: ["Legacy first-name strings split into First and Middle parts while recognized prefixes and suffixes move into their own fields", "Retain-maiden records keep matching Birth and Current last names during migration"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.47",
         date: "2026-08-21T14:57:27.000Z",

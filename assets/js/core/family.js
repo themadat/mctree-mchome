@@ -435,13 +435,13 @@
     return hidden;
   }
 
-  function treeNameLines(person, detailed) {
-    const names = person && person.names || {};
-    const fullName = model.displayName(person);
-    const compactName = [names.preferred || names.given, names.family || names.birth].filter(Boolean).join(" ") || fullName;
-    const parts = String(detailed ? fullName : compactName).trim().split(/\s+/).filter(Boolean).map(function (part) {
-      return part.length > 14 ? part.slice(0, 13) + "…" : part;
-    });
+  function treeNameLines(person, options) {
+    const settings = typeof options === "boolean" ? { length: options ? "full" : "short" } : Object.assign({ basis: "lineal", length: "short" }, options || {});
+    const nameParts = model.nameParts(person, settings.basis === "legal" ? "current" : "birth");
+    const shortLines = [nameParts.first, [nameParts.last, nameParts.suffix].filter(Boolean).join(" ")].filter(Boolean);
+    if (settings.length !== "full" && shortLines.length) return shortLines;
+    const fullName = model.treeName(person, settings.basis, "full");
+    const parts = String(fullName).trim().split(/\s+/).filter(Boolean);
     if (parts.length <= 3) return parts;
     let best = null;
     for (let firstBreak = 1; firstBreak < parts.length - 1; firstBreak += 1) {
@@ -458,7 +458,7 @@
   }
 
   function layout(state, options) {
-    const settings = Object.assign({ mode: "focus", focusId: "", ancestorDepth: 2, descendantDepth: 2, nodeView: "condensed", hideUnplacedLineage: false }, options || {});
+    const settings = Object.assign({ mode: "focus", focusId: "", ancestorDepth: 2, descendantDepth: 2, nodeView: "condensed", nameBasis: "lineal", nameLength: "short", hideUnplacedLineage: false }, options || {});
     if (options && options.depth != null) {
       if (options.ancestorDepth == null) settings.ancestorDepth = options.depth;
       if (options.descendantDepth == null) settings.descendantDepth = options.depth;
@@ -518,7 +518,7 @@
     const verticalGap = 60;
     const rowHeights = new Map();
     sortedLevels.forEach(function (level) {
-      const lineCount = Math.max.apply(null, groups.get(level).map(function (person) { return treeNameLines(person, detailed).length; }));
+      const lineCount = Math.max.apply(null, groups.get(level).map(function (person) { return treeNameLines(person, { basis: settings.nameBasis, length: settings.nameLength }).length; }));
       rowHeights.set(level, (detailed ? 45 : 31) + Math.max(1, lineCount) * 14);
     });
     const rowTrackHeights = new Map();
@@ -577,7 +577,7 @@
       return { relationship: relationship, from: nodeById.get(aId), to: nodeById.get(bId), current: relationship.type === "partner" && currentPartnerRelationshipIds.has(relationship.id) };
     }).filter(function (edge) { return edge.from && edge.to; });
     const height = rowY - verticalGap + 40;
-    return { nodes: nodes, edges: edges, width: contentWidth, height: Math.max(360, height), bounds: { x: 0, y: 0, width: contentWidth, height: Math.max(360, height) }, peopleById: peopleById, nodeView: detailed ? "detailed" : "condensed", generationMetrics: generationMetrics };
+    return { nodes: nodes, edges: edges, width: contentWidth, height: Math.max(360, height), bounds: { x: 0, y: 0, width: contentWidth, height: Math.max(360, height) }, peopleById: peopleById, nodeView: detailed ? "detailed" : "condensed", nameBasis: settings.nameBasis, nameLength: settings.nameLength, generationMetrics: generationMetrics };
   }
 
   function validateRelationshipDraft(draft, state, ignoreId) {

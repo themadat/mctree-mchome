@@ -7,6 +7,127 @@
   const PARENT_KINDS = new Set(config.parentKinds.map(function (item) { return item.id; }));
   const PARTNER_STATUSES = new Set(config.partnerStatuses.map(function (item) { return item.id; }));
   const DATE_QUALIFIERS = new Set(["exact", "about", "before", "after"]);
+  const NAME_PART_KEYS = ["prefix", "first", "middle", "last", "suffix"];
+  const NAME_PREFIXES = new Map([
+    ["rev", "Rev."], ["reverend", "Rev."], ["dr", "Dr."], ["mr", "Mr."], ["mrs", "Mrs."], ["ms", "Ms."], ["miss", "Miss"],
+    ["fr", "Fr."], ["father", "Father"], ["hon", "Hon."], ["prof", "Prof."], ["rabbi", "Rabbi"], ["pastor", "Pastor"],
+    ["capt", "Capt."], ["col", "Col."], ["lt", "Lt."], ["gen", "Gen."], ["judge", "Judge"], ["st", "St."]
+  ]);
+  const NAME_SUFFIXES = new Map([
+    ["jr", "Jr."], ["sr", "Sr."], ["ii", "II"], ["iii", "III"], ["esq", "Esq."], ["phd", "PhD"], ["md", "MD"]
+  ]);
+
+  function nameToken(value) {
+    return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  }
+
+  function blankNameParts() {
+    return { prefix: "", first: "", middle: "", last: "", suffix: "" };
+  }
+
+  function normalizeNameParts(input) {
+    const source = u.plainObject(input);
+    const result = blankNameParts();
+    NAME_PART_KEYS.forEach(function (key) { result[key] = u.cleanLine(source[key], key === "suffix" ? 40 : 120); });
+    return result;
+  }
+
+  function splitFirstMiddle(value) {
+    const words = u.cleanLine(value, 240).split(/\s+/).filter(Boolean);
+    let prefix = "";
+    if (words.length && NAME_PREFIXES.has(nameToken(words[0]))) prefix = NAME_PREFIXES.get(nameToken(words.shift()));
+    return { prefix: prefix, first: words.shift() || "", middle: words.join(" ") };
+  }
+
+  function splitLastSuffix(value, explicitSuffix) {
+    const words = u.cleanLine(value, 240).split(/\s+/).filter(Boolean);
+    let suffix = u.cleanLine(explicitSuffix, 40);
+    if (!suffix && words.length && NAME_SUFFIXES.has(nameToken(words[words.length - 1]))) suffix = NAME_SUFFIXES.get(nameToken(words.pop()));
+    return { last: words.join(" ").replace(/,\s*$/, ""), suffix: suffix };
+  }
+
+  function parseFullName(value) {
+    const words = u.cleanLine(value, 400).split(/\s+/).filter(Boolean);
+    if (!words.length) return blankNameParts();
+    let prefix = "";
+    let suffix = "";
+    if (NAME_PREFIXES.has(nameToken(words[0]))) prefix = NAME_PREFIXES.get(nameToken(words.shift()));
+    if (words.length && NAME_SUFFIXES.has(nameToken(words[words.length - 1]))) suffix = NAME_SUFFIXES.get(nameToken(words.pop()));
+    if (!words.length) return { prefix: prefix, first: "", middle: "", last: "", suffix: suffix };
+    if (words.length === 1) return { prefix: prefix, first: words[0], middle: "", last: "", suffix: suffix };
+    return { prefix: prefix, first: words[0], middle: words.slice(1, -1).join(" "), last: words[words.length - 1], suffix: suffix };
+  }
+
+  function legacyStructuredNames(person) {
+    const source = u.plainObject(person);
+    const names = u.plainObject(source.names);
+    const sourceFields = u.plainObject(source.source && source.source.fields);
+    const given = u.cleanLine(names.given || source.givenName, 240);
+    const explicitMiddle = u.cleanLine(names.middle || source.middleName, 120);
+    const firstParts = splitFirstMiddle(given);
+    if (explicitMiddle) firstParts.middle = explicitMiddle;
+    const family = u.cleanLine(names.family || source.familyName || source.surname, 240);
+    const birthFamily = u.cleanLine((typeof names.birth === "string" ? names.birth : "") || source.birthSurname || source.maidenName || family, 240);
+    const birthLast = splitLastSuffix(birthFamily, names.suffix || source.suffix);
+    const sortValue = u.cleanLine(sourceFields.person_name_sort || sourceFields.legacy_sort_name, 400);
+    const sortPieces = sortValue.split(",").map(function (value) { return value.trim(); }).filter(Boolean);
+    const commaSuffix = sortPieces.length === 2 && NAME_SUFFIXES.has(nameToken(sortPieces[1]));
+    const sortedGiven = sortPieces.length > 1 && !commaSuffix ? splitFirstMiddle(sortPieces.slice(1).join(" ")) : null;
+    const retainMaiden = /^(?:true|yes|1)$/i.test(u.cleanLine(sourceFields.retain_maiden_name || sourceFields.maintain_maiden_name, 20));
+    const currentLast = splitLastSuffix((sortPieces[0] || family || birthLast.last) + (commaSuffix ? " " + sortPieces[1] : ""), names.suffix || source.suffix);
+    const birth = {
+      prefix: firstParts.prefix,
+      first: firstParts.first || "UNKNOWN",
+      middle: firstParts.middle,
+      last: birthLast.last || "UNKNOWN",
+      suffix: birthLast.suffix
+    };
+    const current = {
+      prefix: sortedGiven && sortedGiven.prefix || birth.prefix,
+      first: sortedGiven && sortedGiven.first || birth.first,
+      middle: sortedGiven && sortedGiven.middle || birth.middle,
+      last: retainMaiden ? birth.last : (currentLast.last || birth.last),
+      suffix: currentLast.suffix || birth.suffix
+    };
+    const legacyDisplay = u.cleanLine(names.display || source.displayName || source.name, 400);
+    const legacyPreferred = u.cleanLine(names.preferred || source.preferredName, 240);
+    const preferred = legacyDisplay ? parseFullName(legacyDisplay) : Object.assign(blankNameParts(), { first: legacyPreferred });
+    return {
+      birth: birth,
+      current: current,
+      preferred: preferred,
+      maidenLast: !["UNKNOWN", ""].includes(birth.last) && !["UNKNOWN", ""].includes(current.last) && birth.last.toLowerCase() !== current.last.toLowerCase() ? birth.last : ""
+    };
+  }
+
+  function normalizePersonNames(person) {
+    const source = u.plainObject(person);
+    const names = u.plainObject(source.names);
+    if (!names.birth || typeof names.birth !== "object" || Array.isArray(names.birth)) return legacyStructuredNames(source);
+    const birth = normalizeNameParts(names.birth);
+    const current = normalizeNameParts(names.current);
+    birth.first = birth.first || "UNKNOWN";
+    birth.last = birth.last || "UNKNOWN";
+    current.first = current.first || birth.first;
+    current.last = current.last || birth.last;
+    return {
+      birth: birth,
+      current: current,
+      preferred: normalizeNameParts(names.preferred),
+      maidenLast: u.cleanLine(names.maidenLast || names.maiden_last_name || source.maidenLastName, 120)
+    };
+  }
+
+  function hasNameParts(parts) {
+    const name = normalizeNameParts(parts);
+    return NAME_PART_KEYS.some(function (key) { return Boolean(name[key]); });
+  }
+
+  function formatNameParts(parts, length) {
+    const name = normalizeNameParts(parts);
+    const keys = length === "short" ? ["first", "last", "suffix"] : NAME_PART_KEYS;
+    return keys.map(function (key) { return name[key]; }).filter(Boolean).join(" ");
+  }
 
   function blankDocument(now) {
     return { id: "app-notes", title: "Notes", html: "", order: 0, createdAt: now, updatedAt: now };
@@ -63,6 +184,8 @@
         treeFocusId: "",
         treeMode: "focus",
         treeNodeView: "condensed",
+        treeNameBasis: "lineal",
+        treeNameLength: "short",
         generationDepth: 10,
         ancestorDepth: 10,
         descendantDepth: 10,
@@ -212,7 +335,16 @@
     return source;
   }
 
-  const migrations = { 1: migrate1to2, 2: migrate2to3, 3: migrate3to4, 4: migrate4to5, 5: migrate5to6, 6: migrate6to7, 7: migrate7to8 };
+  function migrate8to9(input) {
+    const source = u.plainObject(input);
+    const workspace = u.plainObject(source.workspace);
+    source.schemaVersion = 9;
+    if (Array.isArray(workspace.people)) workspace.people.forEach(function (person) { person.names = legacyStructuredNames(person); });
+    source.ui = Object.assign({ treeNameBasis: "lineal", treeNameLength: "short" }, u.plainObject(source.ui));
+    return source;
+  }
+
+  const migrations = { 1: migrate1to2, 2: migrate2to3, 3: migrate3to4, 4: migrate4to5, 5: migrate5to6, 6: migrate6to7, 7: migrate7to8, 8: migrate8to9 };
 
   function unwrapInput(input) {
     const source = u.plainObject(input);
@@ -309,7 +441,6 @@
 
   function normalizePerson(input, index, usedIds, now) {
     const source = u.plainObject(input);
-    const sourceNames = u.plainObject(source.names);
     let id = cleanId(source.id, "person");
     if (usedIds.has(id)) id = u.uid("person");
     usedIds.add(id);
@@ -318,15 +449,7 @@
     return {
       id: id,
       reference: "",
-      names: {
-        given: u.cleanLine(sourceNames.given || source.givenName, 100),
-        middle: u.cleanLine(sourceNames.middle || source.middleName, 120),
-        family: u.cleanLine(sourceNames.family || source.familyName || source.surname, 120),
-        birth: u.cleanLine(sourceNames.birth || source.birthSurname || source.maidenName, 120),
-        preferred: u.cleanLine(sourceNames.preferred || source.preferredName, 100),
-        suffix: u.cleanLine(sourceNames.suffix || source.suffix, 40),
-        display: u.cleanLine(sourceNames.display || source.displayName || source.name, 200)
-      },
+      names: normalizePersonNames(source),
       livingStatus: ["living", "deceased", "unknown"].includes(source.livingStatus) ? source.livingStatus : "unknown",
       gender: u.cleanLine(source.gender, 80),
       pronouns: u.cleanLine(source.pronouns, 80),
@@ -550,6 +673,8 @@
         treeFocusId: personIds.has(sourceUi.treeFocusId) ? sourceUi.treeFocusId : selectedPersonId,
         treeMode: sourceUi.treeMode === "overview" ? "overview" : "focus",
         treeNodeView: sourceUi.treeNodeView === "detailed" ? "detailed" : "condensed",
+        treeNameBasis: sourceUi.treeNameBasis === "legal" ? "legal" : "lineal",
+        treeNameLength: sourceUi.treeNameLength === "full" ? "full" : "short",
         generationDepth: Math.round(u.clamp(sourceUi.generationDepth, 1, config.controls.maxTreeDepth, 10)),
         ancestorDepth: Math.round(u.clamp(sourceUi.ancestorDepth, 0, config.controls.maxTreeDepth, sourceUi.generationDepth == null ? 10 : sourceUi.generationDepth)),
         descendantDepth: Math.round(u.clamp(sourceUi.descendantDepth, 0, config.controls.maxTreeDepth, sourceUi.generationDepth == null ? 10 : sourceUi.generationDepth)),
@@ -697,6 +822,8 @@
     next.preferences = defaults.preferences;
     next.ui.treeMode = defaults.ui.treeMode;
     next.ui.treeNodeView = defaults.ui.treeNodeView;
+    next.ui.treeNameBasis = defaults.ui.treeNameBasis;
+    next.ui.treeNameLength = defaults.ui.treeNameLength;
     next.ui.generationDepth = defaults.ui.generationDepth;
     next.ui.ancestorDepth = defaults.ui.ancestorDepth;
     next.ui.descendantDepth = defaults.ui.descendantDepth;
@@ -732,16 +859,36 @@
   function displayName(person) {
     if (!person) return "Unknown person";
     const names = u.plainObject(person.names);
-    if (names.display) return names.display;
-    const given = names.preferred || names.given;
-    const values = [given, names.middle, names.family, names.suffix].filter(Boolean);
-    return values.join(" ") || names.birth || "Unnamed person";
+    const preferred = normalizeNameParts(names.preferred);
+    const current = normalizeNameParts(names.current);
+    const birth = normalizeNameParts(names.birth);
+    if (hasNameParts(preferred)) return formatNameParts(preferred, "full");
+    if (hasNameParts(current)) return formatNameParts(current, "full");
+    return formatNameParts(birth, "full") || "Unnamed person";
+  }
+
+  function treeName(person, basis, length) {
+    if (!person) return "Unknown person";
+    const names = u.plainObject(person.names);
+    const selected = basis === "legal" ? names.current : names.birth;
+    return formatNameParts(selected, length === "full" ? "full" : "short") || displayName(person);
+  }
+
+  function nameParts(person, kind) {
+    const names = u.plainObject(person && person.names);
+    return normalizeNameParts(names[kind]);
   }
 
   function sortName(person) {
     if (!person) return "";
     const names = u.plainObject(person.names);
-    return [names.family || names.birth, names.preferred || names.given, names.middle, names.suffix].filter(Boolean).join(", ").toLowerCase();
+    const preferred = hasNameParts(names.preferred) ? normalizeNameParts(names.preferred) : null;
+    const current = hasNameParts(names.current) ? normalizeNameParts(names.current) : normalizeNameParts(names.birth);
+    const first = preferred && preferred.first || current.first;
+    const last = preferred && preferred.last || current.last;
+    const middle = preferred && preferred.middle || current.middle;
+    const suffix = preferred && preferred.suffix || current.suffix;
+    return [last, first, middle, suffix].filter(Boolean).join(", ").toLowerCase();
   }
 
   function assignReferences(people) {
@@ -787,7 +934,7 @@
       return key !== "source_last_modified_by";
     }).map(function (entry) { return entry[1]; }).join(" ");
     return [
-      displayName(person), sortName(person), person.names && person.names.birth, person.gender, person.pronouns,
+      displayName(person), sortName(person), formatNameParts(person.names && person.names.birth, "full"), formatNameParts(person.names && person.names.current, "full"), formatNameParts(person.names && person.names.preferred, "full"), person.names && person.names.maidenLast, person.gender, person.pronouns,
       person.birth && person.birth.place, person.death && person.death.place,
       person.heritageNote, person.notes,
       sourceText,
@@ -839,6 +986,9 @@
     resetPreferences: resetPreferences,
     exportEnvelope: exportEnvelope,
     displayName: displayName,
+    treeName: treeName,
+    nameParts: nameParts,
+    formatNameParts: formatNameParts,
     sortName: sortName,
     formatFlexibleDate: formatFlexibleDate,
     formatAddress: formatAddress,
