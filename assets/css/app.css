@@ -683,6 +683,7 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .tree-toggle-symbol { display: grid; place-items: center; width: 1.2rem; height: 1.2rem; color: var(--muted); }
 .tree-toggle-symbol .sf-symbol { width: 1.15rem; height: 1.15rem; }
 .tree-line-toggle[aria-pressed="true"] .tree-toggle-symbol { color: var(--accent-strong); }
+.tree-line-toggle-stacked .button-label { font-size: .58rem; line-height: .9; text-align: center; }
 .depth-control { display: grid; min-width: 78px; height: 100%; align-content: center; justify-items: center; gap: .05rem; padding: .06rem .18rem; border-radius: 7px; color: var(--muted); font-size: .58rem; font-weight: 700; line-height: 1; }
 .depth-control-title { display: block; width: 100%; text-align: center; }
 .depth-control-body { display: grid; grid-template-columns: 27px 44px; align-items: stretch; gap: .18rem; }
@@ -719,19 +720,23 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .tree-key dt { flex: 0 0 auto; width: 30px; margin: 0; }
 .tree-key dd { margin: 0; color: var(--text); font-size: .62rem; font-weight: 650; line-height: 1.25; }
 .tree-key-swatch { display: block; width: 30px; height: 8px; overflow: visible; }
+.tree-key-card { display: block; width: 30px; height: 12px; overflow: visible; }
+.tree-key-card .deceased { fill: var(--deceased-card); stroke: var(--deceased-card-muted); stroke-width: 1; }
+.tree-key-card .lineal { fill: var(--surface); stroke: var(--lineal-mark); stroke-width: 3; }
 .tree-key-marks { display: block; width: 30px; color: var(--partner-line); font-size: .6rem; font-weight: 800; letter-spacing: 1.2px; }
 .tree-node { cursor: pointer; outline: none; }
 .tree-node rect { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.5; vector-effect: non-scaling-stroke; filter: drop-shadow(0 3px 5px rgba(20, 28, 25, .12)); }
 .tree-node text { fill: var(--text); font-family: Helvetica, Arial, sans-serif; pointer-events: none; }
 .tree-node .tree-name-line { font-size: 10px; font-weight: 800; }
-.tree-node .tree-life, .tree-node .tree-reference { fill: var(--muted); font-size: 8px; }
+.tree-node .tree-life { fill: var(--muted); font-size: 9.5px; font-weight: 650; }
+.tree-node .tree-reference { fill: var(--muted); font-size: 8px; }
 .tree-node[data-view="condensed"] .tree-name-line { font-size: 11px; }
 .tree-node .tree-name-line.tree-name-compact { font-size: 8.5px; }
 .tree-node .tree-name-line.tree-name-tight { font-size: 7.5px; }
 .tree-node[data-view="condensed"] .tree-name-line.tree-name-compact { font-size: 9px; }
 .tree-node[data-view="condensed"] .tree-name-line.tree-name-tight { font-size: 8px; }
 .tree-node[data-view="condensed"] .tree-family { fill: var(--accent-strong); }
-.tree-node[data-view="condensed"] .tree-life { font-size: 8px; }
+.tree-node[data-view="condensed"] .tree-life { font-size: 9.5px; }
 .tree-node.selected rect { stroke: var(--accent); stroke-width: 3; }
 .tree-node.home rect { fill: var(--accent-soft); }
 .tree-node.deceased rect { fill: var(--deceased-card); }
@@ -766,12 +771,7 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .profile-list > div:first-child { border-top: 0; }
 .profile-list dt { color: var(--muted); font-size: .7rem; font-weight: 750; }
 .profile-list dd { margin: 0; overflow-wrap: anywhere; }
-.age-row dd { display: flex; flex-wrap: wrap; align-items: baseline; gap: .2rem .45rem; }
-.age-value { display: inline-flex; align-items: baseline; gap: .2rem; white-space: nowrap; }
-.age-number { color: var(--text); font-size: 1.08rem; font-variant-numeric: tabular-nums; line-height: 1; }
-.age-unit { color: var(--text); font-size: .74rem; font-weight: 700; }
-.age-qualifier, .age-context { color: var(--muted); font-size: .66rem; font-weight: 650; }
-.age-context { flex: 1 1 100%; }
+.age-row dd { white-space: nowrap; font-size: .72rem; font-variant-numeric: tabular-nums; }
 .profile-section { padding: .75rem 0; border-top: 1px solid var(--line); }
 .profile-section h3 { margin: 0 0 .45rem; font-size: .84rem; }
 .relationship-section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: .65rem; }
@@ -866,6 +866,8 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .print-preview-document .print-generation span { display: grid; min-width: 0; padding: .035in .045in; border: 1px solid #bbb; font-size: 8pt; line-height: 1.15; }
 .print-preview-document .print-generation span.print-lineal { border-color: #b98b8d; box-shadow: inset 0 0 0 1px #e0c7c8; }
 .print-preview-document .print-generation span.print-lineage-highlight { border-color: #8f5b5d; background: #f2e2df; box-shadow: inset 0 0 0 1px #8f5b5d; }
+.print-preview-document .print-generation span.print-deceased { background: #eadcc9; color: #3f3025; }
+.print-preview-document .print-generation span.print-deceased small { color: #6c5847; }
 .print-preview-document .print-generation strong { overflow-wrap: anywhere; font-size: 6.5pt; line-height: 1.05; }
 .print-preview-document .print-generation .print-name-smaller strong { font-size: 5pt; }
 .print-preview-document .print-generation .print-name-smallest strong { font-size: 3.8pt; }
@@ -877,6 +879,7 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .print-preview-document .print-directory > h1 { margin-bottom: 0; padding-bottom: .18in; }
 .print-preview-document .print-directory-entries { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .07in; margin: 0 auto 1rem; padding: .22in .55in .55in; background: #fff; box-shadow: 0 8px 28px rgba(0, 0, 0, .28); }
 .print-preview-document .print-directory-person { min-width: 0; padding: .055in .065in; border: 1px solid #bbb; break-inside: avoid; }
+.print-preview-document .print-directory-person.print-deceased { border-color: #b79f83; background: #eadcc9; color: #3f3025; }
 .print-preview-document .print-directory-person > header { display: flex; align-items: baseline; justify-content: space-between; gap: .05in; padding-bottom: .025in; border-bottom: 1px solid #ddd; }
 .print-preview-document .print-directory-person h2 { min-width: 0; margin: 0; overflow-wrap: anywhere; font-size: 7.5pt; line-height: 1.08; }
 .print-preview-document .print-directory-person .lineage-id { flex: 0 0 auto; font: 6.2pt ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
@@ -986,6 +989,8 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
   .print-generation span { display: grid; min-width: 0; padding: .035in .045in; border: 1px solid #bbb; font-size: 8pt; line-height: 1.15; break-inside: avoid; }
   .print-generation span.print-lineal { border-color: #b98b8d; box-shadow: inset 0 0 0 1px #e0c7c8; }
   .print-generation span.print-lineage-highlight { border-color: #8f5b5d; background: #f2e2df; box-shadow: inset 0 0 0 1px #8f5b5d; }
+  .print-generation span.print-deceased { background: #eadcc9; color: #3f3025; }
+  .print-generation span.print-deceased small { color: #6c5847; }
   .print-generation strong { overflow-wrap: anywhere; font-size: 6.5pt; line-height: 1.05; }
   .print-generation .print-name-smaller strong { font-size: 5pt; }
   .print-generation .print-name-smallest strong { font-size: 3.8pt; }
@@ -997,6 +1002,7 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
   .print-generation-branch > header h4 { margin: 0; font-size: 9pt; }
   .print-directory-entries { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .055in; }
   .print-directory-person { min-width: 0; padding: .045in .055in; border: 1px solid #bbb; break-inside: avoid; }
+  .print-directory-person.print-deceased { border-color: #b79f83; background: #eadcc9; color: #3f3025; }
   .print-directory-person > header { display: flex; align-items: baseline; justify-content: space-between; gap: .045in; padding-bottom: .02in; border-bottom: 1px solid #ddd; }
   .print-directory-person h2 { min-width: 0; margin: 0; overflow-wrap: anywhere; font-size: 7.2pt; line-height: 1.08; }
   .print-directory-person .lineage-id { flex: 0 0 auto; font: 5.9pt ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }

@@ -24,13 +24,14 @@
   let treeNeedsFit = true;
   let treeSurfaceMode = "natural";
   let treeTransform = { x: 24, y: 24, scale: 1 };
+  let favoritesPreviewOpen = false;
 
   const SHORTCUTS = [
     { keys: "/", label: "Focus global search", group: "Global" },
     { keys: "Esc", label: "Close a dialog or menu", group: "Global" },
     { keys: "?", label: "Open Help Center", group: "Global" },
     { keys: "D", label: "Toggle the directory", group: "Family" },
-    { keys: "F", label: "Toggle favorite people search", group: "Family" },
+    { keys: "F", label: "Show favorite people", group: "Family" },
     { keys: "K", label: "Toggle the Family Tree key", group: "Family" },
     { keys: "P", label: "Print or save the family atlas as PDF", group: "Family" },
     { keys: "N", label: "Open Notes", group: "Actions" },
@@ -142,10 +143,10 @@
     const favoriteCount = state().ui.favoritePersonIds.length;
     const favoriteCountLabel = favoriteCount + " favorite " + (favoriteCount === 1 ? "person" : "people");
     $("#favoritesButton").disabled = !isInitialized;
-    $("#favoritesButton").setAttribute("aria-pressed", String(isInitialized && state().ui.favoritesOnly));
-    $("#favoritesButton").title = state().ui.favoritesOnly ? "Showing " + favoriteCountLabel : "Show " + favoriteCountLabel;
+    $("#favoritesButton").setAttribute("aria-expanded", String(isInitialized && favoritesPreviewOpen));
+    $("#favoritesButton").title = "Show " + favoriteCountLabel;
     $("#globalSearch").disabled = !isInitialized;
-    $("#globalSearch").placeholder = state().ui.favoritesOnly ? "Search favorites" : "Search family";
+    $("#globalSearch").placeholder = "Search family";
     renderLocalStatus();
     const latest = config.releases[0];
     const unread = isInitialized && latest && state().ui.seenReleaseVersion !== latest.version;
@@ -327,10 +328,9 @@
 
   function formatEvent(label, person, kind) {
     const event = person && person[kind];
-    if (!event) return "";
     const date = lifeDateLabel(person, kind);
-    if (!date && !event.place) return "";
-    return '<div><dt>' + label + '</dt><dd>' + u.escapeHtml([date, event.place].filter(Boolean).join(" · ")) + "</dd></div>";
+    const place = event && event.place || "";
+    return '<div><dt>' + label + '</dt><dd>' + u.escapeHtml([date, place].filter(Boolean).join(" · ") || "UNKNOWN") + "</dd></div>";
   }
 
   function knownDatePrefix(value) {
@@ -371,31 +371,24 @@
     return { amount: Math.floor(months / 12), unit: "years", approximate: approximate };
   }
 
-  function agePhrase(value, context) {
-    if (!value) return "";
-    return (value.approximate ? "About " : "") + value.amount + " " + value.unit + " " + context;
-  }
-
   function ageDetail(person, plainText) {
     const birthValue = lifeDateValue(person, "birth");
     const deathValue = lifeDateValue(person, "death");
-    if (!birthValue) return "";
+    if (!birthValue) return '<div><dt>Age</dt><dd>UNKNOWN</dd></div>';
     const deceased = person.livingStatus === "deceased";
     const primary = ageValue(birthValue, deceased ? deathValue : new Date());
     const current = deceased ? ageValue(birthValue, new Date()) : null;
-    let primaryText = primary ? agePhrase(primary, deceased ? "at death" : "old") : "";
-    if (deceased && !primaryText) primaryText = "Age at death unknown";
-    const contextText = current ? "Would be " + agePhrase(current, "old").toLowerCase() + " today" : "";
-    if (!primaryText) return "";
-    if (plainText) return '<div><dt>Age</dt><dd>' + u.escapeHtml([primaryText, contextText].filter(Boolean).join(" · ")) + "</dd></div>";
-    const amount = primary ? '<strong class="age-number">' + u.escapeHtml(String(primary.amount)) + "</strong>" : "";
-    const qualifier = primary && primary.approximate ? '<span class="age-qualifier">About</span>' : "";
-    const unit = primary ? '<span class="age-unit">' + u.escapeHtml(primary.unit + " " + (deceased ? "at death" : "old")) + "</span>" : '<span class="age-unit">Age at death unknown</span>';
-    return '<div class="age-row"><dt>Age</dt><dd><span class="age-value">' + qualifier + amount + unit + "</span>" + (contextText ? '<small class="age-context">' + u.escapeHtml(contextText) + "</small>" : "") + "</dd></div>";
+    const compactAge = function (value) { return value ? (value.approximate ? "~" : "") + value.amount + (value.unit === "years" ? "y" : "mo") : ""; };
+    let primaryText = primary ? compactAge(primary) + (deceased ? " at death" : " old") : "";
+    if (deceased && !primaryText) primaryText = "UNKNOWN at death";
+    const contextText = current ? compactAge(current) + " today" : "";
+    const text = [primaryText, contextText].filter(Boolean).join(" · ") || "UNKNOWN";
+    return '<div class="age-row"><dt>Age</dt><dd>' + u.escapeHtml(text) + "</dd></div>";
   }
 
   function livingStatusDetail(person) {
-    return '<div><dt>Living Status</dt><dd>' + u.escapeHtml(personStatusLabel(person)) + "</dd></div>";
+    const label = personStatusLabel(person);
+    return '<div><dt>Living Status</dt><dd>' + u.escapeHtml(label === "Unknown" ? "UNKNOWN" : label) + "</dd></div>";
   }
 
   function statusDetails(person, plainText) {
@@ -509,7 +502,8 @@
 
   function maritalStatusDetail(person, partners) {
     const current = partners.filter(Boolean)[0];
-    return '<div><dt>Marital Status</dt><dd>' + u.escapeHtml(current ? relationshipMaritalStatus(person, current) : maritalStatusLabel("unknown")) + "</dd></div>";
+    const label = current ? relationshipMaritalStatus(person, current) : maritalStatusLabel("unknown");
+    return '<div><dt>Marital Status</dt><dd>' + u.escapeHtml(label === "Unknown" ? "UNKNOWN" : label) + "</dd></div>";
   }
 
   function relationshipNameList(entries, emptyText, contextForEntry) {
@@ -633,7 +627,7 @@
   }
 
   function lineageIdHtml(numbers) {
-    if (!numbers.length) return '<span class="muted-copy">Not recorded</span>';
+    if (!numbers.length) return '<span class="muted-copy">None</span>';
     return '<code class="lineage-id">' + numbers.map(function (number, index) {
       let value = u.escapeHtml(number);
       if (index === numbers.length - 1) value = "<strong>" + value + "</strong>";
@@ -653,7 +647,7 @@
 
   function lineageReadingCell(member, parent, hasRecordedLineage) {
     const generation = "<strong>Gen " + member.generation + "</strong>, ";
-    if (!parent && !hasRecordedLineage) return '<span class="muted-copy">' + generation + "No parent lineage recorded.</span>";
+    if (!parent && !hasRecordedLineage) return '<span class="muted-copy">' + generation + "No parent lineage.</span>";
     if (!parent) return '<span class="lineage-root">' + generation + "Root ancestor</span>";
     const ordinalLabel = ordinalLineageNumber(member.number);
     const ordinal = ordinalLabel ? "<strong>" + u.escapeHtml(ordinalLabel) + "</strong> " : "";
@@ -704,7 +698,7 @@
       return;
     }
     const isHome = state().workspace.family.homePersonId === person.id;
-    const profileLabels = (developerReferencesEnabled() ? [person.reference] : []).concat(isHome ? ["Home person"] : []);
+    const profileLabels = (developerReferencesEnabled() ? [person.reference] : []).concat(isHome ? ["Root Ancestor"] : []);
     const profileEyebrow = profileLabels.length ? '<span class="eyebrow">' + u.escapeHtml(profileLabels.join(" · ")) + "</span>" : "";
     const contactBlocks = [];
     if (person.addresses.length) contactBlocks.push('<section class="profile-section"><h3>Addresses</h3>' + person.addresses.slice().sort(function (a, b) { return a.order - b.order; }).map(function (address) { return '<article class="contact-card"><header><strong>' + u.escapeHtml(address.label) + '</strong><span class="status-pill" data-kind="' + (address.current ? "success" : "neutral") + '">' + (address.current ? "Current" : "Former") + '</span></header><address>' + u.escapeHtml(model.formatAddress(address)).replace(/\n/g, "<br>") + '</address>' + ((model.formatFlexibleDate(address.startDate) || model.formatFlexibleDate(address.endDate)) ? '<small>' + u.escapeHtml([model.formatFlexibleDate(address.startDate), model.formatFlexibleDate(address.endDate)].filter(Boolean).join(" – ")) + "</small>" : "") + (address.notes ? "<p>" + u.escapeHtml(address.notes) + "</p>" : "") + "</article>"; }).join("") + "</section>");
@@ -715,7 +709,7 @@
     const relationshipActions = '<div class="relationship-actions">' + actionButton("Add", "addRelative", 'data-add-relative="' + u.escapeHtml(person.id) + '"', false) + actionButton("Connect", "connectPerson", 'data-add-relationship="' + u.escapeHtml(person.id) + '"', false) + "</div>";
     const relationships = '<section class="profile-section"><div class="relationship-section-heading"><h3>Relationships</h3>' + relationshipActions + '</div><div class="relationship-list">' + relationshipRows(person) + "</div></section>";
     const headerActions = '<div class="profile-header-actions">' + actionButton("Delete", "deletePerson", 'data-delete-person="' + u.escapeHtml(person.id) + '"', true) + actionButton("Edit", "editPerson", 'data-edit-person="' + u.escapeHtml(person.id) + '"', false) + '<button type="button" class="icon-button profile-close" data-close-profile aria-controls="profilePanel" aria-label="Close and deselect person" title="Close and deselect person"><span data-symbol="close" aria-hidden="true"></span></button></div>';
-    container.innerHTML = '<article class="person-profile"><header class="profile-header"><div class="profile-title">' + profileEyebrow + '<h2>' + u.escapeHtml(model.displayName(person)) + '</h2><p>' + u.escapeHtml(family.lifespan(person)) + "</p></div>" + headerActions + '</header><dl class="profile-list identity-list">' + formatEvent("Born", person, "birth") + formatEvent("Died", person, "death") + ageDetail(person, false) + livingStatusDetail(person) + maritalStatusDetail(person, family.relationGroups(person.id, state()).partners) + (person.gender ? '<div><dt>Gender</dt><dd>' + u.escapeHtml(person.gender) + "</dd></div>" : "") + (person.pronouns ? '<div><dt>Pronouns</dt><dd>' + u.escapeHtml(person.pronouns) + "</dd></div>" : "") + "</dl>" + profileLineage(person) + relationships + contactBlocks.join("") + (person.notes ? '<section class="profile-section"><h3>Notes</h3><p class="preserve-lines">' + u.escapeHtml(person.notes) + "</p></section>" : "") + profileSource(person) + "</article>";
+    container.innerHTML = '<article class="person-profile"><header class="profile-header"><div class="profile-title">' + profileEyebrow + '<h2>' + u.escapeHtml(model.displayName(person)) + '</h2><p>' + u.escapeHtml(family.lifespan(person)) + "</p></div>" + headerActions + '</header><dl class="profile-list identity-list">' + formatEvent("Born", person, "birth") + formatEvent("Died", person, "death") + ageDetail(person, false) + livingStatusDetail(person) + maritalStatusDetail(person, family.relationGroups(person.id, state()).partners) + '<div><dt>Gender</dt><dd>' + u.escapeHtml(person.gender || "UNKNOWN") + '</dd></div><div><dt>Pronouns</dt><dd>' + u.escapeHtml(person.pronouns || "UNKNOWN") + "</dd></div></dl>" + profileLineage(person) + relationships + contactBlocks.join("") + (person.notes ? '<section class="profile-section"><h3>Notes</h3><p class="preserve-lines">' + u.escapeHtml(person.notes) + "</p></section>" : "") + profileSource(person) + "</article>";
     icons.mount(container);
   }
 
@@ -1057,12 +1051,18 @@
     return '<svg class="tree-key-swatch" viewBox="0 0 30 8" aria-hidden="true"><path class="tree-edge ' + type + (extraClass ? " " + extraClass : "") + '" data-kind="' + kind + '" d="M1 4 H29"></path></svg>';
   }
 
+  function treeKeyCardSwatch(kind) {
+    return '<svg class="tree-key-card" viewBox="0 0 30 12" aria-hidden="true"><rect class="' + kind + '" x="2" y="1" width="26" height="10" rx="2"></rect></svg>';
+  }
+
   function treeKeyHtml() {
     const rows = [
       [treeKeySwatch("partner", "married"), "Current marriage"],
       [treeKeySwatch("partner", "previous-marriage"), "Previous marriage"],
       [treeKeySwatch("partner", "never-married"), "Never married"],
       ['<span class="tree-key-marks" aria-hidden="true">????</span>', "Unknown status"],
+      [treeKeyCardSwatch("deceased"), "Deceased"],
+      [treeKeyCardSwatch("lineal"), "Bloodline"],
       [treeKeySwatch("parent-child", "biological"), "Lineal parent"],
       [treeKeySwatch("parent-child", "affinal", "affinal-parent"), "Non-Lineal parent"]
     ];
@@ -1124,7 +1124,8 @@
     ancestorControl.insertAdjacentElement("beforebegin", depthControls);
     depthControls.append(ancestorControl, descendantControl);
     const zoomControls = $(".zoom-controls", treeControls);
-    zoomControls.insertAdjacentHTML("beforebegin", '<button type="button" class="tree-line-toggle action-button" data-toggle-non-lineal aria-pressed="' + String(state().ui.showInferredParentLines) + '" title="Toggle Non-Lineal parent lines"><span class="tree-toggle-symbol" data-symbol="' + (state().ui.showInferredParentLines ? "nonLinealLinesFill" : "nonLinealLines") + '" aria-hidden="true"></span><span class="button-label">Non-Lineal Lines</span></button><button type="button" class="tree-line-toggle action-button" data-toggle-unplaced-lineage aria-pressed="' + String(!state().ui.hideUnplacedLineage) + '" title="Toggle unresolved Lineal people"><span class="tree-toggle-symbol" data-symbol="' + (!state().ui.hideUnplacedLineage ? "unknownLinealFill" : "unknownLineal") + '" aria-hidden="true"></span><span class="button-label">Show ?? Lineal</span></button>');
+    const unplacedLineageControl = state().ui.treeMode === "overview" ? '<button type="button" class="tree-line-toggle action-button" data-toggle-unplaced-lineage aria-pressed="' + String(!state().ui.hideUnplacedLineage) + '" title="Toggle unresolved Lineal people"><span class="tree-toggle-symbol" data-symbol="unknownLineal" aria-hidden="true"></span><span class="button-label">?? Lineal</span></button>' : "";
+    zoomControls.insertAdjacentHTML("beforebegin", '<button type="button" class="tree-line-toggle tree-line-toggle-stacked action-button" data-toggle-non-lineal aria-pressed="' + String(state().ui.showInferredParentLines) + '" title="Toggle Non-Lineal parent lines"><span class="tree-toggle-symbol" data-symbol="nonLinealLinesFill" aria-hidden="true"></span><span class="button-label">Non-Lineal<br>Lines</span></button>' + unplacedLineageControl);
     $("#directoryPanel", workspaceGrid).insertAdjacentHTML("afterend", '<button id="directoryTreeDivider" class="family-resize-handle" type="button" role="separator" aria-orientation="vertical" aria-label="Resize directory and Family Tree" aria-valuemin="220" aria-valuemax="480" aria-valuenow="' + state().ui.directoryPanelWidth + '"' + (directoryCollapsed ? " hidden" : "") + '><span aria-hidden="true"></span><output class="family-divider-percentage" aria-hidden="true"></output></button>');
     $(".tree-panel", workspaceGrid).insertAdjacentHTML("afterend", '<button id="treeProfileDivider" class="family-resize-handle" type="button" role="separator" aria-orientation="vertical" aria-label="Resize Family Tree and selected person" aria-valuemin="240" aria-valuemax="600" aria-valuenow="' + state().ui.profilePanelWidth + '"' + (profileCollapsed ? " hidden" : "") + '><span aria-hidden="true"></span><output class="family-divider-percentage" aria-hidden="true"></output></button>');
     $("#directorySort").value = state().ui.directorySort;
@@ -1458,10 +1459,27 @@
     const nameLength = model.displayName(person).length;
     const sizeClass = nameLength > 64 ? " print-name-tiniest" : nameLength > 46 ? " print-name-smallest" : nameLength > 30 ? " print-name-smaller" : "";
     const linealClass = isLinealPerson(person) ? " print-lineal" : "";
+    const deceasedClass = person.livingStatus === "deceased" ? " print-deceased" : "";
     const givenName = String(person.givenName || model.displayName(person) || "").trim().split(/\s+/)[0].toLowerCase();
     const isExcludedLucian = model.displayName(person).trim().toLowerCase() === "lucian lynn kretzing";
-    const highlightClass = linealClass && !isExcludedLucian && ["theophilus", "albon", "lucian"].includes(givenName) ? " print-lineage-highlight" : "";
-    return linealClass + highlightClass + sizeClass;
+    const highlightClass = linealClass && !isExcludedLucian && ["newton", "albon", "lucian"].includes(givenName) ? " print-lineage-highlight" : "";
+    return linealClass + highlightClass + deceasedClass + sizeClass;
+  }
+
+  function printComponentRoot(ids, graph, generations) {
+    const people = ids.map(function (id) { return graph.peopleById.get(id); }).filter(Boolean);
+    const georgeRoot = people.find(function (person) { return isGeorgeMcMillenRoot(person, generations); });
+    if (georgeRoot) return georgeRoot;
+    const firstGeneration = Math.min.apply(null, people.map(function (person) { return generations.get(person.id) || 0; }));
+    const idSet = new Set(ids);
+    return people.filter(function (person) { return (generations.get(person.id) || 0) === firstGeneration; }).sort(function (a, b) {
+      const childDifference = (graph.children.get(b.id) || []).filter(function (entry) { return idSet.has(entry.person.id); }).length - (graph.children.get(a.id) || []).filter(function (entry) { return idSet.has(entry.person.id); }).length;
+      return childDifference || model.sortName(a).localeCompare(model.sortName(b));
+    })[0] || null;
+  }
+
+  function excludedPrintRoot(person) {
+    return person && model.displayName(person).trim().toLowerCase() === "jon couts";
   }
 
   function printLineageProgression(person, graph) {
@@ -1545,7 +1563,9 @@
     const graph = family.indexes(printState);
     const printGenerations = family.generationMap(people, relationships);
     const georgeMcMillenRoot = people.find(function (person) { return isGeorgeMcMillenRoot(person, printGenerations); });
-    const componentsList = family.connectedComponents(printState).sort(function (a, b) {
+    const componentsList = family.connectedComponents(printState).filter(function (ids) {
+      return !excludedPrintRoot(printComponentRoot(ids, graph, printGenerations));
+    }).sort(function (a, b) {
       return Number(Boolean(georgeMcMillenRoot && b.includes(georgeMcMillenRoot.id))) - Number(Boolean(georgeMcMillenRoot && a.includes(georgeMcMillenRoot.id)));
     });
     const familyUnits = family.familyUnits(printState);
@@ -1557,11 +1577,7 @@
       const groups = new Map();
       componentPeople.forEach(function (person) { const level = printGenerations.get(person.id) || 0; if (!groups.has(level)) groups.set(level, []); groups.get(level).push(person); });
       const sortedLevels = Array.from(groups.keys()).sort(function (a, b) { return a - b; });
-      const georgeRoot = componentPeople.find(function (person) { return isGeorgeMcMillenRoot(person, printGenerations); });
-      const rootAncestor = georgeRoot || groups.get(sortedLevels[0]).slice().sort(function (a, b) {
-        const childDifference = (graph.children.get(b.id) || []).filter(function (entry) { return idSet.has(entry.person.id); }).length - (graph.children.get(a.id) || []).filter(function (entry) { return idSet.has(entry.person.id); }).length;
-        return childDifference || model.sortName(a).localeCompare(model.sortName(b));
-      })[0];
+      const rootAncestor = printComponentRoot(ids, graph, printGenerations);
       const earlyGenerations = sortedLevels.filter(function (level) { return level <= 3; }).map(function (level) { return printGenerationSection(level, groups.get(level)); }).join("");
       const branches = new Map();
       sortedLevels.filter(function (level) { return level >= 4; }).forEach(function (level) {
@@ -1584,9 +1600,9 @@
       return '<article class="print-component"><header><div><span>Root Ancestor</span><h3>' + u.escapeHtml(model.displayName(rootAncestor)) + '</h3></div><p>Gen ' + (printGenerations.get(rootAncestor.id) || 0) + " · " + componentPeople.length + " people</p></header>" + earlyGenerations + branchHtml + "</article>";
     }).join("");
     const profiles = people.map(function (person) {
-      return '<article id="print-' + u.escapeHtml(person.id) + '" class="print-directory-person"><header><h2>' + u.escapeHtml(model.displayName(person)) + '</h2>' + lineageIdHtml(lineageId(person)) + '</header><p><span aria-hidden="true">::</span> ' + u.escapeHtml(printLineageProgression(person, graph)) + "</p></article>";
+      return '<article id="print-' + u.escapeHtml(person.id) + '" class="print-directory-person' + (person.livingStatus === "deceased" ? " print-deceased" : "") + '"><header><h2>' + u.escapeHtml(model.displayName(person)) + '</h2>' + lineageIdHtml(lineageId(person)) + '</header><p><span aria-hidden="true">::</span> ' + u.escapeHtml(printLineageProgression(person, graph)) + "</p></article>";
     }).join("");
-    $("#printReport").innerHTML = '<section class="print-front-matter"><article class="print-cover"><span class="eyebrow">Private family atlas</span><h1>' + u.escapeHtml(current.workspace.family.title) + '</h1><p>Prepared by McFamily on ' + u.escapeHtml(printDate()) + '</p><dl><div><dt>People</dt><dd>' + people.length + '</dd></div><div><dt>Relationships</dt><dd>' + relationships.length + '</dd></div><div><dt>Family Units</dt><dd>' + familyUnits.length + '</dd></div><div><dt>Addresses</dt><dd>' + addressCount + '</dd></div><div><dt>Family Maps</dt><dd>' + componentsList.length + '</dd></div></dl><aside><strong>Private document</strong><span>This atlas may contain home addresses, contact details, and family notes. Store and share it carefully.</span></aside></article><article class="print-legend"><h2>How to Use This Atlas</h2><p>Family maps begin with their root ancestor. George McMillen (1745) is Generation 0; Generation 4 and later are grouped under their Generation 3 family line. Lineal members have a faded-red outline, with Theophilus, Albon, and Lucian highlighted for orientation.</p><div><span><strong>Parent links</strong> Biological, adoptive, step, foster, guardian, or unspecified</span><span><strong>Partner links</strong> Married, partnered, separated, divorced, widowed, former, or unspecified</span></div></article></section><section class="print-atlas"><h2>Family Maps</h2>' + componentHtml + '</section><section class="print-directory"><h1>Person Directory</h1><div class="print-directory-entries">' + profiles + "</div></section>" + (notes ? '<article class="print-family-notes"><h1>Family Notes</h1><p>' + u.escapeHtml(notes).replace(/\n/g, "<br>") + "</p></article>" : "");
+    $("#printReport").innerHTML = '<section class="print-front-matter"><article class="print-cover"><span class="eyebrow">Private family atlas</span><h1>' + u.escapeHtml(current.workspace.family.title) + '</h1><p>Prepared by McFamily on ' + u.escapeHtml(printDate()) + '</p><dl><div><dt>People</dt><dd>' + people.length + '</dd></div><div><dt>Relationships</dt><dd>' + relationships.length + '</dd></div><div><dt>Family Units</dt><dd>' + familyUnits.length + '</dd></div><div><dt>Addresses</dt><dd>' + addressCount + '</dd></div><div><dt>Family Maps</dt><dd>' + componentsList.length + '</dd></div></dl><aside><strong>Private document</strong><span>This atlas may contain home addresses, contact details, and family notes. Store and share it carefully.</span></aside></article><article class="print-legend"><h2>How to Use This Atlas</h2><p>Family maps begin with their root ancestor. George McMillen (1745) is Generation 0; Generation 4 and later are grouped under their Generation 3 family line. Lineal members have a faded-red outline, with Newton, Albon, and Lucian highlighted for orientation. Deceased people have brown shading.</p><div><span><strong>Parent links</strong> Biological, adoptive, step, foster, guardian, or unspecified</span><span><strong>Partner links</strong> Married, partnered, separated, divorced, widowed, former, or unspecified</span></div></article></section><section class="print-atlas"><h2>Family Maps</h2>' + componentHtml + '</section><section class="print-directory"><h1>Person Directory</h1><div class="print-directory-entries">' + profiles + "</div></section>" + (notes ? '<article class="print-family-notes"><h1>Family Notes</h1><p>' + u.escapeHtml(notes).replace(/\n/g, "<br>") + "</p></article>" : "");
   }
 
   function openPrintPreview(trigger) {
@@ -1641,16 +1657,15 @@
 
   function globalSearchMatches(query) {
     const needle = query.trim();
-    const favoritesOnly = state().ui.favoritesOnly;
-    if (!needle && !favoritesOnly) return [];
+    if (!needle && !favoritesPreviewOpen) return [];
     const results = [];
     const favoriteIds = new Set(state().ui.favoritePersonIds);
     state().workspace.people.forEach(function (person) {
       const favorite = favoriteIds.has(person.id);
-      if ((!favoritesOnly || favorite) && (!needle || model.fuzzySearchMatch(needle, model.personSearchText(person)))) results.push({ type: "person", id: person.id, title: model.displayName(person), meta: "Person" + (developerReferencesEnabled() ? " · " + person.reference : ""), favorite: favorite });
+      if ((favoritesPreviewOpen ? favorite : model.fuzzySearchMatch(needle, model.personSearchText(person)))) results.push({ type: "person", id: person.id, title: model.displayName(person), meta: "Person" + (developerReferencesEnabled() ? " · " + person.reference : ""), favorite: favorite });
     });
     results.sort(function (a, b) { return Number(b.favorite) - Number(a.favorite) || a.title.localeCompare(b.title); });
-    if (favoritesOnly) return results;
+    if (favoritesPreviewOpen) return results;
     const notes = state().workspace.documents[0];
     if (notes && model.fuzzySearchMatch(needle, "notes " + documentText(notes))) results.push({ type: "notes", id: notes.id, title: "Notes", meta: "Private family notes" });
     config.help.forEach(function (topic) { if (model.fuzzySearchMatch(needle, topic.title + " " + topic.keywords + " " + u.stripHtml(topic.html))) results.push({ type: "help", id: topic.id, title: topic.title, meta: "Help · " + topic.section }); });
@@ -1663,7 +1678,7 @@
     const container = $("#globalSearchResults");
     const query = state().ui.search;
     const searchActive = document.activeElement === $("#globalSearch") || container.contains(document.activeElement);
-    if (!initialized() || (!query && !state().ui.favoritesOnly) || !searchActive) { container.hidden = true; $("#globalSearch").setAttribute("aria-expanded", "false"); return; }
+    if (!initialized() || (!query && !favoritesPreviewOpen) || !searchActive) { container.hidden = true; $("#globalSearch").setAttribute("aria-expanded", "false"); $("#favoritesButton").setAttribute("aria-expanded", "false"); return; }
     const results = globalSearchMatches(query);
     container.hidden = false;
     $("#globalSearch").setAttribute("aria-expanded", "true");
@@ -1672,7 +1687,8 @@
       if (result.type !== "person") return '<div class="global-search-result-row no-favorite" role="listitem">' + main + "</div>";
       const action = result.favorite ? "Remove " + result.title + " from favorites" : "Star " + result.title;
       return '<div class="global-search-result-row" role="listitem">' + main + '<button type="button" class="search-favorite-toggle" data-toggle-favorite="' + u.escapeHtml(result.id) + '" aria-label="' + u.escapeHtml(action) + '" title="' + u.escapeHtml(action) + '" aria-pressed="' + String(result.favorite) + '"><span data-symbol="favorite" aria-hidden="true"></span></button></div>';
-    }).join("") : '<div class="search-empty">' + (state().ui.favoritesOnly ? "No favorite people yet. Turn off Favorites, search for someone, and select their star." : "No matches across people, contacts, Notes, Help, releases, or Roadmap.") + "</div>";
+    }).join("") : '<div class="search-empty">' + (favoritesPreviewOpen ? "No favorite people yet. Search for someone and select their star." : "No matches across people, contacts, Notes, Help, releases, or Roadmap.") + "</div>";
+    $("#favoritesButton").setAttribute("aria-expanded", String(favoritesPreviewOpen));
     icons.mount(container);
   }
 
@@ -1694,6 +1710,7 @@
   }
 
   function activateGlobalSearchResult(type, id) {
+    favoritesPreviewOpen = false;
     if (type === "person") selectPerson(id, { focus: true, mobileProfile: true, focusMode: true });
     else if (type === "notes") openNotes($("#globalSearch"));
     else if (type === "help") { openSupport("help", $("#globalSearch")); setInputValue($("#helpSearch"), config.help.find(function (topic) { return topic.id === id; })?.title || ""); renderHelp(); }
@@ -1701,6 +1718,7 @@
     else if (type === "release") { versionView = "released"; openSupport("releases", $("#globalSearch")); }
     $("#globalSearchResults").hidden = true;
     $("#globalSearch").setAttribute("aria-expanded", "false");
+    $("#favoritesButton").setAttribute("aria-expanded", "false");
   }
 
   function openSupport(tab, trigger) {
@@ -1912,7 +1930,6 @@
     if (nonLinealToggle) {
       storage.mutate(function (next) { next.ui.showInferredParentLines = !next.ui.showInferredParentLines; }, { touch: false, reason: "tree-parent-lines" });
       nonLinealToggle.setAttribute("aria-pressed", String(state().ui.showInferredParentLines));
-      icons.set(nonLinealToggle.querySelector(".tree-toggle-symbol"), state().ui.showInferredParentLines ? "nonLinealLinesFill" : "nonLinealLines");
       renderTree();
       return;
     }
@@ -1920,7 +1937,6 @@
     if (unplacedLineageToggle) {
       storage.mutate(function (next) { next.ui.hideUnplacedLineage = !next.ui.hideUnplacedLineage; }, { touch: false, reason: "tree-unplaced-lineage" });
       unplacedLineageToggle.setAttribute("aria-pressed", String(!state().ui.hideUnplacedLineage));
-      icons.set(unplacedLineageToggle.querySelector(".tree-toggle-symbol"), state().ui.hideUnplacedLineage ? "unknownLineal" : "unknownLinealFill");
       treeNeedsFit = true;
       renderTree();
       return;
@@ -2118,11 +2134,7 @@
       announce(willOpen ? "Opened the directory." : "Closed the directory.");
     });
     $("#favoritesButton").addEventListener("click", function () {
-      storage.mutate(function (next) {
-        next.ui.favoritesOnly = !next.ui.favoritesOnly;
-        next.ui.search = "";
-      }, { touch: false, reason: "favorites-search" });
-      renderHeader();
+      favoritesPreviewOpen = true;
       $("#globalSearch").focus();
       renderGlobalSearchResults();
     });
@@ -2176,12 +2188,12 @@
       const safeLink = event.target.closest("[data-open-url]");
       if (safeLink && !u.safeExternalOpen(safeLink.dataset.openUrl)) components.toast("That external address is not allowed.", { title: "Link unavailable", kind: "warning" });
     });
-    $("#globalSearch").addEventListener("input", function (event) { storage.mutate(function (next) { next.ui.search = u.cleanLine(event.target.value, 200); }, { touch: false, reason: "global-search" }); renderGlobalSearchResults(); });
+    $("#globalSearch").addEventListener("input", function (event) { favoritesPreviewOpen = false; storage.mutate(function (next) { next.ui.search = u.cleanLine(event.target.value, 200); }, { touch: false, reason: "global-search" }); renderGlobalSearchResults(); });
     $("#globalSearch").addEventListener("focus", renderGlobalSearchResults);
-    $("#globalSearch").addEventListener("keydown", function (event) { const results = $$(".global-search-result-main", $("#globalSearchResults")); if (event.key === "ArrowDown" && results.length) { event.preventDefault(); results[0].focus(); } if (event.key === "Escape") { $("#globalSearchResults").hidden = true; event.target.setAttribute("aria-expanded", "false"); event.target.select(); } });
+    $("#globalSearch").addEventListener("keydown", function (event) { const results = $$(".global-search-result-main", $("#globalSearchResults")); if (event.key === "ArrowDown" && results.length) { event.preventDefault(); results[0].focus(); } if (event.key === "Escape") { favoritesPreviewOpen = false; $("#globalSearchResults").hidden = true; event.target.setAttribute("aria-expanded", "false"); $("#favoritesButton").setAttribute("aria-expanded", "false"); event.target.select(); } });
     $("#globalSearchResults").addEventListener("click", function (event) { const favorite = event.target.closest("[data-toggle-favorite]"); if (favorite) { toggleFavoritePerson(favorite.dataset.toggleFavorite); return; } const result = event.target.closest("[data-search-type]"); if (result) activateGlobalSearchResult(result.dataset.searchType, result.dataset.searchId); });
-    $("#globalSearchResults").addEventListener("keydown", function (event) { const button = event.target.closest(".global-search-result-main"); const buttons = $$(".global-search-result-main", event.currentTarget); if (button && (event.key === "ArrowDown" || event.key === "ArrowUp")) { event.preventDefault(); const index = buttons.indexOf(button); buttons[(index + (event.key === "ArrowDown" ? 1 : -1) + buttons.length) % buttons.length]?.focus(); } else if (event.key === "Escape") { event.preventDefault(); $("#globalSearch").focus(); $("#globalSearchResults").hidden = true; $("#globalSearch").setAttribute("aria-expanded", "false"); } });
-    document.addEventListener("focusin", function (event) { if (!event.target.closest(".global-search-wrap")) { $("#globalSearchResults").hidden = true; $("#globalSearch").setAttribute("aria-expanded", "false"); } });
+    $("#globalSearchResults").addEventListener("keydown", function (event) { const button = event.target.closest(".global-search-result-main"); const buttons = $$(".global-search-result-main", event.currentTarget); if (button && (event.key === "ArrowDown" || event.key === "ArrowUp")) { event.preventDefault(); const index = buttons.indexOf(button); buttons[(index + (event.key === "ArrowDown" ? 1 : -1) + buttons.length) % buttons.length]?.focus(); } else if (event.key === "Escape") { event.preventDefault(); favoritesPreviewOpen = false; $("#globalSearch").focus(); $("#globalSearchResults").hidden = true; $("#globalSearch").setAttribute("aria-expanded", "false"); $("#favoritesButton").setAttribute("aria-expanded", "false"); } });
+    document.addEventListener("focusin", function (event) { if (!event.target.closest(".global-search-wrap") && !event.target.closest("#favoritesButton")) { favoritesPreviewOpen = false; $("#globalSearchResults").hidden = true; $("#globalSearch").setAttribute("aria-expanded", "false"); $("#favoritesButton").setAttribute("aria-expanded", "false"); } });
     bindSupportEvents();
     document.addEventListener("keydown", handleGlobalKeydown);
     document.addEventListener("keyup", function (event) { updateShortcutHints(event, false); });

@@ -614,7 +614,9 @@
   }
 
   function lifespan(person) {
-    return (eventYearLabel(person, "birth") || "????") + " – " + (eventYearLabel(person, "death") || "????");
+    const birth = eventYearLabel(person, "birth") || "????";
+    if (person && person.livingStatus === "living") return birth;
+    return birth + " – " + (eventYearLabel(person, "death") || "????");
   }
 
   App.family = {
