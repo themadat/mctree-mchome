@@ -74,8 +74,20 @@
           recovered: false,
           error: ""
         };
-        lastSavedJson = JSON.stringify(currentState);
-        if (candidate.key !== config.storage.stateKey || prepared.migrations.length) saveNow();
+        const normalizedJson = JSON.stringify(currentState);
+        if (candidate.key !== config.storage.stateKey) {
+          lastSavedJson = "";
+          removeLocal(candidate.key);
+          if (!saveNow()) {
+            writeLocal(candidate.key, raw);
+            lastSavedJson = "";
+          }
+        } else if (prepared.migrations.length) {
+          lastSavedJson = "";
+          saveNow();
+        } else {
+          lastSavedJson = normalizedJson;
+        }
         return currentState;
       } catch (error) {
         parseError = error.message || "Saved state could not be read.";

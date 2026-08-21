@@ -8,7 +8,10 @@
   const storage = App.storage;
   const NATIVE_HEADERS = [
     "mcfamily_csv_version", "record_type", "id", "person_id", "family_title", "initialized_at", "home_person_id",
-    "created_at", "updated_at", "order", "given_name", "middle_name", "family_name", "birth_name", "preferred_name", "suffix", "display_name",
+    "created_at", "updated_at", "order",
+    "birth_prefix", "birth_first", "birth_middle", "birth_last", "birth_suffix",
+    "current_prefix", "current_first", "current_middle", "current_last", "current_suffix",
+    "preferred_prefix", "preferred_first", "preferred_middle", "preferred_last", "preferred_suffix", "maiden_last_name",
     "living_status", "gender", "pronouns", "birth_date", "birth_date_qualifier", "birth_place", "death_date", "death_date_qualifier", "death_place",
     "heritage_note", "person_notes", "address_label", "address_current", "address_line_1", "address_line_2", "city", "region", "postal_code", "country",
     "address_start_date", "address_start_qualifier", "address_end_date", "address_end_qualifier", "address_notes", "contact_label", "contact_value",
@@ -24,7 +27,7 @@
   const AFFINITY_FIELD = "parent_affinal_person_id";
   const MCLINEAGE_REQUIRED = [
     "record_id", "lineage_id", "parent_consanguinity_person_id", "parent_affinal_person_id",
-    "person_first_names", "person_last_name", "partner_relationships_json"
+    "person_first_names", "person_last_name", "person_name_sort", "retain_maiden_name", "partner_relationships_json"
   ].concat(MCLINEAGE_PERSON_DATE_HEADERS);
   let pendingImport = null;
 
@@ -98,6 +101,27 @@
     };
   }
 
+  function nameColumns(prefix, parts) {
+    const name = model.nameParts({ names: { [prefix]: parts } }, prefix);
+    return {
+      [prefix + "_prefix"]: name.prefix,
+      [prefix + "_first"]: name.first,
+      [prefix + "_middle"]: name.middle,
+      [prefix + "_last"]: name.last,
+      [prefix + "_suffix"]: name.suffix
+    };
+  }
+
+  function nativeNameParts(row, prefix) {
+    return {
+      prefix: originalCsvValue(row[prefix + "_prefix"]),
+      first: originalCsvValue(row[prefix + "_first"]),
+      middle: originalCsvValue(row[prefix + "_middle"]),
+      last: originalCsvValue(row[prefix + "_last"]),
+      suffix: originalCsvValue(row[prefix + "_suffix"])
+    };
+  }
+
   function nativeRows(state) {
     const rows = [];
     rows.push(rowOf("family", {
@@ -107,11 +131,10 @@
     state.workspace.people.slice().sort(function (a, b) { return a.order - b.order; }).forEach(function (person) {
       rows.push(rowOf("person", Object.assign({
         id: person.id, created_at: person.createdAt, updated_at: person.updatedAt, order: person.order,
-        given_name: person.names.given, middle_name: person.names.middle, family_name: person.names.family, birth_name: person.names.birth,
-        preferred_name: person.names.preferred, suffix: person.names.suffix, display_name: person.names.display, living_status: person.livingStatus,
+        maiden_last_name: person.names.maidenLast, living_status: person.livingStatus,
         gender: person.gender, pronouns: person.pronouns, birth_place: person.birth.place, death_place: person.death.place,
         heritage_note: person.heritageNote, person_notes: person.notes, source_json: JSON.stringify(person.source || {})
-      }, dateColumns("birth", person.birth.date), dateColumns("death", person.death.date))));
+      }, nameColumns("birth", person.names.birth), nameColumns("current", person.names.current), nameColumns("preferred", person.names.preferred), dateColumns("birth", person.birth.date), dateColumns("death", person.death.date))));
       person.addresses.forEach(function (address) {
         rows.push(rowOf("address", Object.assign({
           id: address.id, person_id: person.id, order: address.order, address_label: address.label, address_current: String(address.current),
@@ -487,6 +510,8 @@
   }
 
   function prepareNative(parsed, fileName) {
+    const missingHeaders = NATIVE_HEADERS.filter(function (header) { return !parsed.headers.includes(header); });
+    if (missingHeaders.length) throw new Error("That McFamily CSV is missing current schema columns: " + missingHeaders.join(", ") + ".");
     const versions = new Set(parsed.rows.map(function (row) { return originalCsvValue(row.mcfamily_csv_version); }).filter(Boolean));
     if (versions.size !== 1 || !versions.has(config.csvFormat)) throw new Error("This McFamily CSV version is not supported.");
     const allowed = new Set(["family", "person", "address", "phone", "email", "relationship", "note", "settings"]);
@@ -497,8 +522,10 @@
     const people = personRows.map(function (row, index) {
       return {
         id: originalCsvValue(row.id), createdAt: originalCsvValue(row.created_at), updatedAt: originalCsvValue(row.updated_at), order: Number(originalCsvValue(row.order) || index),
-        givenName: originalCsvValue(row.given_name), middleName: originalCsvValue(row.middle_name), familyName: originalCsvValue(row.family_name),
-        birthSurname: originalCsvValue(row.birth_name), preferredName: originalCsvValue(row.preferred_name), suffix: originalCsvValue(row.suffix), displayName: originalCsvValue(row.display_name),
+        names: {
+          birth: nativeNameParts(row, "birth"), current: nativeNameParts(row, "current"), preferred: nativeNameParts(row, "preferred"),
+          maidenLast: originalCsvValue(row.maiden_last_name)
+        },
         livingStatus: originalCsvValue(row.living_status), gender: originalCsvValue(row.gender), pronouns: originalCsvValue(row.pronouns),
         birth: { date: nativeDate(row, "birth"), place: originalCsvValue(row.birth_place) }, death: { date: nativeDate(row, "death"), place: originalCsvValue(row.death_place) },
         addresses: [], phones: [], emails: [], heritageNote: originalCsvValue(row.heritage_note), notes: originalCsvValue(row.person_notes),
@@ -541,7 +568,7 @@
       preferences: u.plainObject(settings.preferences), ui: u.plainObject(settings.ui), modules: u.plainObject(settings.modules)
     };
     const prepared = model.prepare(rawState);
-    return Object.assign(prepared, { formatLabel: "McFamily CSV v1", sourceRows: parsed.rows.length, fileName: fileName });
+    return Object.assign(prepared, { formatLabel: "McFamily CSV v2", sourceRows: parsed.rows.length, fileName: fileName });
   }
 
   function prepareCsv(text, fileName) {
