@@ -776,10 +776,10 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .profile-close { margin-left: .1rem; }
 .profile-list { display: grid; margin: 0; }
 .profile-list > div, .print-person dl > div, .print-rel-group { display: grid; grid-template-columns: minmax(70px, .42fr) minmax(0, 1fr); gap: .55rem; padding: .34rem 0; border-top: 1px solid var(--line); }
+.profile-list > div { grid-template-columns: 5.5rem minmax(0, 1fr); column-gap: .35rem; }
 .profile-list > div:first-child { border-top: 0; }
 .profile-list dt { color: var(--muted); font-size: .7rem; font-weight: 750; }
 .profile-list dd { margin: 0; overflow-wrap: anywhere; }
-.profile-list > .age-row { grid-template-columns: 54px minmax(0, 1fr); }
 .age-row dd { white-space: nowrap; font-variant-numeric: tabular-nums; }
 .age-row em { font-style: italic; }
 .age-row strong { font-weight: 850; }
