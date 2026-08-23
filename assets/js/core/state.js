@@ -140,11 +140,10 @@
     const fields = u.plainObject(imported.fields);
     const deathValue = u.cleanLine(fields["person-date-death-value"], 40) || u.cleanLine(source.death && source.death.date && source.death.date.value, 40);
     if (deathValue) return "deceased";
-    const birthValue = u.cleanLine(source.birth && source.birth.date && source.birth.date.value, 40) || u.cleanLine(fields["person-date-birth-value"], 40);
-    const birthMatch = birthValue.match(/^(\d{4})(?:-(\d{2})(?:-(\d{2}))?)?$/);
-    if (!birthMatch) return "unknown";
-    const hundredthBirthday = new Date(Number(birthMatch[1]) + 100, birthMatch[2] ? Number(birthMatch[2]) - 1 : 6, birthMatch[3] ? Number(birthMatch[3]) : 1);
-    return new Date() > hundredthBirthday ? "deceased" : "living";
+    const deathDescriptor = u.cleanLine(fields["person-date-death-descriptor"], 40);
+    if (["UNKNOWN", "UNKNOWN PRESUMED"].includes(deathDescriptor)) return "deceased";
+    if (deathDescriptor === "NONE") return "living";
+    return fallback;
   }
 
   function presumeUnknownPartnersDeceased(people, relationships) {
@@ -187,7 +186,7 @@
     const next = u.clone(u.plainObject(input));
     const version = Number(next.schemaVersion);
     if (version !== config.schemaVersion) {
-      throw new Error("This state model is no longer supported. Import the current McLineage v12 or McFamily CSV.");
+      throw new Error("This state model is no longer supported. Import the current McLineage v13 or McFamily CSV.");
     }
     return next;
   }

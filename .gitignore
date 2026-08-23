@@ -2,5 +2,7 @@
 **/.DS_Store
 /assets/data/*
 /data/McLineage-*.csv
+/data/McLineage-*-name-reconciliation.xlsx
+/data/*.inspect.ndjson
 /data/backups/
 /data/raw-exports/

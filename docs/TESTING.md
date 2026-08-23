@@ -15,22 +15,22 @@ Use synthetic families only.
 
 - [ ] A fresh profile shows only the introduction, privacy warning, and CSV picker.
 - [ ] No demo family, blank-family action, GEDCOM action, or bypass appears.
-- [ ] An exact McLineage v12 or current native McFamily CSV with at least one person shows a summary and opens the family.
+- [ ] An exact McLineage v13 or current native McFamily CSV with at least one person shows a summary and opens the family.
 - [ ] Unknown headers, missing required cells, zero-person first import, malformed CSV, oversized file, duplicate ids, unsafe headers, self-links, duplicate links, and ancestry cycles are rejected without replacing state.
-- [ ] McLineage v12 has exactly 36 ordered, hyphenated headers; `record-id` is first, both parent-role fields are adjacent, `source-row-number` immediately precedes `data-quality-notes`, and every underscore-named, missing, extra, or reordered source schema is rejected.
+- [ ] McLineage v13 has exactly 34 ordered, hyphenated headers; `record-id` is first, both parent-role fields are adjacent, `source-row-number` immediately precedes `data-quality-notes`, and every underscore-named, missing, extra, or reordered source schema is rejected.
 - [ ] Structured Birth, Current, and Preferred name parts plus Maiden Last import directly; `person-first-names`, `person-last-name`, and `person-name-sort` are absent.
 - [ ] Every populated `parent-affinal-person-id` resolves to a distinct person paired with the Lineal parent through `partner-relationships-json` and imports as an `affinal`-kind second parent; missing, self, duplicate, non-partner, and partial parent-role schemas are rejected.
 - [ ] Current partner rows import as their own P-referenced people; their source-row and lineage fields are blank, each JSON partner P reference resolves, and no duplicate people are synthesized.
 - [ ] Each current partner relationship has one unique R ID and unordered person pair; malformed JSON, missing/self references, invalid types/orders/end reasons, inconsistent date pairs, and duplicate relationships are rejected.
 - [ ] Relationship type plus end reason maps to married, partnered, widowed, divorced, separated, former, or unknown without a redundant source status field; an `UNKNOWN` end reason reads as former, so no partner of a person whose partnerships all ended is shown as current.
-- [ ] A McLineage file that does not exactly match v12 is rejected with missing, unexpected, or ordering details and never replaces current state.
+- [ ] A McLineage file that does not exactly match v13 is rejected with missing, unexpected, or ordering details and never replaces current state.
 - [ ] Every current non-root lineage path extends its direct parent's path by exactly one segment; blank unlineaged people are accepted, while malformed, duplicate, or parent-mismatched paths are rejected.
 - [ ] Current source date values accept blank, `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, or the same shapes with `?` in unknown digit positions; question-mark values require `partial`, `invalid` descriptors are rejected, and birth descriptors reject blank.
-- [ ] Current `person-*` identity/date columns import lineage and partner rows consistently: a known death value imports as deceased, a birth date beyond age 100 without a death value imports as presumed deceased, an otherwise unknown-status partner of any deceased person is also presumed deceased, and an unknown Lineal member in Generation 0 through 4 is presumed deceased. A birth date within 100 years remains living, Generation 5+ with no other evidence remains unknown, and `99`/`??` placement alone never implies death.
+- [ ] Current `person-*` identity/date columns import lineage and partner rows consistently: a known death value imports as deceased; a blank death value requires `NONE`, `UNKNOWN`, or `UNKNOWN PRESUMED`; those descriptors import as living, deceased, and presumed deceased respectively.
 - [ ] Profile life details use one ordinary one-line `Age` row: living ages are compact, ages below two use months, deceased ages read `#y at death · #y today`, and unavailable ages read `UNKNOWN`.
 - [ ] Desktop defaults to a thin-gutter 20/50/30 Directory/Tree/Profile split, both separators resize with pointer and keyboard input, the first resize persists both widths, a usable tree width remains, and live position percentages appear only in Developer Mode.
-- [ ] State v10 reloads from `mcfamily.state.v10`; older state and recovery keys are ignored and the v12 import gate appears instead.
-- [ ] A state with any schema version other than v10 is rejected rather than unwrapped or migrated.
+- [ ] State v11 reloads from `mcfamily.state.v11`; older state and recovery keys are ignored and the v13 import gate appears instead.
+- [ ] A state with any schema version other than v11 is rejected rather than unwrapped or migrated.
 - [ ] A native `mcfamily-csv-v2` round trip preserves all 16 name columns; v1 native exports and incomplete v2 headers are rejected as older schemas.
 - [ ] Missing required Birth First/Last values normalize to `UNKNOWN`; the importer does not derive structured names from removed flat columns.
 - [ ] Partial source dates remain in source details, produce a partial-only preview warning, and do not become invented normalized dates in editable/native state.
@@ -58,14 +58,14 @@ Use synthetic families only.
 
 - [ ] Lineage mode shows the selected/home person's configured ancestor and descendant depth plus partners and siblings.
 - [ ] Full Tree contains every connected component and isolated person.
-- [ ] The toolbar orders Full Tree before Lineage and Details before Summary, mounts the supplied view icons above each label, and places each Ancestors/Descendants title above a full-input-height directional symbol and narrow depth number.
+- [ ] The toolbar labels Name Preferences, Tree View, Card View, Levels, and Zoom; orders Full Tree before Lineage and Details before Summary; de-emphasizes `(Display)`, `(Current)`, and `(Birth)`; removes the old Source Name, Length, and Zoom % labels; and places `%` inside the aligned zoom number control.
 - [ ] Single-person, multi-partner, adopted, disconnected, pedigree-collapse, and 1,500-person synthetic families render without exceptions.
 - [ ] Pan, Ctrl/Command-wheel and pinch zoom, right-aligned grouped icon-over-label Out/In/Fit buttons, direct zoom percentage entry, node click, and grouped numeric ancestor/descendant steppers with labels above their inputs work; both depths default to 10.
 - [ ] Natural-size Family Tree layouts expose horizontal and vertical scrolling when needed; ordinary wheel input scrolls and Ctrl/Command-wheel zooms.
 - [ ] Arrow keys move between rendered nodes and Enter/Space selects.
 - [ ] Every node and relationship has an understandable accessible label.
 - [ ] Summary cards are the default; Lineal (Birth) and Short name settings are the defaults. Legal and Full switches persist independently, both Summary and Details stay narrow, full names with four or more parts balance across three fitted lines without widening cards, and generation rows grow as needed. Living people show only their birth year; other unknown years use `????`. Lineal cards retain the standard living or deceased fill and use a bold muted-red outline plus a compact lineage symbol on the lifespan row.
-- [ ] Selected profiles show the Names section before Lineage, all five properties for Birth, Current, and Preferred, separate Maiden Last Name, and a Preferred → Current → Birth heading fallback.
+- [ ] Selected profiles show the compact four-row Names section before Lineage. The profile title and relationship links follow the active tree name source at full length, while every Family Line name always uses the full Lineal Birth name.
 - [ ] Partner pairs are adjacent when possible; bright, heavier gold distinguishes the current marriage's solid line, a previous marriage's dashed line, never married's dotted line, and unknown status's repeated question marks from muted-red Lineal parent edges in both the tree and Key.
 - [ ] Family Tree rows use numeric lineage order rather than alphabetical names; Seth Lauer appears before Jared Lauer.
 - [ ] A multi-partner Lineal person is preceded by up to two two-thirds-scale past partners from earliest to latest and followed by the full-size current or latest death-ended Non-Lineal spouse. One left partner is vertically centered; two align with the full-size cards' top and bottom. Their straight horizontal links are parallel and attach 25% from the top or bottom of each compact card, clearing the name containers.
