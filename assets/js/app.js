@@ -206,7 +206,7 @@
 
   function renderOnboarding() {
     const icon = document.documentElement.dataset.theme === "dark" ? config.identity.assets.appIconDark : config.identity.assets.appIconLight;
-    $("#mainContent").innerHTML = '<section class="onboarding-screen" aria-labelledby="onboardingTitle"><div class="onboarding-card"><img src="' + u.escapeHtml(versionedAsset(icon)) + '" alt="" class="onboarding-icon"><span class="eyebrow">Private local family atlas</span><h1 id="onboardingTitle">Open McFamily</h1><p>Choose the cleaned McLineage CSV for the initial load, or a native McFamily CSV exported by this app. McFamily maps and validates people, relationships, source fields, and ancestry before storing a private copy in this browser.</p><div class="privacy-callout"><strong>This is not a login.</strong><span>The import gate controls first-run setup only. The static GitHub Pages app cannot authenticate users or revoke access.</span></div><button id="firstImportButton" type="button" class="button primary large-button">Choose family CSV</button><input id="onboardingImportInput" type="file" accept="text/csv,.csv" data-import-file-input hidden><small>No demo family, blank-family option, JSON/GEDCOM import, cloud sync, or bypass is available.</small></div></section>';
+    $("#mainContent").innerHTML = '<section class="onboarding-screen" aria-labelledby="onboardingTitle"><div class="onboarding-card"><img src="' + u.escapeHtml(versionedAsset(icon)) + '" alt="" class="onboarding-icon"><span class="eyebrow">Private local family atlas</span><h1 id="onboardingTitle">Open McFamily</h1><p>Choose the exact McLineage v12 CSV for the initial load, or a current native McFamily CSV exported by this app. McFamily maps and validates people, relationships, source fields, and ancestry before storing a private copy in this browser.</p><div class="privacy-callout"><strong>This is not a login.</strong><span>The import gate controls first-run setup only. The static GitHub Pages app cannot authenticate users or revoke access.</span></div><button id="firstImportButton" type="button" class="button primary large-button">Choose family CSV</button><input id="onboardingImportInput" type="file" accept="text/csv,.csv" data-import-file-input hidden><small>No demo family, blank-family option, JSON/GEDCOM import, cloud sync, or bypass is available.</small></div></section>';
     icons.mount($("#mainContent"));
   }
 
@@ -229,8 +229,8 @@
   function directoryKinship(person, graph, homePersonId) {
     const fields = u.plainObject(person && person.source && person.source.fields);
     const importedMcLineage = String(person && person.source && person.source.format || "").startsWith("mclineage-cleaned");
-    if (importedMcLineage && Object.prototype.hasOwnProperty.call(fields, "lineage_id")) {
-      const consanguineal = Boolean(u.cleanLine(fields.lineage_id, 200));
+    if (importedMcLineage && Object.prototype.hasOwnProperty.call(fields, "lineage-id")) {
+      const consanguineal = Boolean(u.cleanLine(fields["lineage-id"], 200));
       return { consanguineal: consanguineal, affinal: !consanguineal };
     }
     return {
@@ -241,7 +241,7 @@
 
   function isLinealPerson(person) {
     const fields = u.plainObject(person && person.source && person.source.fields);
-    return Boolean(u.cleanLine(fields.lineage_id, 200));
+    return Boolean(u.cleanLine(fields["lineage-id"], 200));
   }
 
   function directoryFilterSummary() {
@@ -324,7 +324,7 @@
   function lifeDateValue(person, kind) {
     const normalized = String(person && person[kind] && person[kind].date && person[kind].date.value || "");
     if (normalized) return normalized;
-    return sourceField(person, "person_date_" + kind + "_value");
+    return sourceField(person, "person-date-" + kind + "-value");
   }
 
   function lifeDateLabel(person, kind) {
@@ -447,7 +447,7 @@
   }
 
   function relationshipBirthValue(person) {
-    return sourceField(person, "person_date_birth_value")
+    return sourceField(person, "person-date-birth-value")
       || String(person && person.birth && person.birth.date && person.birth.date.value || "");
   }
 
@@ -482,7 +482,7 @@
 
   function parentContext(child, entry) {
     const parent = entry.person || entry;
-    const recordId = sourceField(parent, "record_id").toUpperCase();
+    const recordId = sourceField(parent, "record-id").toUpperCase();
     const consanguinityId = sourceField(child, CONSANGUINITY_FIELD).toUpperCase();
     const affinityId = sourceField(child, AFFINITY_FIELD).toUpperCase();
     if (recordId && recordId === consanguinityId) return "(Lineal)";
@@ -556,23 +556,23 @@
   }
 
   function sourceDisplayValue(entry) {
-    if (entry[0] !== "lineage_id") return entry[1];
+    if (entry[0] !== "lineage-id") return entry[1];
     return String(entry[1] || "").split(".").map(displayLineageSegment).join(".");
   }
 
   function sourceLabel(key) {
-    return String(key || "").replace(/_/g, " ").replace(/\b\w/g, function (character) { return character.toUpperCase(); });
+    return String(key || "").replace(/[-_]/g, " ").replace(/\b\w/g, function (character) { return character.toUpperCase(); });
   }
 
-  const CONSANGUINITY_FIELD = "parent_consanguinity_person_id";
-  const AFFINITY_FIELD = "parent_affinal_person_id";
+  const CONSANGUINITY_FIELD = "parent-consanguinity-person-id";
+  const AFFINITY_FIELD = "parent-affinal-person-id";
 
   function sourceField(person, key) {
     return u.cleanLine(person && person.source && person.source.fields && person.source.fields[key], 4000);
   }
 
   function lineageSegments(person) {
-    const raw = sourceField(person, "lineage_id");
+    const raw = sourceField(person, "lineage-id");
     if (!raw) return [];
     return raw.split(".").map(function (part) { return u.cleanLine(part, 20); }).filter(Boolean).map(function (part) {
       return /^\d+$/.test(part) ? String(Number(part)).padStart(2, "0") : part.padStart(2, "0");
@@ -605,7 +605,7 @@
     const numbers = lineageId(person);
     const byRecordId = new Map();
     current.workspace.people.forEach(function (candidate) {
-      const recordId = sourceField(candidate, "record_id").toUpperCase();
+      const recordId = sourceField(candidate, "record-id").toUpperCase();
       if (recordId && !byRecordId.has(recordId)) byRecordId.set(recordId, candidate);
     });
     const members = [];
@@ -666,7 +666,7 @@
 
   function profileLineage(person) {
     const chain = lineageChain(person);
-    const background = person.heritageNote && !sourceField(person, "lineage_id") ? '<div class="lineage-background"><h4>Background</h4><p class="preserve-lines">' + u.escapeHtml(person.heritageNote) + "</p></div>" : "";
+    const background = person.heritageNote && !sourceField(person, "lineage-id") ? '<div class="lineage-background"><h4>Background</h4><p class="preserve-lines">' + u.escapeHtml(person.heritageNote) + "</p></div>" : "";
     const hasRecordedLineage = chain.members.length > 1 || chain.numbers.length > 0;
     return '<section class="profile-section lineage-section"><h3>Lineage</h3><div class="lineage-id-row"><span>ID</span>' + lineageIdHtml(chain.numbers) + '</div><div class="lineage-columns"><h4>Family Line</h4><ol class="lineage-paired-list">' + chain.members.map(function (member, index) {
       return '<li><div class="lineage-name-cell">' + lineagePersonLink(member, true) + '</div><div class="lineage-reading-cell">' + lineageReadingCell(member, chain.members[index + 1], hasRecordedLineage) + "</div></li>";
@@ -711,7 +711,7 @@
       const ordinal = ordinalLabel ? u.escapeHtml(ordinalLabel) + " " : "";
       return "Gen " + member.generation + ", " + ordinal + "Child of " + u.escapeHtml(firstName(parent.name));
     }).join("<br>");
-    const background = person.heritageNote && !sourceField(person, "lineage_id") ? '<div><dt>Background</dt><dd>' + u.escapeHtml(person.heritageNote).replace(/\n/g, "<br>") + "</dd></div>" : "";
+    const background = person.heritageNote && !sourceField(person, "lineage-id") ? '<div><dt>Background</dt><dd>' + u.escapeHtml(person.heritageNote).replace(/\n/g, "<br>") + "</dd></div>" : "";
     return '<section class="print-wide"><h3>Lineage</h3><dl><div><dt>ID</dt><dd>' + lineageIdHtml(chain.numbers) + '</dd></div><div><dt>Family Line</dt><dd>' + nameList + '</dd></div><div><dt>Reading</dt><dd>' + reading + '</dd></div><div><dt>Family</dt><dd>' + u.escapeHtml(lineageSummaryText(person)) + "</dd></div>" + background + "</dl></section>";
   }
 
@@ -1555,10 +1555,10 @@
       const linealReference = sourceField(cursor, CONSANGUINITY_FIELD).toUpperCase();
       const parents = graph.parents.get(cursor.id) || [];
       const linealParent = parents.find(function (entry) {
-        return linealReference && sourceField(entry.person, "record_id").toUpperCase() === linealReference;
+        return linealReference && sourceField(entry.person, "record-id").toUpperCase() === linealReference;
       }) || parents.find(function (entry) {
         const relationshipReference = u.cleanLine(entry.relationship && entry.relationship.source && entry.relationship.source.fields && entry.relationship.source.fields[CONSANGUINITY_FIELD], 4000).toUpperCase();
-        return relationshipReference && relationshipReference === sourceField(entry.person, "record_id").toUpperCase();
+        return relationshipReference && relationshipReference === sourceField(entry.person, "record-id").toUpperCase();
       }) || parents.find(function (entry) {
         return entry.relationship && entry.relationship.kind === "biological";
       }) || parents.find(function (entry) {
@@ -2315,7 +2315,6 @@
     const report = storage.getLoadReport();
     if (report.recovered) components.toast("The saved state was unusable, so the last valid recovery copy was loaded.", { title: "Recovery copy restored", kind: "warning", duration: 6000 });
     else if (report.error && report.source === "default") components.toast("Saved data could not be read. McFamily returned to the private import screen.", { title: "Import required", kind: "warning", duration: 6000 });
-    else if (report.migrations.length) components.toast("Saved data was upgraded through " + report.migrations.join(", ") + ".", { title: "State upgraded", kind: "success" });
   }
 
   function init() {

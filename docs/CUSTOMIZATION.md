@@ -15,10 +15,11 @@ Parent types, partner statuses, living statuses, date qualifiers, and the 1,500-
 For a schema change:
 
 1. Add narrow defaults and normalizers in `assets/js/core/state.js`.
-2. Add a sequential migration that preserves existing content.
-3. Increment `schemaVersion` and the storage key only when the durable shape requires it.
-4. Update `docs/MCFAMILY_CSV.md` and synthetic fixtures.
-5. Verify old states, export/import round trips, unsafe text, and invalid relationships.
+2. Increment `schemaVersion`, the storage key, and the recovery key so older local data stays isolated.
+3. Update `docs/MCFAMILY_CSV.md` and synthetic fixtures.
+4. Verify the import gate, current export/import round trips, unsafe text, and invalid relationships.
+
+Do not add historical state migrations. McFamily intentionally follows the latest website and latest private data files together.
 
 Keep derived relationship information in `core/family.js`; do not duplicate ancestors, descendants, siblings, or lineage arrays on people.
 

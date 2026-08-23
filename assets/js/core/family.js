@@ -4,7 +4,7 @@
   const App = window.LocalApp;
   const config = App.config;
   const model = App.stateModel;
-  const CONSANGUINITY_FIELD = "parent_consanguinity_person_id";
+  const CONSANGUINITY_FIELD = "parent-consanguinity-person-id";
 
   function indexes(state) {
     const people = state.workspace.people;
@@ -207,7 +207,7 @@
   function bloodlineParentRank(person, entry) {
     const parent = relationPerson(entry);
     const consanguinityId = sourceField(person, CONSANGUINITY_FIELD).toUpperCase();
-    const recordId = sourceField(parent, "record_id").toUpperCase();
+    const recordId = sourceField(parent, "record-id").toUpperCase();
     if (consanguinityId && recordId === consanguinityId) return 0;
     if (entry && entry.relationship && entry.relationship.kind === "biological") return 1;
     return 2;
@@ -318,7 +318,7 @@
 
   function lineageParts(person) {
     const fields = person && person.source && person.source.fields;
-    const raw = String(fields && fields.lineage_id || "").trim();
+    const raw = String(fields && fields["lineage-id"] || "").trim();
     return raw ? raw.split(".").map(function (part) { return part.trim(); }).filter(Boolean) : [];
   }
 
@@ -415,7 +415,7 @@
   function unplacedLineageIds(state) {
     const hidden = new Set();
     state.workspace.people.forEach(function (person) {
-      if (sourceField(person, "lineage_id") === "99") hidden.add(person.id);
+      if (sourceField(person, "lineage-id") === "99") hidden.add(person.id);
     });
     if (!hidden.size) return hidden;
     const total = new Map();
@@ -428,7 +428,7 @@
       });
     });
     state.workspace.people.forEach(function (person) {
-      if (hidden.has(person.id) || sourceField(person, "lineage_id")) return;
+      if (hidden.has(person.id) || sourceField(person, "lineage-id")) return;
       const links = total.get(person.id) || 0;
       if (links && links === (toHidden.get(person.id) || 0)) hidden.add(person.id);
     });
@@ -612,7 +612,7 @@
   function eventYearLabel(person, kind) {
     const value = person && person[kind] && person[kind].date && person[kind].date.value;
     if (value) return String(value).slice(0, 4);
-    const year = sourceField(person, "person_date_" + kind + "_value").slice(0, 4);
+    const year = sourceField(person, "person-date-" + kind + "-value").slice(0, 4);
     return /^[\d?]{4}$/.test(year) ? year : "";
   }
 

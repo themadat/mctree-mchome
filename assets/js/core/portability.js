@@ -20,15 +20,22 @@
     "source_json", "settings_json"
   ];
   const MCLINEAGE_PERSON_DATE_HEADERS = [
-    "person_date_birth_value", "person_date_birth_descriptor",
-    "person_date_death_value", "person_date_death_descriptor"
+    "person-date-birth-value", "person-date-birth-descriptor",
+    "person-date-death-value", "person-date-death-descriptor"
   ];
-  const CONSANGUINITY_FIELD = "parent_consanguinity_person_id";
-  const AFFINITY_FIELD = "parent_affinal_person_id";
-  const MCLINEAGE_REQUIRED = [
-    "record_id", "lineage_id", "parent_consanguinity_person_id", "parent_affinal_person_id",
-    "person_first_names", "person_last_name", "person_name_sort", "retain_maiden_name", "partner_relationships_json"
-  ].concat(MCLINEAGE_PERSON_DATE_HEADERS);
+  const CONSANGUINITY_FIELD = "parent-consanguinity-person-id";
+  const AFFINITY_FIELD = "parent-affinal-person-id";
+  const MCLINEAGE_HEADERS = [
+    "record-id",
+    "person-name-birth-prefix", "person-birth-name-first", "person-birth-name-middle", "person-birth-name-last", "person-birth-name-suffix",
+    "person-name-current-prefix", "person-current-name-first", "person-current-name-middle", "person-current-name-last", "person-current-name-suffix",
+    "person-name-preferred-prefix", "person-preferred-name-first", "person-preferred-name-middle", "person-preferred-name-last", "person-preferred-name-suffix",
+    "person-name-maiden-last", "lineage-id", CONSANGUINITY_FIELD, AFFINITY_FIELD
+  ].concat(MCLINEAGE_PERSON_DATE_HEADERS, [
+    "legacy-male-display-first-names", "legacy-male-display-last-name", "legacy-male-display-deceased",
+    "legacy-female-display-first-names", "legacy-female-display-last-name", "retain-maiden-name",
+    "partner-relationships-json", "notes", "source-last-modified-date", "source-last-modified-by", "source-row-number", "data-quality-notes"
+  ]);
   let pendingImport = null;
 
   function parseCsv(text) {
@@ -210,11 +217,11 @@
   }
 
   function personDateValue(row, kind) {
-    return row["person_date_" + kind + "_value"];
+    return row["person-date-" + kind + "-value"];
   }
 
   function personDateDescriptor(row, kind) {
-    return row["person_date_" + kind + "_descriptor"];
+    return row["person-date-" + kind + "-descriptor"];
   }
 
   function validatePersonDateSchema(parsed) {
@@ -237,10 +244,10 @@
   }
 
   function validateCurrentSourceDates(parsed, counters) {
-    const valueHeaders = parsed.headers.filter(function (header) { return header.includes("date") && header.endsWith("_value"); });
+    const valueHeaders = parsed.headers.filter(function (header) { return header.includes("date") && header.endsWith("-value"); });
     parsed.rows.forEach(function (row) {
       valueHeaders.forEach(function (valueHeader) {
-        const descriptorHeader = valueHeader.replace(/_value$/, "_descriptor");
+        const descriptorHeader = valueHeader.replace(/-value$/, "-descriptor");
         if (!parsed.headers.includes(descriptorHeader)) throw new Error("The current McLineage date schema is incomplete at " + valueHeader + ".");
         const value = u.cleanLine(row[valueHeader], 40);
         const descriptor = u.cleanLine(row[descriptorHeader], 40);
@@ -264,28 +271,28 @@
     const parentReferenceField = CONSANGUINITY_FIELD;
     const byLineageId = new Map();
     parsed.rows.forEach(function (row) {
-      const recordId = sourceRecordKey(row.record_id);
-      const lineageId = u.cleanLine(row.lineage_id, 100);
+      const recordId = sourceRecordKey(row["record-id"]);
+      const lineageId = u.cleanLine(row["lineage-id"], 100);
       const parentRecordId = sourceRecordKey(row[parentReferenceField]);
       if (!lineageId) {
-        if (parentRecordId) throw new Error("A McLineage person with a lineage parent must also have a lineage_id: " + recordId + ".");
+        if (parentRecordId) throw new Error("A McLineage person with a lineage parent must also have a lineage-id: " + recordId + ".");
         return;
       }
-      if (!/^(?:\d{2})(?:\.\d{2})*$|^99$/.test(lineageId)) throw new Error("Current McLineage lineage_id values must use two-digit root-to-person segments.");
-      if (lineageId !== "99" && byLineageId.has(lineageId)) throw new Error("The McLineage CSV contains a duplicate lineage_id: " + lineageId + ".");
+      if (!/^(?:\d{2})(?:\.\d{2})*$|^99$/.test(lineageId)) throw new Error("Current McLineage lineage-id values must use two-digit root-to-person segments.");
+      if (lineageId !== "99" && byLineageId.has(lineageId)) throw new Error("The McLineage CSV contains a duplicate lineage-id: " + lineageId + ".");
       if (lineageId !== "99") byLineageId.set(lineageId, recordId);
     });
     parsed.rows.forEach(function (row) {
-      const recordId = sourceRecordKey(row.record_id);
+      const recordId = sourceRecordKey(row["record-id"]);
       const parentRecordId = sourceRecordKey(row[parentReferenceField]);
-      const lineageId = u.cleanLine(row.lineage_id, 100);
+      const lineageId = u.cleanLine(row["lineage-id"], 100);
       if (!parentRecordId) return;
       const parentPerson = (byRecordId.get(parentRecordId) || [])[0];
       if (!parentPerson) return;
       const parentFields = parentPerson && parentPerson.source && parentPerson.source.fields;
-      const parentLineageId = u.cleanLine(parentFields && parentFields.lineage_id, 100);
+      const parentLineageId = u.cleanLine(parentFields && parentFields["lineage-id"], 100);
       if (!parentLineageId || !lineageId.startsWith(parentLineageId + ".") || lineageId.split(".").length !== parentLineageId.split(".").length + 1) {
-        throw new Error("The lineage_id for " + recordId + " must extend its direct parent's root-to-person lineage path by one segment.");
+        throw new Error("The lineage-id for " + recordId + " must extend its direct parent's root-to-person lineage path by one segment.");
       }
     });
   }
@@ -301,7 +308,7 @@
   }
 
   function sourcePersonId(row, index) {
-    const recordId = sourceRecordKey(row.record_id);
+    const recordId = sourceRecordKey(row["record-id"]);
     return /^P\d{3,}$/.test(recordId) ? recordId : stableId("person", recordId, "row-" + (index + 1));
   }
 
@@ -318,11 +325,24 @@
     const deathDescriptor = u.cleanLine(personDateDescriptor(row, "death"), 40);
     const notes = [];
     if (u.cleanText(row.notes, 4000).trim()) notes.push(u.cleanText(row.notes, 4000).trim());
-    if (u.cleanText(row.data_quality_notes, 4000).trim()) notes.push("Data quality: " + u.cleanText(row.data_quality_notes, 4000).trim());
+    if (u.cleanText(row["data-quality-notes"], 4000).trim()) notes.push("Data quality: " + u.cleanText(row["data-quality-notes"], 4000).trim());
     const person = {
       id: sourcePersonId(row, index),
-      givenName: row.person_first_names,
-      familyName: row.person_last_name,
+      names: {
+        birth: {
+          prefix: row["person-name-birth-prefix"], first: row["person-birth-name-first"], middle: row["person-birth-name-middle"],
+          last: row["person-birth-name-last"], suffix: row["person-birth-name-suffix"]
+        },
+        current: {
+          prefix: row["person-name-current-prefix"], first: row["person-current-name-first"], middle: row["person-current-name-middle"],
+          last: row["person-current-name-last"], suffix: row["person-current-name-suffix"]
+        },
+        preferred: {
+          prefix: row["person-name-preferred-prefix"], first: row["person-preferred-name-first"], middle: row["person-preferred-name-middle"],
+          last: row["person-preferred-name-last"], suffix: row["person-preferred-name-suffix"]
+        },
+        maidenLast: row["person-name-maiden-last"]
+      },
       livingStatus: deathRaw ? "deceased" : "unknown",
       birth: { date: sourceDate(birthRaw, birthDescriptor, counters), place: "" },
       death: { date: sourceDate(deathRaw, deathDescriptor, counters), place: "" },
@@ -331,7 +351,7 @@
       notes: notes.join("\n\n"),
       source: { format: "mclineage-cleaned", fields: sourceFields(row) },
       order: index,
-      updatedAt: /^\d{4}-\d{2}-\d{2}$/.test(row.source_last_modified_date || "") ? row.source_last_modified_date + "T00:00:00.000Z" : ""
+      updatedAt: /^\d{4}-\d{2}-\d{2}$/.test(row["source-last-modified-date"] || "") ? row["source-last-modified-date"] + "T00:00:00.000Z" : ""
     };
     person.livingStatus = model.mcLineageLivingStatus(person, person.livingStatus);
     return person;
@@ -361,17 +381,17 @@
   }
 
   function sourcePartnerRelationships(row, owner, index, counters) {
-    const text = originalCsvValue(row.partner_relationships_json).trim();
+    const text = originalCsvValue(row["partner-relationships-json"]).trim();
     if (!text) return [];
     let entries;
     try { entries = JSON.parse(text); }
-    catch (error) { throw new Error("partner_relationships_json on " + row.record_id + " contains invalid JSON."); }
-    if (!Array.isArray(entries)) throw new Error("partner_relationships_json on " + row.record_id + " must be a JSON array.");
+    catch (error) { throw new Error("partner-relationships-json on " + row["record-id"] + " contains invalid JSON."); }
+    if (!Array.isArray(entries)) throw new Error("partner-relationships-json on " + row["record-id"] + " must be a JSON array.");
     return entries.map(function (input) {
-      if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Every partner relationship on " + row.record_id + " must be a JSON object.");
+      if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Every partner relationship on " + row["record-id"] + " must be a JSON object.");
       const required = ["relationship_id", "partner_person_id", "relationship_type", "relationship_order", "date_start_value", "date_start_descriptor", "date_end_value", "date_end_descriptor", "end_reason"];
       const missing = required.find(function (key) { return !Object.prototype.hasOwnProperty.call(input, key); });
-      if (missing) throw new Error("A partner relationship on " + row.record_id + " is missing " + missing + ".");
+      if (missing) throw new Error("A partner relationship on " + row["record-id"] + " is missing " + missing + ".");
       const relationshipId = u.cleanLine(input.relationship_id, 100).toUpperCase();
       const partnerId = sourceRecordKey(input.partner_person_id);
       const type = u.cleanLine(input.relationship_type, 40);
@@ -385,7 +405,7 @@
       const start = validatePartnerRelationshipDate(input.date_start_value, input.date_start_descriptor, "McLineage partner start date");
       const end = validatePartnerRelationshipDate(input.date_end_value, input.date_end_descriptor, "McLineage partner end date");
       if (end.value && !endReason) throw new Error("A McLineage partner end date requires an end_reason.");
-      const sourceFields = { originating_record_id: row.record_id || "" };
+      const sourceFields = { originating_record_id: row["record-id"] || "" };
       required.forEach(function (key) { sourceFields[key] = String(input[key] == null ? "" : input[key]); });
       return {
         id: relationshipId,
@@ -412,16 +432,16 @@
     const primaryByRow = [];
     const byRecordId = new Map();
     parsed.rows.forEach(function (row, index) {
-      if (!/^P\d{3,}$/.test(sourceRecordKey(row.record_id))) throw new Error("McLineage record_id values must use P references such as P001.");
+      if (!/^P\d{3,}$/.test(sourceRecordKey(row["record-id"]))) throw new Error("McLineage record-id values must use P references such as P001.");
       const person = sourcePerson(row, index, counters);
       people.push(person);
       primaryByRow[index] = person;
-      const recordId = sourceRecordKey(row.record_id);
+      const recordId = sourceRecordKey(row["record-id"]);
       if (!byRecordId.has(recordId)) byRecordId.set(recordId, []);
       byRecordId.get(recordId).push(person);
     });
     const duplicateRecordId = Array.from(byRecordId.entries()).find(function (entry) { return entry[1].length > 1; });
-    if (duplicateRecordId) throw new Error("The McLineage CSV contains a duplicate record_id: " + duplicateRecordId[0] + ".");
+    if (duplicateRecordId) throw new Error("The McLineage CSV contains a duplicate record-id: " + duplicateRecordId[0] + ".");
     validateRootToPersonLineage(parsed, byRecordId);
     const partnerPairs = new Set();
     const relationshipIds = new Set();
@@ -429,12 +449,12 @@
       const primary = primaryByRow[index];
       sourcePartnerRelationships(row, primary, index, counters).forEach(function (relationship) {
         const candidates = byRecordId.get(relationship.partnerPersonId) || [];
-        if (candidates.length !== 1) throw new Error("McLineage partner reference " + relationship.partnerPersonId + " on " + row.record_id + " does not resolve to exactly one person.");
-        if (candidates[0].id === primary.id) throw new Error("McLineage partner references cannot point to the same person: " + row.record_id + ".");
+        if (candidates.length !== 1) throw new Error("McLineage partner reference " + relationship.partnerPersonId + " on " + row["record-id"] + " does not resolve to exactly one person.");
+        if (candidates[0].id === primary.id) throw new Error("McLineage partner references cannot point to the same person: " + row["record-id"] + ".");
         if (relationshipIds.has(relationship.id)) throw new Error("The McLineage CSV contains a duplicate partner relationship ID: " + relationship.id + ".");
         relationshipIds.add(relationship.id);
         const pairKey = [primary.id, candidates[0].id].sort().join("|");
-        if (partnerPairs.has(pairKey)) throw new Error("The McLineage CSV contains a duplicate partner relationship for " + row.record_id + " and " + relationship.partnerPersonId + ".");
+        if (partnerPairs.has(pairKey)) throw new Error("The McLineage CSV contains a duplicate partner relationship for " + row["record-id"] + " and " + relationship.partnerPersonId + ".");
         partnerPairs.add(pairKey);
         relationship.person2Id = candidates[0].id;
         delete relationship.partnerPersonId;
@@ -448,26 +468,26 @@
         if (!/^P\d{3,}$/.test(parentReference)) throw new Error("McLineage Lineal parent references must use P references such as P001.");
         const candidates = byRecordId.get(parentReference) || [];
         if (candidates.length === 1) relationships.push({
-          id: stableId("relationship", row.record_id + "-parent", "parent-" + index),
+          id: stableId("relationship", row["record-id"] + "-parent", "parent-" + index),
           type: "parent-child", parentId: candidates[0].id, childId: primary.id, kind: "biological",
           notes: "Imported Lineal parent " + parentReference,
-          source: { format: "mclineage-cleaned", fields: { child_record_id: row.record_id, [CONSANGUINITY_FIELD]: parentReference } },
+          source: { format: "mclineage-cleaned", fields: { "child-record-id": row["record-id"], [CONSANGUINITY_FIELD]: parentReference } },
           order: relationships.length
         });
         else counters.orphanParents += 1;
       }
       const affinalParentReference = sourceRecordKey(row[AFFINITY_FIELD]);
       if (affinalParentReference) {
-        if (!parentReference) throw new Error("A McLineage Non-Lineal parent requires a Lineal parent: " + row.record_id + ".");
+        if (!parentReference) throw new Error("A McLineage Non-Lineal parent requires a Lineal parent: " + row["record-id"] + ".");
         if (!/^P\d{3,}$/.test(affinalParentReference)) throw new Error("McLineage Non-Lineal parent references must use P references such as P001.");
-        if (affinalParentReference === sourceRecordKey(row.record_id) || affinalParentReference === parentReference) throw new Error("McLineage Non-Lineal parents must differ from the child and Lineal parent: " + row.record_id + ".");
+        if (affinalParentReference === sourceRecordKey(row["record-id"]) || affinalParentReference === parentReference) throw new Error("McLineage Non-Lineal parents must differ from the child and Lineal parent: " + row["record-id"] + ".");
         const affinalCandidates = byRecordId.get(affinalParentReference) || [];
         if (!partnerPairs.has([parentReference, affinalParentReference].sort().join("|"))) throw new Error("McLineage Non-Lineal parent " + affinalParentReference + " is not a recorded partner of " + parentReference + ".");
         if (affinalCandidates.length === 1) relationships.push({
-          id: stableId("relationship", row.record_id + "-affinal-parent", "affinal-parent-" + index),
+          id: stableId("relationship", row["record-id"] + "-affinal-parent", "affinal-parent-" + index),
           type: "parent-child", parentId: affinalCandidates[0].id, childId: primary.id, kind: "affinal",
           notes: "Imported Non-Lineal parent " + affinalParentReference,
-          source: { format: "mclineage-cleaned", fields: { child_record_id: row.record_id, [AFFINITY_FIELD]: affinalParentReference } },
+          source: { format: "mclineage-cleaned", fields: { "child-record-id": row["record-id"], [AFFINITY_FIELD]: affinalParentReference } },
           order: relationships.length
         });
         else counters.orphanAffinalParents += 1;
@@ -492,7 +512,7 @@
     if (counters.partialDates) warnings.push(counters.partialDates + " partial source date" + (counters.partialDates === 1 ? " is" : "s are") + " preserved in source fields but not shown as a normalized date.");
     if (counters.unmappedDates) warnings.push(counters.unmappedDates + " unrecognized source date" + (counters.unmappedDates === 1 ? " is" : "s are") + " preserved in source fields but not shown as a normalized date.");
     prepared.validation.warnings = prepared.validation.warnings.concat(warnings);
-    return Object.assign(prepared, { formatLabel: "McLineage cleaned CSV", sourceRows: parsed.rows.length, fileName: fileName });
+    return Object.assign(prepared, { formatLabel: "McLineage v12 CSV", sourceRows: parsed.rows.length, fileName: fileName });
   }
 
   function parseJsonObject(value, label) {
@@ -574,10 +594,18 @@
   function prepareCsv(text, fileName) {
     const parsed = parseCsv(text);
     if (parsed.headers.includes("mcfamily_csv_version") && parsed.headers.includes("record_type")) return prepareNative(parsed, fileName);
-    const missing = MCLINEAGE_REQUIRED.filter(function (header) { return !parsed.headers.includes(header); });
-    if (!missing.length) return prepareMcLineage(parsed, fileName);
-    if (missing.length < MCLINEAGE_REQUIRED.length) throw new Error("That McLineage CSV is missing current schema columns: " + missing.join(", ") + ".");
-    throw new Error("That CSV is neither a McFamily export nor the current McLineage-cleaned format.");
+    const missing = MCLINEAGE_HEADERS.filter(function (header) { return !parsed.headers.includes(header); });
+    const unexpected = parsed.headers.filter(function (header) { return !MCLINEAGE_HEADERS.includes(header); });
+    const exactOrder = parsed.headers.length === MCLINEAGE_HEADERS.length && parsed.headers.every(function (header, index) { return header === MCLINEAGE_HEADERS[index]; });
+    if (!missing.length && !unexpected.length && exactOrder) return prepareMcLineage(parsed, fileName);
+    if (parsed.headers.some(function (header) { return header === "record-id" || header === "record_id" || header.startsWith("person-") || header.startsWith("person_"); })) {
+      const details = [];
+      if (missing.length) details.push("missing: " + missing.join(", "));
+      if (unexpected.length) details.push("unexpected: " + unexpected.join(", "));
+      if (!missing.length && !unexpected.length && !exactOrder) details.push("columns are not in the McLineage v12 order");
+      throw new Error("McFamily accepts only the exact McLineage v12 schema (" + details.join("; ") + ").");
+    }
+    throw new Error("That CSV is neither a current McFamily export nor an exact McLineage v12 file.");
   }
 
   function summaryFor(state, candidate) {
@@ -590,7 +618,6 @@
       schemaVersion: state.schemaVersion,
       appVersion: state.meta.appVersion,
       updatedAt: state.meta.updatedAt,
-      migrations: candidate && candidate.migrations || [],
       formatLabel: candidate && candidate.formatLabel || "Current local family",
       sourceRows: candidate && candidate.sourceRows || 0
     };
@@ -615,9 +642,6 @@
     document.querySelector("[data-import-addresses]").textContent = String(summary.addresses);
     document.querySelector("[data-import-version]").textContent = summary.formatLabel + " · " + summary.sourceRows + " CSV rows · state v" + summary.schemaVersion;
     document.querySelector("[data-import-updated]").textContent = u.dateLabel(summary.updatedAt);
-    const migrationRow = document.querySelector("[data-import-migrations-row]");
-    migrationRow.hidden = summary.migrations.length === 0;
-    document.querySelector("[data-import-migrations]").textContent = summary.migrations.length ? summary.migrations.join(", ") : "None";
     const warning = document.querySelector("[data-import-warning]");
     warning.hidden = candidate.validation.warnings.length === 0;
     warning.textContent = candidate.validation.warnings.join(" ");

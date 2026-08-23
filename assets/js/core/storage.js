@@ -8,7 +8,7 @@
   let currentState;
   let persistentStorageAvailable = true;
   let lastSavedJson = "";
-  let loadReport = { source: "default", migrations: [], warnings: [], recovered: false, error: "" };
+  let loadReport = { source: "default", warnings: [], recovered: false, error: "" };
 
   function emit(name, detail) {
     window.dispatchEvent(new CustomEvent(name, { detail: detail || {} }));
@@ -58,36 +58,19 @@
   }
 
   function load() {
-    const candidates = [{ key: config.storage.stateKey, label: "current" }].concat(config.storage.legacyKeys.map(function (key) { return { key: key, label: "legacy" }; }));
     let parseError = "";
-    for (let index = 0; index < candidates.length; index += 1) {
-      const candidate = candidates[index];
-      const raw = readLocal(candidate.key);
-      if (!raw) continue;
+    const raw = readLocal(config.storage.stateKey);
+    if (raw) {
       try {
         const prepared = model.prepare(JSON.parse(raw));
         currentState = prepared.state;
         loadReport = {
-          source: candidate.label,
-          migrations: prepared.migrations,
+          source: "current",
           warnings: prepared.validation.warnings,
           recovered: false,
           error: ""
         };
-        const normalizedJson = JSON.stringify(currentState);
-        if (candidate.key !== config.storage.stateKey) {
-          lastSavedJson = "";
-          removeLocal(candidate.key);
-          if (!saveNow()) {
-            writeLocal(candidate.key, raw);
-            lastSavedJson = "";
-          }
-        } else if (prepared.migrations.length) {
-          lastSavedJson = "";
-          saveNow();
-        } else {
-          lastSavedJson = normalizedJson;
-        }
+        lastSavedJson = JSON.stringify(currentState);
         return currentState;
       } catch (error) {
         parseError = error.message || "Saved state could not be read.";
@@ -97,13 +80,13 @@
     const recovery = readRecovery();
     if (recovery) {
       currentState = recovery.state;
-      loadReport = { source: "recovery", migrations: [], warnings: [], recovered: true, error: parseError };
+      loadReport = { source: "recovery", warnings: [], recovered: true, error: parseError };
       saveNow();
       return currentState;
     }
 
     currentState = model.createDefaultState();
-    loadReport = { source: "default", migrations: [], warnings: [], recovered: false, error: parseError };
+    loadReport = { source: "default", warnings: [], recovered: false, error: parseError };
     saveNow();
     return currentState;
   }
@@ -181,7 +164,7 @@
 
   function clearAll() {
     scheduleSave.cancel();
-    [config.storage.stateKey, config.storage.recoveryKey].concat(config.storage.legacyKeys).filter(Boolean).forEach(removeLocal);
+    [config.storage.stateKey, config.storage.recoveryKey].filter(Boolean).forEach(removeLocal);
     lastSavedJson = "";
     currentState = model.createDefaultState({ demo: false });
     saveNow();

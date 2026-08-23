@@ -26,7 +26,7 @@ Destructive controls use the shared confirmation dialog. Deleting a person creat
 
 ## Notes
 
-Notes remains one large plain-text textarea. It opens from the header or `N`, autosaves locally, and returns focus when closed. The compatibility `documents` collection is normalized to `app-notes`, and older multi-note content is consolidated during migration.
+Notes remains one large plain-text textarea. It opens from the header or `N`, autosaves locally, and returns focus when closed. The current `documents` collection is normalized to one `app-notes` document.
 
 ## Global search
 

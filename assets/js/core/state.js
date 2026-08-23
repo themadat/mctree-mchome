@@ -8,19 +8,6 @@
   const PARTNER_STATUSES = new Set(config.partnerStatuses.map(function (item) { return item.id; }));
   const DATE_QUALIFIERS = new Set(["exact", "about", "before", "after"]);
   const NAME_PART_KEYS = ["prefix", "first", "middle", "last", "suffix"];
-  const NAME_PREFIXES = new Map([
-    ["rev", "Rev."], ["reverend", "Rev."], ["dr", "Dr."], ["mr", "Mr."], ["mrs", "Mrs."], ["ms", "Ms."], ["miss", "Miss"],
-    ["fr", "Fr."], ["father", "Father"], ["hon", "Hon."], ["prof", "Prof."], ["rabbi", "Rabbi"], ["pastor", "Pastor"],
-    ["capt", "Capt."], ["col", "Col."], ["lt", "Lt."], ["gen", "Gen."], ["judge", "Judge"], ["st", "St."]
-  ]);
-  const NAME_SUFFIXES = new Map([
-    ["jr", "Jr."], ["sr", "Sr."], ["ii", "II"], ["iii", "III"], ["esq", "Esq."], ["phd", "PhD"], ["md", "MD"]
-  ]);
-
-  function nameToken(value) {
-    return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-  }
-
   function blankNameParts() {
     return { prefix: "", first: "", middle: "", last: "", suffix: "" };
   }
@@ -32,78 +19,9 @@
     return result;
   }
 
-  function splitFirstMiddle(value) {
-    const words = u.cleanLine(value, 240).split(/\s+/).filter(Boolean);
-    let prefix = "";
-    if (words.length && NAME_PREFIXES.has(nameToken(words[0]))) prefix = NAME_PREFIXES.get(nameToken(words.shift()));
-    return { prefix: prefix, first: words.shift() || "", middle: words.join(" ") };
-  }
-
-  function splitLastSuffix(value, explicitSuffix) {
-    const words = u.cleanLine(value, 240).split(/\s+/).filter(Boolean);
-    let suffix = u.cleanLine(explicitSuffix, 40);
-    if (!suffix && words.length && NAME_SUFFIXES.has(nameToken(words[words.length - 1]))) suffix = NAME_SUFFIXES.get(nameToken(words.pop()));
-    return { last: words.join(" ").replace(/,\s*$/, ""), suffix: suffix };
-  }
-
-  function parseFullName(value) {
-    const words = u.cleanLine(value, 400).split(/\s+/).filter(Boolean);
-    if (!words.length) return blankNameParts();
-    let prefix = "";
-    let suffix = "";
-    if (NAME_PREFIXES.has(nameToken(words[0]))) prefix = NAME_PREFIXES.get(nameToken(words.shift()));
-    if (words.length && NAME_SUFFIXES.has(nameToken(words[words.length - 1]))) suffix = NAME_SUFFIXES.get(nameToken(words.pop()));
-    if (!words.length) return { prefix: prefix, first: "", middle: "", last: "", suffix: suffix };
-    if (words.length === 1) return { prefix: prefix, first: words[0], middle: "", last: "", suffix: suffix };
-    return { prefix: prefix, first: words[0], middle: words.slice(1, -1).join(" "), last: words[words.length - 1], suffix: suffix };
-  }
-
-  function legacyStructuredNames(person) {
-    const source = u.plainObject(person);
-    const names = u.plainObject(source.names);
-    const sourceFields = u.plainObject(source.source && source.source.fields);
-    const given = u.cleanLine(names.given || source.givenName, 240);
-    const explicitMiddle = u.cleanLine(names.middle || source.middleName, 120);
-    const firstParts = splitFirstMiddle(given);
-    if (explicitMiddle) firstParts.middle = explicitMiddle;
-    const family = u.cleanLine(names.family || source.familyName || source.surname, 240);
-    const birthFamily = u.cleanLine((typeof names.birth === "string" ? names.birth : "") || source.birthSurname || source.maidenName || family, 240);
-    const birthLast = splitLastSuffix(birthFamily, names.suffix || source.suffix);
-    const sortValue = u.cleanLine(sourceFields.person_name_sort || sourceFields.legacy_sort_name, 400);
-    const sortPieces = sortValue.split(",").map(function (value) { return value.trim(); }).filter(Boolean);
-    const commaSuffix = sortPieces.length === 2 && NAME_SUFFIXES.has(nameToken(sortPieces[1]));
-    const sortedGiven = sortPieces.length > 1 && !commaSuffix ? splitFirstMiddle(sortPieces.slice(1).join(" ")) : null;
-    const retainMaiden = /^(?:true|yes|1)$/i.test(u.cleanLine(sourceFields.retain_maiden_name || sourceFields.maintain_maiden_name, 20));
-    const currentLast = splitLastSuffix((sortPieces[0] || family || birthLast.last) + (commaSuffix ? " " + sortPieces[1] : ""), names.suffix || source.suffix);
-    const birth = {
-      prefix: firstParts.prefix,
-      first: firstParts.first || "UNKNOWN",
-      middle: firstParts.middle,
-      last: birthLast.last || "UNKNOWN",
-      suffix: birthLast.suffix
-    };
-    const current = {
-      prefix: sortedGiven && sortedGiven.prefix || birth.prefix,
-      first: sortedGiven && sortedGiven.first || birth.first,
-      middle: sortedGiven && sortedGiven.middle || birth.middle,
-      last: retainMaiden ? birth.last : (currentLast.last || birth.last),
-      suffix: currentLast.suffix || birth.suffix
-    };
-    const legacyDisplay = u.cleanLine(names.display || source.displayName || source.name, 400);
-    const legacyPreferred = u.cleanLine(names.preferred || source.preferredName, 240);
-    const preferred = legacyDisplay ? parseFullName(legacyDisplay) : Object.assign(blankNameParts(), { first: legacyPreferred });
-    return {
-      birth: birth,
-      current: current,
-      preferred: preferred,
-      maidenLast: !["UNKNOWN", ""].includes(birth.last) && !["UNKNOWN", ""].includes(current.last) && birth.last.toLowerCase() !== current.last.toLowerCase() ? birth.last : ""
-    };
-  }
-
   function normalizePersonNames(person) {
     const source = u.plainObject(person);
     const names = u.plainObject(source.names);
-    if (!names.birth || typeof names.birth !== "object" || Array.isArray(names.birth)) return legacyStructuredNames(source);
     const birth = normalizeNameParts(names.birth);
     const current = normalizeNameParts(names.current);
     birth.first = birth.first || "UNKNOWN";
@@ -114,7 +32,7 @@
       birth: birth,
       current: current,
       preferred: normalizeNameParts(names.preferred),
-      maidenLast: u.cleanLine(names.maidenLast || names.maiden_last_name || source.maidenLastName, 120)
+      maidenLast: u.cleanLine(names.maidenLast, 120)
     };
   }
 
@@ -215,74 +133,14 @@
     };
   }
 
-  function migrate1to2(input) {
-    const source = u.plainObject(input);
-    const now = u.isoNow();
-    const rawRecords = Array.isArray(source.items) ? source.items : (Array.isArray(source.records) ? source.records : []);
-    const rawDocuments = Array.isArray(source.notes) ? source.notes : (Array.isArray(source.documents) ? source.documents : []);
-    return {
-      schemaVersion: 2,
-      meta: { appVersion: source.appVersion || source.version || "", createdAt: source.createdAt || now, updatedAt: source.updatedAt || now },
-      workspace: {
-        title: source.workspaceTitle || source.title || "Legacy workspace",
-        records: rawRecords,
-        documents: rawDocuments.map(function (item, index) {
-          if (typeof item === "string") return { id: u.uid("document"), title: "Note " + (index + 1), html: u.escapeHtml(item).replace(/\n/g, "<br>"), order: index, createdAt: now, updatedAt: now };
-          return item;
-        })
-      },
-      preferences: u.plainObject(source.preferences || source.settings),
-      ui: u.plainObject(source.ui),
-      modules: u.plainObject(source.modules)
-    };
-  }
-
-  function migrate2to3(input) {
-    const source = u.plainObject(input);
-    source.schemaVersion = 3;
-    source.meta = Object.assign({ tombstones: { records: [], documents: [] } }, u.plainObject(source.meta));
-    return source;
-  }
-
-  function migrate3to4(input) {
-    const source = u.plainObject(input);
-    source.schemaVersion = 4;
-    return source;
-  }
-
-  function migrate4to5(input) {
-    const source = u.plainObject(input);
-    const workspace = u.plainObject(source.workspace);
-    source.schemaVersion = 5;
-    source.workspace = Object.assign({}, workspace, {
-      family: u.plainObject(workspace.family),
-      people: Array.isArray(workspace.people) ? workspace.people : [],
-      relationships: Array.isArray(workspace.relationships) ? workspace.relationships : []
-    });
-    return source;
-  }
-
-  function migrate5to6(input) {
-    const source = u.plainObject(input);
-    source.schemaVersion = 6;
-    return source;
-  }
-
-  function migrate6to7(input) {
-    const source = u.plainObject(input);
-    source.schemaVersion = 7;
-    source.ui = Object.assign({ treeNodeView: "condensed", directoryCollapsed: false, profileCollapsed: false }, u.plainObject(source.ui));
-    return source;
-  }
-
   function mcLineageLivingStatus(person, fallback) {
     const source = u.plainObject(person);
     const imported = u.plainObject(source.source);
     if (imported.format !== "mclineage-cleaned") return fallback;
     const fields = u.plainObject(imported.fields);
-    const deathValue = u.cleanLine(fields.person_date_death_value, 40) || u.cleanLine(source.death && source.death.date && source.death.date.value, 40);
+    const deathValue = u.cleanLine(fields["person-date-death-value"], 40) || u.cleanLine(source.death && source.death.date && source.death.date.value, 40);
     if (deathValue) return "deceased";
-    const birthValue = u.cleanLine(source.birth && source.birth.date && source.birth.date.value, 40) || u.cleanLine(fields.person_date_birth_value, 40);
+    const birthValue = u.cleanLine(source.birth && source.birth.date && source.birth.date.value, 40) || u.cleanLine(fields["person-date-birth-value"], 40);
     const birthMatch = birthValue.match(/^(\d{4})(?:-(\d{2})(?:-(\d{2}))?)?$/);
     if (!birthMatch) return "unknown";
     const hundredthBirthday = new Date(Number(birthMatch[1]) + 100, birthMatch[2] ? Number(birthMatch[2]) - 1 : 6, birthMatch[3] ? Number(birthMatch[3]) : 1);
@@ -318,57 +176,20 @@
     people.forEach(function (person) {
       if (person.livingStatus !== "unknown") return;
       const fields = u.plainObject(person.source && person.source.fields);
-      const lineage = u.cleanLine(fields.lineage_id, 400);
+      const lineage = u.cleanLine(fields["lineage-id"], 400);
       if (!lineage || lineage.split(".").some(function (part) { return part === "99"; })) return;
       const generation = lineage.split(".").filter(Boolean).length - 1;
       if (generation >= 0 && generation <= 4) person.livingStatus = "deceased";
     });
   }
 
-  function migrate7to8(input) {
-    const source = u.plainObject(input);
-    const workspace = u.plainObject(source.workspace);
-    source.schemaVersion = 8;
-    if (Array.isArray(workspace.people)) workspace.people.forEach(function (person) {
-      person.livingStatus = mcLineageLivingStatus(person, person.livingStatus);
-    });
-    return source;
-  }
-
-  function migrate8to9(input) {
-    const source = u.plainObject(input);
-    const workspace = u.plainObject(source.workspace);
-    source.schemaVersion = 9;
-    if (Array.isArray(workspace.people)) workspace.people.forEach(function (person) { person.names = legacyStructuredNames(person); });
-    source.ui = Object.assign({ treeNameBasis: "lineal", treeNameLength: "short" }, u.plainObject(source.ui));
-    return source;
-  }
-
-  const migrations = { 1: migrate1to2, 2: migrate2to3, 3: migrate3to4, 4: migrate4to5, 5: migrate5to6, 6: migrate6to7, 7: migrate7to8, 8: migrate8to9 };
-
-  function unwrapInput(input) {
-    const source = u.plainObject(input);
-    if (source.exportFormat && source.state && typeof source.state === "object") return source.state;
-    if (source.backup && source.backup.state && typeof source.backup.state === "object") return source.backup.state;
-    if (source.data && source.data.workspace && typeof source.data === "object") return source.data;
-    return source;
-  }
-
-  function migrate(input) {
-    let next = u.clone(unwrapInput(input));
-    let version = Number(next.schemaVersion || next.stateVersion || 1);
-    if (!Number.isInteger(version) || version < 1) version = 1;
-    if (version > config.schemaVersion) throw new Error("This state uses a newer model (v" + version + ") than McFamily supports (v" + config.schemaVersion + ").");
-    const applied = [];
-    while (version < config.schemaVersion) {
-      const migration = migrations[version];
-      if (!migration) throw new Error("No migration is available from state model v" + version + ".");
-      next = migration(next);
-      applied.push(version + "→" + (version + 1));
-      version += 1;
+  function requireCurrentState(input) {
+    const next = u.clone(u.plainObject(input));
+    const version = Number(next.schemaVersion);
+    if (version !== config.schemaVersion) {
+      throw new Error("This state model is no longer supported. Import the current McLineage v12 or McFamily CSV.");
     }
-    next.schemaVersion = config.schemaVersion;
-    return { state: next, applied: applied };
+    return next;
   }
 
   function cleanId(value, prefix) {
@@ -580,8 +401,8 @@
     const imported = u.plainObject(u.plainObject(relationship).source);
     if (imported.format !== "mclineage-cleaned") return "";
     const fields = u.plainObject(imported.fields);
-    if (u.cleanLine(fields.parent_affinal_person_id, 100)) return "affinal";
-    return u.cleanLine(fields.parent_consanguinity_person_id, 100) ? "biological" : "";
+    if (u.cleanLine(fields["parent-affinal-person-id"], 100)) return "affinal";
+    return u.cleanLine(fields["parent-consanguinity-person-id"], 100) ? "biological" : "";
   }
 
   function normalize(input) {
@@ -799,13 +620,13 @@
   }
 
   function prepare(input) {
-    const migration = migrate(input);
-    const rawErrors = rawRelationshipErrors(migration.state);
+    const currentInput = requireCurrentState(input);
+    const rawErrors = rawRelationshipErrors(currentInput);
     if (rawErrors.length) throw new Error(rawErrors.join(" "));
-    const state = normalize(migration.state);
+    const state = normalize(currentInput);
     const validation = validate(state);
     if (!validation.ok) throw new Error(validation.errors.join(" "));
-    return { state: state, migrations: migration.applied, validation: validation };
+    return { state: state, validation: validation };
   }
 
   function touch(state) {
@@ -978,7 +799,6 @@
   }
 
   App.stateModel = {
-    migrations: migrations,
     createDefaultState: createDefaultState,
     normalize: normalize,
     validate: validate,
