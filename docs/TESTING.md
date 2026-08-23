@@ -11,30 +11,29 @@ Use synthetic families only.
 - [ ] The visible version, build id, asset queries, newest release, cache name, and asset version all match.
 - [ ] No console errors appear during tested workflows.
 
-## Initialization, migration, and portability
+## Initialization, current schema, and portability
 
 - [ ] A fresh profile shows only the introduction, privacy warning, and CSV picker.
 - [ ] No demo family, blank-family action, GEDCOM action, or bypass appears.
-- [ ] A valid cleaned McLineage or native McFamily CSV with at least one person shows a summary and opens the family.
+- [ ] An exact McLineage v12 or current native McFamily CSV with at least one person shows a summary and opens the family.
 - [ ] Unknown headers, missing required cells, zero-person first import, malformed CSV, oversized file, duplicate ids, unsafe headers, self-links, duplicate links, and ancestry cycles are rejected without replacing state.
-- [ ] Current cleaned-source `P` record IDs and direct `parent_consanguinity_person_id` references import without remapping; `record_id` is first, both parent-role fields are adjacent, `person_name_sort` follows `person_last_name`, `source_row_number` immediately precedes `data_quality_notes`, `lineage_id` is a unique two-digit root-to-person path except for isolated `99` records, and removed legacy columns are absent.
-- [ ] Every populated `parent_affinal_person_id` resolves to a distinct person paired with the consanguinity parent through `partner_relationships_json` and imports as an `affinal`-kind second parent; missing, self, duplicate, non-partner, and partial parent-role schemas are rejected.
+- [ ] McLineage v12 has exactly 36 ordered, hyphenated headers; `record-id` is first, both parent-role fields are adjacent, `source-row-number` immediately precedes `data-quality-notes`, and every underscore-named, missing, extra, or reordered source schema is rejected.
+- [ ] Structured Birth, Current, and Preferred name parts plus Maiden Last import directly; `person-first-names`, `person-last-name`, and `person-name-sort` are absent.
+- [ ] Every populated `parent-affinal-person-id` resolves to a distinct person paired with the Lineal parent through `partner-relationships-json` and imports as an `affinal`-kind second parent; missing, self, duplicate, non-partner, and partial parent-role schemas are rejected.
 - [ ] Current partner rows import as their own P-referenced people; their source-row and lineage fields are blank, each JSON partner P reference resolves, and no duplicate people are synthesized.
 - [ ] Each current partner relationship has one unique R ID and unordered person pair; malformed JSON, missing/self references, invalid types/orders/end reasons, inconsistent date pairs, and duplicate relationships are rejected.
 - [ ] Relationship type plus end reason maps to married, partnered, widowed, divorced, separated, former, or unknown without a redundant source status field; an `UNKNOWN` end reason reads as former, so no partner of a person whose partnerships all ended is shown as current.
-- [ ] A McLineage CSV missing any current column is rejected by name, and `descendant_*`, `spouse_#_*`, `lineage_parent_id`, `parent_lineage_id`, `lineage_level_##_name`, `root_ancestor_##_name`, and `legacy_page_reference` files no longer import.
+- [ ] A McLineage file that does not exactly match v12 is rejected with missing, unexpected, or ordering details and never replaces current state.
 - [ ] Every current non-root lineage path extends its direct parent's path by exactly one segment; blank unlineaged people are accepted, while malformed, duplicate, or parent-mismatched paths are rejected.
 - [ ] Current source date values accept blank, `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, or the same shapes with `?` in unknown digit positions; question-mark values require `partial`, `invalid` descriptors are rejected, and birth descriptors reject blank.
-- [ ] Current `person_*` identity/date columns import lineage and partner rows consistently: a known death value imports as deceased, a birth date beyond age 100 without a death value imports as presumed deceased, an otherwise unknown-status partner of any deceased person is also presumed deceased, and an unknown Lineal member in Generation 0 through 4 is presumed deceased. A birth date within 100 years remains living, Generation 5+ with no other evidence remains unknown, and `99`/`??` placement alone never implies death.
+- [ ] Current `person-*` identity/date columns import lineage and partner rows consistently: a known death value imports as deceased, a birth date beyond age 100 without a death value imports as presumed deceased, an otherwise unknown-status partner of any deceased person is also presumed deceased, and an unknown Lineal member in Generation 0 through 4 is presumed deceased. A birth date within 100 years remains living, Generation 5+ with no other evidence remains unknown, and `99`/`??` placement alone never implies death.
 - [ ] Profile life details use one ordinary one-line `Age` row: living ages are compact, ages below two use months, deceased ages read `#y at death · #y today`, and unavailable ages read `UNKNOWN`.
 - [ ] Desktop defaults to a thin-gutter 20/50/30 Directory/Tree/Profile split, both separators resize with pointer and keyboard input, the first resize persists both widths, a usable tree width remains, and live position percentages appear only in Developer Mode.
-- [ ] Loading schema v7 state migrates cleaned-source life statuses through schema v8, then schema v9 structures Birth, Current, Preferred, and Maiden names and saves under the v9 storage key without losing family data.
-- [ ] A large v8 family upgrades without retaining a duplicate v8 state key or reporting storage unavailable; if the v9 write fails, the original v8 key is restored.
+- [ ] State v10 reloads from `mcfamily.state.v10`; older state and recovery keys are ignored and the v12 import gate appears instead.
+- [ ] A state with any schema version other than v10 is rejected rather than unwrapped or migrated.
 - [ ] A native `mcfamily-csv-v2` round trip preserves all 16 name columns; v1 native exports and incomplete v2 headers are rejected as older schemas.
-- [ ] Legacy `first_names` split into First plus remaining Middle words; known Prefix/Suffix tokens move to their own fields, legal-last values derive from sort, retain-maiden rows keep matching Birth and Current Last, and unrecoverable required First/Last values become `UNKNOWN`.
+- [ ] Missing required Birth First/Last values normalize to `UNKNOWN`; the importer does not derive structured names from removed flat columns.
 - [ ] Partial source dates remain in source details, produce a partial-only preview warning, and do not become invented normalized dates in editable/native state.
-- [ ] Older direct `parent_lineage_id` and `lineage_parent_id` sources and legacy lineage-path `parent_lineage_id` or lineage-name sources remain importable.
-- [ ] Legacy schema states migrate without losing Notes or retained compatibility fields.
 - [ ] Export/import round trips every person field, relationship field, preference, and Note.
 - [ ] Later replacement creates recovery before changing state; Restore recovery returns the prior family.
 - [ ] Private export and PDF warnings are visible.
