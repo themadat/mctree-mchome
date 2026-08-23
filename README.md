@@ -4,7 +4,7 @@ McFamily is a private, local-first family atlas that runs as a static GitHub Pag
 
 There is no backend, account, cloud database, or runtime dependency. Family data stays in browser storage and moves only through an explicit CSV import or export. The published repository must never contain a real family CSV or private family data.
 
-Current version: `0.0.1.51` (`major.minor.patch.build`).
+Current version: `0.0.1.52` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -23,8 +23,8 @@ Current version: `0.0.1.51` (`major.minor.patch.build`).
 - Supports partial/fuzzy matches that return the tree to Lineage, collapsible side panels, compact 20/50/30 default desktop splits with persistent resizing, and Summary tree cards that balance names with four or more parts across three fitted lines without widening the card.
 - Keeps portrait placeholders and internal person references out of the ordinary workspace; Developer Mode reveals references and a left-side generation bubble scale for visual troubleshooting.
 - Presents complete oldest-to-newest, two-digit Lineage IDs with the first three ancestral segments italicized and the selected person's final segment bold, followed by a compact direct-parent-linked Family Line with each name's lineage number and generation.
-- Imports every McLineage v12 row as one stable person and expands `partner-relationships-json` into explicit partner records; all 36 hyphenated source headers and their order must match exactly.
-- Imports known and question-mark partial source dates; a recorded death or a birth date beyond age 100 marks someone deceased or presumed deceased, an unknown-status partner of any deceased person is also presumed deceased, and unknown Lineal members in Generations 0 through 4 are presumed deceased. A birth date within 100 years still means living, with a concise Age row in profiles and print when birth data permits.
+- Imports every McLineage v13 row as one stable person and expands `partner-relationships-json` into explicit partner records; all 34 hyphenated source headers and their order must match exactly.
+- Imports known and question-mark partial source dates; person death descriptors explicitly distinguish living (`NONE`), deceased with an unknown date (`UNKNOWN`), and presumed deceased (`UNKNOWN PRESUMED`).
 - Shows partial source dates such as `December ??, 1979`, keeps a natural-language Age property on one line, and fills unknown visible identity properties with `UNKNOWN`. Living profiles use `----` for Died, and living people show only their birth year in directory and tree lifespans. Gender and Pronouns remain stored but are temporarily hidden from person details.
 - Uses compact open Parents, Siblings, Partners, and Children groups near the top of each profile, with generation labels, Lineal/Non-Lineal parent roles, birth order and year for siblings and children, marriage years for partners, and current-first partner history; Imported Source finishes each profile.
 - Uses absolute lineage generations rooted at George McMillen (1745) as Gen 0; readings use concise forms such as `Gen 6, 5th Child of Max`.
@@ -66,7 +66,7 @@ assets/css/app.css             Themes, family workspace, responsive, and print s
 assets/js/config.js            Identity, version, enums, help, releases, and roadmap
 assets/js/icons.js             Shared inline SVG symbol catalog
 assets/js/app.js               Rendering, editing, search, tree interaction, and print atlas
-assets/js/core/state.js        Schema v10 normalization, fuzzy matching, and validation
+assets/js/core/state.js        Schema v11 normalization, fuzzy matching, and validation
 assets/js/core/family.js       Relationship indexes, derived family groups, and graph layout
 assets/js/core/storage.js      Local persistence and recovery snapshot
 assets/js/core/portability.js  Private CSV mapping, export, preview, and replacement import
@@ -80,9 +80,9 @@ context/                       Durable agent workflow and wish ledger
 
 ## Data limits and current-version storage
 
-Schema v10 supports up to 1,500 people so the current McLineage source fits safely. Dates accept `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` with exact, about, before, or after qualifiers. Relationships are stored as explicit records; ancestry, descendants, siblings, family units, and lineage labels are derived when needed.
+Schema v11 supports up to 1,500 people so the current McLineage source fits safely. Dates accept `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` with exact, about, before, or after qualifiers. Relationships are stored as explicit records; ancestry, descendants, siblings, family units, and lineage labels are derived when needed.
 
-McFamily uses a v10-only browser-storage namespace and does not load or migrate earlier application states. Import the exact McLineage v12 source or a current native McFamily CSV; a first import must contain at least one valid person.
+McFamily uses a v11-only browser-storage namespace and does not load or migrate earlier application states. Import the exact McLineage v13 source or a current native McFamily CSV; a first import must contain at least one valid person.
 
 ## CSV and PDF workflow
 

@@ -32,8 +32,8 @@
     "person-name-preferred-prefix", "person-preferred-name-first", "person-preferred-name-middle", "person-preferred-name-last", "person-preferred-name-suffix",
     "person-name-maiden-last", "lineage-id", CONSANGUINITY_FIELD, AFFINITY_FIELD
   ].concat(MCLINEAGE_PERSON_DATE_HEADERS, [
-    "legacy-male-display-first-names", "legacy-male-display-last-name", "legacy-male-display-deceased",
-    "legacy-female-display-first-names", "legacy-female-display-last-name", "retain-maiden-name",
+    "legacy-male-display-first-names", "legacy-male-display-last-name",
+    "legacy-female-display-first-names", "legacy-female-display-last-name",
     "partner-relationships-json", "notes", "source-last-modified-date", "source-last-modified-by", "source-row-number", "data-quality-notes"
   ]);
   let pendingImport = null;
@@ -231,13 +231,17 @@
       ["birth", "death"].forEach(function (kind) {
         const value = u.cleanLine(personDateValue(row, kind), 40);
         const descriptor = u.cleanLine(personDateDescriptor(row, kind), 40);
-        if (!["year", "month", "day", "UNKNOWN", "partial", ""].includes(descriptor)) throw new Error("McLineage person date descriptors must be year, month, day, partial, UNKNOWN, or blank.");
+        const allowedDescriptors = kind === "death"
+          ? ["year", "month", "day", "partial", "NONE", "UNKNOWN", "UNKNOWN PRESUMED"]
+          : ["year", "month", "day", "partial", "UNKNOWN"];
+        if (!allowedDescriptors.includes(descriptor)) throw new Error("McLineage birth descriptors must be year, month, day, partial, or UNKNOWN; death descriptors must additionally support NONE and UNKNOWN PRESUMED.");
         if (kind === "birth" && !descriptor) throw new Error("McLineage birth descriptors cannot be blank.");
         const partial = isPartialSourceDate(value);
         if (value && !partial && !/^\d{4}(?:-(?:0[1-9]|1[0-2])(?:-(?:0[1-9]|[12]\d|3[01]))?)?$/.test(value)) throw new Error("McLineage person date values must be a normalized date, a question-mark partial date, or blank.");
         const expected = partial ? "partial" : value.length === 4 ? "year" : value.length === 7 ? "month" : value.length === 10 ? "day" : "";
         if (value && descriptor !== expected) throw new Error("A McLineage person date descriptor does not match its value.");
-        if (!value && !["UNKNOWN", ""].includes(descriptor)) throw new Error("A McLineage person date without a value must be UNKNOWN or blank.");
+        if (!value && kind === "birth" && descriptor !== "UNKNOWN") throw new Error("A McLineage birth date without a value must use UNKNOWN.");
+        if (!value && kind === "death" && !["NONE", "UNKNOWN", "UNKNOWN PRESUMED"].includes(descriptor)) throw new Error("A McLineage death date without a value must use NONE, UNKNOWN, or UNKNOWN PRESUMED.");
       });
     });
     return true;
@@ -247,6 +251,7 @@
     const valueHeaders = parsed.headers.filter(function (header) { return header.includes("date") && header.endsWith("-value"); });
     parsed.rows.forEach(function (row) {
       valueHeaders.forEach(function (valueHeader) {
+        if (MCLINEAGE_PERSON_DATE_HEADERS.includes(valueHeader)) return;
         const descriptorHeader = valueHeader.replace(/-value$/, "-descriptor");
         if (!parsed.headers.includes(descriptorHeader)) throw new Error("The current McLineage date schema is incomplete at " + valueHeader + ".");
         const value = u.cleanLine(row[valueHeader], 40);
@@ -512,7 +517,7 @@
     if (counters.partialDates) warnings.push(counters.partialDates + " partial source date" + (counters.partialDates === 1 ? " is" : "s are") + " preserved in source fields but not shown as a normalized date.");
     if (counters.unmappedDates) warnings.push(counters.unmappedDates + " unrecognized source date" + (counters.unmappedDates === 1 ? " is" : "s are") + " preserved in source fields but not shown as a normalized date.");
     prepared.validation.warnings = prepared.validation.warnings.concat(warnings);
-    return Object.assign(prepared, { formatLabel: "McLineage v12 CSV", sourceRows: parsed.rows.length, fileName: fileName });
+    return Object.assign(prepared, { formatLabel: "McLineage v13 CSV", sourceRows: parsed.rows.length, fileName: fileName });
   }
 
   function parseJsonObject(value, label) {
@@ -602,10 +607,10 @@
       const details = [];
       if (missing.length) details.push("missing: " + missing.join(", "));
       if (unexpected.length) details.push("unexpected: " + unexpected.join(", "));
-      if (!missing.length && !unexpected.length && !exactOrder) details.push("columns are not in the McLineage v12 order");
-      throw new Error("McFamily accepts only the exact McLineage v12 schema (" + details.join("; ") + ").");
+      if (!missing.length && !unexpected.length && !exactOrder) details.push("columns are not in the McLineage v13 order");
+      throw new Error("McFamily accepts only the exact McLineage v13 schema (" + details.join("; ") + ").");
     }
-    throw new Error("That CSV is neither a current McFamily export nor an exact McLineage v12 file.");
+    throw new Error("That CSV is neither a current McFamily export nor an exact McLineage v13 file.");
   }
 
   function summaryFor(state, candidate) {
