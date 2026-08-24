@@ -874,6 +874,7 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .relationship-group summary { display: flex; align-items: center; justify-content: space-between; gap: .45rem; min-height: 34px; padding: .32rem .45rem; color: var(--text); font-size: .72rem; font-weight: 800; cursor: pointer; }
 .relationship-group summary .count-pill { min-height: 20px; padding: .12rem .38rem; font-size: .62rem; }
 .relationship-names { display: grid; padding: 0 .3rem .3rem; }
+.relationship-name-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: .12rem; }
 .relationship-name { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; min-height: 30px; padding: .28rem .35rem; border: 0; border-radius: 6px; background: transparent; color: var(--person-link); font-size: .75rem; font-weight: 750; text-align: left; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 42%, transparent); text-underline-offset: 2px; }
 .relationship-name > span { min-width: 0; overflow-wrap: anywhere; }
 .relationship-context { flex: 0 0 auto; color: var(--muted); font-size: .68rem; font-weight: 650; white-space: nowrap; }
@@ -881,6 +882,12 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .relationship-name.current-partner { font-weight: 850; }
 .relationship-name.previous-partner { color: var(--person-link); font-weight: 550; opacity: .82; }
 .relationship-name.previous-partner:hover, .relationship-name.previous-partner:focus-visible { color: var(--person-link-hover); opacity: 1; }
+.relationship-edit-button { display: grid; place-items: center; width: 30px; min-width: 30px; min-height: 30px; padding: .3rem; border: 0; border-radius: 7px; background: transparent; color: var(--muted); }
+.relationship-edit-button:hover, .relationship-edit-button:focus-visible { background: var(--accent-soft); color: var(--accent-strong); }
+.relationship-edit-button .sf-symbol { width: .95rem; height: .95rem; }
+.relationship-lineage-preview { padding: .55rem .65rem; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); }
+.relationship-lineage-preview output { min-height: 1.35rem; font-size: .85rem; }
+.relationship-lineage-preview small { color: var(--muted); font-size: .65rem; }
 .relationship-empty { padding: .25rem .35rem; color: var(--muted); font-size: .7rem; }
 .mobile-workspace-tabs { display: none; margin-bottom: .55rem; }
 
