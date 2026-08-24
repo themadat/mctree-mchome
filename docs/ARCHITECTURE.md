@@ -26,8 +26,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 13,
   "meta": {
-    "appVersion": "0.0.1.66",
-    "buildId": "0.0.1.66",
+    "appVersion": "0.0.1.67",
+    "buildId": "0.0.1.67",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -65,7 +65,7 @@ The dataset 16 ZIP package preserves the current state model through five exact 
 
 A normal load is locked behind the hosted passphrase gate. `cloud.js` fetches and validates the ciphertext envelope, tests the entered passphrase against every configured grant locally, requires exactly one match, decrypts that grant's full or redacted record, and hands the decrypted bytes to `portability.js`. No account label or role is listed before sign-in. That parser still accepts only a dataset 16 package with exactly `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`, and requires at least one valid person. Before the first vault exists, an existing local Editor copy becomes Owner Setup; a fresh Owner browser can open one validated private recovery ZIP directly from the missing-vault gate. There is no blank-family or demo bypass.
 
-Dismissed hint ids, dismissed What’s New versions, and Directory visibility live separately in `mcfamily.device-preferences.v1`. The record contains no family values and is overlaid after local load, recovery, import, or hosted decryption. Lock preserves it while removing decrypted state and recovery; Reset Preferences and Erase Everything return it to defaults.
+Dismissed hint ids, dismissed What’s New versions, Directory visibility, and favorite P references live separately in `mcfamily.device-preferences.v1`. The record contains no names, contacts, Notes, or other family content and is overlaid after local load, recovery, import, or hosted decryption. Favorite references are filtered against the loaded people. Lock preserves the record while removing decrypted state and recovery; Reset Preferences clears dismissals and Directory visibility while retaining favorites, and Erase Everything clears it.
 
 McPeople contains one stable P-referenced row per person and no parent or partner columns. McRelations contains all authoritative Person-to-Person parent and partner links, with parent lineage role separated from parent type. McPlaces contains reusable physical addresses, while McResidences assigns people to places. McMetadata declares package/dataset/file-schema versions, exact record counts, access mode, family settings, compatibility details, and append-only audit events. Package validation completes before any current state is touched and rejects ZIP damage, wrong filenames, schema drift, count mismatches, invalid identifiers/dates, broken cross-file references, false redaction claims, duplicate links, multiple Lineal parents, Lineage inconsistencies, and ancestry cycles.
 

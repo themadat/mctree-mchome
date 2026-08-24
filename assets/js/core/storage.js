@@ -10,10 +10,10 @@
   let lastSavedJson = "";
   let loadReport = { source: "default", warnings: [], recovered: false, error: "" };
 
-  function cleanStringList(values, limit) {
+  function cleanStringList(values, limit, maxItems) {
     return Array.from(new Set((Array.isArray(values) ? values : []).map(function (value) {
       return u.cleanLine(value, limit);
-    }).filter(Boolean))).slice(0, 200);
+    }).filter(Boolean))).slice(0, maxItems || 200);
   }
 
   function normalizeDevicePreferences(input) {
@@ -24,7 +24,8 @@
       dismissedHintIds: cleanStringList(source.dismissedHintIds, 80),
       dismissedReleaseVersions: cleanStringList(source.dismissedReleaseVersions, 32),
       directoryCollapsed: typeof source.directoryCollapsed === "boolean" ? source.directoryCollapsed : true,
-      mobileDirectoryOpen: source.mobileDirectoryOpen === true
+      mobileDirectoryOpen: source.mobileDirectoryOpen === true,
+      favoritePersonIds: Array.isArray(source.favoritePersonIds) ? cleanStringList(source.favoritePersonIds, 100, config.controls.maxPeople) : null
     };
   }
 
@@ -94,7 +95,8 @@
       dismissedHintIds: cleanStringList(state.preferences.hints.dismissed, 80),
       dismissedReleaseVersions: cleanStringList(dismissedReleaseVersions, 32),
       directoryCollapsed: state.ui.directoryCollapsed === true,
-      mobileDirectoryOpen: state.ui.directoryCollapsed !== true && state.ui.mobileView === "directory"
+      mobileDirectoryOpen: state.ui.directoryCollapsed !== true && state.ui.mobileView === "directory",
+      favoritePersonIds: cleanStringList(state.ui.favoritePersonIds, 100, config.controls.maxPeople)
     };
   }
 
@@ -114,12 +116,18 @@
     state.ui.directoryCollapsed = saved.directoryCollapsed;
     if (saved.directoryCollapsed && state.ui.mobileView === "directory") state.ui.mobileView = "tree";
     else if (!saved.directoryCollapsed && saved.mobileDirectoryOpen) state.ui.mobileView = "directory";
+    if (saved.favoritePersonIds) {
+      const availablePersonIds = new Set(state.workspace.people.map(function (person) { return person.id; }));
+      state.ui.favoritePersonIds = saved.favoritePersonIds.filter(function (personId) { return availablePersonIds.has(personId); });
+    }
     return state;
   }
 
   function restoreDevicePreferences(state) {
     const saved = readDevicePreferences() || saveDevicePreferences(state);
-    return applyDevicePreferences(state, saved);
+    const restored = applyDevicePreferences(state, saved);
+    if (saved.favoritePersonIds === null) saveDevicePreferences(restored);
+    return restored;
   }
 
   function readRecovery() {

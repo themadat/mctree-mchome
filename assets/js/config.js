@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.66",
-      buildId: "0.0.1.66",
+      version: "0.0.1.67",
+      buildId: "0.0.1.67",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -149,6 +149,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.67",
+        date: "2026-08-24T16:41:27.000Z",
+        title: "Local data and favorite recovery",
+        summary: "Project data now stays outside Git, while starred people persist separately on this device and can be restored from the header in Developer Mode.",
+        features: ["Device-local persistence for favorite person references", "Developer Mode Restore shortcut beside Favorites using the List Star symbol"],
+        improvements: ["The entire data directory is ignored so private working files remain local", "Existing device-preference records upgrade without discarding favorites already stored in the family state"],
+        fixes: ["Hosted refreshes and Lock no longer replace the browser’s remembered favorites"],
+        knownIssues: ["Clearing site storage also clears remembered favorites; keep a Favorites JSON file for recovery", "Previously committed data remains in older Git history until that history is separately rewritten"]
+      },
       {
         version: "0.0.1.66",
         date: "2026-08-24T16:28:41.000Z",
