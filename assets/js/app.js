@@ -40,7 +40,7 @@
     { keys: "V", label: "Open What’s New", group: "Actions" },
     { keys: "X", label: "Dismiss the What’s New banner", group: "Actions" },
     { keys: "R", label: "Reload when a new version is available", group: "Actions" },
-    { keys: "E", label: "Open Save, Share & Audit", group: "Actions" },
+    { keys: "E", label: "Open Access & Audit", group: "Actions" },
     { keys: "T", label: "Switch color theme", group: "Actions" },
     { keys: "Arrow keys", label: "Move through tree relatives, tabs, menus, and choices", group: "Navigation" }
   ];
@@ -209,8 +209,10 @@
   function renderLocalStatus() {
     const button = $("#cloudAuditButton");
     const available = storage.isPersistent();
+    const accessAvailable = initialized() && Boolean(App.cloud && App.cloud.canPublish && App.cloud.canPublish());
     button.dataset.storageState = available ? "saved" : "error";
-    button.disabled = !initialized();
+    button.hidden = !accessAvailable;
+    button.disabled = !accessAvailable;
     const pill = $("#localStorageSettingsState");
     const summary = $("#localStorageSettingsSummary");
     if (pill) {
@@ -1876,7 +1878,7 @@
     if (favoritesPreviewOpen) return results;
     const notes = familyEditingEnabled() ? state().workspace.documents[0] : null;
     if (notes && model.fuzzySearchMatch(needle, "notes " + documentText(notes))) results.push({ type: "notes", id: notes.id, title: "Notes", meta: "Private family notes" });
-    config.help.forEach(function (topic) { if ((familyEditingEnabled() || topic.id !== "notes") && model.fuzzySearchMatch(needle, topic.title + " " + topic.keywords + " " + u.stripHtml(topic.html))) results.push({ type: "help", id: topic.id, title: topic.title, meta: "Help · " + topic.section }); });
+    config.help.forEach(function (topic) { if ((familyEditingEnabled() || !["notes", "print", "backup", "cloud"].includes(topic.id)) && model.fuzzySearchMatch(needle, topic.title + " " + topic.keywords + " " + u.stripHtml(topic.html))) results.push({ type: "help", id: topic.id, title: topic.title, meta: "Help · " + topic.section }); });
     config.roadmap.forEach(function (item) { if (model.fuzzySearchMatch(needle, item.title + " " + item.description)) results.push({ type: "roadmap", id: item.id, title: item.title, meta: "Roadmap · " + item.state }); });
     config.releases.forEach(function (release) { const text = [release.version, release.title, release.summary].concat(release.features || [], release.improvements || [], release.fixes || [], release.knownIssues || []).join(" "); if (model.fuzzySearchMatch(needle, text)) results.push({ type: "release", id: release.version, title: release.title, meta: "Release · v" + release.version }); });
     return results.slice(0, 12);
@@ -2042,7 +2044,7 @@
 
   function renderHelp() {
     const query = String($("#helpSearch")?.value || "").trim().toLowerCase();
-    const topics = config.help.filter(function (topic) { return (familyEditingEnabled() || topic.id !== "notes") && (!query || (topic.title + " " + topic.section + " " + topic.keywords + " " + u.stripHtml(topic.html)).toLowerCase().includes(query)); });
+    const topics = config.help.filter(function (topic) { return (familyEditingEnabled() || !["notes", "print", "backup", "cloud"].includes(topic.id)) && (!query || (topic.title + " " + topic.section + " " + topic.keywords + " " + u.stripHtml(topic.html)).toLowerCase().includes(query)); });
     $("#helpResultCount").textContent = topics.length + " topic" + (topics.length === 1 ? "" : "s");
     const groups = {};
     topics.forEach(function (topic) { (groups[topic.section] = groups[topic.section] || []).push(topic); });
@@ -2067,7 +2069,7 @@
 
   function renderShortcuts() {
     const groups = {};
-    SHORTCUTS.filter(function (shortcut) { return shortcut.keys !== "N" || familyEditingEnabled(); }).forEach(function (shortcut) { (groups[shortcut.group] = groups[shortcut.group] || []).push(shortcut); });
+    SHORTCUTS.filter(function (shortcut) { return familyEditingEnabled() || !["N", "P", "E"].includes(shortcut.keys); }).forEach(function (shortcut) { (groups[shortcut.group] = groups[shortcut.group] || []).push(shortcut); });
     $("#shortcutContent").innerHTML = '<p class="section-intro">Listed shortcuts also work while Shift, Control, or Option is held. Command-key combinations remain available to the browser.</p>' + Object.keys(groups).map(function (group) { return '<section><h3>' + group + "</h3>" + groups[group].map(function (shortcut) { return '<div class="shortcut-row"><kbd>' + u.escapeHtml(shortcut.keys) + '</kbd><span>' + u.escapeHtml(shortcut.label) + "</span></div>"; }).join("") + "</section>"; }).join("");
   }
 
@@ -2406,7 +2408,7 @@
     if (u.isEditableTarget(event.target) || event.metaKey) return;
     if (event.code === "Slash") { event.preventDefault(); if (event.shiftKey) openSupport("help", event.target); else if (initialized()) { $("#globalSearch").focus(); $("#globalSearch").select(); } return; }
     if (event.repeat || !initialized()) return;
-    if (event.code === "KeyP") { event.preventDefault(); printAtlas(); }
+    if (event.code === "KeyP" && familyEditingEnabled()) { event.preventDefault(); printAtlas(); }
     else if (event.code === "KeyD") { event.preventDefault(); $("#directoryButton").click(); }
     else if (event.code === "KeyF") { event.preventDefault(); $("#favoritesButton").click(); }
     else if (event.code === "KeyK") {
@@ -2421,7 +2423,7 @@
       const action = $("[data-toast-action]", toast);
       if (!toast.hidden && $("[data-toast-title]", toast).textContent === "New version available" && !action.hidden) { event.preventDefault(); action.click(); }
     }
-    else if (event.code === "KeyE") { event.preventDefault(); App.cloud.open(); }
+    else if (event.code === "KeyE" && App.cloud.canPublish()) { event.preventDefault(); App.cloud.open(); }
     else if (event.code === "KeyT") { event.preventDefault(); toggleThemeFromAppIcon(); }
   }
 

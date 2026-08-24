@@ -26,8 +26,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 13,
   "meta": {
-    "appVersion": "0.0.1.67",
-    "buildId": "0.0.1.67",
+    "appVersion": "0.0.1.68",
+    "buildId": "0.0.1.68",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -59,7 +59,7 @@ Relationships are independent records. Parent-child records contain `parentId`, 
 
 Derived family concepts are never copied onto people. `family.js` builds them from relationships so edits cannot leave contradictory ancestor, sibling, descendant, or family-unit arrays behind.
 
-The dataset 16 ZIP package preserves the current state model through five exact CSV schemas. McRelations uses schema 2.0; the other files use schema 1.0. McMetadata carries the Editor/PII Viewer/Redacted Read-only access mode and compatibility details without dedicated columns. Historical application-state and transfer schemas are intentionally unsupported. Data-only publications advance through `16.0.x` patch versions without changing those schemas or the website build.
+The dataset 16 ZIP package preserves the current state model through five exact CSV schemas. McRelations uses schema 2.0; the other files use schema 1.0. McMetadata carries the Editor/Member/Viewer access mode and compatibility details without dedicated columns. Historical application-state and transfer schemas are intentionally unsupported. Data-only publications advance through `16.0.x` patch versions without changing those schemas or the website build.
 
 ## Initialization and persistence
 
@@ -71,11 +71,11 @@ McPeople contains one stable P-referenced row per person and no parent or partne
 
 ## Encrypted hosted access
 
-The Pages repository and public ciphertext-only `mcdata` repository are intentionally separate. The vault uses random AES-256-GCM full and redacted data keys. Each named grant derives a wrapping key from its unique passphrase with PBKDF2-SHA-256 and a unique salt, then wraps only the data key that role may open. The fixed Owner and every Editor grant wrap both data keys, each Private Viewer wraps the full-data key, and each Redacted Viewer wraps only the redacted-data key. Passphrases, readable CSV, and GitHub tokens never enter the vault. Version-1 vaults with the original fixed `editor`, `pii`, and `redacted` ids remain valid; new recipient grants use stable random role-prefixed ids and unique shown names retained for access management and audit identity.
+The Pages repository and public ciphertext-only `mcdata` repository are intentionally separate. The vault uses random AES-256-GCM full and redacted data keys. Each named grant derives a wrapping key from its unique passphrase with PBKDF2-SHA-256 and a unique salt, then wraps only the data key that role may open. The fixed Owner and every Editor grant wrap both data keys, each Member wraps the full-data key, and each Viewer wraps only the redacted-data key. Passphrases, readable CSV, and GitHub tokens never enter the vault. Version-1 vaults with the original fixed `editor`, `pii`, and `redacted` ids remain valid; new recipient grants use stable random role-prefixed ids and unique shown names retained for access management and audit identity.
 
-Every online load fetches `McFamily-access.json` anonymously with `no-store`, validates its format, and requires a current passphrase. A wrong, removed, or rotated grant cannot unwrap a data key. The decrypted package must pass the same strict parser as a recovery import, including physical redaction checks for Redacted Viewer. Lock removes the decrypted browser state and recovery snapshot, reloads the application, and requires the passphrase again without publishing or modifying the hosted vault. Revocation applies on the recipient's next reload; a static web application cannot retract information already seen or copied.
+Every online load fetches `McFamily-access.json` anonymously with `no-store`, validates its format, and requires a current passphrase. A wrong, removed, or rotated grant cannot unwrap a data key. The decrypted package must pass the same strict parser as a recovery import, including physical redaction checks for Viewer. Lock removes the decrypted browser state and recovery snapshot, reloads the application, and requires the passphrase again without publishing or modifying the hosted vault. Revocation applies on the recipient's next reload; a static web application cannot retract information already seen or copied.
 
-Owner and Editor publication requires a fine-grained GitHub token limited to the public encrypted-data repository with Contents read/write access. Tokens live only in session or local browser storage. A family publication requires a summary and binds its actor to the signed-in grant label, advances the `16.0.x` patch, appends an audit event, revalidates and encrypts full and redacted packages, and uses both vault revision and GitHub SHA to reject stale writes. Owner-only access publication creates, rotates, or removes grants without recording secret values. Successful publications remain visible in McMetadata and Git history; viewer sign-ins are not centrally logged and the in-package audit is not tamper-proof.
+Owner and Editor publication requires a fine-grained GitHub token limited to the public encrypted-data repository with Contents read/write access. Tokens live only in session or local browser storage. A family publication requires a summary and binds its actor to the signed-in grant label, advances the `16.0.x` patch, appends an audit event, revalidates and encrypts full and redacted packages, and uses both vault revision and GitHub SHA to reject stale writes. Owner-only access publication creates, rotates, or removes grants without recording secret values. Successful publications remain visible in McMetadata and Git history; Member and Viewer sign-ins are not centrally logged and the in-package audit is not tamper-proof.
 
 Lineal people use complete root-to-person paths that extend each direct Lineal parent's path by one two-digit segment; Non-Lineal partner-only rows intentionally leave lineage blank. A known death value marks a person deceased. Without one, `person-date-death-descriptor` is authoritative: `NONE` means living, `UNKNOWN` means explicitly deceased with no known date, and `UNKNOWN PRESUMED` means source evidence presumes death. Partial source dates remain in source details because the editable date model accepts only normalized known values.
 
@@ -107,7 +107,7 @@ The browser owns PDF generation. McFamily does not create a binary PDF directly.
 
 ## Security and privacy boundaries
 
-Hosted passphrases provide client-side encrypted access roles without a custom backend. A public vault can be copied for offline passphrase guessing, so generated phrases must be long and unrelated. Browser storage after unlock, Owner recovery ZIPs, and Owner/Editor PDFs contain sensitive plaintext. Viewer interfaces intentionally omit routine ZIP import/export, PDF, Developer data, and publication controls, but client-side UI restrictions cannot prevent a determined recipient from inspecting information already decrypted in their browser. Strong server-authenticated accounts, immediate session revocation, and central usage history remain future backend work.
+Hosted passphrases provide client-side encrypted access roles without a custom backend. A public vault can be copied for offline passphrase guessing, so generated phrases must be long and unrelated. Browser storage after unlock, Owner recovery ZIPs, and Owner/Editor PDFs contain sensitive plaintext. Member and Viewer interfaces intentionally omit Access & Audit, routine ZIP import/export, PDF, Developer data, and publication controls, but client-side UI restrictions cannot prevent a determined recipient from inspecting information already decrypted in their browser. Strong server-authenticated accounts, immediate session revocation, and central usage history remain future backend work.
 
 No real family CSV, ZIP, or export belongs in the repository. Only synthetic data should be used for committed tests or documentation.
 
