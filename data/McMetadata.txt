@@ -4,16 +4,28 @@ McFamily Dataset Metadata
 Current dataset
 ---------------
 
-Version: 15.0.0
+Version: 16.0.0
 Updated: 2026-08-24
-File: McFamily-15-0-0-2026-08-24.zip
+File: McFamily-16-0-0-2026-08-24.zip
 Files: McPeople.csv, McPlaces.csv, McRelations.csv, McResidences.csv, McMetadata.csv
-Source: McLineage 14.0.0 multi-file conversion
+Source: McFamily 15.0.0 relationship-schema upgrade and adoption update
 Status: Private family data; do not commit to a public or shared source repository.
 
 
 Changelog
 ---------
+
+16.0.0 — 2026-08-24 — [241 KB (+14) | 914 people | 1,470 relations | 1 place | 1 residence | 5 files]
+Author: Adam Lauer [Agent Codex | Model GPT-5 | Effort UNK | Speed UNK]
+Summary: Separated parent lineage from parent type and recorded the first adoption with multiple Non-Lineal parents.
+
+- People: 0 changed | 1 added | 0 deleted. Added one private unknown-name parent record with stable P reference.
+- Relations: 2 changed | 3 added | 0 deleted. Marked the adoptive Lineal parent, added two Non-Lineal biological parents, and recorded
+  the earlier unknown partner history before the current marriage.
+- Schema: replaced parent-kind with parent-lineage plus parent-type in McRelations 2.0. Lineal/Non-Lineal supersede the former
+  consanguineal/affinal parent terminology. One child may have one Lineal and multiple Non-Lineal parents.
+- Metadata: 25 rows. Updated dataset/count/schema declarations and appended two audit events while preserving prior audit history.
+- Package: one stored ZIP containing exactly McPeople.csv, McPlaces.csv, McRelations.csv, McResidences.csv, and McMetadata.csv.
 
 15.0.0 — 2026-08-24 — [227 KB (+18) | 913 people | 1,467 relations | 1 place | 1 residence | 5 files]
 Author: Adam Lauer [Agent Codex | Model GPT-5 | Effort UNK | Speed UNK]
@@ -296,7 +308,7 @@ Versioning rules for humans and agents
 
    McFamily-<major>-<minor>-<patch>-<YYYY>-<MM>-<DD>.zip
 
-   Example: McFamily-15-1-0-2026-08-25.zip
+   Example: McFamily-16-1-0-2026-08-25.zip
 
    - Use integers for major, minor, and patch.
    - Use a four-digit year and two-digit month and day.
@@ -321,8 +333,9 @@ Versioning rules for humans and agents
    - Keep lineage-id as the complete oldest-to-newest path with two-digit segments, such as 01.01.01.03.02.02.04.02.01.01. Every non-root
      path must extend its direct Lineal parent's path by exactly one segment.
    - Store every parent and partner exactly once in McRelations with a stable relationship-id and resolvable P references. Parent rows use
-     lineal or non-lineal parent-kind. Partner rows store partner-type, relationship-order, dates, and end-reason. A Non-Lineal parent must
-     be partnered with the child's Lineal parent.
+     lineal or non-lineal parent-lineage plus biological, adoptive, step, foster, guardian, or unknown parent-type. A child may have at
+     most one Lineal parent and multiple distinct Non-Lineal parents; no partner link to the Lineal parent is required. Partner rows store
+     partner-type, relationship-order, dates, and end-reason.
    - Store reusable physical addresses in McPlaces with stable L IDs. Link people to places only through McResidences with stable RS IDs.
    - Store known date values as YYYY, YYYY-MM, or YYYY-MM-DD. Unknown digits may be represented by question marks anywhere in the same
      shapes and must use the partial descriptor. Do not use invalid as a descriptor.

@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.57",
-      buildId: "0.0.1.57",
+      version: "0.0.1.58",
+      buildId: "0.0.1.58",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -27,13 +27,13 @@
       }
     },
 
-    schemaVersion: 12,
+    schemaVersion: 13,
     packageFormat: "mcfamily-package",
     packageVersion: "1",
-    datasetVersion: "15.0.0",
+    datasetVersion: "16.0.0",
     storage: {
-      stateKey: "mcfamily.state.v12",
-      recoveryKey: "mcfamily.recovery.v4"
+      stateKey: "mcfamily.state.v13",
+      recoveryKey: "mcfamily.recovery.v5"
     },
 
     features: {
@@ -62,13 +62,17 @@
     },
 
     parentKinds: [
-      { id: "biological", label: "Biological parent" },
-      { id: "affinal", label: "Non-Lineal parent" },
-      { id: "adoptive", label: "Adoptive parent" },
-      { id: "step", label: "Step-parent" },
-      { id: "foster", label: "Foster parent" },
+      { id: "biological", label: "Biological" },
+      { id: "adoptive", label: "Adopted" },
+      { id: "step", label: "Step" },
+      { id: "foster", label: "Foster" },
       { id: "guardian", label: "Guardian" },
-      { id: "unknown", label: "Parent" }
+      { id: "unknown", label: "Unknown" }
+    ],
+
+    parentLineages: [
+      { id: "lineal", label: "Lineal" },
+      { id: "non-lineal", label: "Non-Lineal" }
     ],
 
     maritalStatuses: [
@@ -116,6 +120,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.58",
+        date: "2026-08-24T04:00:00.000Z",
+        title: "Lineal and Non-Lineal adoption records",
+        summary: "Parent relationships now store lineage role separately from biological, adopted, step, foster, guardian, or unknown parent type.",
+        features: ["Multiple Non-Lineal parents per child", "Lineal adoption branches use a dashed muted-red tree line", "Profiles identify parent relationships such as Lineal :: Adopted and Non-Lineal :: Biological"],
+        improvements: ["McRelations schema 2.0 replaces parent-kind with parent-lineage and parent-type", "Lineage paths continue through the explicitly selected Lineal parent regardless of parent type", "The tree Key now explains Lineal adoption"],
+        fixes: ["Adoption cases no longer require every Non-Lineal parent to be partnered with the Lineal parent"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.57",
         date: "2026-08-24T03:30:00.000Z",

@@ -427,7 +427,7 @@
   function relationshipLabel(relationship, personId, other, entry) {
     if (relationship.type === "parent-child") {
       const type = config.parentKinds.find(function (item) { return item.id === relationship.kind; });
-      return personId === relationship.parentId ? "Child" : (type ? type.label : "Parent");
+      return personId === relationship.parentId ? "Child" : (type ? type.label + " parent" : "Parent");
     }
     const person = state().workspace.people.find(function (item) { return item.id === personId; });
     return relationshipMaritalStatus(person, { person: other, relationship: relationship, current: entry && entry.current });
@@ -443,7 +443,8 @@
     const second = profileName(edge.to.person);
     if (edge.relationship.type === "parent-child") {
       const kind = config.parentKinds.find(function (item) { return item.id === edge.relationship.kind; });
-      return first + " is " + (kind ? kind.label.toLowerCase() : "a parent") + " of " + second + (relationshipMeta(edge.relationship) ? ". " + relationshipMeta(edge.relationship) : "");
+      const lineage = config.parentLineages.find(function (item) { return item.id === edge.relationship.lineage; });
+      return first + " is the " + (lineage ? lineage.label.toLowerCase() + " " : "") + (kind ? kind.label.toLowerCase() + " parent" : "parent") + " of " + second + (relationshipMeta(edge.relationship) ? ". " + relationshipMeta(edge.relationship) : "");
     }
     const status = maritalStatusLabel(family.partnerMaritalStatusId(edge.from.person, { person: edge.to.person, relationship: edge.relationship, current: edge.current }));
     return first + " and " + second + ": " + status + (relationshipMeta(edge.relationship) ? ". " + relationshipMeta(edge.relationship) : "");
@@ -496,7 +497,10 @@
   }
 
   function parentContext(child, entry) {
-    return entry.relationship && entry.relationship.kind === "biological" ? "(Lineal)" : "(Non-Lineal)";
+    const relationship = entry && entry.relationship || {};
+    const lineage = config.parentLineages.find(function (item) { return item.id === relationship.lineage; });
+    const kind = config.parentKinds.find(function (item) { return item.id === relationship.kind; });
+    return "(" + (lineage ? lineage.label : "Non-Lineal") + " :: " + (kind ? kind.label : "Unknown") + ")";
   }
 
   function maritalStatusLabel(id) {
@@ -626,7 +630,7 @@
     while (cursor && !used.has(cursor.id) && members.length <= config.controls.maxPeople) {
       used.add(cursor.id);
       members.push({ name: lineageName(cursor), person: cursor, number: lineageOwnNumber(cursor) });
-      const parentEntry = (graph.parents.get(cursor.id) || []).find(function (entry) { return entry.relationship && entry.relationship.kind === "biological"; });
+      const parentEntry = (graph.parents.get(cursor.id) || []).find(function (entry) { return entry.relationship && entry.relationship.lineage === "lineal"; });
       const parent = parentEntry && parentEntry.person;
       if (!parent || used.has(parent.id)) break;
       cursor = parent;
@@ -754,8 +758,8 @@
     icons.mount(container);
   }
 
-  function isAffinalParentEdge(edge) {
-    return Boolean(edge && edge.relationship && edge.relationship.type === "parent-child" && edge.relationship.kind === "affinal");
+  function isNonLinealParentEdge(edge) {
+    return Boolean(edge && edge.relationship && edge.relationship.type === "parent-child" && edge.relationship.lineage === "non-lineal");
   }
 
   function unknownPartnerMarks(edge, pathId) {
@@ -882,14 +886,15 @@
     }
     const showAffinalLines = state().ui.showInferredParentLines;
     const edges = currentTreeLayout.edges.filter(function (edge) {
-      return showAffinalLines || !isAffinalParentEdge(edge);
+      return showAffinalLines || !isNonLinealParentEdge(edge);
     }).map(function (edge) {
       const relationship = edge.relationship;
       const kind = relationship.type === "parent-child" ? relationship.kind : family.partnerLineKind(relationship, edge.current, edge.from.person, edge.to.person);
       const description = relationshipDescription(edge);
-      const affinal = isAffinalParentEdge(edge) ? " affinal-parent" : "";
+      const affinal = isNonLinealParentEdge(edge) ? " affinal-parent" : "";
+      const lineage = relationship.type === "parent-child" ? ' data-lineage="' + u.escapeHtml(relationship.lineage) + '"' : "";
       const pathId = "tree-edge-" + u.escapeHtml(relationship.id);
-      const path = '<path id="' + pathId + '" class="tree-edge ' + u.escapeHtml(relationship.type) + affinal + '" role="img" aria-label="' + u.escapeHtml(description) + '" data-kind="' + u.escapeHtml(kind) + '" d="' + edgePath(edge) + '"><title>' + u.escapeHtml(description) + "</title></path>";
+      const path = '<path id="' + pathId + '" class="tree-edge ' + u.escapeHtml(relationship.type) + affinal + '" role="img" aria-label="' + u.escapeHtml(description) + '" data-kind="' + u.escapeHtml(kind) + '"' + lineage + ' d="' + edgePath(edge) + '"><title>' + u.escapeHtml(description) + "</title></path>";
       return path + (relationship.type === "partner" && kind === "unknown" ? unknownPartnerMarks(edge, pathId) : "");
     }).join("");
     const nodes = currentTreeLayout.nodes.map(function (node) {
@@ -1107,8 +1112,8 @@
     bindDivider({ divider: profileDivider, panel: profile, stateKey: "profilePanelWidth", cssProperty: "--profile-panel-width", min: 240, max: 600, direction: -1 });
   }
 
-  function treeKeySwatch(type, kind, extraClass) {
-    return '<svg class="tree-key-swatch" viewBox="0 0 30 8" aria-hidden="true"><path class="tree-edge ' + type + (extraClass ? " " + extraClass : "") + '" data-kind="' + kind + '" d="M1 4 H29"></path></svg>';
+  function treeKeySwatch(type, kind, extraClass, lineage) {
+    return '<svg class="tree-key-swatch" viewBox="0 0 30 8" aria-hidden="true"><path class="tree-edge ' + type + (extraClass ? " " + extraClass : "") + '" data-kind="' + kind + '"' + (lineage ? ' data-lineage="' + lineage + '"' : "") + ' d="M1 4 H29"></path></svg>';
   }
 
   function treeKeyCardSwatch(kind) {
@@ -1123,8 +1128,9 @@
       ['<span class="tree-key-marks" aria-hidden="true">????</span>', "Unknown status"],
       [treeKeyCardSwatch("deceased"), "Deceased"],
       [treeKeyCardSwatch("lineal"), "Bloodline"],
-      [treeKeySwatch("parent-child", "biological"), "Lineal parent"],
-      [treeKeySwatch("parent-child", "affinal", "affinal-parent"), "Non-Lineal parent"]
+      [treeKeySwatch("parent-child", "biological", "", "lineal"), "Lineal parent"],
+      [treeKeySwatch("parent-child", "adoptive", "", "lineal"), "Lineal adoption"],
+      [treeKeySwatch("parent-child", "biological", "affinal-parent", "non-lineal"), "Non-Lineal parent"]
     ];
     return '<aside class="tree-key"><details open><summary aria-keyshortcuts="K" data-shortcut="K">Key</summary><dl>' + rows.map(function (row) {
       return "<div><dt>" + row[0] + "</dt><dd>" + u.escapeHtml(row[1]) + "</dd></div>";
@@ -1375,8 +1381,8 @@
       if (pendingRelative) {
         const sourceId = pendingRelative.sourceId;
         let relationship;
-        if (pendingRelative.role === "parent") relationship = { id: u.uid("relationship"), type: "parent-child", parentId: person.id, childId: sourceId, kind: "unknown", startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, place: "", notes: "", createdAt: u.isoNow(), updatedAt: u.isoNow() };
-        else if (pendingRelative.role === "child") relationship = { id: u.uid("relationship"), type: "parent-child", parentId: sourceId, childId: person.id, kind: "unknown", startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, place: "", notes: "", createdAt: u.isoNow(), updatedAt: u.isoNow() };
+        if (pendingRelative.role === "parent") relationship = { id: u.uid("relationship"), type: "parent-child", parentId: person.id, childId: sourceId, lineage: "non-lineal", kind: "unknown", startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, place: "", notes: "", createdAt: u.isoNow(), updatedAt: u.isoNow() };
+        else if (pendingRelative.role === "child") relationship = { id: u.uid("relationship"), type: "parent-child", parentId: sourceId, childId: person.id, lineage: "non-lineal", kind: "unknown", startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, place: "", notes: "", createdAt: u.isoNow(), updatedAt: u.isoNow() };
         else relationship = { id: u.uid("relationship"), type: "partner", person1Id: sourceId, person2Id: person.id, status: "unknown", startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, place: "", notes: "", createdAt: u.isoNow(), updatedAt: u.isoNow() };
         relationshipError = family.validateRelationshipDraft(relationship, next);
         if (!relationshipError) next.workspace.relationships.push(relationship);
@@ -1398,6 +1404,7 @@
     const partner = $("#relationshipType").value === "partner";
     $("#relationPerson1Label").textContent = partner ? "First partner" : "Parent";
     $("#relationPerson2Label").textContent = partner ? "Second partner" : "Child";
+    $("#parentLineageField").hidden = partner;
     $("#parentKindField").hidden = partner;
     $("#partnerStatusField").hidden = !partner;
   }
@@ -1411,8 +1418,10 @@
     const secondId = relationship ? (relationship.type === "parent-child" ? relationship.childId : relationship.person2Id) : state().workspace.people.find(function (person) { return person.id !== firstId; })?.id;
     $("#relationPerson1").innerHTML = personOptions(firstId);
     $("#relationPerson2").innerHTML = personOptions(secondId);
+    $("#parentLineage").innerHTML = config.parentLineages.map(function (item) { return '<option value="' + item.id + '">' + u.escapeHtml(item.label) + "</option>"; }).join("");
     $("#parentKind").innerHTML = config.parentKinds.map(function (item) { return '<option value="' + item.id + '">' + u.escapeHtml(item.label) + "</option>"; }).join("");
     $("#partnerStatus").innerHTML = config.partnerStatuses.map(function (item) { return '<option value="' + item.id + '">' + u.escapeHtml(item.label) + "</option>"; }).join("");
+    $("#parentLineage").value = relationship && relationship.lineage || "non-lineal";
     $("#parentKind").value = relationship && relationship.kind || "unknown";
     $("#partnerStatus").value = relationship && relationship.status || "unknown";
     $("#relationshipStartDate").value = relationship && relationship.startDate.value || "";
@@ -1444,7 +1453,7 @@
       startDate: startDate, endDate: endDate, place: $("#relationshipPlace").value, notes: $("#relationshipNotes").value,
       order: existing ? existing.order : state().workspace.relationships.length, createdAt: existing ? existing.createdAt : now, updatedAt: now
     };
-    if (type === "parent-child") Object.assign(relationship, { parentId: $("#relationPerson1").value, childId: $("#relationPerson2").value, kind: $("#parentKind").value });
+    if (type === "parent-child") Object.assign(relationship, { parentId: $("#relationPerson1").value, childId: $("#relationPerson2").value, lineage: $("#parentLineage").value, kind: $("#parentKind").value });
     else Object.assign(relationship, { person1Id: $("#relationPerson1").value, person2Id: $("#relationPerson2").value, status: $("#partnerStatus").value });
     const error = family.validateRelationshipDraft(relationship, state(), existing && existing.id);
     if (error) {
@@ -1586,9 +1595,7 @@
       names.push(firstName(model.displayName(cursor)));
       const parents = graph.parents.get(cursor.id) || [];
       const linealParent = parents.find(function (entry) {
-        return entry.relationship && entry.relationship.kind === "biological";
-      }) || parents.find(function (entry) {
-        return !entry.relationship || entry.relationship.kind !== "affinal";
+        return entry.relationship && entry.relationship.lineage === "lineal";
       });
       cursor = linealParent && linealParent.person;
     }

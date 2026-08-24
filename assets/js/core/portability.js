@@ -7,7 +7,15 @@
   const model = App.stateModel;
   const storage = App.storage;
   const FILE_NAMES = ["McPeople.csv", "McPlaces.csv", "McRelations.csv", "McResidences.csv", "McMetadata.csv"];
-  const FILE_SCHEMA_VERSION = "1.0.0";
+  const FILE_SCHEMA_VERSIONS = {
+    "McPeople.csv": "1.0.0",
+    "McPlaces.csv": "1.0.0",
+    "McRelations.csv": "2.0.0",
+    "McResidences.csv": "1.0.0",
+    "McMetadata.csv": "1.0.0"
+  };
+  const PARENT_LINEAGES = new Set(config.parentLineages.map(function (item) { return item.id; }));
+  const PARENT_TYPES = new Set(config.parentKinds.map(function (item) { return item.id; }));
   const PEOPLE_HEADERS = [
     "record-id",
     "person-name-birth-prefix", "person-birth-name-first", "person-birth-name-middle", "person-birth-name-last", "person-birth-name-suffix",
@@ -22,7 +30,7 @@
     "source-last-modified-date", "source-last-modified-by"
   ];
   const RELATION_HEADERS = [
-    "relationship-id", "relationship-type", "person-1-id", "person-2-id", "parent-kind", "partner-type", "relationship-order",
+    "relationship-id", "relationship-type", "person-1-id", "person-2-id", "parent-lineage", "parent-type", "partner-type", "relationship-order",
     "date-start-value", "date-start-descriptor", "date-end-value", "date-end-descriptor", "end-reason", "place-id", "notes",
     "source-last-modified-date", "source-last-modified-by"
   ];
@@ -82,7 +90,7 @@
       if (missing.length) details.push("missing: " + missing.join(", "));
       if (unexpected.length) details.push("unexpected: " + unexpected.join(", "));
       if (!missing.length && !unexpected.length && !exactOrder) details.push("columns are out of order");
-      throw new Error(fileName + " does not match schema " + FILE_SCHEMA_VERSION + " (" + details.join("; ") + ").");
+      throw new Error(fileName + " does not match schema " + FILE_SCHEMA_VERSIONS[fileName] + " (" + details.join("; ") + ").");
     }
     const rows = matrix.map(function (values, rowIndex) {
       if (values.length > headers.length || values.slice(headers.length).some(Boolean)) throw new Error(fileName + " row " + (rowIndex + 2) + " has too many cells.");
@@ -325,8 +333,8 @@
     if (one("package", "dataset-version") !== config.datasetVersion) throw new Error("This McFamily dataset version is not supported.");
     const schemaRows = parsed.rows.filter(function (row) { return row["metadata-type"] === "schema" && row.key === "schema-version"; });
     const schemaSubjects = new Set(schemaRows.map(function (row) { return row.subject; }));
-    if (schemaRows.length !== FILE_NAMES.length || FILE_NAMES.some(function (name) { return !schemaSubjects.has(name); }) || schemaRows.some(function (row) { return row.value !== FILE_SCHEMA_VERSION; })) {
-      throw new Error("McMetadata.csv must declare schema " + FILE_SCHEMA_VERSION + " exactly once for all five files.");
+    if (schemaRows.length !== FILE_NAMES.length || FILE_NAMES.some(function (name) { return !schemaSubjects.has(name); }) || schemaRows.some(function (row) { return row.value !== FILE_SCHEMA_VERSIONS[row.subject]; })) {
+      throw new Error("McMetadata.csv must declare each file's supported schema version exactly once.");
     }
     const audits = parsed.rows.filter(function (row) { return row["metadata-type"] === "audit"; }).map(function (row) {
       if (!u.cleanLine(row.value, 120) || !row["recorded-at"]) throw new Error("Every audit row requires an action and recorded-at timestamp.");
@@ -353,7 +361,7 @@
   function validateLineage(people, relationships) {
     const peopleById = new Map(people.map(function (person) { return [person.id, person]; }));
     const linealParents = new Map();
-    relationships.filter(function (relationship) { return relationship.type === "parent-child" && relationship.kind === "biological"; }).forEach(function (relationship) {
+    relationships.filter(function (relationship) { return relationship.type === "parent-child" && relationship.lineage === "lineal"; }).forEach(function (relationship) {
       if (linealParents.has(relationship.childId)) throw new Error("McRelations.csv gives " + relationship.childId + " more than one Lineal parent.");
       linealParents.set(relationship.childId, relationship.parentId);
     });
@@ -420,42 +428,37 @@
       const end = validateSourceDate(row["date-end-value"], row["date-end-descriptor"], "McRelations.csv " + id + " end date", { allowBlankDescriptor: true });
       if (row["place-id"] && !placeIds.has(row["place-id"].toUpperCase())) throw new Error("McRelations.csv " + id + " references a missing place.");
       if (type === "parent-child") {
-        if (!["lineal", "non-lineal"].includes(row["parent-kind"]) || row["partner-type"] || row["end-reason"]) throw new Error("McRelations.csv " + id + " has inconsistent parent fields.");
+        if (!PARENT_LINEAGES.has(row["parent-lineage"]) || !PARENT_TYPES.has(row["parent-type"]) || row["partner-type"] || row["end-reason"]) throw new Error("McRelations.csv " + id + " has inconsistent parent fields.");
         return {
-          id: id, type: type, parentId: person1, childId: person2, kind: row["parent-kind"] === "lineal" ? "biological" : "affinal",
+          id: id, type: type, parentId: person1, childId: person2, lineage: row["parent-lineage"], kind: row["parent-type"],
           startDate: sourceDate(start.value, start.descriptor, counters), endDate: sourceDate(end.value, end.descriptor, counters),
-          place: "", notes: row.notes, source: { format: "mcrelations-v1", fields: sourceFields(row, [
-            "date-start-value", "date-start-descriptor", "date-end-value", "date-end-descriptor", "place-id",
+          place: "", notes: row.notes, source: { format: "mcrelations-v2", fields: sourceFields(row, [
+            "parent-lineage", "parent-type", "date-start-value", "date-start-descriptor", "date-end-value", "date-end-descriptor", "place-id",
             "source-last-modified-date", "source-last-modified-by"
           ]) }, order: order
         };
       }
       if (type !== "partner") throw new Error("McRelations.csv " + id + " must be parent-child or partner.");
-      if (row["parent-kind"] || !["marriage", "partnership", "UNKNOWN"].includes(row["partner-type"]) || !["death", "divorce", "separation", "annulment", "UNKNOWN", ""].includes(row["end-reason"])) throw new Error("McRelations.csv " + id + " has inconsistent partner fields.");
+      if (row["parent-lineage"] || row["parent-type"] || !["marriage", "partnership", "UNKNOWN"].includes(row["partner-type"]) || !["death", "divorce", "separation", "annulment", "UNKNOWN", ""].includes(row["end-reason"])) throw new Error("McRelations.csv " + id + " has inconsistent partner fields.");
       if (end.value && !row["end-reason"]) throw new Error("McRelations.csv " + id + " has an end date without an end reason.");
       return {
         id: id, type: type, person1Id: person1, person2Id: person2, status: partnerStatus(row["partner-type"], row["end-reason"]),
         startDate: sourceDate(start.value, start.descriptor, counters), endDate: sourceDate(end.value, end.descriptor, counters),
-        place: "", notes: row.notes, source: { format: "mcrelations-v1", fields: sourceFields(row, [
+        place: "", notes: row.notes, source: { format: "mcrelations-v2", fields: sourceFields(row, [
           "partner-type", "date-start-value", "date-start-descriptor", "date-end-value", "date-end-descriptor", "end-reason", "place-id",
           "source-last-modified-date", "source-last-modified-by"
         ]) }, order: order
       };
     });
 
-    const partnerPairs = new Set(relationships.filter(function (relationship) { return relationship.type === "partner"; }).map(function (relationship) { return [relationship.person1Id, relationship.person2Id].sort().join("|"); }));
     const parentsByChild = new Map();
     relationships.filter(function (relationship) { return relationship.type === "parent-child"; }).forEach(function (relationship) {
       if (!parentsByChild.has(relationship.childId)) parentsByChild.set(relationship.childId, []);
       parentsByChild.get(relationship.childId).push(relationship);
     });
     parentsByChild.forEach(function (parents, childId) {
-      const lineal = parents.filter(function (relationship) { return relationship.kind === "biological"; });
-      const nonLineal = parents.filter(function (relationship) { return relationship.kind === "affinal"; });
+      const lineal = parents.filter(function (relationship) { return relationship.lineage === "lineal"; });
       if (lineal.length > 1) throw new Error("McRelations.csv gives " + childId + " more than one Lineal parent.");
-      nonLineal.forEach(function (relationship) {
-        if (lineal.length !== 1 || !partnerPairs.has([lineal[0].parentId, relationship.parentId].sort().join("|"))) throw new Error("McRelations.csv Non-Lineal parent " + relationship.parentId + " is not partnered with " + childId + "'s Lineal parent.");
-      });
     });
     validateLineage(people, relationships);
 
@@ -512,7 +515,7 @@
     return Object.assign(prepared, {
       formatLabel: "McFamily package v" + config.packageVersion + " · dataset " + config.datasetVersion,
       sourceRows: Object.values(parsed).reduce(function (total, file) { return total + file.rows.length; }, 0),
-      fileName: fileName, checkCount: 11
+      fileName: fileName, checkCount: 12
     });
   }
 
@@ -577,7 +580,8 @@
         "relationship-id": relationship.id, "relationship-type": relationship.type,
         "person-1-id": relationship.type === "parent-child" ? relationship.parentId : relationship.person1Id,
         "person-2-id": relationship.type === "parent-child" ? relationship.childId : relationship.person2Id,
-        "parent-kind": relationship.type === "parent-child" ? (relationship.kind === "affinal" ? "non-lineal" : "lineal") : "",
+        "parent-lineage": relationship.type === "parent-child" ? relationship.lineage : "",
+        "parent-type": relationship.type === "parent-child" ? relationship.kind : "",
         "partner-type": partnerType, "relationship-order": fields["relationship-order"] || relationship.order,
         "date-start-value": start.value, "date-start-descriptor": start.descriptor, "date-end-value": end.value, "date-end-descriptor": end.descriptor,
         "end-reason": endReason, "place-id": fields["place-id"] || "", notes: relationship.notes,
@@ -625,7 +629,7 @@
     add("family", "McFamily", "updated-at", state.meta.updatedAt);
     add("family", "McFamily", "notes", u.richTextToPlainText(state.workspace.documents[0] && state.workspace.documents[0].html || "", config.controls.maxDocumentHtmlLength));
     add("family", "McFamily", "settings-json", JSON.stringify({ preferences: state.preferences, ui: state.ui, modules: state.modules }));
-    FILE_NAMES.forEach(function (name) { add("schema", name, "schema-version", FILE_SCHEMA_VERSION); });
+    FILE_NAMES.forEach(function (name) { add("schema", name, "schema-version", FILE_SCHEMA_VERSIONS[name]); });
     state.meta.package.auditHistory.forEach(function (audit, index) {
       rows.push({
         "metadata-id": audit.id || "A" + String(index + 1).padStart(4, "0"), "metadata-type": "audit", subject: audit.subject,
