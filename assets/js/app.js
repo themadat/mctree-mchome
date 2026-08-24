@@ -1493,12 +1493,81 @@
     return $$('[data-new-person-relationship="' + kind + '"]:checked', $("#personRelationshipsSection")).map(function (input) { return input.value; });
   }
 
+  function newPartnerStatusDetails(status) {
+    return {
+      partnered: { type: "partnership", endReason: "" },
+      married: { type: "marriage", endReason: "" },
+      separated: { type: "marriage", endReason: "separation" },
+      divorced: { type: "marriage", endReason: "divorce" },
+      widowed: { type: "marriage", endReason: "death" },
+      annulled: { type: "marriage", endReason: "annulment" },
+      former: { type: "UNKNOWN", endReason: "UNKNOWN" },
+      unknown: { type: "UNKNOWN", endReason: "" }
+    }[status] || { type: "UNKNOWN", endReason: "" };
+  }
+
+  function selectedNewPartnerDetails(personId) {
+    const checkbox = $$('[data-new-person-relationship="partners"]', $("#personRelationshipsSection")).find(function (input) { return input.value === personId; });
+    const row = checkbox && checkbox.closest("[data-new-person-relationship-row]");
+    return {
+      status: row && $("[data-new-partner-status]", row)?.value || "unknown",
+      startDate: row && $("[data-new-partner-start-date]", row)?.value.trim() || "",
+      endDate: row && $("[data-new-partner-end-date]", row)?.value.trim() || ""
+    };
+  }
+
+  function validateNewPartnerRow(row) {
+    const checkbox = $('[data-new-person-relationship="partners"]', row);
+    const details = $("[data-new-partner-details]", row);
+    const status = $("[data-new-partner-status]", row);
+    const start = $("[data-new-partner-start-date]", row);
+    const end = $("[data-new-partner-end-date]", row);
+    const message = $("[data-new-partner-validation]", row);
+    const selected = Boolean(checkbox && checkbox.checked);
+    if (details) details.hidden = !selected;
+    if (!selected) {
+      [status, start, end].filter(Boolean).forEach(function (input) { input.setAttribute("aria-invalid", "false"); });
+      if (message) message.hidden = true;
+      return true;
+    }
+    const startValid = validStructuredDateInput(start && start.value);
+    const endValid = validStructuredDateInput(end && end.value);
+    const endedStatus = ["separated", "divorced", "widowed", "annulled", "former"].includes(status && status.value);
+    const statusValid = !String(end && end.value || "").trim() || endedStatus;
+    if (start) start.setAttribute("aria-invalid", String(!startValid));
+    if (end) end.setAttribute("aria-invalid", String(!endValid));
+    if (status) status.setAttribute("aria-invalid", String(!statusValid));
+    if (message) {
+      message.textContent = !startValid || !endValid ? "Use YYYY, YYYY-MM, or YYYY-MM-DD." : !statusValid ? "Choose an ended status when an end date is entered." : "";
+      message.hidden = startValid && endValid && statusValid;
+    }
+    return startValid && endValid && statusValid;
+  }
+
+  function validateNewPartnerRows() {
+    return $$('[data-new-person-relationship-row="partners"]', $("#personRelationshipsSection")).map(validateNewPartnerRow).every(Boolean);
+  }
+
+  function filterNewPersonRelationshipPicker(input) {
+    const picker = input.closest("[data-new-person-relationship-picker]");
+    const needle = u.cleanLine(input.value, 120).toLocaleLowerCase();
+    let visible = 0;
+    $$('[data-new-person-relationship-row]', picker).forEach(function (row) {
+      const name = $(".relationship-picker-choice span", row)?.textContent.toLocaleLowerCase() || "";
+      row.hidden = Boolean(needle && !name.includes(needle));
+      if (!row.hidden) visible += 1;
+    });
+    const empty = $("[data-relationship-search-empty]", picker);
+    if (empty) empty.hidden = visible > 0;
+  }
+
   function updateNewPersonRelationshipCounts() {
     $$('[data-new-person-relationship-picker]', $("#personRelationshipsSection")).forEach(function (picker) {
       const selected = selectedNewPersonRelationshipIds(picker.dataset.newPersonRelationshipPicker);
       const count = $("[data-relationship-selection-count]", picker);
       if (count) count.textContent = selected.length ? selected.length + " selected" : "None";
     });
+    validateNewPartnerRows();
   }
 
   function renderNewPersonRelationshipPickers(person) {
@@ -1508,10 +1577,15 @@
     const people = hidden ? [] : state().workspace.people.slice().sort(function (a, b) { return model.sortName(a).localeCompare(model.sortName(b)); });
     ["parents", "partners", "children"].forEach(function (kind) {
       const container = $("#newPerson" + kind[0].toUpperCase() + kind.slice(1));
+      const partnerStatusOptions = config.partnerStatuses.map(function (item) {
+        const label = item.id === "partnered" ? "Unmarried partners" : item.id === "unknown" ? "Unknown" : item.label;
+        return '<option value="' + u.escapeHtml(item.id) + '" ' + (item.id === "unknown" ? "selected" : "") + '>' + u.escapeHtml(label) + "</option>";
+      }).join("");
       container.innerHTML = people.length ? people.map(function (candidate, index) {
         const id = "new-person-" + kind + "-" + index;
         const label = model.displayName(candidate) + (developerReferencesEnabled() ? " · " + candidate.reference : "");
-        return '<label for="' + id + '"><input id="' + id + '" type="checkbox" value="' + u.escapeHtml(candidate.id) + '" data-new-person-relationship="' + kind + '"><span>' + u.escapeHtml(label) + "</span></label>";
+        const partnerDetails = kind === "partners" ? '<div class="new-partner-details" data-new-partner-details="' + u.escapeHtml(candidate.id) + '" hidden><label class="field"><span>Status</span><select data-new-partner-status>' + partnerStatusOptions + '</select></label><label class="field"><span>Start date</span><input data-new-partner-start-date placeholder="YYYY-MM-DD" inputmode="numeric" maxlength="10"></label><label class="field"><span>End date</span><input data-new-partner-end-date placeholder="YYYY-MM-DD" inputmode="numeric" maxlength="10"></label><p class="new-partner-validation" data-new-partner-validation role="alert" hidden></p></div>' : "";
+        return '<div class="relationship-picker-option" data-new-person-relationship-row="' + kind + '"><label class="relationship-picker-choice" for="' + id + '"><input id="' + id + '" type="checkbox" value="' + u.escapeHtml(candidate.id) + '" data-new-person-relationship="' + kind + '"><span>' + u.escapeHtml(label) + "</span></label>" + partnerDetails + "</div>";
       }).join("") : '<p class="relationship-picker-empty">No existing people available.</p>';
     });
     $$('[data-new-person-relationship-picker]', section).forEach(function (picker) { picker.open = false; });
@@ -1535,7 +1609,8 @@
       if (message) message.hidden = valid;
       return valid;
     }).every(Boolean);
-    const valid = firstNamePresent && datesValid && emailsValid && addressesValid;
+    const partnerRelationshipsValid = validateNewPartnerRows();
+    const valid = firstNamePresent && datesValid && emailsValid && addressesValid && partnerRelationshipsValid;
     $("#savePersonButton").disabled = !valid;
     return valid;
   }
@@ -1777,7 +1852,7 @@
     if (!person || ($("#personRelationshipsSection").hidden && !pendingRelative)) return [];
     const choices = [];
     selectedNewPersonRelationshipIds("parents").forEach(function (id) { choices.push({ kind: "parent", id: id }); });
-    selectedNewPersonRelationshipIds("partners").forEach(function (id) { choices.push({ kind: "partner", id: id }); });
+    selectedNewPersonRelationshipIds("partners").forEach(function (id) { choices.push({ kind: "partner", id: id, details: selectedNewPartnerDetails(id) }); });
     selectedNewPersonRelationshipIds("children").forEach(function (id) { choices.push({ kind: "child", id: id }); });
     if (pendingRelative) {
       choices.push({ kind: pendingRelative.role === "parent" ? "child" : pendingRelative.role === "child" ? "parent" : "partner", id: pendingRelative.sourceId });
@@ -1796,7 +1871,21 @@
         startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, place: "", notes: "",
         source: { format: "mcrelations-v2", fields: {} }, order: state().workspace.relationships.length + seen.size, createdAt: now, updatedAt: now
       };
-      if (choice.kind === "partner") Object.assign(relationship, { person1Id: person.id, person2Id: choice.id, status: "unknown" });
+      if (choice.kind === "partner") {
+        const details = choice.details || { status: "unknown", startDate: "", endDate: "" };
+        const sourceDetails = newPartnerStatusDetails(details.status);
+        relationship.startDate.value = details.startDate;
+        relationship.endDate.value = details.endDate;
+        relationship.source.fields = {
+          "partner-type": sourceDetails.type,
+          "end-reason": sourceDetails.endReason,
+          "date-start-value": details.startDate,
+          "date-start-descriptor": automaticDateDescriptor(details.startDate, "optional", ""),
+          "date-end-value": details.endDate,
+          "date-end-descriptor": automaticDateDescriptor(details.endDate, "optional", "")
+        };
+        Object.assign(relationship, { person1Id: person.id, person2Id: choice.id, status: details.status });
+      }
       else Object.assign(relationship, { parentId: parentId, childId: childId, lineage: "non-lineal", kind: "unknown" });
       return relationship;
     }).filter(Boolean);
@@ -1812,6 +1901,7 @@
     syncPersonRepeatables();
     const dateInputs = $$('[data-person-date]', $("#personDialog"));
     if (!dateInputs.map(validatePersonDateInput).every(Boolean)) return showPersonError("Correct every date marked in red. The examples below each date show every accepted format.");
+    if (!validateNewPartnerRows()) return showPersonError("Correct the selected partner status or dates marked in red.");
     if (!$$('input[type="email"]', $("#personDialog")).every(function (input) { return input.checkValidity(); })) return showPersonError("Correct the email address marked as invalid.");
     if (personDraft.addresses.some(function (address) { return ![address.line1, address.line2, address.city, address.region, address.postalCode, address.country].some(function (value) { return Boolean(String(value || "").trim()); }); })) return showPersonError("Every address needs at least one physical address field, or remove the empty address.");
     const person = collectPersonForm(existing);
@@ -2948,6 +3038,7 @@
       if (["relationPerson1", "relationPerson2", "parentLineage", "parentKind"].includes(event.target.id)) updateRelationshipLineagePreview();
     });
     $("#personDialog").addEventListener("input", function (event) {
+      if (event.target.matches("[data-new-person-relationship-search]")) filterNewPersonRelationshipPicker(event.target);
       const birthName = /^birthName(Prefix|First|Middle|Last|Suffix)$/.exec(event.target.id);
       if (birthName) syncBirthNamePart(birthName[1]);
       const derivedName = /^(current|preferred)Name(Prefix|First|Middle|Last|Suffix)$/.exec(event.target.id);
@@ -2957,6 +3048,7 @@
         if (event.target.id === "deathDate" && valid && event.target.value.trim()) $("#livingStatus").value = "deceased";
       }
       if (event.target.matches("[data-new-person-relationship]")) updateNewPersonRelationshipCounts();
+      if (event.target.matches("[data-new-partner-status], [data-new-partner-start-date], [data-new-partner-end-date]")) validateNewPartnerRow(event.target.closest("[data-new-person-relationship-row]"));
       if (updatePersonFormValidity()) $("#personFormError").hidden = true;
     });
     $("#personDialog").addEventListener("click", function (event) {
