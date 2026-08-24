@@ -324,7 +324,8 @@
     if (endReason === "death") return "widowed";
     if (endReason === "divorce") return "divorced";
     if (endReason === "separation") return "separated";
-    if (["annulment", "UNKNOWN"].includes(endReason)) return "former";
+    if (endReason === "annulment") return "annulled";
+    if (endReason === "UNKNOWN") return "former";
     if (type === "marriage") return "married";
     if (type === "partnership") return "partnered";
     return "unknown";
@@ -629,8 +630,10 @@
       const fields = Object.assign({}, u.plainObject(relationship.source && relationship.source.fields));
       const start = sourceDateForExport(fields, "date-start", relationship.startDate, "");
       const end = sourceDateForExport(fields, "date-end", relationship.endDate, "");
-      const partnerType = relationship.type === "partner" ? (relationship.status === "partnered" ? "partnership" : relationship.status === "unknown" ? "UNKNOWN" : "marriage") : "";
-      const endReason = relationship.type === "partner" ? ({ widowed: "death", divorced: "divorce", separated: "separation", former: "UNKNOWN" }[relationship.status] || "") : "";
+      const savedPartnerType = String(fields["partner-type"] || "").trim();
+      const savedEndReason = String(fields["end-reason"] || "").trim();
+      const partnerType = relationship.type === "partner" ? (["marriage", "partnership", "UNKNOWN"].includes(savedPartnerType) ? savedPartnerType : relationship.status === "partnered" ? "partnership" : relationship.status === "unknown" ? "UNKNOWN" : "marriage") : "";
+      const endReason = relationship.type === "partner" ? (["death", "divorce", "separation", "annulment", "UNKNOWN"].includes(savedEndReason) ? savedEndReason : ({ widowed: "death", divorced: "divorce", separated: "separation", annulled: "annulment", former: "UNKNOWN" }[relationship.status] || "")) : "";
       return Object.assign({}, fields, {
         "relationship-id": relationship.id, "relationship-type": relationship.type,
         "person-1-id": relationship.type === "parent-child" ? relationship.parentId : relationship.person1Id,

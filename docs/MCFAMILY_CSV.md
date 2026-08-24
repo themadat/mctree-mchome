@@ -27,7 +27,7 @@ record-id,person-name-birth-prefix,person-birth-name-first,person-birth-name-mid
 - `record-id` is a unique `P` reference with at least three digits, such as `P001`.
 - Birth First/Last and Current First/Last are required. Each Birth, Current, and Preferred name has Prefix, First, Middle, Last, and Suffix parts. Maiden Last is separate.
 - Display preference remains Preferred, then Current, then Birth.
-- `lineage-id` is a unique root-to-person path of two-digit dotted segments. Each non-root path must extend its Lineal parent's path by one segment. Compatibility value `99` remains the unresolved `??` lineage.
+- `lineage-id` is a unique root-to-person path of two-digit dotted segments. Each non-root path must extend its Lineal parent's path by one segment. When an Editor creates a Lineal parent link, McFamily previews and assigns this path automatically, preserving a valid existing child segment or using the next available `01`–`98` segment. Compatibility value `99` remains the unresolved `??` lineage.
 - Known dates use `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`. Question-mark partial dates use the same shapes and the `partial` descriptor.
 - Birth descriptors are `year`, `month`, `day`, `partial`, or `UNKNOWN` and cannot be blank.
 - A blank death date requires `NONE`, `UNKNOWN`, or `UNKNOWN PRESUMED`, meaning living, deceased with unknown date, or presumed deceased. A known death date uses `year`, `month`, `day`, or `partial`.
@@ -54,7 +54,7 @@ relationship-id,relationship-type,person-1-id,person-2-id,parent-lineage,parent-
 
 For `parent-child`, `person-1-id` is the parent and `person-2-id` is the child. `parent-lineage` is `lineal` or `non-lineal`, while `parent-type` is independently `biological`, `adoptive`, `step`, `foster`, `guardian`, or `unknown`; partner-only fields must be blank. A child may have at most one Lineal parent and any number of distinct Non-Lineal parents. A Non-Lineal parent does not need a partner row connecting them to the Lineal parent. The earlier `parent_consanguinity_person_id` and `parent_affinal_person_id` fields are now represented by explicit Lineal and Non-Lineal relationship rows. This applies the requested `parent_lineal_person_id` / `parent_non-lineal_person_id` terminology without reintroducing singular person columns that cannot represent multiple parents.
 
-For `partner`, both person IDs are unordered partners, both parent fields are blank, and `partner-type` is `marriage`, `partnership`, or `UNKNOWN`. `end-reason` is `death`, `divorce`, `separation`, `annulment`, `UNKNOWN`, or blank. A blank reason means no recorded ending. `relationship-order` is a positive chronological sequence used when dates do not establish order.
+For `partner`, both person IDs are unordered partners, both parent fields are blank, and `partner-type` is `marriage`, `partnership`, or `UNKNOWN`. `end-reason` is `death`, `divorce`, `separation`, `annulment`, `UNKNOWN`, or blank. A blank reason means no recorded ending. Editors can update both fields independently from the partner row in a selected-person profile; an entered end date requires an end reason. `relationship-order` is a positive chronological sequence used when dates do not establish order.
 
 Relationship IDs are unique. Both people and an optional `place-id` must resolve. Self-links, duplicates, inconsistent type-specific fields, invalid date pairs, and ancestry cycles are rejected.
 
