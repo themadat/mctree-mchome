@@ -25,6 +25,8 @@
   let treeSurfaceMode = "natural";
   let treeTransform = { x: 24, y: 24, scale: 1 };
   let favoritesPreviewOpen = false;
+  const FAVORITES_BACKUP_FORMAT = "mcfamily-favorites";
+  const FAVORITES_BACKUP_VERSION = 1;
 
   const SHORTCUTS = [
     { keys: "/", label: "Focus global search", group: "Global" },
@@ -49,6 +51,19 @@
 
   function initialized() {
     return Boolean(state().workspace.family.initializedAt);
+  }
+
+  function fullStructuredName(person, kind) {
+    const parts = model.nameParts(person, kind);
+    return [parts.prefix, parts.first, parts.middle, parts.last, parts.suffix].filter(Boolean).join(" ");
+  }
+
+  function personNameVariants(person) {
+    return [
+      { label: "Preferred", value: fullStructuredName(person, "preferred") || "----" },
+      { label: "Current", value: fullStructuredName(person, "current") || "----" },
+      { label: "Lineal", value: fullStructuredName(person, "birth") || "----" }
+    ];
   }
 
   function familyEditingEnabled() {
@@ -1145,6 +1160,12 @@
     };
     const treeNameControls = '<div class="tree-control-section tree-name-preferences"><span class="tree-control-heading">Name Preferences</span><div class="tree-name-controls" role="group" aria-label="Tree name preferences"><div class="tree-name-setting tree-name-source"><div class="segmented" aria-label="Tree name source">' + treeNameOption("preferred", "preferredName", "Preferred", "Display") + treeNameOption("legal", "legalName", "Legal", "Current") + treeNameOption("lineal", "linealName", "Lineal", "Birth") + '</div></div><div class="tree-name-setting tree-name-length"><div class="segmented" aria-label="Tree name length">' + treeLengthOption("short", "shortName", "Short") + treeLengthOption("full", "fullName", "Full") + "</div></div></div></div>";
     $("#mainContent").innerHTML = '<section class="family-workspace" aria-label="Family workspace"><nav class="mobile-workspace-tabs segmented" aria-label="Workspace views"><button type="button" data-mobile-view="directory" aria-pressed="' + String(state().ui.mobileView === "directory") + '">Directory</button><button type="button" data-mobile-view="tree" aria-pressed="' + String(state().ui.mobileView === "tree") + '">Family Tree</button><button type="button" data-mobile-view="profile" aria-pressed="' + String(state().ui.mobileView === "profile") + '"' + personTabDisabled + '>Person</button></nav><div class="family-workspace-grid" data-mobile-view="' + u.escapeHtml(state().ui.mobileView) + '" data-directory-collapsed="' + String(directoryCollapsed) + '" data-profile-collapsed="' + String(profileCollapsed) + '"><aside id="directoryPanel" class="directory-panel workspace-card' + (directoryCollapsed ? " is-collapsed" : "") + '" aria-label="Family directory">' + directoryHeader + directoryControls + '<div class="directory-body"><div id="directoryList" class="directory-list"></div><nav id="directoryAlphaRail" class="directory-alpha-rail" aria-label="Jump to directory letter"></nav></div></aside><section class="tree-panel workspace-card" aria-label="Family Tree"><header class="tree-toolbar"><div class="tree-view-controls"><div class="segmented" aria-label="Tree mode"><button type="button" data-tree-mode="focus" aria-pressed="' + String(state().ui.treeMode === "focus") + '"' + lineageDisabled + '>Focus</button><button type="button" data-tree-mode="overview" aria-pressed="' + String(state().ui.treeMode === "overview") + '">Overview</button></div><div class="segmented" aria-label="Person card detail"><button type="button" data-tree-node-view="condensed" aria-pressed="' + String(state().ui.treeNodeView === "condensed") + '">Condensed</button><button type="button" data-tree-node-view="detailed" aria-pressed="' + String(state().ui.treeNodeView === "detailed") + '">Detailed</button></div><label class="depth-control"><span>Ancestors</span><input id="ancestorDepth" type="number" min="0" max="' + config.controls.maxTreeDepth + '" step="1" value="' + state().ui.ancestorDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><label class="depth-control"><span>Descendants</span><input id="descendantDepth" type="number" min="0" max="' + config.controls.maxTreeDepth + '" step="1" value="' + state().ui.descendantDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><div class="zoom-controls" role="group" aria-label="Tree zoom controls"><button type="button" class="zoom-action" data-zoom="out" aria-label="Zoom out" title="Zoom out"><span class="zoom-action-icon" data-symbol="zoomOut" aria-hidden="true"></span><span>Out</span></button><label class="zoom-value-control"><span class="visually-hidden">Zoom percentage</span><span class="zoom-value-box"><input id="zoomValue" type="number" min="1" max="250" step="1" value="100" inputmode="numeric"><span aria-hidden="true">%</span></span></label><button type="button" class="zoom-action" data-zoom="in" aria-label="Zoom in" title="Zoom in"><span class="zoom-action-icon" data-symbol="zoomIn" aria-hidden="true"></span><span>In</span></button><button type="button" class="zoom-action" data-fit-tree aria-label="Fit tree" title="Fit tree"><span class="zoom-action-icon" data-symbol="fit" aria-hidden="true"></span><span>Fit</span></button><span id="zoomStatus" class="visually-hidden" aria-live="polite">100% zoom</span></div></div></header><div class="tree-canvas"><svg id="familyTreeSvg" role="group" aria-label="Interactive Family Tree. Scroll horizontally or vertically, drag to pan, use the zoom controls, and select a person to focus." tabindex="0"></svg></div>' + treeKeyHtml() + '</section><aside id="profilePanel" class="profile-panel workspace-card' + (profileCollapsed ? " is-collapsed" : "") + '" aria-label="Selected person profile"><div id="profilePanelContent" class="profile-panel-content"></div></aside></div></section>';
+    const treeStage = document.createElement("div");
+    treeStage.className = "tree-stage";
+    const treeCanvas = $(".tree-canvas", $("#mainContent"));
+    const treeKey = $(".tree-key", $("#mainContent"));
+    treeCanvas.before(treeStage);
+    treeStage.append(treeCanvas, treeKey);
     const workspaceGrid = $(".family-workspace-grid", $("#mainContent"));
     workspaceGrid.style.setProperty("--directory-panel-width", state().ui.panelSizingCustomized ? state().ui.directoryPanelWidth + "px" : "20%");
     workspaceGrid.style.setProperty("--profile-panel-width", state().ui.panelSizingCustomized ? state().ui.profilePanelWidth + "px" : "30%");
@@ -1751,7 +1772,7 @@
     const favoriteIds = new Set(state().ui.favoritePersonIds);
     state().workspace.people.forEach(function (person) {
       const favorite = favoriteIds.has(person.id);
-      if ((favoritesPreviewOpen ? favorite : model.fuzzySearchMatch(needle, model.personSearchText(person)))) results.push({ type: "person", id: person.id, title: model.displayName(person), meta: "Person" + (developerReferencesEnabled() ? " · " + person.reference : ""), favorite: favorite });
+      if ((favoritesPreviewOpen ? favorite : model.fuzzySearchMatch(needle, model.personSearchText(person)))) results.push({ type: "person", id: person.id, title: model.displayName(person), names: personNameVariants(person), meta: "Person" + (developerReferencesEnabled() ? " · " + person.reference : ""), favorite: favorite });
     });
     results.sort(function (a, b) { return Number(b.favorite) - Number(a.favorite) || a.title.localeCompare(b.title); });
     if (favoritesPreviewOpen) return results;
@@ -1772,10 +1793,13 @@
     container.hidden = false;
     $("#globalSearch").setAttribute("aria-expanded", "true");
     container.innerHTML = results.length ? results.map(function (result, index) {
-      const main = '<button type="button" class="global-search-result-main" id="global-result-' + index + '" data-search-type="' + result.type + '" data-search-id="' + u.escapeHtml(result.id) + '"><span><strong>' + u.escapeHtml(result.title) + '</strong><small>' + u.escapeHtml(result.meta) + "</small></span><span aria-hidden=\"true\">→</span></button>";
+      const content = result.type === "person"
+        ? '<span class="search-person-copy"><span class="search-person-names">' + result.names.map(function (name, nameIndex) { return '<span class="search-person-name' + (nameIndex === 0 ? " is-primary" : "") + '"><small>' + u.escapeHtml(name.label) + '</small><strong>' + u.escapeHtml(name.value) + "</strong></span>"; }).join("") + '</span><small class="search-result-meta">' + u.escapeHtml(result.meta) + "</small></span>"
+        : '<span><strong>' + u.escapeHtml(result.title) + '</strong><small>' + u.escapeHtml(result.meta) + "</small></span>";
+      const main = '<button type="button" class="global-search-result-main" id="global-result-' + index + '" data-search-type="' + result.type + '" data-search-id="' + u.escapeHtml(result.id) + '">' + content + '<span class="search-result-arrow" aria-hidden="true">→</span></button>';
       if (result.type !== "person") return '<div class="global-search-result-row no-favorite" role="listitem">' + main + "</div>";
       const action = result.favorite ? "Remove " + result.title + " from favorites" : "Star " + result.title;
-      return '<div class="global-search-result-row" role="listitem">' + main + '<button type="button" class="search-favorite-toggle" data-toggle-favorite="' + u.escapeHtml(result.id) + '" aria-label="' + u.escapeHtml(action) + '" title="' + u.escapeHtml(action) + '" aria-pressed="' + String(result.favorite) + '"><span data-symbol="favorite" aria-hidden="true"></span></button></div>';
+      return '<div class="global-search-result-row' + (result.favorite ? " is-favorite" : "") + '" role="listitem">' + main + '<button type="button" class="search-favorite-toggle" data-toggle-favorite="' + u.escapeHtml(result.id) + '" aria-label="' + u.escapeHtml(action) + '" title="' + u.escapeHtml(action) + '" aria-pressed="' + String(result.favorite) + '"><span data-symbol="favorite" aria-hidden="true"></span></button></div>';
     }).join("") : '<div class="search-empty">' + (favoritesPreviewOpen ? "No favorite people yet. Search for someone and select their star." : "No matches across people, contacts, Notes, Help, releases, or Roadmap.") + "</div>";
     $("#favoritesButton").setAttribute("aria-expanded", String(favoritesPreviewOpen));
     icons.mount(container);
@@ -1794,10 +1818,75 @@
     renderHeader();
     renderGlobalSearchResults();
     if (state().ui.selectedPersonId === id) renderProfile();
+    if (!$("#developerPanel").hidden) renderDeveloper();
     requestAnimationFrame(function () {
       const replacement = $("[data-toggle-favorite='" + CSS.escape(id) + "']", fromProfile ? $("#profilePanel") : $("#globalSearchResults"));
       (replacement || $("#globalSearch")).focus();
     });
+  }
+
+  function saveFavoritesFile() {
+    const favoriteIds = new Set(state().ui.favoritePersonIds);
+    const people = state().workspace.people.filter(function (person) { return favoriteIds.has(person.id); }).sort(function (a, b) { return model.sortName(a).localeCompare(model.sortName(b)); }).map(function (person) {
+      return {
+        id: person.id,
+        preferredName: fullStructuredName(person, "preferred"),
+        currentName: fullStructuredName(person, "current"),
+        linealName: fullStructuredName(person, "birth")
+      };
+    });
+    if (!people.length) {
+      components.toast("Star at least one person before saving a Favorites file.", { title: "No favorites to save", kind: "warning" });
+      return;
+    }
+    const envelope = {
+      format: FAVORITES_BACKUP_FORMAT,
+      version: FAVORITES_BACKUP_VERSION,
+      exportedAt: u.isoNow(),
+      familyTitle: state().workspace.family.title,
+      people: people
+    };
+    const blob = new Blob([JSON.stringify(envelope, null, 2) + "\n"], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const slug = state().workspace.family.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "mcfamily";
+    link.href = url;
+    link.download = slug + "-favorites-" + new Date().toISOString().slice(0, 10) + ".json";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(function () { URL.revokeObjectURL(url); }, 0);
+    components.toast(people.length + " favorite " + (people.length === 1 ? "person was" : "people were") + " saved outside browser storage.", { title: "Favorites file saved", kind: "success", duration: 5000 });
+  }
+
+  async function restoreFavoritesFile(file) {
+    if (!file) return;
+    try {
+      if (file.size > 256 * 1024) throw new Error("That Favorites file is larger than the 256 KB limit.");
+      const text = file.text ? await file.text() : await new Promise(function (resolve, reject) {
+        const reader = new FileReader();
+        reader.onload = function () { resolve(String(reader.result || "")); };
+        reader.onerror = function () { reject(new Error("The selected Favorites file could not be read.")); };
+        reader.readAsText(file);
+      });
+      const parsed = JSON.parse(text);
+      if (!parsed || parsed.format !== FAVORITES_BACKUP_FORMAT || parsed.version !== FAVORITES_BACKUP_VERSION || !Array.isArray(parsed.people)) throw new Error("Choose a current McFamily Favorites JSON file.");
+      if (parsed.people.length > config.controls.maxPeople) throw new Error("The Favorites file contains too many people.");
+      const availableIds = new Set(state().workspace.people.map(function (person) { return person.id; }));
+      const requestedIds = Array.from(new Set(parsed.people.map(function (person) { return u.cleanLine(person && person.id, 100); }).filter(Boolean)));
+      const restoredIds = requestedIds.filter(function (id) { return availableIds.has(id); });
+      const missingCount = requestedIds.length - restoredIds.length;
+      storage.mutate(function (next) { next.ui.favoritePersonIds = restoredIds; }, { reason: "favorites-restore" });
+      favoritesPreviewOpen = false;
+      renderHeader();
+      renderGlobalSearchResults();
+      renderProfile();
+      renderDeveloper();
+      const skipped = missingCount ? " " + missingCount + " missing " + (missingCount === 1 ? "person was" : "people were") + " skipped." : "";
+      components.toast(restoredIds.length + " favorite " + (restoredIds.length === 1 ? "person was" : "people were") + " restored." + skipped, { title: "Favorites restored", kind: missingCount ? "warning" : "success", duration: 6000 });
+    } catch (error) {
+      components.toast(error instanceof SyntaxError ? "That file is not valid JSON." : error.message, { title: "Favorites not restored", kind: "danger", duration: 6000 });
+    }
   }
 
   function activateGlobalSearchResult(type, id) {
@@ -1909,6 +1998,7 @@
     $("#developerDiagnostics").innerHTML = diagnostics.map(function (row) { return '<div><dt>' + u.escapeHtml(row[0]) + '</dt><dd>' + u.escapeHtml(row[1]) + "</dd></div>"; }).join("");
     $("#developerState").textContent = JSON.stringify(model.exportEnvelope(state()), null, 2);
     $("#restoreRecoveryButton").disabled = !recovery;
+    $("#saveFavoritesButton").disabled = !state().ui.favoritePersonIds.length;
   }
 
   function renderSupport() {
@@ -2177,6 +2267,12 @@
     $("#supportRoadmapSort").addEventListener("change", function (event) { storage.mutate(function (next) { next.modules.roadmap.sortBy = event.target.value; }, { touch: false, reason: "roadmap-sort" }); renderSupportRoadmap(); });
     $("#restoreRecoveryButton").addEventListener("click", restoreRecovery);
     $("#saveRecoveryButton").addEventListener("click", saveRecoveryCopy);
+    $("#saveFavoritesButton").addEventListener("click", saveFavoritesFile);
+    $("#restoreFavoritesButton").addEventListener("click", function () { $("#restoreFavoritesInput").click(); });
+    $("#restoreFavoritesInput").addEventListener("change", function (event) {
+      restoreFavoritesFile(event.target.files && event.target.files[0]);
+      event.target.value = "";
+    });
     $("#disableDeveloperButton").addEventListener("click", function () { toggleDeveloperMode(false); });
   }
 

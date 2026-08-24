@@ -25,8 +25,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 11,
   "meta": {
-    "appVersion": "0.0.1.52",
-    "buildId": "0.0.1.52",
+    "appVersion": "0.0.1.53",
+    "buildId": "0.0.1.53",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -67,7 +67,7 @@ After initialization, deleting the last person does not clear `initializedAt`; t
 
 Startup checks only `mcfamily.state.v11` and the matching `mcfamily.recovery.v3` snapshot. State v11 passes through normalization, sanitization, and validation; every other state version is rejected. Earlier state keys and recovery snapshots are ignored, so a v13 deployment opens the import gate until a current source is loaded. A corrupt current copy falls back to the current recovery snapshot or to the uninitialized gate. Ordinary mutations update metadata and are saved locally with a short debounce.
 
-Person deletion also writes recovery before removing that person's relationship records. Recovery is a single last-known snapshot, not a history or merge log.
+Person deletion also writes recovery before removing that person's relationship records. Recovery is a single last-known snapshot, not a history or merge log. Favorite person IDs ordinarily live in normalized UI state; Developer Mode can additionally download a small private `mcfamily-favorites` JSON envelope and restore that exact ID set without depending on browser storage.
 
 ## Tree and directory
 
