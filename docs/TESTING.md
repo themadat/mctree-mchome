@@ -13,7 +13,7 @@ Use synthetic families only.
 
 ## Initialization, current schema, and portability
 
-- [ ] A fresh profile shows only the introduction, privacy warning, and ZIP picker.
+- [ ] A fresh profile shows the introduction, privacy warning, ZIP picker, and title-bar Audit action; only a validated local import or explicit Download Latest can initialize the workspace.
 - [ ] No demo family, blank-family action, GEDCOM action, or bypass appears.
 - [ ] A valid dataset 16 ZIP with at least one person shows people, relationship, place, residence, dataset, state, and validation-group summaries before opening the family.
 - [ ] The ZIP contains exactly the five root files `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`; missing, extra, duplicate, nested, encrypted, unsupported-compression, truncated, bad-checksum, multi-disk, and oversized packages are rejected without replacing state.
@@ -35,6 +35,10 @@ Use synthetic families only.
 - [ ] Startup removes only older versioned `mcfamily.state.v#` and `mcfamily.recovery.v#` keys, preserving current state and unrelated local-storage entries so the package has quota to persist.
 - [ ] A state with any schema version other than v13 is rejected rather than unwrapped or migrated.
 - [ ] One ZIP export/import round trip preserves all five files, 16 name columns, people, places, residences, relationships, preferences, Notes, package metadata, and audit history.
+- [ ] Dataset `16.0.0`, `16.0.1`, and later `16.0.x` packages with the same five exact schemas validate; a different major/minor series is rejected.
+- [ ] Cloud Upload rejects malformed ZIPs, schema/count/reference/date/cycle failures, a stale dataset patch, missing or rewritten remote audit history, a public repository, missing token permissions, and a changed GitHub file SHA without altering local or remote data.
+- [ ] A valid cloud publication shows collection-level changes, requires Recorded by and Audit summary, advances exactly one dataset patch, appends one `published-cloud-package` event, re-validates the final ZIP, writes one latest file, opens it locally after recovery, and downloads the exact published bytes.
+- [ ] Download Latest validates before replacement, saves recovery when local data exists, downloads the remote bytes, and works from the first-launch gate; tokens and GitHub settings never appear in the ZIP, recovery state, PDF, or service-worker cache.
 - [ ] Missing required Birth First/Last values normalize to `UNKNOWN`; the importer does not derive structured names from removed flat columns.
 - [ ] Partial source dates remain in source details, produce a partial-only preview warning, and do not become invented normalized dates in editable/native state.
 - [ ] Later replacement creates recovery before changing state; Restore recovery returns the prior family.

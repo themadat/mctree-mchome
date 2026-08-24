@@ -12,10 +12,11 @@ McFamily is an ordered-script static page with no module loader or runtime packa
 6. `core/components.js` implements dialogs, menus, toasts, loading UI, and focus restoration.
 7. `core/family.js` derives relationship indexes, ancestors, descendants, siblings, connected components, generations, and tree layout.
 8. `core/portability.js` validates, imports, and exports the complete five-file private ZIP package.
-9. `core/pwa.js` manages appearance-aware install metadata, service-worker registration, and updates.
-10. `app.js` renders the onboarding gate, family workspace, editors, Settings, search, SVG interaction, and print atlas.
+9. `core/cloud.js` explicitly uploads/downloads that ZIP through a private GitHub repository, enforces audit continuity, and rejects stale writes by file SHA.
+10. `core/pwa.js` manages appearance-aware install metadata, service-worker registration, and updates.
+11. `app.js` renders the onboarding gate, family workspace, editors, Settings, search, SVG interaction, and print atlas.
 
-All modules attach to `window.LocalApp`. Application runtime has no family-data network path.
+All modules attach to `window.LocalApp`. The ordinary workspace remains local. The only family-data network path is the editor-invoked `core/cloud.js` transaction to GitHub's API; the service worker never intercepts or caches it.
 
 ## Schema v13
 
@@ -25,8 +26,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 13,
   "meta": {
-    "appVersion": "0.0.1.58",
-    "buildId": "0.0.1.58",
+    "appVersion": "0.0.1.59",
+    "buildId": "0.0.1.59",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -58,13 +59,23 @@ Relationships are independent records. Parent-child records contain `parentId`, 
 
 Derived family concepts are never copied onto people. `family.js` builds them from relationships so edits cannot leave contradictory ancestor, sibling, descendant, or family-unit arrays behind.
 
-The dataset 16 ZIP package preserves the current state model through five exact CSV schemas. McRelations uses schema 2.0; the other files use schema 1.0. Historical application-state and transfer schemas are intentionally unsupported.
+The dataset 16 ZIP package preserves the current state model through five exact CSV schemas. McRelations uses schema 2.0; the other files use schema 1.0. Historical application-state and transfer schemas are intentionally unsupported. Data-only publications advance through `16.0.x` patch versions without changing those schemas or the website build.
 
 ## Initialization and persistence
 
-A fresh default has no `initializedAt` value and no people. `app.js` renders only the introduction and ZIP input in that state. `portability.js` accepts only a dataset 16 package with exactly `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`, and requires at least one valid person before the first local state is stored.
+A fresh default has no `initializedAt` value and no people. `app.js` renders the introduction and ZIP input in that state while retaining the title-bar Audit action for an explicit cloud download. `portability.js` accepts only a dataset 16 package with exactly `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`, and requires at least one valid person before the first local state is stored.
 
 McPeople contains one stable P-referenced row per person and no parent or partner columns. McRelations contains all authoritative Person-to-Person parent and partner links, with parent lineage role separated from parent type. McPlaces contains reusable physical addresses, while McResidences assigns people to places. McMetadata declares package/dataset/file-schema versions, exact record counts, family settings, and append-only audit events. Package validation completes before any current state is touched and rejects ZIP damage, wrong filenames, schema drift, count mismatches, invalid identifiers/dates, broken cross-file references, duplicate links, multiple Lineal parents, Lineage inconsistencies, and ancestry cycles.
+
+## Private GitHub package transport
+
+The public Pages repository and private data repository are intentionally separate. Cloud connection settings and the optional remembered token live in dedicated browser-storage keys and are never written into normalized state, exports, recovery, PDFs, or service-worker caches. Session-only tokens use `sessionStorage`; remembered tokens use `localStorage`. Every editor should use a separate fine-grained token limited to the private data repository with Contents read/write access.
+
+Download Latest reads the configured ZIP through GitHub's Contents/Blob APIs, applies the same strict package parser used by local import, creates local recovery when necessary, replaces the browser workspace without rewriting package metadata, and downloads the exact remote bytes.
+
+Upload Changes validates the edited ZIP before any write. When a remote package exists, its dataset version must match the candidate and its complete audit sequence must be an unchanged prefix of the candidate audit. McFamily calculates collection-level added/changed/removed counts, requires an editor and summary, increments the `16.0.x` patch, appends one `published-cloud-package` event, re-encodes and re-validates the final ZIP, then writes it with the remote GitHub file SHA. A changed SHA or API conflict rejects the save rather than merging or overwriting. One Git commit and the McMetadata event preserve each successful publication.
+
+This provides controlled editor handoff and revocation through GitHub collaborators, but not application roles, sign-in tracking, read/download usage history, or a tamper-proof audit. Those remain backend work.
 
 Lineal people use complete root-to-person paths that extend each direct Lineal parent's path by one two-digit segment; Non-Lineal partner-only rows intentionally leave lineage blank. A known death value marks a person deceased. Without one, `person-date-death-descriptor` is authoritative: `NONE` means living, `UNKNOWN` means explicitly deceased with no known date, and `UNKNOWN PRESUMED` means source evidence presumes death. Partial source dates remain in source details because the editable date model accepts only normalized known values.
 
