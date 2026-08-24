@@ -83,7 +83,7 @@
   }
 
   function developerReferencesEnabled() {
-    return Boolean(config.features.developerTools && state().preferences.controls.developerMode);
+    return Boolean(config.features.developerTools && familyEditingEnabled() && state().preferences.controls.developerMode);
   }
 
   function mutationDisabledAttributes() {
@@ -160,12 +160,15 @@
     versionButton.setAttribute("aria-label", "Open release notes for version " + config.identity.version + (developerMode ? ". Developer Mode is enabled" : ""));
     $("#betaPill").hidden = !isBetaDeploy();
     const accessPill = $("#accessModePill");
+    const runtimeAccess = App.cloud && App.cloud.currentAccess ? App.cloud.currentAccess() : null;
     accessPill.hidden = !isInitialized;
-    accessPill.textContent = isInitialized ? accessProfile().shortLabel.toUpperCase() : "";
+    accessPill.textContent = isInitialized ? String(runtimeAccess && runtimeAccess.label || accessProfile().shortLabel).toUpperCase() : "";
     accessPill.dataset.accessMode = isInitialized ? accessMode() : "";
     document.documentElement.dataset.developer = developerMode ? "on" : "off";
     setInputValue($("#globalSearch"), state().ui.search);
-    ["#printButton", "#notesButton", "#supportButton"].forEach(function (selector) { $(selector).disabled = !isInitialized; });
+    ["#notesButton", "#supportButton"].forEach(function (selector) { $(selector).disabled = !isInitialized; });
+    $("#printButton").disabled = !isInitialized || !familyEditingEnabled();
+    $("#printButton").hidden = isInitialized && !familyEditingEnabled();
     $("#addPersonButton").disabled = !isInitialized || !familyEditingEnabled();
     $("#directoryButton").disabled = !isInitialized;
     const directoryIsOpen = isInitialized && !state().ui.directoryCollapsed && (!window.matchMedia("(max-width: 699px)").matches || state().ui.mobileView === "directory");
@@ -245,7 +248,7 @@
 
   function renderOnboarding() {
     const icon = document.documentElement.dataset.theme === "dark" ? config.identity.assets.appIconDark : config.identity.assets.appIconLight;
-    $("#mainContent").innerHTML = '<section class="onboarding-screen" aria-labelledby="onboardingTitle"><div class="onboarding-card"><img src="' + u.escapeHtml(versionedAsset(icon)) + '" alt="" class="onboarding-icon"><span class="eyebrow">Private local family atlas</span><h1 id="onboardingTitle">Open your family package</h1><p>Everyone can use this same McFamily link. Choose the ZIP your maintainer sent you; it determines whether this browser opens as Editor, PII Viewer, or Redacted Read-only. McFamily checks the complete package before storing a local copy.</p><div class="privacy-callout"><strong>The ZIP is your access handoff.</strong><span>This is not a password or account system. Keep full-data packages private; only the Redacted Read-only ZIP physically removes addresses, contact details, and notes.</span></div><button id="firstImportButton" type="button" class="button primary large-button">Choose McFamily ZIP</button><input id="onboardingImportInput" type="file" accept="application/zip,.zip" data-import-file-input hidden><small>Damaged, incomplete, mismatched, or falsely labelled redacted packages are rejected without replacing family data.</small></div></section>';
+    $("#mainContent").innerHTML = '<section class="onboarding-screen" aria-labelledby="onboardingTitle"><div class="onboarding-card"><img src="' + u.escapeHtml(versionedAsset(icon)) + '" alt="" class="onboarding-icon"><span class="eyebrow">Owner recovery</span><h1 id="onboardingTitle">Open the initial family record</h1><p>This screen is only for the Owner before the first encrypted vault is published. Open the latest validated recovery ZIP, then use Access &amp; Audit to create the passphrase sign-in used by everyone else.</p><div class="privacy-callout"><strong>Recipients do not need a ZIP.</strong><span>After Owner setup, they use the normal McFamily link and their assigned passphrase.</span></div><button id="firstImportButton" type="button" class="button primary large-button">Open Owner Recovery ZIP</button><input id="onboardingImportInput" type="file" accept="application/zip,.zip" data-import-file-input hidden><small>McFamily validates all five internal CSV files before opening this private recovery copy.</small></div></section>';
     icons.mount($("#mainContent"));
   }
 
@@ -1802,6 +1805,10 @@
   }
 
   function printAtlas(eventOrTrigger) {
+    if (!familyEditingEnabled()) {
+      components.message("Export unavailable", "PDF and print export are not provided in read-only access.");
+      return;
+    }
     if (!initialized() || !state().workspace.people.length) {
       components.message("Nothing to print", "Add at least one person before building the family atlas.");
       return;
@@ -2081,7 +2088,7 @@
   }
 
   function renderSupport() {
-    $("#developerTab").hidden = !state().preferences.controls.developerMode || !config.features.developerTools;
+    $("#developerTab").hidden = !developerReferencesEnabled();
     switchSupportTab(state().ui.supportTab);
   }
 
@@ -2126,7 +2133,7 @@
   function toggleDeveloperMode(force, options) {
     if (!config.features.developerTools || !initialized()) return;
     storage.mutate(function (next) { next.preferences.controls.developerMode = typeof force === "boolean" ? force : !next.preferences.controls.developerMode; }, { reason: "developer-mode" });
-    $("#developerTab").hidden = !state().preferences.controls.developerMode;
+    $("#developerTab").hidden = !developerReferencesEnabled();
     renderHeader();
     renderMain();
     if (state().preferences.controls.developerMode) {
@@ -2503,7 +2510,7 @@
   }
 
   function bindRuntimeEvents() {
-    window.addEventListener("app:storageerror", function (event) { components.toast(event.detail.message, { title: event.detail.title, kind: "danger", duration: 0, actionLabel: initialized() ? "Export" : "", onAction: initialized() ? portability.exportCsv : null }); renderLocalStatus(); });
+    window.addEventListener("app:storageerror", function (event) { components.toast(event.detail.message, { title: event.detail.title, kind: "danger", duration: 0, actionLabel: initialized() && familyEditingEnabled() ? "Recovery ZIP" : "", onAction: initialized() && familyEditingEnabled() ? portability.exportCsv : null }); renderLocalStatus(); });
     window.addEventListener("app:statesaved", renderLocalStatus);
     window.addEventListener("app:pwaerror", function (event) { components.toast(event.detail.message, { title: "Offline support unavailable", kind: "warning", duration: 5000 }); });
     window.addEventListener("app:statechange", function (event) { if (["import", "recovery", "erase-all", "reset-preferences"].includes(event.detail.reason)) { treeNeedsFit = true; renderAll(); } });
@@ -2517,12 +2524,12 @@
     else if (report.error && report.source === "default") components.toast("Saved data could not be read. McFamily returned to the private import screen.", { title: "Import required", kind: "warning", duration: 6000 });
   }
 
-  function init() {
+  async function init() {
     storage.load();
     applyIdentity();
     components.init();
     portability.init();
-    App.cloud.init();
+    await App.cloud.init();
     bindGeneralEvents();
     bindRuntimeEvents();
     pwa.init();

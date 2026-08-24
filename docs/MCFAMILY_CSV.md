@@ -1,6 +1,6 @@
 # McFamily package and CSV contract
 
-McFamily imports and exports one private ZIP artifact. The current dataset `16.0.x` series and package format `mcfamily-package` version `1` require exactly these five UTF-8 CSV files at the ZIP root:
+Inside every hosted encrypted record, McFamily stores one complete ZIP package. Owner and Editor may also import or export that same structure as a private recovery file. The current dataset `16.0.x` series and package format `mcfamily-package` version `1` require exactly these five UTF-8 CSV files at the ZIP root:
 
 ```text
 McPeople.csv
@@ -10,7 +10,9 @@ McResidences.csv
 McMetadata.csv
 ```
 
-Loose CSVs, nested directories, missing files, extra files, encrypted entries, unsupported compression, damaged checksums, and packages larger than 5 MB are rejected. ZIP entries may be stored or deflated. These files contain sensitive plaintext even though they are packaged in a ZIP; store them privately and never commit a real package or extracted family file.
+Loose CSVs, nested directories, missing files, extra files, encrypted ZIP entries, unsupported compression, damaged checksums, and packages larger than 5 MB are rejected. ZIP entries may be stored or deflated. These files contain sensitive plaintext even though they are packaged in a ZIP; store recovery copies privately and never commit a real package or extracted family file.
+
+The hosted `mcfamily-encrypted-vault` JSON envelope is different from a ZIP. It contains AES-GCM ciphertext for separate full and redacted ZIP payloads, public non-secret revision metadata, and passphrase-wrapped data keys for active grants. The public vault never contains a passphrase, GitHub token, or readable CSV filename/content. McFamily validates the envelope first, decrypts only the payload authorized for the selected grant, and then applies every ZIP and CSV check documented below.
 
 CSV uses RFC 4180-style quoting. Every file has one exact, ordered, hyphenated header row. McFamily rejects missing, additional, duplicate, renamed, underscore-form, or reordered columns rather than guessing or migrating older schemas. Export escapes formula-looking cell values, and the importer removes only the corresponding export escape.
 
@@ -85,15 +87,15 @@ Required single-value rows declare:
 
 At least one `audit` row is required. Audit rows record a stable ID, file or package subject, action, timestamp, actor, and details. Imports and exports append audit events, and the full history remains in future exports. Declared counts must exactly match the other four files; the home person must resolve.
 
-An Editor package contains the full record and enables application editing and cloud publishing. A PII Viewer package contains the same full record but opens the application read-only. The family `settings-json` carries compatibility details that have no dedicated column in the five current schemas: labelled phone/email arrays, gender/pronouns, life places, heritage background, and free-text relationship place. Addresses remain authoritative McPlaces plus McResidences records. A Redacted Read-only package must have zero McPlaces and McResidences rows, blank family Notes, blank person and relationship notes, no relationship place references, and no supplemental profile/relationship detail maps. Export also clears contact arrays and unstructured notes before CSV generation and scrubs audit actors/details. The importer rejects a package labelled `redacted-viewer` if those structural redaction rules do not hold. Access modes are not passwords or encryption; only physical redaction removes those fields from a recipient's ZIP.
+An Editor package contains the full record and enables application editing when opened by an Owner or Editor grant. A PII Viewer package contains the same full record but opens read-only. The family `settings-json` carries compatibility details that have no dedicated column in the five current schemas: labelled phone/email arrays, gender/pronouns, life places, heritage background, and free-text relationship place. Addresses remain authoritative McPlaces plus McResidences records. A Redacted Read-only package must have zero McPlaces and McResidences rows, blank family Notes, blank person and relationship notes, no relationship place references, and no supplemental profile/relationship detail maps. Export also clears contact arrays and unstructured notes before CSV generation and scrubs audit actors/details. The importer rejects a package labelled `redacted-viewer` if those structural redaction rules do not hold. Package access mode is still validated after hosted decryption; physical redaction, rather than a UI flag, removes private fields from the redacted payload.
 
-Data-only cloud publications increment the final dataset patch number (`16.0.0` → `16.0.1` → `16.0.2`) while all five schemas remain unchanged. Each publication appends a `published-cloud-package` audit event. An upload based on an earlier patch or missing/rewritten prior audit rows is rejected and must be reapplied to Download Latest.
+Hosted family publications increment the final dataset patch number (`16.0.0` → `16.0.1` → `16.0.2`) while all five schemas remain unchanged. Each publication appends a `published-hosted-family` audit event; passphrase changes append a hosted-access event without recording secrets. A publication based on an earlier vault revision or changed GitHub file SHA is rejected and must be reapplied after reload.
 
 ## Import transaction
 
 McFamily parses into a candidate state before touching the current family. Validation covers ZIP integrity and contents, five exact schemas, required metadata, dataset/package versions, CSV shape and limits, IDs, counts, date descriptors, names, Lineage paths, relationship rules, Person-to-Place links, and ancestry cycles. A successful preview reports record counts and the number of validation groups that passed. Any failure reports the reason and leaves current browser data unchanged.
 
-First launch requires an initialized family and at least one valid person from either a local package selection or the explicit Download Latest action. Later imports show a comparison, require confirmation, and save the prior current state as the recovery snapshot before replacement. Imports never merge concurrent copies.
+Normal launch requires a current hosted vault, an active passphrase, and an initialized decrypted family with at least one valid person. Before the first vault exists, the Owner may use the explicit recovery control to open one valid Editor ZIP and create initial hosted access. Later recovery imports are Owner/Editor-only, show a comparison, require confirmation, and save the prior current state as the recovery snapshot before replacement. Imports never merge concurrent copies.
 
 ## Private conversion helper
 
