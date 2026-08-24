@@ -48,6 +48,22 @@
   };
   let pendingImport = null;
 
+  function isSupportedDatasetVersion(value) {
+    const escapedSeries = String(config.datasetSeries || config.datasetVersion.split(".").slice(0, 2).join(".")).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp("^" + escapedSeries + "\\.\\d+$").test(u.cleanLine(value, 40));
+  }
+
+  function datasetVersionFor(state) {
+    const value = u.cleanLine(state && state.meta && state.meta.package && state.meta.package.datasetVersion, 40);
+    return isSupportedDatasetVersion(value) ? value : config.datasetVersion;
+  }
+
+  function nextDatasetPatch(value) {
+    if (!isSupportedDatasetVersion(value)) throw new Error("Only dataset " + config.datasetSeries + " patch versions can be published by this website.");
+    const parts = value.split(".").map(Number);
+    return parts[0] + "." + parts[1] + "." + (parts[2] + 1);
+  }
+
   function parseCsv(text, fileName) {
     const source = String(text || "").replace(/^\uFEFF/, "");
     const matrix = [];
@@ -330,7 +346,8 @@
     }
     if (one("package", "package-format") !== config.packageFormat) throw new Error("This McFamily package format is not supported.");
     if (one("package", "package-version") !== config.packageVersion) throw new Error("This McFamily package version is not supported.");
-    if (one("package", "dataset-version") !== config.datasetVersion) throw new Error("This McFamily dataset version is not supported.");
+    const datasetVersion = one("package", "dataset-version");
+    if (!isSupportedDatasetVersion(datasetVersion)) throw new Error("This website accepts only McFamily dataset " + config.datasetSeries + " patch versions.");
     const schemaRows = parsed.rows.filter(function (row) { return row["metadata-type"] === "schema" && row.key === "schema-version"; });
     const schemaSubjects = new Set(schemaRows.map(function (row) { return row.subject; }));
     if (schemaRows.length !== FILE_NAMES.length || FILE_NAMES.some(function (name) { return !schemaSubjects.has(name); }) || schemaRows.some(function (row) { return row.value !== FILE_SCHEMA_VERSIONS[row.subject]; })) {
@@ -354,7 +371,8 @@
         title: one("family", "title"), initializedAt: one("family", "initialized-at"), homePersonId: one("family", "home-person-id"),
         createdAt: one("family", "created-at"), updatedAt: one("family", "updated-at"), notes: one("family", "notes"), settings: settings
       },
-      audits: audits
+      audits: audits,
+      datasetVersion: datasetVersion
     };
   }
 
@@ -498,7 +516,7 @@
       schemaVersion: config.schemaVersion,
       meta: {
         createdAt: metadata.family.createdAt, updatedAt: metadata.family.updatedAt,
-        package: { format: config.packageFormat, version: config.packageVersion, datasetVersion: config.datasetVersion, auditHistory: metadata.audits }
+        package: { format: config.packageFormat, version: config.packageVersion, datasetVersion: metadata.datasetVersion, auditHistory: metadata.audits }
       },
       workspace: {
         family: { title: metadata.family.title || "McFamily", initializedAt: metadata.family.initializedAt, homePersonId: metadata.family.homePersonId },
@@ -513,7 +531,7 @@
     }
     prepared.validation.warnings = counters.partialDates ? [counters.partialDates + " partial source dates were preserved and displayed approximately."] : [];
     return Object.assign(prepared, {
-      formatLabel: "McFamily package v" + config.packageVersion + " · dataset " + config.datasetVersion,
+      formatLabel: "McFamily package v" + config.packageVersion + " · dataset " + metadata.datasetVersion,
       sourceRows: Object.values(parsed).reduce(function (total, file) { return total + file.rows.length; }, 0),
       fileName: fileName, checkCount: 12
     });
@@ -617,7 +635,7 @@
     }
     add("package", "McFamily", "package-format", config.packageFormat);
     add("package", "McFamily", "package-version", config.packageVersion);
-    add("package", "McFamily", "dataset-version", config.datasetVersion);
+    add("package", "McFamily", "dataset-version", datasetVersionFor(state));
     add("package", "McFamily", "person-count", state.workspace.people.length);
     add("package", "McFamily", "relationship-count", state.workspace.relationships.length);
     add("package", "McFamily", "place-count", state.workspace.places.length);
@@ -653,6 +671,27 @@
     return "A" + Date.now().toString(36).toUpperCase();
   }
 
+  function packageBytes(state) {
+    return encodeZip(packageFiles(state));
+  }
+
+  function packageFileName(state) {
+    const title = state.workspace.family.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "mcfamily";
+    return title + "-private-package-" + new Date().toISOString().slice(0, 10) + "-v" + datasetVersionFor(state).replace(/\./g, "-") + ".zip";
+  }
+
+  function downloadBytes(bytes, fileName) {
+    const blob = new Blob([bytes], { type: "application/zip" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(function () { URL.revokeObjectURL(url); }, 0);
+  }
+
   function exportPackage() {
     if (!storage.getState().workspace.family.initializedAt) {
       App.components.message("No family to export", "Import the initial McFamily data package before creating an export.");
@@ -666,17 +705,8 @@
     }, { reason: "package-export" });
     storage.saveNow();
     const state = storage.getState();
-    const bytes = encodeZip(packageFiles(state));
-    const blob = new Blob([bytes], { type: "application/zip" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    const slug = state.workspace.family.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "mcfamily";
-    link.href = url;
-    link.download = slug + "-private-package-" + new Date().toISOString().slice(0, 10) + "-v" + config.datasetVersion.replace(/\./g, "-") + ".zip";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.setTimeout(function () { URL.revokeObjectURL(url); }, 0);
+    const bytes = packageBytes(state);
+    downloadBytes(bytes, packageFileName(state));
     App.components.toast("The complete five-file private ZIP package was downloaded. Store it securely.", { title: "Package exported", kind: "success", duration: 5000 });
   }
 
@@ -690,6 +720,17 @@
       reader.onerror = function () { reject(new Error("The selected ZIP could not be read.")); };
       reader.readAsArrayBuffer(file);
     });
+  }
+
+  async function prepareBytes(bytes, fileName) {
+    const source = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+    if (source.byteLength > config.controls.maxImportBytes) throw new Error("That ZIP is larger than the " + u.formatBytes(config.controls.maxImportBytes) + " import limit.");
+    const buffer = source.buffer.slice(source.byteOffset, source.byteOffset + source.byteLength);
+    return preparePackage(await parseZip(buffer), fileName || "McFamily package");
+  }
+
+  async function prepareFile(file) {
+    return prepareBytes(await readFile(file), file && file.name);
   }
 
   function summaryFor(state, candidate) {
@@ -734,9 +775,7 @@
   async function previewFile(file, trigger) {
     try {
       App.components.setLoading(true, "Checking private data package…");
-      const buffer = await readFile(file);
-      const files = await parseZip(buffer);
-      const prepared = preparePackage(files, file.name);
+      const prepared = await prepareFile(file);
       const initial = isInitialImport();
       if (initial) requireInitialPackage(prepared);
       pendingImport = Object.assign({}, prepared, { initial: initial });
@@ -793,6 +832,15 @@
     parseZip: parseZip,
     encodeZip: encodeZip,
     packageFiles: packageFiles,
+    packageBytes: packageBytes,
+    packageFileName: packageFileName,
+    downloadBytes: downloadBytes,
+    prepareBytes: prepareBytes,
+    prepareFile: prepareFile,
+    isSupportedDatasetVersion: isSupportedDatasetVersion,
+    nextDatasetPatch: nextDatasetPatch,
+    auditId: auditId,
+    datasetVersionFor: datasetVersionFor,
     summaryFor: summaryFor,
     requireInitialPackage: requireInitialPackage
   };

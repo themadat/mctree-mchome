@@ -221,6 +221,8 @@ a { color: var(--accent-strong); }
 .top-toolbar .button-icon { display: grid; place-items: center; width: 24px; height: 24px; font-size: 1.4rem; }
 .top-toolbar .button-icon .sf-symbol { width: 22px; height: 22px; }
 .top-toolbar .button-label { font-size: .62rem; font-weight: 650; line-height: 1.05; text-transform: none; }
+#cloudAuditButton[data-cloud-state="danger"] { color: var(--danger); }
+#cloudAuditButton[data-cloud-state="success"] { color: var(--success); }
 .header-backup-status { appearance: none; display: inline-flex; flex: 0 0 auto; align-items: center; width: 190px; min-width: 190px; max-width: 190px; min-height: 48px; padding: .32rem .48rem; gap: .38rem; overflow: visible; border: 1px solid transparent; border-radius: 12px; background: transparent; color: var(--muted); font: inherit; }
 .header-backup-status:hover, .header-backup-status:focus-visible { border-color: transparent; background: var(--surface-2); }
 .header-backup-status .floating-status-copy strong { color: var(--text); }
@@ -886,6 +888,37 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .status-button[data-storage-state="saved"] { border-color: var(--success); color: var(--success); }
 .status-button[data-storage-state="error"] { border-color: var(--danger); color: var(--danger); }
 
+.cloud-audit-dialog { width: min(900px, calc(100vw - 2rem)); height: min(92svh, 940px); max-height: 92svh; }
+.cloud-audit-dialog .dialog-header { align-items: center; }
+.cloud-audit-dialog .dialog-header > .status-pill { margin-left: auto; white-space: nowrap; }
+.cloud-audit-body { display: grid; align-content: start; gap: .75rem; }
+.cloud-section { padding: .85rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.cloud-section h3 { margin: 0; font-size: .92rem; }
+.cloud-overview { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.cloud-overview > div:first-child { min-width: 0; }
+.cloud-overview .section-intro { margin: .3rem 0 0; }
+.cloud-actions { display: flex; flex: 0 0 auto; flex-wrap: wrap; justify-content: flex-end; gap: .4rem; }
+.cloud-upload-review { border-color: color-mix(in srgb, var(--success) 50%, var(--line)); background: color-mix(in srgb, var(--success) 5%, var(--surface)); }
+.cloud-upload-review .form-grid { margin-top: .8rem; }
+.cloud-change-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .35rem; margin: .7rem 0 0; padding: 0; list-style: none; }
+.cloud-change-list li { padding: .45rem .55rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); font-size: .72rem; font-weight: 700; }
+.cloud-change-list li.no-change { color: var(--muted); font-weight: 550; }
+.cloud-audit-list { display: grid; gap: .4rem; max-height: 360px; margin: .7rem 0 .55rem; padding: 0; overflow-y: auto; list-style: none; scrollbar-gutter: stable; }
+.cloud-audit-list li { display: grid; gap: .18rem; padding: .55rem .65rem; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); }
+.cloud-audit-list li > div { display: flex; align-items: baseline; justify-content: space-between; gap: .65rem; }
+.cloud-audit-list li > div > span { color: var(--muted); font-size: .65rem; font-weight: 750; }
+.cloud-audit-list small { color: var(--muted); font-size: .65rem; }
+.cloud-audit-list p { margin: .12rem 0 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .73rem; }
+.cloud-audit-list .cloud-audit-empty { color: var(--muted); text-align: center; }
+.cloud-settings { padding: 0; overflow: hidden; }
+.cloud-settings > summary { min-height: 48px; padding: .8rem .85rem; font-size: .82rem; font-weight: 800; cursor: pointer; }
+.cloud-settings[open] > summary { border-bottom: 1px solid var(--line); }
+.cloud-settings-content { padding: .85rem; }
+.cloud-settings-content .form-grid { margin-top: .8rem; }
+.cloud-remember { display: flex; align-items: center; gap: .45rem; margin-top: .75rem; color: var(--text); font-size: .73rem; font-weight: 750; }
+.cloud-remember input { width: 18px; height: 18px; }
+.cloud-remember small { color: var(--muted); font-weight: 500; }
+
 .print-report { display: none; }
 .print-preview-dialog { width: min(1200px, calc(100vw - 1.5rem)); height: min(94svh, 1000px); max-height: 94svh; }
 .print-preview-scroll { padding: 1rem; background: #4b504e; }
@@ -1013,6 +1046,12 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
   .developer-tool-section .developer-actions { width: 100%; }
   #familyTreeSvg { min-height: 300px; }
   .person-name-grid { grid-template-columns: 1fr; }
+  .cloud-overview { align-items: stretch; flex-direction: column; }
+  .cloud-actions { justify-content: stretch; }
+  .cloud-actions .button { flex: 1 1 150px; }
+  .cloud-change-list { grid-template-columns: 1fr; }
+  .cloud-audit-dialog .dialog-header > .status-pill { display: none; }
+  .cloud-remember { align-items: flex-start; flex-wrap: wrap; }
   .repeatable-contact { grid-template-columns: 1fr; align-items: stretch; }
   .date-field-group { grid-template-columns: minmax(0, 1fr) 95px; }
 }

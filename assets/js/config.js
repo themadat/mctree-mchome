@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.58",
-      buildId: "0.0.1.58",
+      version: "0.0.1.59",
+      buildId: "0.0.1.59",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -31,14 +31,27 @@
     packageFormat: "mcfamily-package",
     packageVersion: "1",
     datasetVersion: "16.0.0",
+    datasetSeries: "16.0",
     storage: {
       stateKey: "mcfamily.state.v13",
-      recoveryKey: "mcfamily.recovery.v5"
+      recoveryKey: "mcfamily.recovery.v5",
+      cloudSettingsKey: "mcfamily.cloud.settings.v1",
+      cloudTokenKey: "mcfamily.cloud.token.v1",
+      cloudBaselineKey: "mcfamily.cloud.baseline.v1"
+    },
+
+    cloud: {
+      owner: "themadat",
+      repository: "app-data",
+      branch: "main",
+      path: "data/mcfamily/McFamily-latest.zip",
+      apiVersion: "2022-11-28"
     },
 
     features: {
       family: true,
       familyEditing: false,
+      cloudPackages: true,
       documents: true,
       roadmap: true,
       developerTools: true,
@@ -120,6 +133,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.59",
+        date: "2026-08-24T05:00:00.000Z",
+        title: "Private cloud package handoff",
+        summary: "Editors can now validate, publish, audit, and download the latest five-file family package through a private GitHub data repository.",
+        features: ["Title-bar Cloud & Audit workspace", "Validated Upload Changes and Download Latest workflow", "Automatic dataset patch versions and persistent McMetadata audit events"],
+        improvements: ["GitHub file SHAs reject stale uploads instead of overwriting a newer edit", "Every published ZIP is opened locally and downloaded for the next old-fashioned edit/save cycle", "Fine-grained tokens stay outside family packages and can remain session-only"],
+        fixes: ["Dataset 16 packages can advance through compatible 16.0 patch revisions without a website schema update"],
+        knownIssues: ["The audit is change history, not a tamper-proof security log; repository access and revocation remain controlled by GitHub"]
+      },
       {
         version: "0.0.1.58",
         date: "2026-08-24T04:00:00.000Z",
@@ -706,7 +729,8 @@
       { id: "print", title: "Print or save a PDF", section: "Family", keywords: "print pdf atlas directory lineage family maps generation developer preview", html: "<p>Choose <strong>Print / Save PDF</strong> to build the atlas and open the browser print dialog. Its compact opening flows into six-column Family Maps; George McMillen (1745) is Generation 0, and Generation 4 and later are grouped beneath Generation 3 family lines. Lineal cards have a clearly visible faded-red outline; stronger Newton, Albon, and Lucian orientation highlights include a Bloodline symbol, deceased entries use brown shading, and unresolved 99/?? lineage branches are omitted. Jon Couts remains in the directory but is not presented as a map root. The dense three-column Person Directory shows only each full name, styled Lineage ID, and root-to-person first-name progression. In Developer Mode, the same action opens an in-app preview instead of printing.</p>" },
       { id: "notes", title: "Working with Notes", section: "Features", keywords: "notes text edit modal autosave", html: "<p>Notes is a single local plain-text scratchpad. Open it from the top bar or press <kbd>N</kbd>; it is included in McFamily backups.</p>" },
       { id: "backup", title: "ZIP backup and restore", section: "Data", keywords: "zip csv package export import backup restore recovery private metadata audit", html: "<p>The ZIP export is the complete editable copy of the family and contains five private CSV files: McPeople, McPlaces, McRelations, McResidences, and McMetadata. McMetadata carries file schema versions, record counts, family settings, and audit events. Store the ZIP securely. Replacement imports are accepted only after every file and cross-file link validates; the prior local copy becomes the recovery snapshot.</p>" },
-      { id: "privacy", title: "Privacy and local data", section: "Data", keywords: "privacy local storage static gate authentication", html: "<p>Family data stays in this browser unless you export it. The first-run import gate is an onboarding step, not authentication. Never commit a private family backup into the public Pages repository.</p>" },
+      { id: "cloud", title: "Cloud records and editor handoff", section: "Data", keywords: "cloud github audit upload download latest patch editor handoff token conflict", html: "<p>Audit in the title bar opens the private GitHub package workflow. Connect a separate <strong>private</strong> data repository with a fine-grained token limited to that repository and Contents read/write access. Download Latest validates, opens, and saves the current ZIP. Extract it, edit the five CSV files directly, and re-create a ZIP with exactly those files at its root. Upload Changes validates everything before showing the record differences and required audit entry. Publish checks the GitHub file SHA so a stale editor cannot overwrite a newer package, advances the dataset 16.0 patch number, appends the audit event to McMetadata, opens the result locally, and downloads the exact published copy. Each editor should use their own GitHub account and token; browser JavaScript cannot use SSH keys.</p>" },
+      { id: "privacy", title: "Privacy and local data", section: "Data", keywords: "privacy local storage static gate authentication github token", html: "<p>The first-run gate is onboarding, not authentication. Family data stays local unless you explicitly publish or download through Cloud Records. The Pages repository must remain public-data-free; configure a separate private GitHub data repository. Tokens stay outside family ZIPs and can be session-only. The McMetadata audit is durable change history but is not tamper-proof; GitHub owns repository access and revocation.</p>" },
       { id: "install", title: "Install McFamily", section: "Installation", keywords: "install home screen pwa offline", html: "<p>Use the browser’s Install app, Add to Home Screen, or Add to Dock command. After the shell has loaded once, local features continue to work offline.</p>" },
       { id: "shortcuts", title: "Keyboard access", section: "Accessibility", keywords: "keyboard shortcuts search directory favorites key print notes update reload", html: "<p>Press <kbd>/</kbd> for search, <kbd>D</kbd> for Directory, <kbd>F</kbd> for Favorites, <kbd>K</kbd> for the tree Key, <kbd>P</kbd> to print, <kbd>N</kbd> for Notes, <kbd>X</kbd> to dismiss What’s New, <kbd>R</kbd> to reload when an update is ready, <kbd>T</kbd> for theme, and <kbd>?</kbd> for Help. Visible controls provide every shortcut action.</p>" }
     ]

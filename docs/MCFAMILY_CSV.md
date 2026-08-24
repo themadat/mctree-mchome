@@ -1,6 +1,6 @@
 # McFamily package and CSV contract
 
-McFamily imports and exports one private ZIP artifact. Dataset `16.0.0` and package format `mcfamily-package` version `1` require exactly these five UTF-8 CSV files at the ZIP root:
+McFamily imports and exports one private ZIP artifact. The current dataset `16.0.x` series and package format `mcfamily-package` version `1` require exactly these five UTF-8 CSV files at the ZIP root:
 
 ```text
 McPeople.csv
@@ -84,11 +84,13 @@ Required single-value rows declare:
 
 At least one `audit` row is required. Audit rows record a stable ID, file or package subject, action, timestamp, actor, and details. Imports and exports append audit events, and the full history remains in future exports. Declared counts must exactly match the other four files; the home person must resolve.
 
+Data-only cloud publications increment the final dataset patch number (`16.0.0` → `16.0.1` → `16.0.2`) while all five schemas remain unchanged. Each publication appends a `published-cloud-package` audit event. An upload based on an earlier patch or missing/rewritten prior audit rows is rejected and must be reapplied to Download Latest.
+
 ## Import transaction
 
 McFamily parses into a candidate state before touching the current family. Validation covers ZIP integrity and contents, five exact schemas, required metadata, dataset/package versions, CSV shape and limits, IDs, counts, date descriptors, names, Lineage paths, relationship rules, Person-to-Place links, and ancestry cycles. A successful preview reports record counts and the number of validation groups that passed. Any failure reports the reason and leaves current browser data unchanged.
 
-First launch requires an initialized family and at least one valid person. Later imports show a comparison, require confirmation, and save the prior current state as the recovery snapshot before replacement. Imports never merge concurrent copies.
+First launch requires an initialized family and at least one valid person from either a local package selection or the explicit Download Latest action. Later imports show a comparison, require confirmation, and save the prior current state as the recovery snapshot before replacement. Imports never merge concurrent copies.
 
 ## Private conversion helper
 

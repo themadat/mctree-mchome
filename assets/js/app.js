@@ -221,7 +221,7 @@
 
   function renderOnboarding() {
     const icon = document.documentElement.dataset.theme === "dark" ? config.identity.assets.appIconDark : config.identity.assets.appIconLight;
-    $("#mainContent").innerHTML = '<section class="onboarding-screen" aria-labelledby="onboardingTitle"><div class="onboarding-card"><img src="' + u.escapeHtml(versionedAsset(icon)) + '" alt="" class="onboarding-icon"><span class="eyebrow">Private local family atlas</span><h1 id="onboardingTitle">Open McFamily</h1><p>Choose the current McFamily ZIP package. It must contain exactly McPeople, McPlaces, McRelations, McResidences, and McMetadata CSV files. McFamily validates ZIP integrity, every schema, record count, identifier, and cross-file reference before storing a private copy in this browser.</p><div class="privacy-callout"><strong>This is not a login.</strong><span>The import gate controls first-run setup only. The static GitHub Pages app cannot authenticate users or revoke access.</span></div><button id="firstImportButton" type="button" class="button primary large-button">Choose family ZIP</button><input id="onboardingImportInput" type="file" accept="application/zip,.zip" data-import-file-input hidden><small>No loose CSV, demo family, blank-family option, JSON/GEDCOM import, cloud sync, or bypass is available.</small></div></section>';
+    $("#mainContent").innerHTML = '<section class="onboarding-screen" aria-labelledby="onboardingTitle"><div class="onboarding-card"><img src="' + u.escapeHtml(versionedAsset(icon)) + '" alt="" class="onboarding-icon"><span class="eyebrow">Private local family atlas</span><h1 id="onboardingTitle">Open McFamily</h1><p>Choose the current McFamily ZIP package here, or use Audit in the title bar to download the latest package from a configured private GitHub repository. McFamily validates ZIP integrity, every schema, record count, identifier, and cross-file reference before storing a private copy in this browser.</p><div class="privacy-callout"><strong>This is not a login.</strong><span>The package gate controls first-run setup only. The static GitHub Pages app cannot authenticate users or revoke access.</span></div><button id="firstImportButton" type="button" class="button primary large-button">Choose family ZIP</button><input id="onboardingImportInput" type="file" accept="application/zip,.zip" data-import-file-input hidden><small>No loose CSV, demo family, blank-family option, JSON/GEDCOM import, automatic cloud sync, or bypass is available.</small></div></section>';
     icons.mount($("#mainContent"));
   }
 
@@ -2430,6 +2430,7 @@
     applyIdentity();
     components.init();
     portability.init();
+    App.cloud.init();
     bindGeneralEvents();
     bindRuntimeEvents();
     pwa.init();
