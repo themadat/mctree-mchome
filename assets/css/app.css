@@ -383,6 +383,22 @@ input:focus, textarea:focus, select:focus { border-color: var(--accent); outline
 
 dialog { width: min(680px, calc(100vw - 2rem)); max-height: min(88svh, 900px); padding: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
 dialog::backdrop { background: rgba(10, 16, 14, .56); backdrop-filter: blur(3px); }
+.access-locked { overflow: hidden; }
+.access-locked > :not(#accessGateDialog):not(#importPreviewDialog):not(#messageDialog):not(#loadingOverlay):not(#politeStatus):not(#assertiveStatus) { visibility: hidden; }
+.access-gate-dialog { width: min(540px, calc(100vw - 1.5rem)); max-height: min(92svh, 760px); }
+.access-gate-dialog .dialog-shell { overflow-y: auto; }
+.access-gate-brand { display: grid; justify-items: center; padding: 1.4rem 1.25rem .65rem; text-align: center; }
+.access-gate-brand .onboarding-icon { width: 72px; height: 72px; margin-bottom: .7rem; border-radius: 18px; }
+.access-gate-brand h1 { margin: .15rem 0 .35rem; font-size: 1.55rem; }
+.access-gate-brand p { max-width: 48ch; margin: 0; color: var(--muted); }
+.access-gate-form { display: grid; gap: .8rem; padding-top: .5rem; }
+.access-gate-form .inline-status { margin: 0; }
+.access-owner-recovery { display: grid; gap: 8px; margin-top: 6px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); }
+.access-owner-recovery[hidden] { display: none; }
+.access-owner-recovery strong { color: var(--text); }
+.password-input-row { display: flex; align-items: stretch; gap: .4rem; }
+.password-input-row > input { min-width: 0; flex: 1 1 auto; }
+.password-input-row > .button { flex: 0 0 auto; }
 .dialog-shell, dialog > form { display: flex; flex-direction: column; min-height: 0; max-height: inherit; }
 .dialog-header { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; gap: 1rem; min-height: 64px; padding: .8rem 1rem; border-bottom: 1px solid var(--line); background: var(--surface); }
 .dialog-header h2 { margin: 0; font-size: 1.12rem; }
@@ -923,6 +939,12 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .access-package-card h4 { margin: 0; font-size: .86rem; }
 .access-package-card p { margin: 0; color: var(--muted); font-size: .72rem; line-height: 1.4; }
 .access-package-card .button { align-self: end; margin-top: .2rem; white-space: normal; }
+.access-grant-list { display: grid; gap: .55rem; }
+.access-grant-row { display: grid; grid-template-columns: auto minmax(150px, .8fr) minmax(240px, 1.2fr); align-items: end; gap: .45rem .65rem; min-width: 0; margin: 0; padding: .7rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); }
+.access-grant-row legend { padding: 0 .3rem; font-size: .78rem; font-weight: 850; }
+.access-grant-row > [data-grant-enabled] { width: 20px; height: 20px; margin: 0 0 .62rem; }
+.access-grant-row > small { grid-column: 2 / -1; color: var(--muted); font-size: .66rem; }
+.access-grant-row .field { min-width: 0; }
 .cloud-upload-review { border-color: color-mix(in srgb, var(--success) 50%, var(--line)); background: color-mix(in srgb, var(--success) 5%, var(--surface)); }
 .cloud-upload-review .form-grid { margin-top: .8rem; }
 .cloud-change-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .35rem; margin: .7rem 0 0; padding: 0; list-style: none; }
@@ -1079,6 +1101,10 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
   .access-package-grid { grid-template-columns: 1fr; }
   .cloud-audit-dialog .dialog-header > .status-pill { display: none; }
   .cloud-remember { align-items: flex-start; flex-wrap: wrap; }
+  .access-grant-row { grid-template-columns: auto minmax(0, 1fr); align-items: start; }
+  .access-grant-row > [data-grant-enabled] { grid-row: 1 / span 2; margin-top: 1.35rem; }
+  .access-grant-row .field { grid-column: 2; }
+  .access-grant-row > small { grid-column: 1 / -1; }
   .repeatable-contact { grid-template-columns: 1fr; align-items: stretch; }
   .date-field-group { grid-template-columns: minmax(0, 1fr) 95px; }
 }

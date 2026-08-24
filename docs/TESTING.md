@@ -11,10 +11,15 @@ Use synthetic families only.
 - [ ] The visible version, build id, asset queries, newest release, cache name, and asset version all match.
 - [ ] No console errors appear during tested workflows.
 
-## Initialization, current schema, and portability
+## Hosted access, current schema, and portability
 
-- [ ] A fresh profile shows the introduction, privacy warning, ZIP picker, and title-bar Audit action; only a validated local import or explicit Download Latest can initialize the workspace.
-- [ ] No demo family, blank-family action, GEDCOM action, or bypass appears.
+- [ ] Every ordinary load shows only the hosted access gate until a current public ciphertext vault is fetched and a valid named passphrase decrypts its authorized package.
+- [ ] A missing vault shows a clear connection/setup status and one Owner Recovery ZIP action; a validated Editor recovery package enters Owner Setup, while invalid files leave the gate locked.
+- [ ] No demo family, blank-family action, GEDCOM action, loose-CSV action, stored-passphrase bypass, or local-state-only viewer bypass appears.
+- [ ] The vault rejects wrong format/version, malformed base64, unsupported KDF/cipher parameters, missing full/redacted payloads, duplicate/unknown grants, oversized content, and invalid revisions before decrypting anything.
+- [ ] Correct Owner, Editor, Private Viewer, and Redacted Viewer passphrases open only their assigned package; wrong, rotated, disabled, and removed passphrases fail without exposing the workspace.
+- [ ] Full and redacted packages use independent random data keys. Owner/Editor can unwrap both, Private Viewer can unwrap only full, and Redacted Viewer can unwrap only redacted.
+- [ ] Neither the serialized vault nor its public metadata contains a passphrase, GitHub token, readable CSV filename, person/contact/address value, or decrypted ZIP bytes.
 - [ ] A valid dataset 16 ZIP with at least one person shows access mode, people, relationship, place, residence, dataset, state, and validation-group summaries before opening the family.
 - [ ] The ZIP contains exactly the five root files `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`; missing, extra, duplicate, nested, encrypted, unsupported-compression, truncated, bad-checksum, multi-disk, and oversized packages are rejected without replacing state.
 - [ ] McRelations uses its exact ordered, hyphenated schema 2.0.0 header and every other file uses schema 1.0.0; unknown, missing, duplicate, unsafe, underscore-named, or reordered headers and malformed/oversized CSVs are rejected.
@@ -31,8 +36,9 @@ Use synthetic families only.
 - [ ] McMetadata declares the supported package/dataset versions, exact counts, family data, all five schema rows, and at least one valid audit event; duplicates, missing rows, count mismatches, bad timestamps/JSON, and unresolved home person are rejected.
 - [ ] New exports declare exactly one supported access mode. Pre-v0.0.1.61 dataset 16 packages without that row default to Editor; duplicate or unknown access rows are rejected.
 - [ ] Redacted Read-only export contains zero place/residence rows and no family Notes, person notes, relationship notes, or relationship place references; adding any of those back while retaining the redacted label makes import fail.
-- [ ] PII Viewer and Redacted Read-only disable person, relationship, family-title, and Notes mutations, hide cloud publishing, and keep replacement import, audit history, print, search, favorites, and display preferences available.
-- [ ] Editor mode enables family-record editing, all three access-package downloads, and the audited cloud handoff. The header and Save & Share both show the current mode.
+- [ ] Private Viewer and Redacted Viewer disable person, relationship, family-title, and Notes mutations and omit routine recovery ZIP import/export, PDF, Developer data, publishing, GitHub-token, and passphrase-management surfaces. Search, favorites, display preferences, Lock, and audit history remain available.
+- [ ] Private Viewer can read contact/address data from the full package. Redacted Viewer receives zero places/residences and no contacts, family Notes, person/relationship notes, or supplemental private detail maps.
+- [ ] Owner and Editor enable family-record editing, recovery ZIP, PDF, and audited family publication. Owner alone can create, rotate, enable, and revoke the four hosted grants.
 - [ ] Profile life details use one ordinary one-line `Age` row: living ages are compact, ages below two use months, deceased ages read `#y at death · #y today`, and unavailable ages read `UNKNOWN`.
 - [ ] Desktop defaults to a thin-gutter 20/50/30 Directory/Tree/Profile split, both separators resize with pointer and keyboard input, the first resize persists both widths, a usable tree width remains, and live position percentages appear only in Developer Mode.
 - [ ] State v13 reloads from `mcfamily.state.v13`; older state and recovery keys are ignored and the dataset 16 import gate appears instead.
@@ -40,9 +46,10 @@ Use synthetic families only.
 - [ ] A state with any schema version other than v13 is rejected rather than unwrapped or migrated.
 - [ ] One ZIP export/import round trip preserves all five files, 16 name columns, people, places, residences, relationships, preferences, Notes, package metadata, and audit history.
 - [ ] Dataset `16.0.0`, `16.0.1`, and later `16.0.x` packages with the same five exact schemas validate; a different major/minor series is rejected.
-- [ ] Cloud Upload rejects malformed ZIPs, schema/count/reference/date/cycle failures, a stale dataset patch, missing or rewritten remote audit history, a public repository, missing token permissions, and a changed GitHub file SHA without altering local or remote data.
-- [ ] A valid cloud publication shows collection-level changes, requires Recorded by and Audit summary, advances exactly one dataset patch, appends one `published-cloud-package` event, re-validates the final ZIP, writes one latest file, opens it locally after recovery, and downloads the exact published bytes.
-- [ ] Download Latest validates before replacement, saves recovery when local data exists, downloads the remote bytes, and works from the first-launch gate; tokens and GitHub settings never appear in the ZIP, recovery state, PDF, or service-worker cache.
+- [ ] Hosted publication rejects malformed current data, schema/count/reference/date/cycle failures, a stale vault revision, changed GitHub file SHA, non-public target, missing token permissions, or wrong configured path without altering local or remote data.
+- [ ] A valid family publication requires Recorded by and What changed, advances exactly one dataset patch, appends one `published-hosted-family` event, validates and encrypts both packages, writes one ciphertext vault, and keeps existing grants usable.
+- [ ] First access publication creates all enabled grants and one hosted-access audit event. Later Owner publication preserves blank passphrase rows, rotates nonblank rows, removes unchecked grants, never records secret values, and keeps Owner mandatory.
+- [ ] Lock clears decrypted browser state and requires a fresh online passphrase check. Tokens, settings, passphrases, and unencrypted family values never enter the vault, recovery state, PDF metadata, audit details, or service-worker cache.
 - [ ] Missing required Birth First/Last values normalize to `UNKNOWN`; the importer does not derive structured names from removed flat columns.
 - [ ] Partial source dates remain in source details, produce a partial-only preview warning, and do not become invented normalized dates in editable/native state.
 - [ ] Later replacement creates recovery before changing state; Restore recovery returns the prior family.
@@ -51,10 +58,10 @@ Use synthetic families only.
 
 ## Editing and derived relationships
 
-- [ ] Selected-person Add, Connect, Edit, and Delete controls are enabled only when `features.familyEditing` is true and the loaded access package is Editor; they are disabled and greyed in both viewer modes. Set as home is absent.
+- [ ] Selected-person Add, Connect, Edit, and Delete controls are enabled only when `features.familyEditing` is true and active hosted access is Owner or Editor; they are disabled and greyed in both viewer modes. Set as home is absent.
 - [ ] The selected-person header orders Delete, Edit, and X; Relationships owns Add and Connect. All four mutation controls use the supplied icon-over-label symbols.
 - [ ] Identity properties appear as Born, Died, Age, Living Status, and Marital Status; Gender and Pronouns remain hidden. Missing values read `UNKNOWN`, except a living person's Died value is `----`. Ages use the same visual weight as adjacent values and natural years/months wording.
-- The remaining mutation checks in this section apply while an Editor package is open.
+- The remaining mutation checks in this section apply while Owner or Editor access is open.
 - [ ] Add and remove repeated contacts without losing adjacent entries.
 - [ ] Connect biological, adopted, step, foster, guardian, and unknown parent types independently as Lineal or Non-Lineal, rejecting a second Lineal parent while accepting multiple Non-Lineal parents.
 - [ ] Connect every partner status with dates, place, and notes.
@@ -148,7 +155,7 @@ Use synthetic families only.
 ## Offline and installation
 
 - [ ] A fresh online load installs the current service worker and caches all shell assets.
-- [ ] Reload works offline with the locally stored family.
-- [ ] The worker does not cache or transmit family data.
+- [ ] Reload while offline remains locked and explains that the current encrypted hosted record could not be reached; there is no stale decrypted-family bypass.
+- [ ] The worker does not cache or transmit the vault, decrypted family data, passphrases, or tokens.
 - [ ] A build change shows the new-version toast and Force refresh activates the waiting worker.
 - [ ] Both manifests install with correct McFamily identity and light/dark icons.

@@ -244,7 +244,7 @@
       if (event.key === "Escape" && !activePopover) {
         const dialogs = Array.from(document.querySelectorAll("dialog[open]"));
         const dialog = dialogs[dialogs.length - 1];
-        if (dialog && dialog.id !== "confirmDialog" && dialog.id !== "choiceDialog") {
+        if (dialog && dialog.dataset.backdropClose !== "false" && dialog.id !== "confirmDialog" && dialog.id !== "choiceDialog") {
           event.preventDefault();
           closeDialog(dialog, "cancel");
         }

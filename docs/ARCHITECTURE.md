@@ -11,12 +11,12 @@ McFamily is an ordered-script static page with no module loader or runtime packa
 5. `core/storage.js` loads and autosaves browser state and manages one recovery snapshot.
 6. `core/components.js` implements dialogs, menus, toasts, loading UI, and focus restoration.
 7. `core/family.js` derives relationship indexes, ancestors, descendants, siblings, connected components, generations, and tree layout.
-8. `core/portability.js` validates, imports, and exports the complete five-file private ZIP package.
-9. `core/cloud.js` explicitly uploads/downloads that ZIP through a private GitHub repository, enforces audit continuity, and rejects stale writes by file SHA.
+8. `core/portability.js` validates the five-file package used inside encrypted records and provides Owner/Editor recovery ZIP import/export.
+9. `core/cloud.js` fetches the public ciphertext vault, derives passphrase keys, decrypts the authorized package, applies access gates, publishes encrypted updates, manages grants, and rejects stale writes by vault revision and file SHA.
 10. `core/pwa.js` manages appearance-aware install metadata, service-worker registration, and updates.
 11. `app.js` renders the onboarding gate, family workspace, editors, Settings, search, SVG interaction, and print atlas.
 
-All modules attach to `window.LocalApp`. The ordinary workspace remains local. The only family-data network path is the editor-invoked `core/cloud.js` transaction to GitHub's API; the service worker never intercepts or caches it.
+All modules attach to `window.LocalApp`. Every load anonymously fetches the encrypted vault before opening the workspace. Decryption and package validation happen locally. Only Owner and Editor publication uses GitHub's write API; the service worker never intercepts or caches vault traffic.
 
 ## Schema v13
 
@@ -26,8 +26,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 13,
   "meta": {
-    "appVersion": "0.0.1.61",
-    "buildId": "0.0.1.61",
+    "appVersion": "0.0.1.62",
+    "buildId": "0.0.1.62",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -63,19 +63,17 @@ The dataset 16 ZIP package preserves the current state model through five exact 
 
 ## Initialization and persistence
 
-A fresh default has no `initializedAt` value and no people. `app.js` renders the introduction and ZIP input in that state while retaining title-bar Save & Share for an explicit Editor cloud download. `portability.js` accepts only a dataset 16 package with exactly `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`, and requires at least one valid person before the first local state is stored.
+A normal load is locked behind the hosted passphrase gate. `cloud.js` fetches and validates the ciphertext envelope, lists only its configured grant labels, decrypts the selected full or redacted record, and hands the decrypted bytes to `portability.js`. That parser still accepts only a dataset 16 package with exactly `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`, and requires at least one valid person. Before the first vault exists, an existing local Editor copy becomes Owner Setup; a fresh Owner browser can open one validated private recovery ZIP directly from the missing-vault gate. There is no blank-family or demo bypass.
 
 McPeople contains one stable P-referenced row per person and no parent or partner columns. McRelations contains all authoritative Person-to-Person parent and partner links, with parent lineage role separated from parent type. McPlaces contains reusable physical addresses, while McResidences assigns people to places. McMetadata declares package/dataset/file-schema versions, exact record counts, access mode, family settings, compatibility details, and append-only audit events. Package validation completes before any current state is touched and rejects ZIP damage, wrong filenames, schema drift, count mismatches, invalid identifiers/dates, broken cross-file references, false redaction claims, duplicate links, multiple Lineal parents, Lineage inconsistencies, and ancestry cycles.
 
-## Private GitHub package transport
+## Encrypted hosted access
 
-The public Pages repository and private data repository are intentionally separate. Cloud connection settings and the optional remembered token live in dedicated browser-storage keys and are never written into normalized state, exports, recovery, PDFs, or service-worker caches. Session-only tokens use `sessionStorage`; remembered tokens use `localStorage`. Every editor should use a separate fine-grained token limited to the private data repository with Contents read/write access.
+The Pages repository and public ciphertext-only `app-data` repository are intentionally separate. The vault uses random AES-256-GCM full and redacted data keys. Each named grant derives a wrapping key from its passphrase with PBKDF2-SHA-256 and a unique salt, then wraps only the data key that role may open. Owner and Editor grants wrap both data keys, Private Viewer wraps the full-data key, and Redacted Viewer wraps only the redacted-data key. Passphrases, readable CSV, and GitHub tokens never enter the vault.
 
-Download Latest reads the configured ZIP through GitHub's Contents/Blob APIs, applies the same strict package parser used by local import, creates local recovery when necessary, replaces the browser workspace without rewriting package metadata, and downloads the exact remote bytes.
+Every online load fetches `McFamily-access.json` anonymously with `no-store`, validates its format, and requires a current passphrase. A wrong, removed, or rotated grant cannot unwrap a data key. The decrypted package must pass the same strict parser as a recovery import, including physical redaction checks for Redacted Viewer. Lock removes the decrypted browser state. Revocation applies on the recipient's next reload; a static web application cannot retract information already seen or copied.
 
-Upload Changes validates the edited ZIP before any write. When a remote package exists, its dataset version must match the candidate and its complete audit sequence must be an unchanged prefix of the candidate audit. McFamily calculates collection-level added/changed/removed counts, requires an editor and summary, increments the `16.0.x` patch, appends one `published-cloud-package` event, re-encodes and re-validates the final ZIP, then writes it with the remote GitHub file SHA. A changed SHA or API conflict rejects the save rather than merging or overwriting. One Git commit and the McMetadata event preserve each successful publication.
-
-This provides controlled editor handoff and revocation through GitHub collaborators, but not application roles, sign-in tracking, read/download usage history, or a tamper-proof audit. Those remain backend work.
+Owner and Editor publication requires a fine-grained GitHub token limited to the public encrypted-data repository with Contents read/write access. Tokens live only in session or local browser storage. A family publication requires an actor and summary, advances the `16.0.x` patch, appends an audit event, revalidates and encrypts full and redacted packages, and uses both vault revision and GitHub SHA to reject stale writes. Owner-only access publication creates, rotates, or removes grants without recording secret values. Successful publications remain visible in McMetadata and Git history; viewer sign-ins are not centrally logged and the in-package audit is not tamper-proof.
 
 Lineal people use complete root-to-person paths that extend each direct Lineal parent's path by one two-digit segment; Non-Lineal partner-only rows intentionally leave lineage blank. A known death value marks a person deceased. Without one, `person-date-death-descriptor` is authoritative: `NONE` means living, `UNKNOWN` means explicitly deceased with no known date, and `UNKNOWN PRESUMED` means source evidence presumes death. Partial source dates remain in source details because the editable date model accepts only normalized known values.
 
@@ -107,12 +105,12 @@ The browser owns PDF generation. McFamily does not create a binary PDF directly.
 
 ## Security and privacy boundaries
 
-The import gate is not authentication. Browser storage, extracted package CSVs, exported ZIPs, and printed PDFs all contain sensitive plaintext. The static application has no owner/editor/viewer roles, revocation, or server-side usage audit. Those wishlist features require a future authenticated backend and are explicitly marked that way in the Roadmap.
+Hosted passphrases provide client-side encrypted access roles without a custom backend. A public vault can be copied for offline passphrase guessing, so generated phrases must be long and unrelated. Browser storage after unlock, Owner recovery ZIPs, and Owner/Editor PDFs contain sensitive plaintext. Viewer interfaces intentionally omit routine ZIP import/export, PDF, Developer data, and publication controls, but client-side UI restrictions cannot prevent a determined recipient from inspecting information already decrypted in their browser. Strong server-authenticated accounts, immediate session revocation, and central usage history remain future backend work.
 
 No real family CSV, ZIP, or export belongs in the repository. Only synthetic data should be used for committed tests or documentation.
 
 ## PWA and offline strategy
 
-`sw.js` precaches the public HTML, scripts, manifests, and install assets. Same-origin application requests use network-first revalidation and cached fallback. The service worker never reads browser family state and has no sync endpoint.
+`sw.js` precaches the public HTML, scripts, manifests, and install assets. Same-origin application requests use network-first revalidation and cached fallback, except the hosted vault path, which is never cached. The service worker never reads browser family state and has no sync endpoint. Unlock intentionally requires an online vault check so removed grants do not gain an offline bypass.
 
 A waiting worker triggers the persistent new-version toast; its refresh action activates the new worker and reloads with a cache-busting URL.

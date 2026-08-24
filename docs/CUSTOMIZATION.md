@@ -49,6 +49,6 @@ Editable and generated assets are in `assets/icons/`. Keep current names unless 
 
 ## Publishing
 
-Never publish a real family ZIP or CSV, exported PDF, screenshot with private information, authentication token, or generated family data. The Pages deployment consists only of public application code and assets.
+Never publish a readable family ZIP or CSV, exported PDF, screenshot with private information, passphrase, or authentication token. The Pages deployment consists only of public application code and assets. The separate public data repository may contain only the application-generated AES-GCM ciphertext vault at the configured path; never extract or commit its readable package there.
 
 Run the full checklist in `docs/TESTING.md` before publishing.

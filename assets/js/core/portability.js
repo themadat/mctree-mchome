@@ -891,6 +891,7 @@
 
   async function previewFile(file, trigger) {
     try {
+      if (!isInitialImport() && accessModeFor(storage.getState()) !== "editor") throw new Error("Recovery-file import is available only to Owner or Editor access.");
       App.components.setLoading(true, "Checking private data package…");
       const prepared = await prepareFile(file);
       const initial = isInitialImport();
@@ -908,6 +909,12 @@
 
   async function confirmImport() {
     if (!pendingImport) return;
+    if (!pendingImport.initial && accessModeFor(storage.getState()) !== "editor") {
+      pendingImport = null;
+      App.components.closeDialog("#importPreviewDialog", "cancel");
+      App.components.message("Read-only access", "Recovery-file import is available only to Owner or Editor access.");
+      return;
+    }
     if (!pendingImport.initial) {
       const accepted = await App.components.confirm({
         title: "Replace the local family?",

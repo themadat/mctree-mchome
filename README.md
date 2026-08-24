@@ -1,14 +1,14 @@
 # McFamily
 
-McFamily is a private, local-first family atlas that runs as a static GitHub Pages app. It visualizes family relationships, keeps addresses and other profile information together, builds a print-ready atlas, and can hand one validated data package between editors through a separate private GitHub repository.
+McFamily is a private family atlas that runs as a static GitHub Pages app. It visualizes family relationships, keeps addresses and other profile information together, builds a print-ready atlas, and opens the latest encrypted family record from one public link.
 
-There is no custom backend, in-app account, cloud database, or runtime dependency. Family data stays in browser storage unless an editor explicitly imports, exports, uploads, or downloads the McFamily ZIP. The published Pages repository must never contain a real family package or private family data.
+There is no custom backend, account provider, cloud database, or runtime dependency. A separate public `app-data` repository contains only an AES-GCM encrypted vault; readable family CSVs, passphrases, and GitHub tokens never belong in either public repository.
 
-Current version: `0.0.1.61` (`major.minor.patch.build`).
+Current version: `0.0.1.62` (`major.minor.patch.build`).
 
 ## What it does
 
-- Opens only after importing or explicitly downloading one validated McFamily ZIP containing the five required CSV files and at least one person on first launch.
+- Automatically fetches the encrypted hosted vault and opens only after a valid Owner, Editor, Private Viewer, or Redacted Viewer passphrase decrypts and validates it.
 - Shows a Lineage tree around a selected person and a Full Tree view of connected and isolated people.
 - Supports two-axis scrolling, pan, directly editable zoom and 0-10 depth numbers, fit, keyboard selection, touch, and accessible relationship descriptions.
 - Orders each Family Tree generation by numeric lineage ID; up to two prior partners appear chronologically at two-thirds size to the left of the Lineal person, while the current or latest death-ended spouse remains full-size on the right. One prior partner is vertically centered; two align to the full-size cards' top and bottom, with their parallel links attached one-quarter from the outer edge of each compact card. Bright gold partner lines distinguish current marriages (solid), previous marriages (dashed), never-married partnerships (dotted), and unknown relationships (question marks), with a floating key in the corner of the tree.
@@ -24,13 +24,13 @@ Current version: `0.0.1.61` (`major.minor.patch.build`).
 - Keeps portrait placeholders and internal person references out of the ordinary workspace; Developer Mode reveals references and a left-side generation bubble scale for visual troubleshooting.
 - Presents complete oldest-to-newest, two-digit Lineage IDs with the first three ancestral segments italicized and the selected person's final segment bold, followed by a compact direct-parent-linked Family Line with each name's lineage number and generation.
 - Keeps people, places, person-to-person relationships, person-to-place residences, and package metadata in separate exact-schema CSV files inside one ZIP artifact.
-- Opens Save & Share from the title bar to create Editor, PII Viewer, or Redacted Read-only ZIPs, and lets Editor packages validate, audit, and publish the canonical ZIP to a private GitHub repository.
+- Opens Access & Audit from the title bar so Editors can publish the current family and Owners can create, rotate, or revoke hosted passphrases.
 - Imports known and question-mark partial source dates; person death descriptors explicitly distinguish living (`NONE`), deceased with an unknown date (`UNKNOWN`), and presumed deceased (`UNKNOWN PRESUMED`).
 - Shows partial source dates such as `December ??, 1979`, keeps a natural-language Age property on one line, and fills unknown visible identity properties with `UNKNOWN`. Living profiles use `----` for Died, and living people show only their birth year in directory and tree lifespans. Gender and Pronouns remain stored but are temporarily hidden from person details.
 - Uses compact open Parents, Siblings, Partners, and Children groups near the top of each profile, with combined parent role/type labels such as `Lineal :: Adopted` and `Non-Lineal :: Biological`, birth order and year for siblings and children, marriage years for partners, and current-first partner history; Imported Source finishes each profile.
 - Uses absolute lineage generations rooted at George McMillen (1745) as Gen 0; readings use concise forms such as `Gen 6, 5th Child of Max`.
 - Lets the person panel close and clear selection; choosing any Family Tree person reopens it without a separate Show person control.
-- Enables family-record Add, Connect, Edit, Delete, Notes, and family-title changes only for Editor packages; viewer packages keep those controls read-only while preserving personal display preferences and favorites.
+- Enables family-record Add, Connect, Edit, Delete, Notes, family-title, recovery ZIP, PDF, and publishing actions only for Owner or Editor access. Viewer modes expose no routine import, export, PDF, developer-data, or publishing controls.
 - Retains structured profiles for people, multiple addresses, phones, emails, life events, and typed parent or partner relationships.
 - Rejects a damaged or malformed ZIP, missing/extra/reordered columns, bad metadata counts, missing references, duplicate relationships, self-links, and ancestry cycles before replacement.
 - Keeps a recovery snapshot before destructive replacement or deletion.
@@ -47,22 +47,25 @@ python3 -m http.server 8000
 
 Open `http://localhost:8000`. Use a local server rather than opening `index.html` directly so the service worker and install behavior can run.
 
-On a fresh browser profile, McFamily intentionally has no demo family or blank-workspace bypass. Select the access package sent by the maintainer, as described in [`docs/MCFAMILY_CSV.md`](docs/MCFAMILY_CSV.md), or use Save & Share to configure an Editor connection and get the canonical package.
+On a fresh browser profile, McFamily intentionally has no demo family or blank-workspace bypass. The normal path is the passphrase gate. Before the first vault exists, the Owner may open one validated recovery ZIP on their existing browser and use Access & Audit to publish the first encrypted vault.
 
 ## Privacy model
 
-The first-launch import and access mode are onboarding and handoff controls, not authentication. Everyone can use the same public application link; the privately delivered ZIP selects the experience:
+Everyone uses the same public application link. Long passphrases wrap random AES-256 data keys with PBKDF2 and AES-GCM; the passphrase itself never leaves the browser:
 
-- **Editor** contains full data, enables family-record editing, and exposes the audited GitHub publish workflow.
-- **PII Viewer** contains full data and disables ordinary record editing and publishing. It is plaintext, so this is an accidental-edit guard rather than security against a technically skilled recipient.
-- **Redacted Read-only** physically removes places, residences, addresses, contact details, family Notes, and unstructured person/relationship notes before export. It retains names, dates, lineage, and relationships.
+- **Owner** decrypts full data and may edit, publish, add or rotate passphrases, and revoke grants.
+- **Editor** decrypts full data and may edit and publish, but cannot manage passphrases.
+- **Private Viewer** decrypts full data read-only, including addresses and contacts, without routine export controls.
+- **Redacted Viewer** can decrypt only a separately encrypted record where places, residences, contacts, family Notes, and unstructured record notes were physically removed before encryption.
 
-- Store ZIP exports and PDFs privately.
+- Treat passphrases like private links and use at least five unrelated words.
+- Revocation removes future online sign-in after reload; it cannot erase information already viewed, copied, photographed, or retained in a running browser session.
+- The public data repository must contain ciphertext only. Store Owner recovery ZIPs and PDFs privately.
 - Do not commit real names, addresses, phone numbers, email addresses, heritage notes, or family notes.
 - Use synthetic people for tests and screenshots.
-- Browser storage is per browser profile and device. Clearing site data removes the active local copy.
-- Give every editor their own GitHub account and fine-grained token for the private data repository. Remove a collaborator or revoke their token to remove repository access.
-- Passwords, authenticated revocation, and read/sign-in usage history still require a future backend; the current package modes do not claim those protections.
+- Browser storage is per browser profile and device. Lock clears the decrypted local family and requires the passphrase again.
+- Each publisher still needs a fine-grained GitHub token limited to `app-data` with Contents read/write permission; the token stays outside the vault.
+- Viewer sign-ins cannot be centrally recorded without a backend or a viewer write credential. Published family and access changes remain in McMetadata and Git history.
 
 ## Project structure
 
@@ -76,7 +79,7 @@ assets/js/core/state.js        Schema v13 normalization, fuzzy matching, and val
 assets/js/core/family.js       Relationship indexes, derived family groups, and graph layout
 assets/js/core/storage.js      Local persistence and recovery snapshot
 assets/js/core/portability.js  Strict five-file ZIP validation, export, preview, and replacement import
-assets/js/core/cloud.js        Private GitHub upload/download, patch versioning, conflict checks, and audit UI
+assets/js/core/cloud.js        Passphrase cryptography, encrypted GitHub vault publication, revocation, and audit UI
 assets/js/core/components.js   Dialogs, popovers, toasts, and focus management
 assets/js/core/pwa.js          Install metadata, offline worker, and update notice
 manifest*.webmanifest          Light and dark install metadata
@@ -89,28 +92,29 @@ context/                       Durable agent workflow and wish ledger
 
 Schema v13 supports up to 1,500 people, 6,000 relationships, 5,000 places, and 10,000 residences. Dates accept `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` with exact, about, before, or after qualifiers. Parent records independently store a Lineal/Non-Lineal role and parent type, allowing one Lineal and multiple Non-Lineal parents per child. Ancestry, descendants, siblings, family units, and lineage labels are derived when needed.
 
-McFamily uses a v13-only browser-storage namespace and does not load or migrate earlier application states. Import or download the current dataset 16 package; initialization requires at least one valid person. The website accepts patch revisions in the current `16.0.x` data series while keeping all five file schemas exact.
+McFamily uses a v13-only browser-storage namespace and does not load or migrate earlier application states. Every decrypted hosted payload is still a strict dataset 16 package and must contain at least one valid person. The website accepts patch revisions in the current `16.0.x` data series while keeping all five file schemas exact.
 
-## Private cloud edit/save workflow
+## Encrypted hosted access workflow
 
-Cloud Records uses the same browser-side GitHub Contents API pattern as `cocktail-list`, adapted to one five-file ZIP transaction. Create a separate private data repository, add each editor as a collaborator, and give each editor a fine-grained personal access token limited to that repository with Contents read/write access. The default target is `themadat/app-data`, branch `main`, at `data/mcfamily/McFamily-latest.zip`; all values are editable in the GitHub Connection panel.
+The default vault is `themadat/app-data`, branch `main`, at `data/mcfamily/McFamily-access.json`. That repository must be public so link-only readers can download the ciphertext anonymously. It must contain no readable family CSV or ZIP.
 
-1. Open **Audit** in the title bar and save the private repository connection. Tokens are session-only unless **Remember token on this device** is selected. Browser JavaScript cannot use an SSH key.
-2. Choose **Download Latest**. McFamily validates the ZIP, saves the previous browser workspace as recovery, opens the latest data locally, and downloads the exact package.
-3. Extract the ZIP, edit `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`, then create a ZIP containing exactly those five files at its root.
-4. Choose **Upload Changes**. McFamily re-runs every package and cross-file check, confirms that the uploaded dataset version and audit history continue from the latest cloud package, and shows a record-level summary.
-5. Enter the editor name and audit summary, then choose **Publish & Download**. McFamily rechecks the GitHub file SHA, increments the `16.0.x` dataset patch, appends a `published-cloud-package` event to McMetadata, publishes one Git commit, opens the result locally, and downloads the exact published ZIP.
+1. The Owner opens their current Editor recovery ZIP once, opens **Access & Audit**, and enters a fine-grained GitHub token limited to `app-data` with Contents read/write access.
+2. Generate or enter Owner, Editor, Private Viewer, and Redacted Viewer passphrases. Save the generated phrases before closing the dialog.
+3. Choose **Publish Access Changes**. McFamily validates the family, builds full and physically redacted packages in memory, encrypts them with different random data keys, wraps only the appropriate key for each passphrase, and publishes one ciphertext-only JSON vault.
+4. Send everyone the ordinary Pages link plus their shown name and passphrase. They never receive a ZIP.
+5. Editors record what changed and choose **Publish Family Update**. McFamily advances the dataset patch, appends an audit event, revalidates, encrypts both current views with the existing data keys, checks the remote revision/SHA, and replaces the vault.
+6. To revoke someone, the Owner unchecks their grant and publishes Access Changes. To rotate access, enter a new passphrase for that grant and publish.
 
-If somebody publishes between review and save, the upload is rejected. Download Latest and reapply the edits; McFamily never guesses at a merge. GitHub commit history and the package audit history both preserve prior changes. The in-package audit is useful change history, but it is not cryptographically tamper-proof.
+If somebody publishes first, the stale publication is rejected. Reload, sign in again, and reapply the edit; McFamily never guesses at a merge. GitHub history and McMetadata preserve successful publications, but the in-package audit is not cryptographically tamper-proof.
 
 ## Local ZIP and PDF workflow
 
-Without the cloud handoff, a maintainer can still keep one canonical private ZIP:
+An Owner may keep a private recovery ZIP outside GitHub:
 
 1. Import the latest McFamily ZIP.
 2. Add or update people and relationships.
-3. Open **Save & Share** and download the package that matches the recipient: Editor, PII Viewer, or Redacted Read-only.
-4. Send the same McFamily app link plus exactly that ZIP through a private channel. Redacted Read-only is the only package intended for someone who must not receive contact details or Notes.
+3. Open **Access & Audit** and download the recovery ZIP.
+4. Do not send this file to ordinary viewers; their passphrase opens the hosted encrypted family automatically.
 
 The ZIP contains `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`. Imports replace the current family only after ZIP integrity, all five exact schemas, metadata counts, IDs, links, lineage paths, and ancestry cycles pass validation. McFamily creates a recovery snapshot first; it does not merge concurrent copies.
 
@@ -120,7 +124,7 @@ The ZIP contains `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidence
 
 Publish the repository contents without changing relative paths. Use HTTPS so the service worker and install features are available. Keep `sw.js` at the repository root because its location defines the offline scope.
 
-The service worker caches only the public application shell and assets. It never caches family packages, GitHub responses, or tokens. Cloud actions run only after an editor explicitly opens the audit workflow and chooses an operation; ordinary online reloads revalidate the shell and offline reloads use the cached application plus local family state.
+The service worker caches only the public application shell and assets. It never caches the encrypted vault, decrypted family packages, GitHub responses, passphrases, or tokens. Passphrase sign-in intentionally requires an online vault check so removed grants do not receive an offline bypass.
 
 ## Versioning
 
