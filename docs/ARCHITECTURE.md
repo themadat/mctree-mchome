@@ -25,8 +25,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 11,
   "meta": {
-    "appVersion": "0.0.1.55",
-    "buildId": "0.0.1.55",
+    "appVersion": "0.0.1.56",
+    "buildId": "0.0.1.56",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -59,13 +59,13 @@ The native v2 transfer format preserves the current state model. Historical appl
 
 ## Initialization and persistence
 
-A fresh default has no `initializedAt` value and no people. `app.js` renders only the introduction and file input in that state. `portability.js` accepts the exact documented McLineage v13 columns or current native `mcfamily-csv-v2` rows and requires at least one valid person before the first local state is stored.
+A fresh default has no `initializedAt` value and no people. `app.js` renders only the introduction and file input in that state. `portability.js` accepts the exact documented McLineage v14 columns or current native `mcfamily-csv-v2` rows and requires at least one valid person before the first local state is stored.
 
-McLineage v13 rows represent every person and partner as a stable P-referenced row. All 34 top-level source headers use hyphens and must match the documented order exactly. Lineal people use complete root-to-person paths that extend each direct parent's path by one two-digit segment; Non-Lineal partner-only rows intentionally leave lineage fields blank. The originating person's `partner-relationships-json` array expands into authoritative app relationship records with stable R IDs, partner P references, relationship types, ordering, dates, and ending reasons. The `parent-affinal-person-id` reference must resolve through those normalized partner pairs. A known death value marks a person deceased. Without one, `person-date-death-descriptor` is authoritative: `NONE` means living, `UNKNOWN` means explicitly deceased with no known date, and `UNKNOWN PRESUMED` means age, early-generation, or partner evidence presumes death. Partial source dates remain in source details because the editable/native date model accepts only normalized known values.
+McLineage v14 rows represent every person and partner as a stable P-referenced row. All 30 top-level source headers use hyphens and must match the documented order exactly. Lineal people use complete root-to-person paths that extend each direct parent's path by one two-digit segment; Non-Lineal partner-only rows intentionally leave lineage fields blank. The originating person's `partner-relationships-json` array expands into authoritative app relationship records with stable R IDs, partner P references, relationship types, ordering, dates, and ending reasons. The `parent-affinal-person-id` reference must resolve through those normalized partner pairs. A known death value marks a person deceased. Without one, `person-date-death-descriptor` is authoritative: `NONE` means living, `UNKNOWN` means explicitly deceased with no known date, and `UNKNOWN PRESUMED` means age, early-generation, or partner evidence presumes death. Partial source dates remain in source details because the editable/native date model accepts only normalized known values. The four former legacy spouse-directory display-name columns are rejected; structured names are the only name source fields.
 
 After initialization, deleting the last person does not clear `initializedAt`; the workspace remains open and offers Add Person. Subsequent imports may contain an initialized empty family, but replacement always shows a summary, asks for confirmation, and writes the current state to recovery first.
 
-Startup checks only `mcfamily.state.v11` and the matching `mcfamily.recovery.v3` snapshot. State v11 passes through normalization, sanitization, and validation; every other state version is rejected. Earlier state keys and recovery snapshots are ignored, so a v13 deployment opens the import gate until a current source is loaded. A corrupt current copy falls back to the current recovery snapshot or to the uninitialized gate. Ordinary mutations update metadata and are saved locally with a short debounce.
+Startup checks only `mcfamily.state.v11` and the matching `mcfamily.recovery.v3` snapshot. State v11 passes through normalization, sanitization, and validation; every other state version is rejected. Earlier state keys and recovery snapshots are ignored, so a v14 deployment opens the import gate until a current source is loaded. A corrupt current copy falls back to the current recovery snapshot or to the uninitialized gate. Ordinary mutations update metadata and are saved locally with a short debounce.
 
 Person deletion also writes recovery before removing that person's relationship records. Recovery is a single last-known snapshot, not a history or merge log. Favorite person IDs ordinarily live in normalized UI state; Developer Mode can additionally download a small private `mcfamily-favorites` JSON envelope and restore that exact ID set without depending on browser storage.
 
