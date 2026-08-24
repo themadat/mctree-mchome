@@ -4,7 +4,7 @@ McFamily is a private, local-first family atlas that runs as a static GitHub Pag
 
 There is no custom backend, in-app account, cloud database, or runtime dependency. Family data stays in browser storage unless an editor explicitly imports, exports, uploads, or downloads the McFamily ZIP. The published Pages repository must never contain a real family package or private family data.
 
-Current version: `0.0.1.59` (`major.minor.patch.build`).
+Current version: `0.0.1.60` (`major.minor.patch.build`).
 
 ## What it does
 
