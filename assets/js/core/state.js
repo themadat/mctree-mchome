@@ -881,15 +881,16 @@
     return [address.line1, address.line2, locality, address.country].filter(Boolean).join("\n");
   }
 
-  function personSearchText(person) {
-    const sourceText = Object.entries(u.plainObject(person.source && person.source.fields)).filter(function (entry) {
+  function personSearchText(person, options) {
+    const settings = Object.assign({ includeNotes: true, includeSource: true }, u.plainObject(options));
+    const sourceText = settings.includeSource ? Object.entries(u.plainObject(person.source && person.source.fields)).filter(function (entry) {
       const key = String(entry[0] || "").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
       return key !== "source_last_modified_by";
-    }).map(function (entry) { return entry[1]; }).join(" ");
+    }).map(function (entry) { return entry[1]; }).join(" ") : "";
     return [
       displayName(person), sortName(person), formatNameParts(person.names && person.names.birth, "full"), formatNameParts(person.names && person.names.current, "full"), formatNameParts(person.names && person.names.preferred, "full"), person.names && person.names.maidenLast, person.gender, person.pronouns,
       person.birth && person.birth.place, person.death && person.death.place,
-      person.heritageNote, person.notes,
+      person.heritageNote, settings.includeNotes ? person.notes : "",
       sourceText,
       (person.addresses || []).map(function (item) { return item.label + " " + formatAddress(item) + " " + item.notes; }).join(" "),
       (person.phones || []).map(function (item) { return item.label + " " + item.value; }).join(" "),

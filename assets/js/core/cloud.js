@@ -15,7 +15,12 @@
     "pii-viewer": { mode: "pii-viewer", label: "Private Viewer", stateMode: "pii-viewer", fullKey: true, redactedKey: false, canManage: false, canPublish: false },
     "redacted-viewer": { mode: "redacted-viewer", label: "Redacted Viewer", stateMode: "redacted-viewer", fullKey: false, redactedKey: true, canManage: false, canPublish: false }
   };
-  const FIXED_GRANT_MODES = { owner: "owner", pii: "pii-viewer", redacted: "redacted-viewer" };
+  const LEGACY_GRANT_MODES = { owner: "owner", editor: "editor", pii: "pii-viewer", redacted: "redacted-viewer" };
+  const GRANT_GROUPS = {
+    editor: { prefix: "editor", title: "Editor", nameLabel: "Editor username", placeholder: "For example: Mama", description: "Can edit and publish. Audit entries use this username automatically.", maxKey: "maxEditors", listId: "hostedEditorGrantList", emptyId: "hostedEditorEmpty" },
+    "pii-viewer": { prefix: "pii", title: "Private Viewer", nameLabel: "Viewer name", placeholder: "For example: Family Friend", description: "Can see addresses and contacts, but cannot edit, export, or open Notes.", maxKey: "maxPiiViewers", listId: "hostedPiiGrantList", emptyId: "hostedPiiEmpty" },
+    "redacted-viewer": { prefix: "redacted", title: "Redacted Viewer", nameLabel: "Viewer name", placeholder: "For example: Family Guest", description: "Cannot see addresses, contacts, private notes, editing, exports, or Notes.", maxKey: "maxRedactedViewers", listId: "hostedRedactedGrantList", emptyId: "hostedRedactedEmpty" }
+  };
   const PASSPHRASE_WORDS = [
     "amber", "apple", "atlas", "basil", "beacon", "birch", "bluebird", "brook", "cedar", "clover", "copper", "cove",
     "dahlia", "ember", "fern", "field", "garden", "harbor", "hazel", "hickory", "iris", "juniper", "lantern", "laurel",
@@ -192,7 +197,8 @@
 
   function modeForGrant(id, suppliedMode) {
     const cleanId = u.cleanLine(id, 64);
-    const expectedMode = FIXED_GRANT_MODES[cleanId] || (/^editor(?:-[a-f0-9]{16})?$/.test(cleanId) ? "editor" : "");
+    const dynamicMatch = /^(editor|pii|redacted)-[a-f0-9]{16}$/.exec(cleanId);
+    const expectedMode = LEGACY_GRANT_MODES[cleanId] || (dynamicMatch && LEGACY_GRANT_MODES[dynamicMatch[1]]) || "";
     if (!expectedMode || (suppliedMode && suppliedMode !== expectedMode)) throw new Error("The encrypted vault contains an invalid access grant.");
     return expectedMode;
   }
@@ -269,14 +275,14 @@
     if (!grants.length || grants.length > config.cloud.maxAccessGrants) throw new Error("The encrypted vault contains too many access grants.");
     const used = new Set();
     const usedLabels = new Set();
-    let editorCount = 0;
+    const modeCounts = { editor: 0, "pii-viewer": 0, "redacted-viewer": 0 };
     const normalizedGrants = grants.map(function (item) {
       const grant = u.plainObject(item);
       const id = u.cleanLine(grant.id, 64);
       const definition = definitionForGrant(id, grant.mode);
       if (used.has(id)) throw new Error("The encrypted vault contains a duplicate access grant.");
       used.add(id);
-      if (definition.mode === "editor") editorCount += 1;
+      if (Object.prototype.hasOwnProperty.call(modeCounts, definition.mode)) modeCounts[definition.mode] += 1;
       const label = u.cleanLine(grant.label, 80);
       const normalizedLabel = label.toLowerCase();
       if (!label || usedLabels.has(normalizedLabel)) throw new Error("Every access grant must have a unique shown name.");
@@ -288,7 +294,9 @@
       return { id: id, label: label, mode: definition.mode, iterations: iterations, salt: grant.salt, wrapped: validateEncryptedPayload(grant.wrapped, "Access grant") };
     });
     if (!used.has("owner")) throw new Error("The encrypted vault has no Owner grant.");
-    if (editorCount > config.cloud.maxEditors) throw new Error("The encrypted vault contains more editors than McFamily allows.");
+    if (modeCounts.editor > config.cloud.maxEditors) throw new Error("The encrypted vault contains more editors than McFamily allows.");
+    if (modeCounts["pii-viewer"] > config.cloud.maxPiiViewers) throw new Error("The encrypted vault contains more Private Viewers than McFamily allows.");
+    if (modeCounts["redacted-viewer"] > config.cloud.maxRedactedViewers) throw new Error("The encrypted vault contains more Redacted Viewers than McFamily allows.");
     const datasetVersion = u.cleanLine(source.datasetVersion, 40);
     if (!portability.isSupportedDatasetVersion(datasetVersion)) throw new Error("The encrypted vault dataset version is not supported.");
     const updatedAtValue = u.cleanLine(source.updatedAt, 80);
@@ -450,60 +458,61 @@
     });
   }
 
-  function uniqueEditorGrantId() {
+  function uniqueGrantId(mode) {
+    const group = GRANT_GROUPS[mode];
     const existing = new Set($$("[data-grant-row]").map(function (row) { return row.dataset.grantRow; }));
     let id = "";
-    do { id = "editor-" + Array.from(randomBytes(8), function (byte) { return byte.toString(16).padStart(2, "0"); }).join(""); }
+    do { id = group.prefix + "-" + Array.from(randomBytes(8), function (byte) { return byte.toString(16).padStart(2, "0"); }).join(""); }
     while (existing.has(id));
     return id;
   }
 
-  function createEditorGrantRow(grant) {
-    const fragment = $("#hostedEditorGrantTemplate").content.cloneNode(true);
+  function createPersonGrantRow(mode, grant) {
+    const group = GRANT_GROUPS[mode];
+    const fragment = $("#hostedPersonGrantTemplate").content.cloneNode(true);
     const row = $("[data-grant-row]", fragment);
-    const id = grant && grant.id || uniqueEditorGrantId();
+    const id = grant && grant.id || uniqueGrantId(mode);
     row.dataset.grantRow = id;
-    row.dataset.grantMode = "editor";
+    row.dataset.grantMode = mode;
+    $("[data-grant-title]", row).textContent = group.title;
+    $("[data-grant-name-label]", row).textContent = group.nameLabel;
     $("[data-grant-label]", row).value = grant && grant.label || "";
+    $("[data-grant-label]", row).placeholder = group.placeholder;
     const passphrase = $("[data-grant-passphrase]", row);
     passphrase.placeholder = grant ? "Keep current passphrase" : "Enter 8+ characters";
-    $("[data-remove-editor]", row).textContent = grant ? "Revoke" : "Remove";
+    $("[data-remove-grant]", row).textContent = grant ? "Revoke" : "Remove";
+    $("[data-grant-description]", row).textContent = group.description;
     return row;
   }
 
-  function addEditorGrantRow(grant) {
-    const list = $("#hostedEditorGrantList");
-    const row = createEditorGrantRow(grant);
+  function addPersonGrantRow(mode, grant) {
+    const group = GRANT_GROUPS[mode];
+    const list = $("#" + group.listId);
+    const row = createPersonGrantRow(mode, grant);
     list.appendChild(row);
-    $("#hostedEditorEmpty").hidden = true;
+    $("#" + group.emptyId).hidden = true;
     return row;
   }
 
   function updateDraftGrantCount() {
-    const enabledFixed = $$("[data-grant-row]:not([data-grant-mode='editor'])").filter(function (row) {
-      return row.dataset.grantRow === "owner" || $("[data-grant-enabled]", row).checked;
-    }).length;
-    $("#hostedGrantCount").textContent = (enabledFixed + $$("#hostedEditorGrantList [data-grant-row]").length) + " active after publishing";
+    $("#hostedGrantCount").textContent = $$("[data-grant-row]").length + " active after publishing";
   }
 
   function renderGrantRows() {
     const allGrants = currentVault && currentVault.grants || [];
     const grants = new Map(allGrants.map(function (grant) { return [grant.id, grant]; }));
-    ["owner", "pii", "redacted"].forEach(function (id) {
-      const row = $('[data-grant-row="' + id + '"]');
-      const grant = grants.get(id);
-      const enabled = $("[data-grant-enabled]", row);
-      enabled.checked = id === "owner" || (currentVault ? Boolean(grant) : true);
-      const label = $("[data-grant-label]", row);
-      label.value = grant && grant.label || definitionForGrant(id).label;
-      const passphrase = $("[data-grant-passphrase]", row);
-      passphrase.value = "";
-      passphrase.placeholder = grant ? "Keep current passphrase" : "Enter 8+ characters";
+    const owner = grants.get("owner");
+    const ownerRow = $('[data-grant-row="owner"]');
+    $("[data-grant-label]", ownerRow).value = owner && owner.label || definitionForGrant("owner").label;
+    $("[data-grant-passphrase]", ownerRow).value = "";
+    $("[data-grant-passphrase]", ownerRow).placeholder = owner ? "Keep current passphrase" : "Enter 8+ characters";
+    Object.keys(GRANT_GROUPS).forEach(function (mode) {
+      const group = GRANT_GROUPS[mode];
+      const list = $("#" + group.listId);
+      list.replaceChildren();
+      allGrants.filter(function (grant) { return grant.mode === mode; }).forEach(function (grant) { addPersonGrantRow(mode, grant); });
+      $("#" + group.emptyId).hidden = Boolean(list.children.length);
     });
-    const editorList = $("#hostedEditorGrantList");
-    editorList.replaceChildren();
-    allGrants.filter(function (grant) { return grant.mode === "editor"; }).forEach(addEditorGrantRow);
-    $("#hostedEditorEmpty").hidden = Boolean(editorList.children.length);
     $("#hostedGrantCount").textContent = (currentVault ? allGrants.length : 0) + " active";
   }
 
@@ -815,21 +824,26 @@
     $("#cloudTestButton").addEventListener("click", testConnection);
     $("#cloudForgetButton").addEventListener("click", forgetConnection);
     $("#hostedAccessManager").addEventListener("click", function (event) {
-      const addEditor = event.target.closest("#hostedAddEditorButton");
-      if (addEditor) {
-        if ($$("#hostedEditorGrantList [data-grant-row]").length >= config.cloud.maxEditors) {
-          components.message("Editor limit reached", "McFamily allows up to " + config.cloud.maxEditors + " separately named editors.", { trigger: addEditor });
+      const addGrant = event.target.closest("[data-add-grant]");
+      if (addGrant) {
+        const mode = addGrant.dataset.addGrant;
+        const group = GRANT_GROUPS[mode];
+        if (!group) return;
+        if ($$("#" + group.listId + " [data-grant-row]").length >= config.cloud[group.maxKey]) {
+          components.message(group.title + " limit reached", "McFamily allows up to " + config.cloud[group.maxKey] + " separately named " + group.title + " accounts.", { trigger: addGrant });
           return;
         }
-        const row = addEditorGrantRow();
+        const row = addPersonGrantRow(mode);
         updateDraftGrantCount();
         $("[data-grant-label]", row).focus();
         return;
       }
-      const removeEditor = event.target.closest("[data-remove-editor]");
-      if (removeEditor) {
-        removeEditor.closest("[data-grant-row]").remove();
-        $("#hostedEditorEmpty").hidden = Boolean($("#hostedEditorGrantList").children.length);
+      const removeGrant = event.target.closest("[data-remove-grant]");
+      if (removeGrant) {
+        const row = removeGrant.closest("[data-grant-row]");
+        const group = GRANT_GROUPS[row.dataset.grantMode];
+        row.remove();
+        $("#" + group.emptyId).hidden = Boolean($("#" + group.listId).children.length);
         updateDraftGrantCount();
         return;
       }
@@ -839,9 +853,6 @@
       input.value = generatePassphrase();
       input.focus();
       input.select();
-    });
-    $("#hostedAccessManager").addEventListener("change", function (event) {
-      if (event.target.matches("[data-grant-enabled]")) updateDraftGrantCount();
     });
     window.addEventListener("app:statechange", function () {
       if (activeSession) { renderAccessState(); return; }

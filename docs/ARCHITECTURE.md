@@ -26,8 +26,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 13,
   "meta": {
-    "appVersion": "0.0.1.63",
-    "buildId": "0.0.1.63",
+    "appVersion": "0.0.1.64",
+    "buildId": "0.0.1.64",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -69,7 +69,7 @@ McPeople contains one stable P-referenced row per person and no parent or partne
 
 ## Encrypted hosted access
 
-The Pages repository and public ciphertext-only `app-data` repository are intentionally separate. The vault uses random AES-256-GCM full and redacted data keys. Each named grant derives a wrapping key from its passphrase with PBKDF2-SHA-256 and a unique salt, then wraps only the data key that role may open. The fixed Owner and any number of uniquely identified Editor grants wrap both data keys, Private Viewer wraps the full-data key, and Redacted Viewer wraps only the redacted-data key. Passphrases, readable CSV, and GitHub tokens never enter the vault. Version-1 vaults with the original fixed `editor` grant remain valid; new Editors use stable random `editor-…` ids and unique shown names.
+The Pages repository and public ciphertext-only `app-data` repository are intentionally separate. The vault uses random AES-256-GCM full and redacted data keys. Each named grant derives a wrapping key from its passphrase with PBKDF2-SHA-256 and a unique salt, then wraps only the data key that role may open. The fixed Owner and every Editor grant wrap both data keys, each Private Viewer wraps the full-data key, and each Redacted Viewer wraps only the redacted-data key. Passphrases, readable CSV, and GitHub tokens never enter the vault. Version-1 vaults with the original fixed `editor`, `pii`, and `redacted` ids remain valid; new recipient grants use stable random role-prefixed ids and unique shown names.
 
 Every online load fetches `McFamily-access.json` anonymously with `no-store`, validates its format, and requires a current passphrase. A wrong, removed, or rotated grant cannot unwrap a data key. The decrypted package must pass the same strict parser as a recovery import, including physical redaction checks for Redacted Viewer. Lock removes the decrypted browser state. Revocation applies on the recipient's next reload; a static web application cannot retract information already seen or copied.
 
