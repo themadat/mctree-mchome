@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.53",
-      buildId: "0.0.1.53",
+      version: "0.0.1.54",
+      buildId: "0.0.1.54",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -112,6 +112,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.54",
+        date: "2026-08-23T21:00:00.000Z",
+        title: "Aligned Family Tree controls",
+        summary: "Family Tree toolbar headings and internal name controls now align consistently, with the zoom suffix placed before its stepper arrows.",
+        features: [],
+        improvements: ["Centered Name Preferences, Tree View, Card View, Levels, and Zoom headings", "Equal-height, evenly sized Preferred/Legal/Lineal and Short/Full controls", "Zoom values read as number, percent, then native up/down arrows"],
+        fixes: ["Name Preferences controls no longer overflow or render at mismatched heights"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.53",
         date: "2026-08-23T18:00:00.000Z",

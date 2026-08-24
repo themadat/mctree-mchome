@@ -58,7 +58,7 @@ Use synthetic families only.
 
 - [ ] Lineage mode shows the selected/home person's configured ancestor and descendant depth plus partners and siblings.
 - [ ] Full Tree contains every connected component and isolated person.
-- [ ] The toolbar labels Name Preferences, Tree View, Card View, Levels, and Zoom; orders Full Tree before Lineage and Details before Summary; de-emphasizes `(Display)`, `(Current)`, and `(Birth)`; removes the old Source Name, Length, and Zoom % labels; and places `%` inside the aligned zoom number control.
+- [ ] The toolbar centers Name Preferences, Tree View, Card View, Levels, and Zoom over their groups; orders Full Tree before Lineage and Details before Summary; keeps both internal Name Preferences toggle groups equal-height without overflow; de-emphasizes `(Display)`, `(Current)`, and `(Birth)`; removes the old Source Name, Length, and Zoom % labels; and places `%` between the zoom value and its native up/down arrows.
 - [ ] Single-person, multi-partner, adopted, disconnected, pedigree-collapse, and 1,500-person synthetic families render without exceptions.
 - [ ] Pan, Ctrl/Command-wheel and pinch zoom, right-aligned grouped icon-over-label Out/In/Fit buttons, direct zoom percentage entry, node click, and grouped numeric ancestor/descendant steppers with labels above their inputs work; both depths default to 10.
 - [ ] Natural-size Family Tree layouts expose horizontal and vertical scrolling when needed; ordinary wheel input scrolls and Ctrl/Command-wheel zooms.
