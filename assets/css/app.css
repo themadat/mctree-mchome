@@ -181,7 +181,7 @@ a { color: var(--accent-strong); }
 .access-mode-pill[data-access-mode="editor"] { border-color: color-mix(in srgb, var(--success) 55%, var(--line)); background: color-mix(in srgb, var(--success) 12%, var(--surface)); color: var(--success); }
 .access-mode-pill[data-access-mode="pii-viewer"] { border-color: color-mix(in srgb, var(--warning) 58%, var(--line)); background: color-mix(in srgb, var(--warning) 12%, var(--surface)); color: color-mix(in srgb, var(--warning) 82%, var(--text)); }
 .access-mode-pill[data-access-mode="redacted-viewer"] { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); background: var(--accent-soft); color: var(--accent-strong); }
-.header-search-cluster { grid-area: search; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; justify-self: center; gap: .35rem; width: 100%; max-width: 650px; min-width: 0; }
+.header-search-cluster { grid-area: search; display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; justify-self: center; gap: .35rem; width: 100%; max-width: 650px; min-width: 0; }
 .global-search-wrap { position: relative; display: flex; align-items: center; width: 100%; min-width: 0; height: 42px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 50%, transparent); }
 .global-search-wrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .global-search-wrap input { width: 100%; min-width: 0; height: 100%; padding: 0 2.3rem 0 2.25rem; border: 0; outline: 0; background: transparent; }

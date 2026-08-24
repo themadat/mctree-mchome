@@ -4,7 +4,7 @@ McFamily is a private family atlas that runs as a static GitHub Pages app. It vi
 
 There is no custom backend, account provider, cloud database, or runtime dependency. The separate public `mcdata` repository contains only an AES-GCM encrypted vault; readable family CSVs, passphrases, and GitHub tokens never belong in either public repository.
 
-Current version: `0.0.1.66` (`major.minor.patch.build`).
+Current version: `0.0.1.67` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -17,7 +17,7 @@ Current version: `0.0.1.66` (`major.minor.patch.build`).
 - Can hide `99`-lineage people from Full Tree with a persisted `?? Lineal` control whose outlined symbol remains fixed; enabling it centers the revealed people. The control is hidden in Lineage view, while those people remain available in directory and search. Printable atlases omit unresolved `99`/`??` lineage branches.
 - Records out-of-wedlock partnerships as never-married relationships with no start date, sequenced by relationship order.
 - Provides a header-toggled directory with title-bar search and result count, visible Filter By and Sort By controls, combinable status and Lineal/Non-Lineal checkbox filters, A–Z quick jumps, lifespan and lineage context, and broad search across names, contact details, places, heritage, and notes.
-- Lets people be starred directly in search or from the selected-person panel, pins favorites above other matches, and opens favorites as a one-time dropdown without changing or highlighting the ordinary search scope.
+- Lets people be starred directly in search or from the selected-person panel, remembers those favorites separately on the device through hosted refreshes and Lock, and opens them as a one-time dropdown without changing or highlighting the ordinary search scope. Developer Mode adds a Restore shortcut beside Favorites for a saved Favorites JSON file.
 - Shows Preferred (Display), Legal (Current), Lineal (Birth), and Maiden names as four compact profile rows; the Family Tree can use any of the first three as its name source and can show Short or Full names.
 - Keeps local save/backup status in the top toolbar and provides D, F, K, X, and R shortcuts for Directory, Favorites, the tree Key, What's New dismissal, and update reload.
 - Supports partial/fuzzy matches that return the tree to Lineage, collapsible side panels, compact 20/50/30 default desktop splits with persistent resizing, and Summary tree cards that balance names with four or more parts across three fitted lines without widening the card.
@@ -64,7 +64,7 @@ Everyone uses the same public application link. Passphrases wrap random AES-256 
 - Access usernames are non-secret vault metadata. Use a first name or nickname, not an email address or another sensitive identifier.
 - Do not commit real names, addresses, phone numbers, email addresses, heritage notes, or family notes.
 - Use synthetic people for tests and screenshots.
-- Browser storage is per browser profile and device. Lock clears the decrypted local family and recovery snapshot, reloads, and requires the passphrase again without publishing anything. Dismissed hints, dismissed What’s New banners, and Directory visibility remain on that device.
+- Browser storage is per browser profile and device. Lock clears the decrypted local family and recovery snapshot, reloads, and requires the passphrase again without publishing anything. Favorites, dismissed hints, dismissed What’s New banners, and Directory visibility remain on that device.
 - Each publisher still needs a fine-grained GitHub token limited to `mcdata` with Contents read/write permission; the token stays outside the vault.
 - Viewer sign-ins cannot be centrally recorded without a backend or a viewer write credential. Published family and access changes remain in McMetadata and Git history.
 
@@ -87,6 +87,7 @@ manifest*.webmanifest          Light and dark install metadata
 sw.js                          Versioned offline application shell
 docs/                          Architecture, package/CSV contract, customization, and test checklists
 context/                       Durable agent workflow and wish ledger
+data/                          Local-only private working files; ignored by Git in full
 ```
 
 ## Data limits and current-version storage
