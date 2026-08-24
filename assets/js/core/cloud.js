@@ -76,7 +76,7 @@
     if (!/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$/.test(settings.owner)) throw new Error("Enter a valid GitHub user or organization.");
     if (!/^[A-Za-z0-9._-]+$/.test(settings.repository)) throw new Error("Enter a valid GitHub repository name.");
     if (!settings.branch || /[\s~^:?*[\]\\/]/.test(settings.branch) || settings.branch.includes("..")) throw new Error("Enter a valid Git branch name.");
-    if (!settings.path || !/\.json$/i.test(settings.path) || settings.path.split("/").some(function (part) { return !part || part === "." || part === ".."; })) throw new Error("Enter a valid .json vault path inside the repository.");
+    if (!settings.path || !/\.json$/i.test(settings.path) || settings.path.split("/").some(function (part) { return !part || part === "." || part === ".."; })) throw new Error("Enter a repository path ending in .json, such as data/mcfamily/McFamily-access.json.");
     const deployed = settingsDefaults();
     if (["owner", "repository", "branch", "path"].some(function (key) { return settings[key] !== deployed[key]; })) {
       throw new Error("This deployed app is fixed to " + deployed.owner + "/" + deployed.repository + " · " + deployed.branch + " · " + deployed.path + ". Update config.js and deploy before changing that public location.");

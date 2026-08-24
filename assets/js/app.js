@@ -125,10 +125,6 @@
     }), { focus: true });
   }
 
-  function mutationDisabledAttributes() {
-    return familyEditingEnabled() ? "" : ' disabled aria-disabled="true" title="This access package is read-only"';
-  }
-
   function setInputValue(input, value) {
     if (input && document.activeElement !== input) input.value = value == null ? "" : String(value);
   }
@@ -220,6 +216,7 @@
     $("#printButton").disabled = !isInitialized || !familyEditingEnabled();
     $("#printButton").hidden = isInitialized && !familyEditingEnabled();
     $("#addPersonButton").disabled = !isInitialized || !familyEditingEnabled();
+    $("#addPersonButton").hidden = isInitialized && !familyEditingEnabled();
     $("#directoryButton").disabled = !isInitialized;
     const directoryIsOpen = isInitialized && !state().ui.directoryCollapsed && (!window.matchMedia("(max-width: 699px)").matches || state().ui.mobileView === "directory");
     $("#directoryButton").setAttribute("aria-pressed", String(directoryIsOpen));
@@ -818,9 +815,11 @@
   function renderProfile() {
     const container = $("#profilePanelContent");
     if (!container) return;
+    const editing = familyEditingEnabled();
     const person = state().workspace.people.find(function (item) { return item.id === state().ui.selectedPersonId; });
     if (!person) {
-      container.innerHTML = '<div class="empty-state"><h2>No person selected</h2><p>Select someone in the directory or tree.</p><button type="button" class="button primary" data-add-person' + mutationDisabledAttributes() + '>Add person</button></div>';
+      const addButton = editing ? '<button type="button" class="button primary" data-add-person>Add person</button>' : "";
+      container.innerHTML = '<div class="empty-state"><h2>No person selected</h2><p>Select someone in the directory or tree.</p>' + addButton + "</div>";
       return;
     }
     const isHome = state().workspace.family.homePersonId === person.id;
@@ -831,14 +830,15 @@
     if (piiVisible() && person.addresses.length) contactBlocks.push('<section class="profile-section"><h3>Addresses</h3>' + person.addresses.slice().sort(function (a, b) { return a.order - b.order; }).map(function (address) { const start = addressDateLabel(address, "start"); const end = addressDateLabel(address, "end"); return '<article class="contact-card"><header><strong>' + u.escapeHtml(address.label) + '</strong><span class="status-pill" data-kind="' + (address.current ? "success" : "neutral") + '">' + (address.current ? "Current" : "Former") + '</span></header><address>' + u.escapeHtml(model.formatAddress(address)).replace(/\n/g, "<br>") + '</address>' + ((start || end) ? '<small>' + u.escapeHtml([start, end].filter(Boolean).join(" – ")) + "</small>" : "") + (address.notes ? "<p>" + u.escapeHtml(address.notes) + "</p>" : "") + "</article>"; }).join("") + "</section>");
     if (piiVisible() && (person.phones.length || person.emails.length)) contactBlocks.push('<section class="profile-section"><h3>Contact</h3><dl class="profile-list">' + person.phones.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + person.emails.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + "</dl></section>");
     const actionButton = function (label, symbol, attribute, danger) {
-      return '<button type="button" class="profile-action' + (danger ? " danger-text" : "") + '" ' + attribute + mutationDisabledAttributes() + ' aria-label="' + u.escapeHtml(label + " person") + '"><span class="profile-action-icon" data-symbol="' + symbol + '" aria-hidden="true"></span><span>' + u.escapeHtml(label) + "</span></button>";
+      return '<button type="button" class="profile-action' + (danger ? " danger-text" : "") + '" ' + attribute + ' aria-label="' + u.escapeHtml(label + " person") + '"><span class="profile-action-icon" data-symbol="' + symbol + '" aria-hidden="true"></span><span>' + u.escapeHtml(label) + "</span></button>";
     };
-    const relationshipActions = '<div class="relationship-actions">' + actionButton("Add", "addRelative", 'data-add-relative="' + u.escapeHtml(person.id) + '"', false) + actionButton("Connect", "connectPerson", 'data-add-relationship="' + u.escapeHtml(person.id) + '"', false) + "</div>";
+    const relationshipActions = editing ? '<div class="relationship-actions">' + actionButton("Add", "addRelative", 'data-add-relative="' + u.escapeHtml(person.id) + '"', false) + actionButton("Connect", "connectPerson", 'data-add-relationship="' + u.escapeHtml(person.id) + '"', false) + "</div>" : "";
     const relationships = '<section class="profile-section"><div class="relationship-section-heading"><h3>Relationships</h3>' + relationshipActions + '</div><div class="relationship-list">' + relationshipRows(person) + "</div></section>";
     const selectedName = profileName(person);
     const favoriteAction = (isFavorite ? "Remove " : "Add ") + selectedName + (isFavorite ? " from" : " to") + " favorites";
     const favoriteButton = '<button type="button" class="profile-action profile-favorite-action" data-toggle-favorite="' + u.escapeHtml(person.id) + '" aria-pressed="' + String(isFavorite) + '" aria-label="' + u.escapeHtml(favoriteAction) + '" title="' + u.escapeHtml(favoriteAction) + '"><span class="profile-action-icon" data-symbol="favorite" aria-hidden="true"></span><span>Favorite</span></button>';
-    const headerActions = '<div class="profile-header-actions">' + favoriteButton + actionButton("Delete", "deletePerson", 'data-delete-person="' + u.escapeHtml(person.id) + '"', true) + actionButton("Edit", "editPerson", 'data-edit-person="' + u.escapeHtml(person.id) + '"', false) + '<button type="button" class="icon-button profile-close" data-close-profile aria-controls="profilePanel" aria-label="Close and deselect person" title="Close and deselect person"><span data-symbol="close" aria-hidden="true"></span></button></div>';
+    const recordActions = editing ? actionButton("Delete", "deletePerson", 'data-delete-person="' + u.escapeHtml(person.id) + '"', true) + actionButton("Edit", "editPerson", 'data-edit-person="' + u.escapeHtml(person.id) + '"', false) : "";
+    const headerActions = '<div class="profile-header-actions">' + favoriteButton + recordActions + '<button type="button" class="icon-button profile-close" data-close-profile aria-controls="profilePanel" aria-label="Close and deselect person" title="Close and deselect person"><span data-symbol="close" aria-hidden="true"></span></button></div>';
     container.innerHTML = '<article class="person-profile"><header class="profile-header"><div class="profile-title">' + profileEyebrow + '<h2>' + u.escapeHtml(selectedName) + '</h2><p>' + u.escapeHtml(family.lifespan(person)) + "</p></div>" + headerActions + '</header><dl class="profile-list identity-list">' + formatEvent("Born", person, "birth") + formatEvent("Died", person, "death") + ageDetail(person, false) + livingStatusDetail(person) + maritalStatusDetail(person, family.relationGroups(person.id, state()).partners) + "</dl>" + profileNames(person) + profileLineage(person) + relationships + contactBlocks.join("") + (familyEditingEnabled() && person.notes ? '<section class="profile-section"><h3>Notes</h3><p class="preserve-lines">' + u.escapeHtml(person.notes) + "</p></section>" : "") + profileSource(person) + "</article>";
     icons.mount(container);
   }

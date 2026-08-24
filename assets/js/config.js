@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.69",
-      buildId: "0.0.1.69",
+      version: "0.0.1.70",
+      buildId: "0.0.1.70",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -149,6 +149,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.70",
+        date: "2026-08-24T18:05:09.000Z",
+        title: "Read-only action cleanup",
+        summary: "Member and Viewer now see a fully read-only workspace, while Audit explains the one generated encrypted vault required in mcdata.",
+        features: ["Single-vault GitHub setup guidance with the exact configured JSON path"],
+        improvements: ["GitHub connection identifies McFamily-access.json as the generated file containing both access grants and encrypted family packages"],
+        fixes: ["Member and Viewer no longer see Add in the title bar", "Member and Viewer no longer see Add, Connect, Edit, Delete, or the empty-profile Add Person action"],
+        knownIssues: ["The current vault format uses one combined JSON file; separate physical access and data files would require a future format change"]
+      },
       {
         version: "0.0.1.69",
         date: "2026-08-24T17:25:42.000Z",
@@ -845,7 +855,7 @@
       { id: "print", title: "Print or save a PDF", section: "Family", keywords: "print pdf atlas directory lineage family maps generation developer preview", html: "<p>Choose <strong>Print / Save PDF</strong> to build the atlas and open the browser print dialog. Its compact opening flows into six-column Family Maps; George McMillen (1745) is Generation 0, and Generation 4 and later are grouped beneath Generation 3 family lines. Lineal cards have a clearly visible faded-red outline; stronger Newton, Albon, and Lucian orientation highlights include a Bloodline symbol, deceased entries use brown shading, and unresolved 99/?? lineage branches are omitted. Jon Couts remains in the directory but is not presented as a map root. The dense three-column Person Directory shows only each full name, styled Lineage ID, and root-to-person first-name progression. In Developer Mode, the same action opens an in-app preview instead of printing.</p>" },
       { id: "notes", title: "Working with Notes", section: "Features", keywords: "notes text edit modal autosave", html: "<p>Notes is a single private plain-text scratchpad available only to Owner and Editor access. Open it from the top bar or press <kbd>N</kbd>; it is included in private recovery files and encrypted family publications.</p>" },
       { id: "backup", title: "Owner recovery file", section: "Data", keywords: "zip csv recovery backup restore owner private metadata audit", html: "<p>Owner and Editor access can download a private recovery ZIP containing McPeople, McPlaces, McRelations, McResidences, and McMetadata. It is not the normal sharing method and contains readable private information. Store it securely and use it only to recover or initialize the Owner workspace. Members and Viewers receive no recovery import or download controls.</p>" },
-      { id: "cloud", title: "Publishing the encrypted family", section: "Data", keywords: "cloud github audit encrypted vault publish latest patch editor username token conflict", html: "<p><strong>Audit</strong> lets Owner and named Editor access publish the current family to the ciphertext-only public <code>mcdata</code> repository. Every publication uses the signed-in username as its audit actor, requires a summary, advances the dataset patch, validates full and redacted records, encrypts both in this browser, and checks the GitHub SHA/revision before writing. The fine-grained GitHub token stays outside the vault.</p>" },
+      { id: "cloud", title: "Publishing the encrypted family", section: "Data", keywords: "cloud github audit encrypted vault publish latest patch editor username token conflict json path", html: "<p><strong>Audit</strong> lets Owner and named Editor access publish the current family to the ciphertext-only public <code>mcdata</code> repository. McFamily generates one <code>data/mcfamily/McFamily-access.json</code> file containing the access grants plus separately encrypted full and Viewer family packages; do not manually upload a ZIP or a second data file. Every publication uses the signed-in username as its audit actor, requires a summary, advances the dataset patch, validates full and redacted records, encrypts both in this browser, and checks the GitHub SHA/revision before writing. The fine-grained GitHub token stays outside the vault.</p>" },
       { id: "access-packages", title: "Passphrases and access", section: "Data", keywords: "password passphrase access owner editor member viewer pii redacted revoke rotate", html: "<p>Everyone uses the same public McFamily link and enters only their assigned passphrase; McFamily identifies the matching grant locally. <strong>Owner</strong> can edit, publish, and manage access. Each named <strong>Editor</strong> has a unique passphrase, can edit and publish, and is automatically named in publication history. Separately named <strong>Members</strong> see full profile details read-only, while named <strong>Viewers</strong> decrypt only a copy with places, contacts, and unstructured private notes physically removed. Neither read-only role can open family Notes or Audit. In Developer Mode, the signed-in Owner can use the role pill to preview other roles without changing data or access. Owners can add, rename, rotate, or revoke every recipient independently, and McFamily rejects duplicate passphrases. Revocation blocks the next sign-in after reload but cannot erase information already seen or copied.</p>" },
       { id: "privacy", title: "Privacy and local data", section: "Data", keywords: "privacy encryption aes gcm pbkdf2 passphrase github token redacted lock", html: "<p>The public data repository contains only AES-GCM ciphertext, salts, nonces, wrapped random keys, access labels, and non-secret version metadata. Passphrases and GitHub tokens are never written into the vault. Eight characters are required, but three unrelated words are recommended because short phrases are easier to guess from the public encrypted file. Send phrases privately and never reuse a personal password. <strong>Lock McFamily</strong> removes the decrypted family and recovery snapshot from this browser, reloads, and requires a passphrase again without changing the hosted vault. Dismissed hints, dismissed What’s New banners, and Directory visibility remain as non-sensitive device preferences. Member and Viewer modes remove Audit, routine ZIP, PDF, developer-data, and publishing controls; Viewer also lacks the private fields cryptographically. Member and Viewer sign-ins are not centrally recorded without a backend.</p>" },
       { id: "install", title: "Install McFamily", section: "Installation", keywords: "install home screen pwa offline", html: "<p>Use the browser’s Install app, Add to Home Screen, or Add to Dock command. After the shell has loaded once, local features continue to work offline.</p>" },

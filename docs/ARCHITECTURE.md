@@ -26,8 +26,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 13,
   "meta": {
-    "appVersion": "0.0.1.69",
-    "buildId": "0.0.1.69",
+    "appVersion": "0.0.1.70",
+    "buildId": "0.0.1.70",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -71,7 +71,7 @@ McPeople contains one stable P-referenced row per person and no parent or partne
 
 ## Encrypted hosted access
 
-The Pages repository and public ciphertext-only `mcdata` repository are intentionally separate. The vault uses random AES-256-GCM full and redacted data keys. Each named grant derives a wrapping key from its unique passphrase with PBKDF2-SHA-256 and a unique salt, then wraps only the data key that role may open. The fixed Owner and every Editor grant wrap both data keys, each Member wraps the full-data key, and each Viewer wraps only the redacted-data key. Passphrases, readable CSV, and GitHub tokens never enter the vault. Version-1 vaults with the original fixed `editor`, `pii`, and `redacted` ids remain valid; new recipient grants use stable random role-prefixed ids and unique shown names retained for access management and audit identity.
+The Pages repository and public ciphertext-only `mcdata` repository are intentionally separate. McFamily generates one `data/mcfamily/McFamily-access.json` vault containing access grants plus the separately encrypted full and Viewer family packages; there is no second encrypted-directory file. The vault uses random AES-256-GCM full and redacted data keys. Each named grant derives a wrapping key from its unique passphrase with PBKDF2-SHA-256 and a unique salt, then wraps only the data key that role may open. The fixed Owner and every Editor grant wrap both data keys, each Member wraps the full-data key, and each Viewer wraps only the redacted-data key. Passphrases, readable CSV, and GitHub tokens never enter the vault. Version-1 vaults with the original fixed `editor`, `pii`, and `redacted` ids remain valid; new recipient grants use stable random role-prefixed ids and unique shown names retained for access management and audit identity.
 
 Every online load fetches `McFamily-access.json` anonymously with `no-store`, validates its format, and requires a current passphrase. A wrong, removed, or rotated grant cannot unwrap a data key. The decrypted package must pass the same strict parser as a recovery import, including physical redaction checks for Viewer. Lock removes the decrypted browser state and recovery snapshot, reloads the application, and requires the passphrase again without publishing or modifying the hosted vault. Revocation applies on the recipient's next reload; a static web application cannot retract information already seen or copied.
 
