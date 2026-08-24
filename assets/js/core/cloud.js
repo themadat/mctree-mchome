@@ -18,8 +18,8 @@
   const LEGACY_GRANT_MODES = { owner: "owner", editor: "editor", pii: "pii-viewer", redacted: "redacted-viewer" };
   const GRANT_GROUPS = {
     editor: { prefix: "editor", title: "Editor", nameLabel: "Editor username", placeholder: "For example: Mama", description: "Can edit and publish. Audit entries use this username automatically.", maxKey: "maxEditors", listId: "hostedEditorGrantList", emptyId: "hostedEditorEmpty" },
-    "pii-viewer": { prefix: "pii", title: "Member", nameLabel: "Member name", placeholder: "For example: Family Friend", description: "Can see addresses and contacts, but cannot edit, export, open Notes, or use Access & Audit.", maxKey: "maxPiiViewers", listId: "hostedPiiGrantList", emptyId: "hostedPiiEmpty" },
-    "redacted-viewer": { prefix: "redacted", title: "Viewer", nameLabel: "Viewer name", placeholder: "For example: Family Guest", description: "Cannot see addresses, contacts, private notes, editing, exports, PDF, Notes, or Access & Audit.", maxKey: "maxRedactedViewers", listId: "hostedRedactedGrantList", emptyId: "hostedRedactedEmpty" }
+    "pii-viewer": { prefix: "pii", title: "Member", nameLabel: "Member name", placeholder: "For example: Family Friend", description: "Can see addresses and contacts, but cannot edit, export, open Notes, or use Audit.", maxKey: "maxPiiViewers", listId: "hostedPiiGrantList", emptyId: "hostedPiiEmpty" },
+    "redacted-viewer": { prefix: "redacted", title: "Viewer", nameLabel: "Viewer name", placeholder: "For example: Family Guest", description: "Cannot see addresses, contacts, private notes, editing, exports, PDF, Notes, or Audit.", maxKey: "maxRedactedViewers", listId: "hostedRedactedGrantList", emptyId: "hostedRedactedEmpty" }
   };
   const PASSPHRASE_WORDS = [
     "amber", "apple", "atlas", "basil", "beacon", "birch", "bluebird", "brook", "cedar", "clover", "copper", "cove",
@@ -30,6 +30,7 @@
   let busy = false;
   let currentVault = null;
   let activeSession = null;
+  let rolePreview = "";
   let gateResolve = null;
   let githubConnectionStatus = null;
 
@@ -415,17 +416,37 @@
     });
   }
 
-  function accessProfile() {
+  function actualAccessProfile() {
     if (!activeSession) return null;
     const definition = definitionForGrant(activeSession.grant);
     return { id: activeSession.grant.id, mode: definition.stateMode, label: activeSession.grant.label || definition.label, roleLabel: definition.label, canManage: definition.canManage, canPublish: definition.canPublish };
+  }
+
+  function accessProfile() {
+    const actual = actualAccessProfile();
+    if (!actual || actual.roleLabel !== "Owner" || !rolePreview) return actual;
+    const definition = ROLE_DEFINITIONS[rolePreview];
+    if (!definition) return actual;
+    return { id: actual.id, mode: definition.stateMode, label: actual.label, roleLabel: definition.label, canManage: definition.canManage, canPublish: definition.canPublish, preview: true, previewRole: definition.mode };
+  }
+
+  function setRolePreview(mode) {
+    const actual = actualAccessProfile();
+    const requested = mode === "owner" ? "" : u.cleanLine(mode, 40);
+    if (!actual || actual.roleLabel !== "Owner" || (requested && !ROLE_DEFINITIONS[requested])) {
+      rolePreview = "";
+      renderAccessState();
+      return false;
+    }
+    rolePreview = requested;
+    renderAccessState();
+    return true;
   }
 
   function setStatus(kind, title, message) {
     const statusKind = kind === "success" ? "success" : "danger";
     $("#cloudVaultSummary").dataset.kind = statusKind;
     $("#cloudAuditButton").dataset.cloudState = statusKind;
-    $("#cloudHeaderStatus").textContent = title;
     $("#cloudConnectionState").textContent = title;
     $("#cloudStatusText").textContent = message;
   }
@@ -615,6 +636,7 @@
     try {
       setBusy(true, "Opening the encrypted family record…");
       const opened = await decryptVaultRecordByPassphrase(currentVault, passphrase);
+      rolePreview = "";
       activeSession = { grant: opened.grant, keys: opened.keys };
       localStorage.setItem(config.storage.hostedSeenKey, "1");
       storage.replace(opened.prepared.state, { saveRecovery: false, reason: "hosted-unlock", touch: false });
@@ -703,6 +725,7 @@
       const nextVault = await buildVault(nextState, keys, grants, (currentVault ? currentVault.revision : 0) + 1);
       const written = await writeVault(credentials.settings, credentials.token, nextVault, remote && remote.sha || "", currentVault ? "update passphrase access" : "create encrypted family vault");
       currentVault = written.vault;
+      rolePreview = "";
       activeSession = { grant: currentVault.grants.find(function (grant) { return grant.id === "owner"; }), keys: keys };
       localStorage.setItem(config.storage.hostedSeenKey, "1");
       storage.replace(nextState, { saveRecovery: true, recoveryReason: "Before hosted access publication", reason: "hosted-access-publish", touch: false });
@@ -798,6 +821,7 @@
       });
       if (!accepted) return;
     }
+    rolePreview = "";
     activeSession = null;
     currentVault = null;
     storage.clearAll({ preserveDevicePreferences: true });
@@ -821,6 +845,7 @@
       const mode = portability.accessModeFor(storage.getState());
       const id = mode === "pii-viewer" ? "pii" : mode === "redacted-viewer" ? "redacted" : "owner";
       const definition = definitionForGrant(id);
+      rolePreview = "";
       activeSession = { grant: { id: id, mode: definition.mode, label: "Local " + definition.label }, keys: {} };
       renderAccessState();
       finishUnlock();
@@ -837,6 +862,7 @@
       const seen = localStorage.getItem(config.storage.hostedSeenKey) === "1";
       const localOwner = initialized() && portability.accessModeFor(storage.getState()) === "editor" && !seen;
       if (localOwner) {
+        rolePreview = "";
         activeSession = { grant: { id: "owner", mode: "owner", label: "Owner Setup" }, keys: {} };
         renderAccessState();
         finishUnlock();
@@ -900,6 +926,7 @@
     window.addEventListener("app:statechange", function () {
       if (activeSession) { renderAccessState(); return; }
       if (currentVault || !initialized() || portability.accessModeFor(storage.getState()) !== "editor") return;
+      rolePreview = "";
       activeSession = { grant: { id: "owner", mode: "owner", label: "Owner Setup" }, keys: {} };
       renderAccessState();
       finishUnlock();
@@ -921,6 +948,8 @@
     init: init,
     open: openDialog,
     currentAccess: accessProfile,
+    actualAccess: actualAccessProfile,
+    setRolePreview: setRolePreview,
     canManageAccess: function () { const profile = accessProfile(); return Boolean(profile && profile.canManage); },
     canPublish: function () { const profile = accessProfile(); return Boolean(profile && profile.canPublish); },
     generatePassphrase: generatePassphrase,

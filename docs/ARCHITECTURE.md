@@ -26,8 +26,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 13,
   "meta": {
-    "appVersion": "0.0.1.68",
-    "buildId": "0.0.1.68",
+    "appVersion": "0.0.1.69",
+    "buildId": "0.0.1.69",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -107,7 +107,7 @@ The browser owns PDF generation. McFamily does not create a binary PDF directly.
 
 ## Security and privacy boundaries
 
-Hosted passphrases provide client-side encrypted access roles without a custom backend. A public vault can be copied for offline passphrase guessing, so generated phrases must be long and unrelated. Browser storage after unlock, Owner recovery ZIPs, and Owner/Editor PDFs contain sensitive plaintext. Member and Viewer interfaces intentionally omit Access & Audit, routine ZIP import/export, PDF, Developer data, and publication controls, but client-side UI restrictions cannot prevent a determined recipient from inspecting information already decrypted in their browser. Strong server-authenticated accounts, immediate session revocation, and central usage history remain future backend work.
+Hosted passphrases provide client-side encrypted access roles without a custom backend. A public vault can be copied for offline passphrase guessing, so generated phrases must be long and unrelated. Browser storage after unlock, Owner recovery ZIPs, and Owner/Editor PDFs contain sensitive plaintext. Member and Viewer interfaces intentionally omit Audit, routine ZIP import/export, PDF, Developer data, and publication controls, but client-side UI restrictions cannot prevent a determined recipient from inspecting information already decrypted in their browser. Owner Developer Mode can apply a transient lower-role preview to the UI gates; the actual active session remains the Owner and the preview never changes cryptographic authority. Strong server-authenticated accounts, immediate session revocation, and central usage history remain future backend work.
 
 No real family CSV, ZIP, or export belongs in the repository. Only synthetic data should be used for committed tests or documentation.
 

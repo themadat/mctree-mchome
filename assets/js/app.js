@@ -25,8 +25,10 @@
   let treeSurfaceMode = "natural";
   let treeTransform = { x: 24, y: 24, scale: 1 };
   let favoritesPreviewOpen = false;
+  let personNameOverrides = new Set();
   const FAVORITES_BACKUP_FORMAT = "mcfamily-favorites";
   const FAVORITES_BACKUP_VERSION = 1;
+  const NAME_PARTS = ["Prefix", "First", "Middle", "Last", "Suffix"];
 
   const SHORTCUTS = [
     { keys: "/", label: "Focus global search", group: "Global" },
@@ -40,7 +42,7 @@
     { keys: "V", label: "Open What’s New", group: "Actions" },
     { keys: "X", label: "Dismiss the What’s New banner", group: "Actions" },
     { keys: "R", label: "Reload when a new version is available", group: "Actions" },
-    { keys: "E", label: "Open Access & Audit", group: "Actions" },
+    { keys: "E", label: "Open Audit", group: "Actions" },
     { keys: "T", label: "Switch color theme", group: "Actions" },
     { keys: "Arrow keys", label: "Move through tree relatives, tabs, menus, and choices", group: "Navigation" }
   ];
@@ -67,7 +69,8 @@
   }
 
   function accessMode() {
-    return portability.accessModeFor(state());
+    const runtimeAccess = App.cloud && App.cloud.currentAccess ? App.cloud.currentAccess() : null;
+    return runtimeAccess && runtimeAccess.mode || portability.accessModeFor(state());
   }
 
   function accessProfile() {
@@ -82,8 +85,44 @@
     return accessProfile().pii;
   }
 
+  function developerModeAuthorized() {
+    const actualAccess = App.cloud && App.cloud.actualAccess ? App.cloud.actualAccess() : null;
+    return Boolean(config.features.developerTools && initialized() && actualAccess && actualAccess.canPublish && state().preferences.controls.developerMode);
+  }
+
   function developerReferencesEnabled() {
-    return Boolean(config.features.developerTools && familyEditingEnabled() && state().preferences.controls.developerMode);
+    return developerModeAuthorized() && familyEditingEnabled();
+  }
+
+  function rolePreviewAvailable() {
+    const actualAccess = App.cloud && App.cloud.actualAccess ? App.cloud.actualAccess() : null;
+    return Boolean(developerModeAuthorized() && actualAccess && actualAccess.roleLabel === "Owner");
+  }
+
+  function openRolePreviewMenu(trigger) {
+    if (!rolePreviewAvailable()) return;
+    const current = App.cloud.currentAccess();
+    const selectedRole = current.previewRole || "owner";
+    const roles = [
+      { id: "owner", label: "Owner" },
+      { id: "editor", label: "Editor" },
+      { id: "pii-viewer", label: "Member" },
+      { id: "redacted-viewer", label: "Viewer" }
+    ];
+    components.openMenu(trigger, roles.map(function (role) {
+      return {
+        value: role.id,
+        label: (role.id === selectedRole ? "Current: " : "Preview: ") + role.label,
+        symbol: role.id === selectedRole ? "check" : "detail",
+        disabled: role.id === selectedRole,
+        action: function () {
+          App.cloud.setRolePreview(role.id);
+          treeNeedsFit = true;
+          renderAll();
+          components.toast(role.id === "owner" ? "Owner view restored." : role.label + " behavior is being previewed. Data and sign-in access were not changed.", { title: role.id === "owner" ? "Role preview ended" : role.label + " preview", kind: "info" });
+        }
+      };
+    }), { focus: true });
   }
 
   function mutationDisabledAttributes() {
@@ -153,7 +192,8 @@
     const isInitialized = initialized();
     document.body.dataset.onboarding = isInitialized ? "false" : "true";
     document.body.dataset.accessMode = isInitialized ? accessMode() : "uninitialized";
-    const developerMode = developerReferencesEnabled();
+    const developerReferences = developerReferencesEnabled();
+    const developerMode = developerReferences;
     const versionButton = $("#versionButton");
     versionButton.textContent = "v" + config.identity.version + (developerMode ? " DEV" : "");
     versionButton.dataset.developer = developerMode ? "true" : "false";
@@ -162,9 +202,13 @@
     const accessPill = $("#accessModePill");
     const runtimeAccess = App.cloud && App.cloud.currentAccess ? App.cloud.currentAccess() : null;
     accessPill.hidden = !isInitialized;
-    accessPill.textContent = isInitialized ? String(runtimeAccess && runtimeAccess.label || accessProfile().shortLabel).toUpperCase() : "";
+    accessPill.textContent = isInitialized ? String(runtimeAccess && runtimeAccess.roleLabel || accessProfile().shortLabel).toUpperCase() : "";
     accessPill.dataset.accessMode = isInitialized ? accessMode() : "";
-    document.documentElement.dataset.developer = developerMode ? "on" : "off";
+    accessPill.dataset.preview = runtimeAccess && runtimeAccess.preview ? "true" : "false";
+    accessPill.disabled = !rolePreviewAvailable();
+    accessPill.title = rolePreviewAvailable() ? "Quick change the role preview" : (runtimeAccess ? runtimeAccess.roleLabel + " access" : "Access role");
+    accessPill.setAttribute("aria-label", runtimeAccess && runtimeAccess.preview ? "Previewing " + runtimeAccess.roleLabel + ". Quick change role preview" : rolePreviewAvailable() ? runtimeAccess.roleLabel + ". Quick change role preview" : (runtimeAccess ? runtimeAccess.roleLabel + " access" : "Access role"));
+    document.documentElement.dataset.developer = developerReferences ? "on" : "off";
     setInputValue($("#globalSearch"), state().ui.search);
     const familyNotesVisible = isInitialized && familyEditingEnabled();
     $("#notesButton").disabled = !familyNotesVisible;
@@ -187,8 +231,8 @@
     $("#favoritesButton").setAttribute("aria-expanded", String(isInitialized && favoritesPreviewOpen));
     $("#favoritesButton").title = "Show " + favoriteCountLabel;
     const restoreFavoritesHeaderButton = $("#restoreFavoritesHeaderButton");
-    restoreFavoritesHeaderButton.hidden = !developerMode;
-    restoreFavoritesHeaderButton.disabled = !isInitialized || !developerMode;
+    restoreFavoritesHeaderButton.hidden = !developerReferences;
+    restoreFavoritesHeaderButton.disabled = !isInitialized || !developerReferences;
     $("#globalSearch").disabled = !isInitialized;
     $("#globalSearch").placeholder = "Search family";
     renderLocalStatus();
@@ -260,7 +304,7 @@
 
   function renderOnboarding() {
     const icon = document.documentElement.dataset.theme === "dark" ? config.identity.assets.appIconDark : config.identity.assets.appIconLight;
-    $("#mainContent").innerHTML = '<section class="onboarding-screen" aria-labelledby="onboardingTitle"><div class="onboarding-card"><img src="' + u.escapeHtml(versionedAsset(icon)) + '" alt="" class="onboarding-icon"><span class="eyebrow">Owner recovery</span><h1 id="onboardingTitle">Open the initial family record</h1><p>This screen is only for the Owner before the first encrypted vault is published. Open the latest validated recovery ZIP, then use Access &amp; Audit to create the passphrase sign-in used by everyone else.</p><div class="privacy-callout"><strong>Recipients do not need a ZIP.</strong><span>After Owner setup, they use the normal McFamily link and their assigned passphrase.</span></div><button id="firstImportButton" type="button" class="button primary large-button">Open Owner Recovery ZIP</button><input id="onboardingImportInput" type="file" accept="application/zip,.zip" data-import-file-input hidden><small>McFamily validates all five internal CSV files before opening this private recovery copy.</small></div></section>';
+    $("#mainContent").innerHTML = '<section class="onboarding-screen" aria-labelledby="onboardingTitle"><div class="onboarding-card"><img src="' + u.escapeHtml(versionedAsset(icon)) + '" alt="" class="onboarding-icon"><span class="eyebrow">Owner recovery</span><h1 id="onboardingTitle">Open the initial family record</h1><p>This screen is only for the Owner before the first encrypted vault is published. Open the latest validated recovery ZIP, then use Audit to create the passphrase sign-in used by everyone else.</p><div class="privacy-callout"><strong>Recipients do not need a ZIP.</strong><span>After Owner setup, they use the normal McFamily link and their assigned passphrase.</span></div><button id="firstImportButton" type="button" class="button primary large-button">Open Owner Recovery ZIP</button><input id="onboardingImportInput" type="file" accept="application/zip,.zip" data-import-file-input hidden><small>McFamily validates all five internal CSV files before opening this private recovery copy.</small></div></section>';
     icons.mount($("#mainContent"));
   }
 
@@ -784,7 +828,7 @@
     const profileLabels = (developerReferencesEnabled() ? [person.reference] : []).concat(isHome ? ["Root Ancestor"] : []);
     const profileEyebrow = profileLabels.length ? '<span class="eyebrow">' + u.escapeHtml(profileLabels.join(" · ")) + "</span>" : "";
     const contactBlocks = [];
-    if (piiVisible() && person.addresses.length) contactBlocks.push('<section class="profile-section"><h3>Addresses</h3>' + person.addresses.slice().sort(function (a, b) { return a.order - b.order; }).map(function (address) { return '<article class="contact-card"><header><strong>' + u.escapeHtml(address.label) + '</strong><span class="status-pill" data-kind="' + (address.current ? "success" : "neutral") + '">' + (address.current ? "Current" : "Former") + '</span></header><address>' + u.escapeHtml(model.formatAddress(address)).replace(/\n/g, "<br>") + '</address>' + ((model.formatFlexibleDate(address.startDate) || model.formatFlexibleDate(address.endDate)) ? '<small>' + u.escapeHtml([model.formatFlexibleDate(address.startDate), model.formatFlexibleDate(address.endDate)].filter(Boolean).join(" – ")) + "</small>" : "") + (address.notes ? "<p>" + u.escapeHtml(address.notes) + "</p>" : "") + "</article>"; }).join("") + "</section>");
+    if (piiVisible() && person.addresses.length) contactBlocks.push('<section class="profile-section"><h3>Addresses</h3>' + person.addresses.slice().sort(function (a, b) { return a.order - b.order; }).map(function (address) { const start = addressDateLabel(address, "start"); const end = addressDateLabel(address, "end"); return '<article class="contact-card"><header><strong>' + u.escapeHtml(address.label) + '</strong><span class="status-pill" data-kind="' + (address.current ? "success" : "neutral") + '">' + (address.current ? "Current" : "Former") + '</span></header><address>' + u.escapeHtml(model.formatAddress(address)).replace(/\n/g, "<br>") + '</address>' + ((start || end) ? '<small>' + u.escapeHtml([start, end].filter(Boolean).join(" – ")) + "</small>" : "") + (address.notes ? "<p>" + u.escapeHtml(address.notes) + "</p>" : "") + "</article>"; }).join("") + "</section>");
     if (piiVisible() && (person.phones.length || person.emails.length)) contactBlocks.push('<section class="profile-section"><h3>Contact</h3><dl class="profile-list">' + person.phones.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + person.emails.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + "</dl></section>");
     const actionButton = function (label, symbol, attribute, danger) {
       return '<button type="button" class="profile-action' + (danger ? " danger-text" : "") + '" ' + attribute + mutationDisabledAttributes() + ' aria-label="' + u.escapeHtml(label + " person") + '"><span class="profile-action-icon" data-symbol="' + symbol + '" aria-hidden="true"></span><span>' + u.escapeHtml(label) + "</span></button>";
@@ -1292,8 +1336,18 @@
     announce("Selected " + model.displayName(state().workspace.people.find(function (person) { return person.id === id; })) + ".");
   }
 
+  function addressDateValue(address, kind) {
+    const normalized = String(address && address[kind + "Date"] && address[kind + "Date"].value || "");
+    if (normalized) return normalized;
+    return String(address && address.source && address.source.fields && address.source.fields["date-" + kind + "-value"] || "");
+  }
+
+  function addressDateLabel(address, kind) {
+    return model.formatFlexibleDate(address && address[kind + "Date"]) || partialDateLabel(addressDateValue(address, kind));
+  }
+
   function addressRow(address, index) {
-    return '<fieldset class="repeatable-card" data-address-index="' + index + '"><legend>Address ' + (index + 1) + '</legend><div class="repeatable-card-actions"><button type="button" class="button small danger-text" data-remove-address="' + index + '">Remove</button></div><div class="form-grid"><label class="field"><span>Label</span><input data-address-field="label" value="' + u.escapeHtml(address.label || "Home") + '"></label><label class="check-field"><input type="checkbox" data-address-field="current" ' + (address.current !== false ? "checked" : "") + '><span>Current address</span></label><label class="field full"><span>Address line 1</span><input data-address-field="line1" value="' + u.escapeHtml(address.line1 || "") + '"></label><label class="field full"><span>Address line 2</span><input data-address-field="line2" value="' + u.escapeHtml(address.line2 || "") + '"></label><label class="field"><span>City / locality</span><input data-address-field="city" value="' + u.escapeHtml(address.city || "") + '"></label><label class="field"><span>State / region</span><input data-address-field="region" value="' + u.escapeHtml(address.region || "") + '"></label><label class="field"><span>Postal code</span><input data-address-field="postalCode" value="' + u.escapeHtml(address.postalCode || "") + '"></label><label class="field"><span>Country</span><input data-address-field="country" value="' + u.escapeHtml(address.country || "") + '"></label><label class="field"><span>Start date</span><input data-address-field="startDate" placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" value="' + u.escapeHtml(address.startDate && address.startDate.value || "") + '"></label><label class="field"><span>End date</span><input data-address-field="endDate" placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" value="' + u.escapeHtml(address.endDate && address.endDate.value || "") + '"></label><label class="field full"><span>Address notes</span><textarea data-address-field="notes" rows="2">' + u.escapeHtml(address.notes || "") + "</textarea></label></div></fieldset>";
+    return '<fieldset class="repeatable-card" data-address-index="' + index + '"><legend>Address ' + (index + 1) + '</legend><div class="repeatable-card-actions"><button type="button" class="button small danger-text" data-remove-address="' + index + '">Remove</button></div><div class="form-grid"><label class="field"><span>Label</span><input data-address-field="label" value="' + u.escapeHtml(address.label || "Home") + '"></label><label class="check-field"><input type="checkbox" data-address-field="current" ' + (address.current !== false ? "checked" : "") + '><span>Current address</span></label><label class="field full"><span>Address line 1</span><input data-address-field="line1" value="' + u.escapeHtml(address.line1 || "") + '"></label><label class="field full"><span>Address line 2</span><input data-address-field="line2" value="' + u.escapeHtml(address.line2 || "") + '"></label><label class="field"><span>City / locality</span><input data-address-field="city" value="' + u.escapeHtml(address.city || "") + '"></label><label class="field"><span>State / region</span><input data-address-field="region" value="' + u.escapeHtml(address.region || "") + '"></label><label class="field"><span>Postal code</span><input data-address-field="postalCode" value="' + u.escapeHtml(address.postalCode || "") + '"></label><label class="field"><span>Country</span><input data-address-field="country" value="' + u.escapeHtml(address.country || "") + '"></label><label class="field"><span>Start date</span><input data-address-field="startDate" data-person-date placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" inputmode="text" maxlength="10" autocomplete="off" spellcheck="false" value="' + u.escapeHtml(addressDateValue(address, "start")) + '"></label><label class="field"><span>End date</span><input data-address-field="endDate" data-person-date placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" inputmode="text" maxlength="10" autocomplete="off" spellcheck="false" value="' + u.escapeHtml(addressDateValue(address, "end")) + '"></label><label class="field full"><span>Address notes</span><textarea data-address-field="notes" rows="2">' + u.escapeHtml(address.notes || "") + "</textarea></label></div></fieldset>";
   }
 
   function contactRow(item, index, type) {
@@ -1311,11 +1365,21 @@
     personDraft.addresses = $$("[data-address-index]", $("#addressEditor")).map(function (row, index) {
       const value = function (name) { return row.querySelector('[data-address-field="' + name + '"]')?.value || ""; };
       const previous = personDraft.addresses[index] || {};
+      const startValue = value("startDate").trim();
+      const endValue = value("endDate").trim();
+      const source = u.clone(previous.source || { format: "mcresidences-v1", fields: {} });
+      source.format = source.format || "mcresidences-v1";
+      source.fields = Object.assign({}, u.plainObject(source.fields), {
+        "date-start-value": startValue,
+        "date-start-descriptor": automaticDateDescriptor(startValue, "optional", ""),
+        "date-end-value": endValue,
+        "date-end-descriptor": automaticDateDescriptor(endValue, "optional", "")
+      });
       return {
         id: previous.id || u.uid("address"), placeId: previous.placeId || "", residenceId: previous.residenceId || "",
         label: value("label"), current: row.querySelector('[data-address-field="current"]')?.checked !== false,
         line1: value("line1"), line2: value("line2"), city: value("city"), region: value("region"), postalCode: value("postalCode"), country: value("country"),
-        startDate: { value: value("startDate"), qualifier: "exact" }, endDate: { value: value("endDate"), qualifier: "exact" }, notes: value("notes"), order: index
+        startDate: normalizedPersonDate(startValue, source.fields["date-start-descriptor"]), endDate: normalizedPersonDate(endValue, source.fields["date-end-descriptor"]), notes: value("notes"), source: source, order: index
       };
     });
     ["phone", "email"].forEach(function (type) {
@@ -1369,12 +1433,77 @@
       });
       const residence = {
         id: residenceId, personId: person.id, placeId: placeId, label: address.label || "Home", current: address.current !== false,
-        startDate: address.startDate, endDate: address.endDate, notes: address.notes || "", source: { format: "mcresidences-v1", fields: {} }, order: index
+        startDate: address.startDate, endDate: address.endDate, notes: address.notes || "", source: u.clone(address.source || previousResidence && previousResidence.source || { format: "mcresidences-v1", fields: {} }), order: index
       };
       sourceState.workspace.residences.push(residence);
       Object.assign(address, { id: residenceId, residenceId: residenceId, placeId: placeId });
     });
     removeUnreferencedPlaces(sourceState);
+  }
+
+  function targetNameInputId(group, part) {
+    return group + "Name" + part;
+  }
+
+  function syncBirthNamePart(part) {
+    const source = $("#birthName" + part);
+    ["current", "preferred"].forEach(function (group) {
+      const targetId = targetNameInputId(group, part);
+      if (!personNameOverrides.has(targetId)) $("#" + targetId).value = source.value;
+    });
+  }
+
+  function validateDateSegment(segment, minimum, maximum) {
+    if (!segment || !/^[\d?]+$/.test(segment)) return false;
+    const unknowns = (segment.match(/\?/g) || []).length;
+    const combinations = Math.pow(10, unknowns);
+    for (let index = 0; index < combinations; index += 1) {
+      let replacement = String(index).padStart(unknowns, "0");
+      const value = Number(segment.replace(/\?/g, function () { const digit = replacement[0]; replacement = replacement.slice(1); return digit; }));
+      if (value >= minimum && value <= maximum) return true;
+    }
+    return false;
+  }
+
+  function validDateInput(value) {
+    const clean = String(value || "").trim();
+    if (!clean) return true;
+    const match = /^([\d?]{4})(?:-([\d?]{2})(?:-([\d?]{2}))?)?$/.exec(clean);
+    if (!match) return false;
+    if (match[2] && !validateDateSegment(match[2], 1, 12)) return false;
+    if (match[3] && !validateDateSegment(match[3], 1, 31)) return false;
+    if (match[2] && match[3] && !match[2].includes("?")) {
+      const year = match[1].includes("?") ? 2000 : Number(match[1]);
+      const maximumDay = new Date(Date.UTC(year, Number(match[2]), 0)).getUTCDate();
+      if (!validateDateSegment(match[3], 1, maximumDay)) return false;
+    }
+    return true;
+  }
+
+  function validatePersonDateInput(input) {
+    const valid = validDateInput(input.value);
+    input.setAttribute("aria-invalid", String(!valid));
+    return valid;
+  }
+
+  function validStructuredDateInput(value) {
+    return validDateInput(value) && !String(value || "").includes("?");
+  }
+
+  function automaticDateDescriptor(value, kind, livingStatus) {
+    if (value.includes("?")) return "partial";
+    if (value.length === 4) return "year";
+    if (value.length === 7) return "month";
+    if (value.length === 10) return "day";
+    if (kind === "birth") return "UNKNOWN";
+    if (kind === "death") return livingStatus === "living" ? "NONE" : "UNKNOWN";
+    return "";
+  }
+
+  function normalizedPersonDate(value, descriptor) {
+    if (descriptor === "partial") return { value: "", qualifier: "about" };
+    if (["UNKNOWN", "UNKNOWN PRESUMED"].includes(descriptor)) return { value: "", qualifier: "about" };
+    return { value: value, qualifier: "exact" };
   }
 
   function fillPersonForm(person) {
@@ -1388,24 +1517,19 @@
       preferredNamePrefix: preferredName.prefix, preferredNameFirst: preferredName.first, preferredNameMiddle: preferredName.middle, preferredNameLast: preferredName.last, preferredNameSuffix: preferredName.suffix,
       maidenLastName: person && person.names.maidenLast,
       livingStatus: person && person.livingStatus || "living",
-      gender: person && person.gender,
-      pronouns: person && person.pronouns,
-      birthDate: person && person.birth.date.value,
-      birthQualifier: person && person.birth.date.qualifier || "exact",
-      birthPlace: person && person.birth.place,
-      deathDate: person && person.death.date.value,
-      deathQualifier: person && person.death.date.qualifier || "exact",
-      deathPlace: person && person.death.place,
-      heritageNote: person && person.heritageNote,
+      birthDate: person && lifeDateValue(person, "birth"),
+      deathDate: person && lifeDateValue(person, "death"),
       personNotes: person && person.notes
     };
     Object.keys(values).forEach(function (id) { const input = $("#" + id); if (input) input.value = values[id] || ""; });
+    personNameOverrides = new Set(person ? ["current", "preferred"].flatMap(function (group) { return NAME_PARTS.map(function (part) { return targetNameInputId(group, part); }); }) : []);
     personDraft = {
       addresses: u.clone(person && person.addresses || []),
       phones: u.clone(person && person.phones || []),
       emails: u.clone(person && person.emails || [])
     };
     renderPersonRepeatables();
+    $$('[data-person-date]', $("#personDialog")).forEach(function (input) { input.setAttribute("aria-invalid", "false"); });
     $("#personFormError").hidden = true;
   }
 
@@ -1415,10 +1539,6 @@
     $("#personDialogTitle").textContent = person ? "Edit " + model.displayName(person) : pendingRelative ? "Add " + pendingRelative.role : "Add Person";
     fillPersonForm(person);
     components.openDialog("#personDialog", { trigger: trigger, focus: "#birthNameFirst" });
-  }
-
-  function validDateInput(value) {
-    return !value || /^\d{4}(?:-(?:0[1-9]|1[0-2])(?:-(?:0[1-9]|[12]\d|3[01]))?)?$/.test(value);
   }
 
   function showPersonError(message) {
@@ -1431,6 +1551,19 @@
   function collectPersonForm(existing) {
     syncPersonRepeatables();
     const now = u.isoNow();
+    const birthValue = $("#birthDate").value.trim();
+    const deathValue = $("#deathDate").value.trim();
+    const livingStatus = deathValue ? "deceased" : $("#livingStatus").value;
+    const birthDescriptor = automaticDateDescriptor(birthValue, "birth", livingStatus);
+    const deathDescriptor = automaticDateDescriptor(deathValue, "death", livingStatus);
+    const source = existing ? u.clone(existing.source) : { format: "mcpeople-v1", fields: {} };
+    source.format = source.format || "mcpeople-v1";
+    source.fields = Object.assign({}, u.plainObject(source.fields), {
+      "person-date-birth-value": birthValue,
+      "person-date-birth-descriptor": birthDescriptor,
+      "person-date-death-value": deathValue,
+      "person-date-death-descriptor": deathDescriptor
+    });
     return {
       id: existing ? existing.id : nextNumericRecordId("P", state().workspace.people, 3),
       names: {
@@ -1439,17 +1572,17 @@
         preferred: { prefix: $("#preferredNamePrefix").value, first: $("#preferredNameFirst").value, middle: $("#preferredNameMiddle").value, last: $("#preferredNameLast").value, suffix: $("#preferredNameSuffix").value },
         maidenLast: $("#maidenLastName").value
       },
-      livingStatus: $("#livingStatus").value,
-      gender: $("#gender").value,
-      pronouns: $("#pronouns").value,
-      birth: { date: { value: $("#birthDate").value.trim(), qualifier: $("#birthQualifier").value }, place: $("#birthPlace").value },
-      death: { date: { value: $("#deathDate").value.trim(), qualifier: $("#deathQualifier").value }, place: $("#deathPlace").value },
+      livingStatus: livingStatus,
+      gender: existing ? existing.gender : "",
+      pronouns: existing ? existing.pronouns : "",
+      birth: { date: normalizedPersonDate(birthValue, birthDescriptor), place: existing ? existing.birth.place : "" },
+      death: { date: normalizedPersonDate(deathValue, deathDescriptor), place: existing ? existing.death.place : "" },
       addresses: personDraft.addresses,
       phones: personDraft.phones,
       emails: personDraft.emails,
-      heritageNote: $("#heritageNote").value,
+      heritageNote: existing ? existing.heritageNote : "",
       notes: $("#personNotes").value,
-      source: existing ? u.clone(existing.source) : { format: "mcpeople-v1", fields: {} },
+      source: source,
       order: existing ? existing.order : state().workspace.people.length,
       createdAt: existing ? existing.createdAt : now,
       updatedAt: now
@@ -1463,10 +1596,9 @@
     const existing = id ? state().workspace.people.find(function (person) { return person.id === id; }) : null;
     const enteredNames = ["birthNameFirst", "birthNameLast", "currentNameFirst", "currentNameLast", "preferredNameFirst", "preferredNameLast"].some(function (idValue) { return $("#" + idValue).value.trim(); });
     if (!enteredNames) return showPersonError("Enter at least a birth, current, or preferred name.");
-    const dateValues = [$("#birthDate").value.trim(), $("#deathDate").value.trim()];
     syncPersonRepeatables();
-    personDraft.addresses.forEach(function (address) { dateValues.push(address.startDate.value, address.endDate.value); });
-    if (dateValues.some(function (value) { return !validDateInput(value); })) return showPersonError("Use YYYY, YYYY-MM, or YYYY-MM-DD for every date.");
+    const dateInputs = $$('[data-person-date]', $("#personDialog"));
+    if (!dateInputs.map(validatePersonDateInput).every(Boolean)) return showPersonError("Dates must be blank or use YYYY, YYYY-MM, or YYYY-MM-DD. Any digit may be ? when it is unknown.");
     if (personDraft.addresses.some(function (address) { return ![address.line1, address.line2, address.city, address.region, address.postalCode, address.country].some(function (value) { return Boolean(String(value || "").trim()); }); })) return showPersonError("Every address needs at least one physical address field, or remove the empty address.");
     const person = collectPersonForm(existing);
     let relationshipError = "";
@@ -1543,7 +1675,7 @@
     const type = $("#relationshipType").value;
     const startDate = { value: $("#relationshipStartDate").value.trim(), qualifier: $("#relationshipStartQualifier").value };
     const endDate = { value: $("#relationshipEndDate").value.trim(), qualifier: $("#relationshipEndQualifier").value };
-    if (!validDateInput(startDate.value) || !validDateInput(endDate.value)) {
+    if (!validStructuredDateInput(startDate.value) || !validStructuredDateInput(endDate.value)) {
       $("#relationshipFormError").textContent = "Use YYYY, YYYY-MM, or YYYY-MM-DD for relationship dates.";
       $("#relationshipFormError").hidden = false;
       return;
@@ -2003,14 +2135,15 @@
 
   function openSupport(tab, trigger) {
     if (!initialized()) return;
-    const chosen = tab || state().ui.supportTab || "settings";
+    const requested = tab || state().ui.supportTab || "settings";
+    const chosen = requested === "developer" && !developerReferencesEnabled() ? "settings" : requested;
     switchSupportTab(chosen);
     components.openDialog("#supportDialog", { trigger: trigger, focus: "[data-support-tab='" + chosen + "']" });
     renderSupport();
   }
 
   function switchSupportTab(tab) {
-    if (tab === "developer" && !state().preferences.controls.developerMode) tab = "settings";
+    if (tab === "developer" && !developerReferencesEnabled()) tab = "settings";
     storage.mutate(function (next) { next.ui.supportTab = tab; }, { touch: false, reason: "support-tab" });
     $$('[data-support-tab]').forEach(function (button) { const selected = button.dataset.supportTab === tab; button.setAttribute("aria-selected", String(selected)); button.tabIndex = selected ? 0 : -1; });
     $$('[data-support-panel]').forEach(function (panel) { panel.hidden = panel.dataset.supportPanel !== tab; });
@@ -2083,7 +2216,7 @@
   }
 
   async function renderDeveloper() {
-    if (!state().preferences.controls.developerMode) return;
+    if (!developerReferencesEnabled()) return;
     const usage = await storage.usage();
     const device = pwa.detectDevice();
     const recovery = storage.recoveryInfo();
@@ -2146,6 +2279,8 @@
 
   function toggleDeveloperMode(force, options) {
     if (!config.features.developerTools || !initialized()) return;
+    const willEnable = typeof force === "boolean" ? force : !state().preferences.controls.developerMode;
+    if (!willEnable && App.cloud && App.cloud.setRolePreview) App.cloud.setRolePreview("owner");
     storage.mutate(function (next) { next.preferences.controls.developerMode = typeof force === "boolean" ? force : !next.preferences.controls.developerMode; }, { reason: "developer-mode" });
     $("#developerTab").hidden = !developerReferencesEnabled();
     renderHeader();
@@ -2430,6 +2565,7 @@
   function bindGeneralEvents() {
     bindAppIconGestures();
     $("#versionButton").addEventListener("click", function (event) { openSupport("releases", event.currentTarget); });
+    $("#accessModePill").addEventListener("click", function (event) { openRolePreviewMenu(event.currentTarget); });
     $("#directoryButton").addEventListener("click", function () {
       const mobile = window.matchMedia("(max-width: 699px)").matches;
       const directoryIsOpen = !state().ui.directoryCollapsed && (!mobile || state().ui.mobileView === "directory");
@@ -2486,6 +2622,16 @@
     $("#personForm").addEventListener("submit", savePerson);
     $("#relationshipForm").addEventListener("submit", saveRelationship);
     $("#relationshipType").addEventListener("change", updateRelationshipFormType);
+    $("#personDialog").addEventListener("input", function (event) {
+      const birthName = /^birthName(Prefix|First|Middle|Last|Suffix)$/.exec(event.target.id);
+      if (birthName) syncBirthNamePart(birthName[1]);
+      const derivedName = /^(current|preferred)Name(Prefix|First|Middle|Last|Suffix)$/.exec(event.target.id);
+      if (derivedName) personNameOverrides.add(event.target.id);
+      if (event.target.matches("[data-person-date]")) {
+        const valid = validatePersonDateInput(event.target);
+        if (event.target.id === "deathDate" && valid && event.target.value.trim()) $("#livingStatus").value = "deceased";
+      }
+    });
     $("#personDialog").addEventListener("click", function (event) {
       if (event.target.closest("[data-add-address]")) { syncPersonRepeatables(); personDraft.addresses.push({ id: u.uid("address"), label: "Home", current: true, startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, order: personDraft.addresses.length }); renderPersonRepeatables(); }
       if (event.target.closest("[data-add-phone]")) { syncPersonRepeatables(); personDraft.phones.push({ id: u.uid("phone"), label: "Mobile", value: "", order: personDraft.phones.length }); renderPersonRepeatables(); }

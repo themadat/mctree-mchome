@@ -4,7 +4,7 @@ McFamily is a private family atlas that runs as a static GitHub Pages app. It vi
 
 There is no custom backend, account provider, cloud database, or runtime dependency. The separate public `mcdata` repository contains only an AES-GCM encrypted vault; readable family CSVs, passphrases, and GitHub tokens never belong in either public repository.
 
-Current version: `0.0.1.68` (`major.minor.patch.build`).
+Current version: `0.0.1.69` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -24,13 +24,15 @@ Current version: `0.0.1.68` (`major.minor.patch.build`).
 - Keeps portrait placeholders and internal person references out of the ordinary workspace; Developer Mode reveals references and a left-side generation bubble scale for visual troubleshooting.
 - Presents complete oldest-to-newest, two-digit Lineage IDs with the first three ancestral segments italicized and the selected person's final segment bold, followed by a compact direct-parent-linked Family Line with each name's lineage number and generation.
 - Keeps people, places, person-to-person relationships, person-to-place residences, and package metadata in separate exact-schema CSV files inside one ZIP artifact.
-- Opens Access & Audit from the title bar so separately named Editors can publish under their own audit username and Owners can add, rotate, or revoke each passphrase independently.
+- Opens Audit immediately left of Add so separately named Editors can publish under their own audit username and Owners can add, rotate, or revoke each passphrase independently.
+- Lets the signed-in Owner click the role pill in Developer Mode to preview Editor, Member, or Viewer behavior without changing the vault, package, or active credentials.
 - Imports known and question-mark partial source dates; person death descriptors explicitly distinguish living (`NONE`), deceased with an unknown date (`UNKNOWN`), and presumed deceased (`UNKNOWN PRESUMED`).
 - Shows partial source dates such as `December ??, 1979`, keeps a natural-language Age property on one line, and fills unknown visible identity properties with `UNKNOWN`. Living profiles use `----` for Died, and living people show only their birth year in directory and tree lifespans. Gender and Pronouns remain stored but are temporarily hidden from person details.
 - Uses compact open Parents, Siblings, Partners, and Children groups near the top of each profile, with combined parent role/type labels such as `Lineal :: Adopted` and `Non-Lineal :: Biological`, birth order and year for siblings and children, marriage years for partners, and current-first partner history. Imported Source appears only to Owner or Editor access in Developer Mode.
 - Uses absolute lineage generations rooted at George McMillen (1745) as Gen 0; readings use concise forms such as `Gen 6, 5th Child of Max`.
 - Lets the person panel close and clear selection; choosing any Family Tree person reopens it without a separate Show person control.
-- Enables family-record Add, Connect, Edit, Delete, person and family Notes, family-title, recovery ZIP, PDF, publishing, and imported-source inspection only for Owner or Editor access; imported source additionally requires Developer Mode. Member and Viewer modes expose no Access & Audit, Notes, imported-source search, routine import, export, PDF, developer-data, or publishing controls.
+- Enables family-record Add, Connect, Edit, Delete, person and family Notes, family-title, recovery ZIP, PDF, publishing, and imported-source inspection only for Owner or Editor access; imported source additionally requires Developer Mode. Member and Viewer modes expose no Audit, Notes, imported-source search, routine import, export, PDF, developer-data, or publishing controls.
+- Uses a compact person form whose Birth (Lineal), Current (Legal), and Preferred (Display) names each stay on one weighted five-part row. Birth typing seeds Current and Preferred until either target field is edited. Date descriptors are derived from blank, exact, or question-mark partial values; invalid formats are marked and blocked.
 - Retains structured profiles for people, multiple addresses, phones, emails, life events, and typed parent or partner relationships.
 - Rejects a damaged or malformed ZIP, missing/extra/reordered columns, bad metadata counts, missing references, duplicate relationships, self-links, and ancestry cycles before replacement.
 - Keeps a recovery snapshot before destructive replacement or deletion.
@@ -47,7 +49,7 @@ python3 -m http.server 8000
 
 Open `http://localhost:8000`. Use a local server rather than opening `index.html` directly so the service worker and install behavior can run.
 
-On a fresh browser profile, McFamily intentionally has no demo family or blank-workspace bypass. The normal path is the passphrase gate. Before the first vault exists, the Owner may open one validated recovery ZIP on their existing browser and use Access & Audit to publish the first encrypted vault.
+On a fresh browser profile, McFamily intentionally has no demo family or blank-workspace bypass. The normal path is the passphrase gate. Before the first vault exists, the Owner may open one validated recovery ZIP on their existing browser and use Audit to publish the first encrypted vault.
 
 ## Privacy model
 
@@ -100,7 +102,7 @@ McFamily uses a v13-only browser-storage namespace and does not load or migrate 
 
 The default vault is `themadat/mcdata`, branch `main`, at `data/mcfamily/McFamily-access.json`. That repository must be public so link-only readers can download the ciphertext anonymously. It must contain no readable family CSV or ZIP.
 
-1. The Owner opens their current Editor recovery ZIP once, opens **Access & Audit**, and enters a fine-grained GitHub token limited to `mcdata` with Contents read/write access.
+1. The Owner opens their current Editor recovery ZIP once, opens **Audit**, and enters a fine-grained GitHub token limited to `mcdata` with Contents read/write access.
 2. Set the Owner username and passphrase, then add every Editor, Member, and Viewer with a unique shown name and a unique passphrase. Names remain public audit metadata but are not shown on the sign-in screen. Save new phrases before closing the dialog.
 3. Choose **Publish Access Changes**. McFamily validates the family, builds full and physically redacted packages in memory, encrypts them with different random data keys, wraps only the appropriate key for each passphrase, and publishes one ciphertext-only JSON vault.
 4. Send everyone the ordinary Pages link plus their passphrase. They do not choose an account or role and never receive a ZIP; McFamily identifies the matching grant locally.
@@ -115,7 +117,7 @@ An Owner may keep a private recovery ZIP outside GitHub:
 
 1. Import the latest McFamily ZIP.
 2. Add or update people and relationships.
-3. Open **Access & Audit** and download the recovery ZIP.
+3. Open **Audit** and download the recovery ZIP.
 4. Do not send this file to ordinary viewers; their passphrase opens the hosted encrypted family automatically.
 
 The ZIP contains `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`. Imports replace the current family only after ZIP integrity, all five exact schemas, metadata counts, IDs, links, lineage paths, and ancestry cycles pass validation. McFamily creates a recovery snapshot first; it does not merge concurrent copies.
