@@ -945,6 +945,14 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .access-grant-row > [data-grant-enabled] { width: 20px; height: 20px; margin: 0 0 .62rem; }
 .access-grant-row > small { grid-column: 2 / -1; color: var(--muted); font-size: .66rem; }
 .access-grant-row .field { min-width: 0; }
+.access-editor-group { display: grid; gap: .5rem; padding: .7rem; border: 1px solid var(--line); border-radius: 10px; background: color-mix(in srgb, var(--surface-2) 70%, transparent); }
+.access-editor-heading { display: flex; align-items: center; justify-content: space-between; gap: .7rem; }
+.access-editor-heading h4 { margin: 0; font-size: .8rem; }
+.access-editor-heading small { display: block; margin-top: .12rem; color: var(--muted); font-size: .66rem; }
+.access-editor-list { display: grid; gap: .5rem; }
+.access-editor-group > .field-help { margin: 0; }
+.access-editor-row > [data-remove-editor] { align-self: end; margin-bottom: .18rem; }
+#hostedRecordedBy[readonly] { color: var(--text); font-weight: 800; background: var(--surface-2); }
 .cloud-upload-review { border-color: color-mix(in srgb, var(--success) 50%, var(--line)); background: color-mix(in srgb, var(--success) 5%, var(--surface)); }
 .cloud-upload-review .form-grid { margin-top: .8rem; }
 .cloud-change-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .35rem; margin: .7rem 0 0; padding: 0; list-style: none; }
@@ -1103,8 +1111,10 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
   .cloud-remember { align-items: flex-start; flex-wrap: wrap; }
   .access-grant-row { grid-template-columns: auto minmax(0, 1fr); align-items: start; }
   .access-grant-row > [data-grant-enabled] { grid-row: 1 / span 2; margin-top: 1.35rem; }
+  .access-editor-row > [data-remove-editor] { grid-row: 1 / span 2; align-self: start; margin-top: 1.18rem; }
   .access-grant-row .field { grid-column: 2; }
   .access-grant-row > small { grid-column: 1 / -1; }
+  .access-editor-heading { align-items: flex-start; }
   .repeatable-contact { grid-template-columns: 1fr; align-items: stretch; }
   .date-field-group { grid-template-columns: minmax(0, 1fr) 95px; }
 }
