@@ -12,23 +12,23 @@
   <meta name="apple-mobile-web-app-title" content="McFamily">
   <meta name="mobile-web-app-capable" content="yes">
   <title>McFamily</title>
-  <link rel="manifest" href="manifest.webmanifest?v=0.0.1.68">
-  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg?v=0.0.1.68">
-  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=0.0.1.68">
-  <link rel="apple-touch-startup-image" href="assets/icons/splash-light.png?v=0.0.1.68" media="(prefers-color-scheme: light)">
-  <link rel="apple-touch-startup-image" href="assets/icons/splash-dark.png?v=0.0.1.68" media="(prefers-color-scheme: dark)">
-  <link rel="stylesheet" href="assets/css/app.css?v=0.0.1.68">
-  <script defer src="assets/js/config.js?v=0.0.1.68"></script>
-  <script defer src="assets/js/icons.js?v=0.0.1.68"></script>
-  <script defer src="assets/js/core/utils.js?v=0.0.1.68"></script>
-  <script defer src="assets/js/core/state.js?v=0.0.1.68"></script>
-  <script defer src="assets/js/core/storage.js?v=0.0.1.68"></script>
-  <script defer src="assets/js/core/components.js?v=0.0.1.68"></script>
-  <script defer src="assets/js/core/family.js?v=0.0.1.68"></script>
-  <script defer src="assets/js/core/portability.js?v=0.0.1.68"></script>
-  <script defer src="assets/js/core/cloud.js?v=0.0.1.68"></script>
-  <script defer src="assets/js/core/pwa.js?v=0.0.1.68"></script>
-  <script defer src="assets/js/app.js?v=0.0.1.68"></script>
+  <link rel="manifest" href="manifest.webmanifest?v=0.0.1.69">
+  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg?v=0.0.1.69">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=0.0.1.69">
+  <link rel="apple-touch-startup-image" href="assets/icons/splash-light.png?v=0.0.1.69" media="(prefers-color-scheme: light)">
+  <link rel="apple-touch-startup-image" href="assets/icons/splash-dark.png?v=0.0.1.69" media="(prefers-color-scheme: dark)">
+  <link rel="stylesheet" href="assets/css/app.css?v=0.0.1.69">
+  <script defer src="assets/js/config.js?v=0.0.1.69"></script>
+  <script defer src="assets/js/icons.js?v=0.0.1.69"></script>
+  <script defer src="assets/js/core/utils.js?v=0.0.1.69"></script>
+  <script defer src="assets/js/core/state.js?v=0.0.1.69"></script>
+  <script defer src="assets/js/core/storage.js?v=0.0.1.69"></script>
+  <script defer src="assets/js/core/components.js?v=0.0.1.69"></script>
+  <script defer src="assets/js/core/family.js?v=0.0.1.69"></script>
+  <script defer src="assets/js/core/portability.js?v=0.0.1.69"></script>
+  <script defer src="assets/js/core/cloud.js?v=0.0.1.69"></script>
+  <script defer src="assets/js/core/pwa.js?v=0.0.1.69"></script>
+  <script defer src="assets/js/app.js?v=0.0.1.69"></script>
 </head>
 <body class="access-locked">
   <a class="skip-link" href="#mainContent">Skip to main content</a>
@@ -36,14 +36,14 @@
   <header class="app-header">
     <div class="title-cluster">
       <button id="appIconButton" class="app-icon-button" type="button" aria-label="Switch color theme. Press and hold to toggle Developer Mode" title="Switch color theme · Press and hold for Developer Mode" aria-keyshortcuts="T" data-shortcut="T">
-        <img id="appIcon" src="assets/icons/app-icon-light.png?v=0.0.1.68" alt="">
+        <img id="appIcon" src="assets/icons/app-icon-light.png?v=0.0.1.69" alt="">
       </button>
       <div class="identity-copy">
         <span id="appName" class="app-name">McFamily</span>
         <div class="identity-pill-row">
-          <button id="versionButton" class="version-pill" type="button" aria-label="Open release notes" aria-keyshortcuts="V" data-shortcut="V">v0.0.1.68</button>
+          <button id="versionButton" class="version-pill" type="button" aria-label="Open release notes" aria-keyshortcuts="V" data-shortcut="V">v0.0.1.69</button>
           <span id="betaPill" class="environment-pill beta-pill" title="This is the beta application" hidden>BETA</span>
-          <span id="accessModePill" class="environment-pill access-mode-pill" hidden></span>
+          <button id="accessModePill" class="environment-pill access-mode-pill" type="button" aria-haspopup="menu" aria-expanded="false" disabled hidden></button>
         </div>
       </div>
     </div>
@@ -68,18 +68,17 @@
     </div>
 
     <div class="top-toolbar" aria-label="Application actions">
-      <button id="cloudAuditButton" class="header-backup-status" type="button" aria-haspopup="dialog" aria-controls="cloudAuditDialog" aria-label="Open Access and Audit" title="Open Access &amp; Audit" data-cloud-state="warning" aria-keyshortcuts="E" data-shortcut="E" hidden>
-        <span class="floating-status-icon" aria-hidden="true" data-symbol="cloudAudit"></span>
-        <span class="floating-status-copy"><strong>Access &amp; Audit</strong><small id="cloudHeaderStatus">Checking</small></span>
+      <button id="cloudAuditButton" class="button action-button" type="button" aria-haspopup="dialog" aria-controls="cloudAuditDialog" aria-label="Open Audit" title="Open Audit" data-cloud-state="warning" aria-keyshortcuts="E" data-shortcut="E" hidden>
+        <span class="button-icon" aria-hidden="true" data-symbol="cloudAudit"></span><span class="button-label">Audit</span>
       </button>
       <button id="addPersonButton" class="button action-button" type="button" aria-haspopup="dialog" aria-controls="personDialog" title="Family editing is paused while McFamily is being built" disabled>
         <span class="button-icon" aria-hidden="true" data-symbol="add"></span><span class="button-label">Add</span>
       </button>
-      <button id="printButton" class="button action-button" type="button" aria-keyshortcuts="P" data-shortcut="P">
-        <span class="button-icon" aria-hidden="true" data-symbol="documents"></span><span class="button-label">PDF</span>
-      </button>
       <button id="notesButton" class="button action-button" type="button" aria-haspopup="dialog" aria-controls="notesDialog" aria-keyshortcuts="N" data-shortcut="N">
         <span class="button-icon" aria-hidden="true" data-symbol="notes"></span><span class="button-label">Notes</span>
+      </button>
+      <button id="printButton" class="button action-button" type="button" aria-keyshortcuts="P" data-shortcut="P">
+        <span class="button-icon" aria-hidden="true" data-symbol="pdf"></span><span class="button-label">PDF</span>
       </button>
       <button id="supportButton" class="button icon-button action-button" type="button" aria-label="Open settings" title="Open settings" data-shortcut="?">
         <span class="button-icon" aria-hidden="true" data-symbol="support"></span><span class="button-label">Settings</span>
@@ -108,32 +107,29 @@
       <header class="dialog-header"><div><span class="eyebrow">Family directory</span><h2 id="personDialogTitle">Add Person</h2></div><button type="button" class="icon-button" data-close-dialog="personDialog" aria-label="Close without saving"><span aria-hidden="true" data-symbol="close"></span></button></header>
       <div class="dialog-body person-form-body">
         <input id="personId" type="hidden">
-        <section class="form-section"><h3>Names</h3><div class="name-editor-groups">
-          <fieldset class="name-editor-group"><legend>Birth Name</legend><div class="form-grid person-name-grid">
+        <section class="form-section person-names-section"><h3>Names</h3><p id="personNameSyncNote" class="field-help names-sync-note">Current and Preferred automatically update as you type in Birth. You can change either afterward.</p><div class="name-editor-groups">
+          <fieldset class="name-editor-group"><legend>Birth (Lineal)</legend><div class="form-grid person-name-grid">
             <label class="field"><span>Prefix</span><input id="birthNamePrefix"></label><label class="field"><span>First</span><input id="birthNameFirst"></label><label class="field"><span>Middle</span><input id="birthNameMiddle"></label><label class="field"><span>Last</span><input id="birthNameLast"></label><label class="field"><span>Suffix</span><input id="birthNameSuffix"></label>
           </div></fieldset>
-          <fieldset class="name-editor-group"><legend>Current Name <small>legal name</small></legend><div class="form-grid person-name-grid">
+          <fieldset class="name-editor-group"><legend>Current (Legal)</legend><div class="form-grid person-name-grid">
             <label class="field"><span>Prefix</span><input id="currentNamePrefix" autocomplete="honorific-prefix"></label><label class="field"><span>First</span><input id="currentNameFirst" autocomplete="given-name"></label><label class="field"><span>Middle</span><input id="currentNameMiddle" autocomplete="additional-name"></label><label class="field"><span>Last</span><input id="currentNameLast" autocomplete="family-name"></label><label class="field"><span>Suffix</span><input id="currentNameSuffix" autocomplete="honorific-suffix"></label>
           </div></fieldset>
-          <fieldset class="name-editor-group"><legend>Preferred Name <small>display name</small></legend><div class="form-grid person-name-grid">
+          <fieldset class="name-editor-group"><legend>Preferred (Display)</legend><div class="form-grid person-name-grid">
             <label class="field"><span>Prefix</span><input id="preferredNamePrefix"></label><label class="field"><span>First</span><input id="preferredNameFirst" autocomplete="nickname"></label><label class="field"><span>Middle</span><input id="preferredNameMiddle"></label><label class="field"><span>Last</span><input id="preferredNameLast"></label><label class="field"><span>Suffix</span><input id="preferredNameSuffix"></label>
           </div></fieldset>
           <label class="field"><span>Maiden Last Name</span><input id="maidenLastName"></label>
         </div></section>
-        <section class="form-section"><h3>Life Details</h3><div class="form-grid">
+        <section class="form-section person-details-section"><h3>Details</h3><div class="form-grid person-details-grid">
           <label class="field"><span>Living status</span><select id="livingStatus"><option value="living">Living</option><option value="deceased">Deceased</option><option value="unknown">Unknown</option></select></label>
-          <label class="field"><span>Gender <small>optional</small></span><input id="gender"></label>
-          <label class="field"><span>Pronouns <small>optional</small></span><input id="pronouns"></label>
-          <div></div>
-          <div class="date-field-group"><label class="field"><span>Birth date</span><input id="birthDate" placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" inputmode="numeric"></label><label class="field qualifier-field"><span>Qualifier</span><select id="birthQualifier"><option value="exact">Exact</option><option value="about">About</option><option value="before">Before</option><option value="after">After</option></select></label></div>
-          <label class="field"><span>Birth place</span><input id="birthPlace"></label>
-          <div class="date-field-group"><label class="field"><span>Death date</span><input id="deathDate" placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" inputmode="numeric"></label><label class="field qualifier-field"><span>Qualifier</span><select id="deathQualifier"><option value="exact">Exact</option><option value="about">About</option><option value="before">Before</option><option value="after">After</option></select></label></div>
-          <label class="field"><span>Death place</span><input id="deathPlace"></label>
+          <label class="field"><span>Birth date</span><input id="birthDate" data-person-date placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" inputmode="text" maxlength="10" autocomplete="off" spellcheck="false"></label>
+          <label class="field"><span>Death date</span><input id="deathDate" data-person-date placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" inputmode="text" maxlength="10" autocomplete="off" spellcheck="false"></label>
         </div></section>
-        <section class="form-section"><div class="form-section-heading"><h3>Addresses</h3><button type="button" class="button small" data-add-address>Add address</button></div><div id="addressEditor" class="repeatable-list"></div></section>
-        <section class="form-section"><div class="form-section-heading"><h3>Phone Numbers</h3><button type="button" class="button small" data-add-phone>Add phone</button></div><div id="phoneEditor" class="repeatable-list compact-repeatable"></div></section>
-        <section class="form-section"><div class="form-section-heading"><h3>Email Addresses</h3><button type="button" class="button small" data-add-email>Add email</button></div><div id="emailEditor" class="repeatable-list compact-repeatable"></div></section>
-        <section class="form-section"><h3>Background and Notes</h3><div class="form-grid"><label class="field full"><span>Lineage background</span><textarea id="heritageNote" rows="4"></textarea></label><label class="field full"><span>General notes</span><textarea id="personNotes" rows="5"></textarea></label></div></section>
+        <div class="person-contact-sections">
+          <section class="form-section"><div class="form-section-heading"><h3>Addresses</h3><button type="button" class="button small" data-add-address>Add address</button></div><div id="addressEditor" class="repeatable-list"></div></section>
+          <section class="form-section"><div class="form-section-heading"><h3>Phone Numbers</h3><button type="button" class="button small" data-add-phone>Add phone</button></div><div id="phoneEditor" class="repeatable-list compact-repeatable"></div></section>
+          <section class="form-section"><div class="form-section-heading"><h3>Email Addresses</h3><button type="button" class="button small" data-add-email>Add email</button></div><div id="emailEditor" class="repeatable-list compact-repeatable"></div></section>
+        </div>
+        <section class="form-section editor-notes-section"><h3>Editor Notes</h3><label class="field"><span>Details</span><textarea id="personNotes" rows="3"></textarea></label></section>
         <p id="personFormError" class="inline-status warning" role="alert" hidden></p>
       </div>
       <footer class="dialog-footer"><button type="button" class="button" data-close-dialog="personDialog">Cancel</button><button type="submit" class="button primary">Save person</button></footer>
@@ -187,13 +183,13 @@
               <div class="setting-row"><div><strong>Contextual hints</strong><small>Hints can also be dismissed one at a time.</small></div><button id="hintsToggle" type="button" class="toggle-button" aria-pressed="true">On</button></div><div class="button-row"><button id="restoreHintsButton" class="button" type="button">Restore dismissed hints</button></div>
             </div>
             <div class="settings-section"><div class="section-heading"><div><span class="eyebrow">This browser</span><h3>Reset or Erase</h3></div></div>
-              <p class="section-intro">Local backup, cloud handoff, and audit tools now live together under <strong>Save &amp; Share</strong> in the title bar.</p>
+              <p class="section-intro" data-editor-only>Local backup, cloud handoff, and audit tools live together under <strong>Audit</strong> in the title bar.</p>
               <div class="danger-zone"><div><strong>Reset preferences</strong><small>Keep family data and Notes, but restore appearance and view settings.</small></div><button id="resetPreferencesButton" class="button danger-text" type="button">Reset preferences</button></div>
               <div class="danger-zone"><div><strong>Erase all local McFamily data</strong><small>Return this browser to the strict import screen.</small></div><button id="eraseAllButton" class="button danger" type="button">Erase all data</button></div>
             </div>
           </section>
           <section id="helpPanel" class="support-panel" role="tabpanel" aria-labelledby="helpTab" data-support-panel="help" hidden><div class="support-search sticky-controls"><label class="grow-control"><span class="visually-hidden">Search help</span><input id="helpSearch" type="search" placeholder="Search Help Center"></label><span id="helpResultCount" class="count-pill">0 topics</span></div><div id="helpContent" class="help-content"></div></section>
-          <section id="releasesPanel" class="support-panel" role="tabpanel" aria-labelledby="releasesTab" data-support-panel="releases" hidden><div class="release-summary"><div><span class="eyebrow">Current version</span><h3 id="releaseCurrentVersion">v0.0.1.68</h3></div><p>Browse released work and the McFamily roadmap.</p></div><div class="segmented version-views" role="group" aria-label="Version views"><button type="button" data-version-view="released" aria-pressed="true">Released</button><button type="button" data-version-view="planned" aria-pressed="false">Planned</button><button type="button" data-version-view="wishlist" aria-pressed="false">Wishlist</button></div><div id="releaseContent" class="release-list"></div></section>
+          <section id="releasesPanel" class="support-panel" role="tabpanel" aria-labelledby="releasesTab" data-support-panel="releases" hidden><div class="release-summary"><div><span class="eyebrow">Current version</span><h3 id="releaseCurrentVersion">v0.0.1.69</h3></div><p>Browse released work and the McFamily roadmap.</p></div><div class="segmented version-views" role="group" aria-label="Version views"><button type="button" data-version-view="released" aria-pressed="true">Released</button><button type="button" data-version-view="planned" aria-pressed="false">Planned</button><button type="button" data-version-view="wishlist" aria-pressed="false">Wishlist</button></div><div id="releaseContent" class="release-list"></div></section>
           <section id="shortcutsPanel" class="support-panel" role="tabpanel" aria-labelledby="shortcutsTab" data-support-panel="shortcuts" hidden><div class="release-summary"><div><span class="eyebrow">Keyboard</span><h3>Shortcut Reference</h3></div><p>Shortcuts never replace visible controls.</p></div><div id="shortcutContent" class="shortcut-content"></div></section>
           <section id="supportRoadmapPanel" class="support-panel" role="tabpanel" aria-labelledby="supportRoadmapTab" data-support-panel="roadmap" hidden><div class="support-search sticky-controls"><label class="grow-control"><span class="visually-hidden">Search roadmap</span><input id="supportRoadmapSearch" type="search" placeholder="Search roadmap"></label><select id="supportRoadmapState" aria-label="Roadmap view"><option value="all">All</option><option value="released">Released</option><option value="planned">Planned</option><option value="wishlist">Wishlist</option></select><select id="supportRoadmapSort" aria-label="Sort roadmap"><option value="priority">Priority</option><option value="target">Target release</option><option value="effort">Effort</option><option value="age">Age</option><option value="title">Title</option></select></div><div id="supportRoadmapList" class="roadmap-list compact-roadmap"></div></section>
           <section id="developerPanel" class="support-panel" role="tabpanel" aria-labelledby="developerTab" data-support-panel="developer" hidden><div class="release-summary"><div><span class="eyebrow">Hidden tools</span><h3>Developer Mode</h3></div><p>Diagnostics are read-only and contain private family data.</p></div><dl id="developerDiagnostics" class="diagnostic-grid"></dl><section class="developer-tool-section"><div><h4>Favorite People Backup</h4><p>Save a small private JSON file outside browser storage, then restore it after a reset or storage failure.</p></div><div class="button-row developer-actions"><button id="saveFavoritesButton" class="button" type="button">Save favorites file</button><button id="restoreFavoritesButton" class="button" type="button">Restore favorites</button><input id="restoreFavoritesInput" type="file" accept="application/json,.json" hidden></div></section><div class="button-row developer-actions"><button id="restoreRecoveryButton" class="button" type="button">Restore recovery copy</button><button id="saveRecoveryButton" class="button" type="button">Save recovery copy</button><button id="disableDeveloperButton" class="button" type="button">Hide developer mode</button></div><h4>Normalized Private State</h4><pre id="developerState" class="developer-json" tabindex="0" aria-label="Normalized application state"></pre></section>
@@ -204,7 +200,7 @@
 
   <dialog id="accessGateDialog" class="app-dialog access-gate-dialog" aria-labelledby="accessGateTitle" data-backdrop-close="false">
     <div class="dialog-shell">
-      <div class="access-gate-brand"><img src="assets/icons/app-icon-light.png?v=0.0.1.68" alt="" class="onboarding-icon"><span class="eyebrow">Private family atlas</span><h1 id="accessGateTitle">Welcome to McFamily</h1><p>Enter the private passphrase you were given. McFamily identifies your access locally and securely opens the latest family record.</p></div>
+      <div class="access-gate-brand"><img src="assets/icons/app-icon-light.png?v=0.0.1.69" alt="" class="onboarding-icon"><span class="eyebrow">Private family atlas</span><h1 id="accessGateTitle">Welcome to McFamily</h1><p>Enter the private passphrase you were given. McFamily identifies your access locally and securely opens the latest family record.</p></div>
       <form id="accessGateForm" class="dialog-body access-gate-form">
         <p id="accessGateStatus" class="inline-status" role="status" aria-live="polite">Checking for the latest encrypted family record…</p>
         <label class="field"><span>Passphrase</span><span class="password-input-row"><input id="accessPassphrase" type="password" autocomplete="current-password" autocapitalize="none" spellcheck="false" aria-label="Passphrase" required disabled><button id="accessPassphraseVisibility" class="button small" type="button" aria-pressed="false">Show</button></span></label>
@@ -223,7 +219,7 @@
 
   <dialog id="cloudAuditDialog" class="app-dialog cloud-audit-dialog" aria-labelledby="cloudAuditTitle" data-backdrop-close="false">
     <div class="dialog-shell">
-      <header class="dialog-header"><h2 id="cloudAuditTitle">Access &amp; Audit</h2><button type="button" class="icon-button" data-close-dialog="cloudAuditDialog" aria-label="Close Access and Audit"><span aria-hidden="true" data-symbol="close"></span></button></header>
+      <header class="dialog-header"><h2 id="cloudAuditTitle">Audit</h2><button type="button" class="icon-button" data-close-dialog="cloudAuditDialog" aria-label="Close Audit"><span aria-hidden="true" data-symbol="close"></span></button></header>
       <div class="dialog-body cloud-audit-body">
         <section class="cloud-status-overview" aria-label="Access and connection status">
           <article id="currentAccessSummary" class="cloud-status-card" data-kind="danger"><span class="cloud-status-label"><span class="cloud-status-dot" aria-hidden="true"></span>Signed in as</span><strong id="currentAccessName">Not opened</strong><small id="currentAccessRole">Permission: None</small></article>
@@ -234,8 +230,8 @@
         <section id="hostedAccessManager" class="cloud-section" aria-labelledby="hostedAccessTitle" data-owner-only><div class="section-heading"><div><span class="eyebrow">Owner controls</span><h3 id="hostedAccessTitle">People &amp; Passphrases</h3></div><span id="hostedGrantCount" class="count-pill">0 active</span></div><p class="section-intro">Every person needs a unique shown name for auditing and a unique passphrase for sign-in. Leave an existing passphrase blank to keep it, or enter a new one to change it. Access changes take effect only after publication.</p><div class="access-grant-list">
           <fieldset class="access-grant-row" data-grant-row="owner" data-grant-mode="owner"><legend>Owner</legend><input type="checkbox" data-grant-enabled checked disabled aria-label="Owner access is required"><label class="field"><span>Owner username</span><input data-grant-label maxlength="80" value="Owner"></label><label class="field"><span>New passphrase</span><span class="password-input-row"><input data-grant-passphrase type="text" autocomplete="off" placeholder="Keep current passphrase"><button class="button small" type="button" data-generate-passphrase>Generate</button></span></label><small>Can edit, publish, and manage every username and passphrase.</small></fieldset>
           <section class="access-role-group" aria-labelledby="hostedEditorsTitle"><div class="access-role-heading"><div><h4 id="hostedEditorsTitle">Editors</h4><small>Can edit and publish; every publication uses the signed-in username.</small></div><button class="button small" type="button" data-add-grant="editor">Add Editor</button></div><div id="hostedEditorGrantList" class="access-person-list"></div><p id="hostedEditorEmpty" class="field-help">No separate editors. The Owner can still edit and publish.</p></section>
-          <section class="access-role-group" aria-labelledby="hostedPiiTitle"><div class="access-role-heading"><div><h4 id="hostedPiiTitle">Members</h4><small>Can see addresses and contacts, but cannot edit, export, open Notes, or use Access &amp; Audit.</small></div><button class="button small" type="button" data-add-grant="pii-viewer">Add Member</button></div><div id="hostedPiiGrantList" class="access-person-list"></div><p id="hostedPiiEmpty" class="field-help">No Members have access.</p></section>
-          <section class="access-role-group" aria-labelledby="hostedRedactedTitle"><div class="access-role-heading"><div><h4 id="hostedRedactedTitle">Viewers</h4><small>Receive the family tree without addresses, contacts, private notes, editing, exports, PDF, Notes, or Access &amp; Audit.</small></div><button class="button small" type="button" data-add-grant="redacted-viewer">Add Viewer</button></div><div id="hostedRedactedGrantList" class="access-person-list"></div><p id="hostedRedactedEmpty" class="field-help">No Viewers have access.</p></section>
+          <section class="access-role-group" aria-labelledby="hostedPiiTitle"><div class="access-role-heading"><div><h4 id="hostedPiiTitle">Members</h4><small>Can see addresses and contacts, but cannot edit, export, open Notes, or use Audit.</small></div><button class="button small" type="button" data-add-grant="pii-viewer">Add Member</button></div><div id="hostedPiiGrantList" class="access-person-list"></div><p id="hostedPiiEmpty" class="field-help">No Members have access.</p></section>
+          <section class="access-role-group" aria-labelledby="hostedRedactedTitle"><div class="access-role-heading"><div><h4 id="hostedRedactedTitle">Viewers</h4><small>Receive the family tree without addresses, contacts, private notes, editing, exports, PDF, Notes, or Audit.</small></div><button class="button small" type="button" data-add-grant="redacted-viewer">Add Viewer</button></div><div id="hostedRedactedGrantList" class="access-person-list"></div><p id="hostedRedactedEmpty" class="field-help">No Viewers have access.</p></section>
         </div><template id="hostedPersonGrantTemplate"><fieldset class="access-grant-row access-person-row" data-grant-row><legend data-grant-title></legend><button class="button small danger-text" type="button" data-remove-grant>Revoke</button><label class="field"><span data-grant-name-label>Shown name</span><input data-grant-label maxlength="80" autocomplete="off"></label><label class="field"><span>New passphrase</span><span class="password-input-row"><input data-grant-passphrase type="text" autocomplete="off" placeholder="Enter 8+ characters"><button class="button small" type="button" data-generate-passphrase>Generate</button></span></label><small data-grant-description></small></fieldset></template><p class="inline-status warning"><strong>Save new phrases before closing.</strong> McFamily cannot recover them. Short phrases are easier to guess from the public encrypted file; use three unrelated words when practical and never reuse a personal password. Shown names are visible in the public vault, so use first names or nicknames rather than sensitive details.</p><div class="button-row"><button id="hostedAccessPublishButton" class="button primary" type="button">Publish Access Changes</button></div></section>
         <details id="hostedConnectionDetails" class="cloud-section cloud-settings" data-editor-only><summary><span>GitHub connection</span><small id="cloudSettingsSummary">Public repository with encrypted data only</small></summary><div class="cloud-settings-content"><p class="section-intro privacy-warning"><strong>Public encrypted repository:</strong> the configured path stores ciphertext only. Use a fine-grained token limited to this repository with Contents read/write access.</p><div class="form-grid"><label class="field"><span>Repository owner</span><input id="cloudOwner" maxlength="39" autocomplete="username" autocapitalize="none" spellcheck="false"></label><label class="field"><span>Repository</span><input id="cloudRepository" maxlength="100" autocapitalize="none" spellcheck="false"></label><label class="field"><span>Branch</span><input id="cloudBranch" maxlength="100" autocapitalize="none" spellcheck="false"></label><label class="field full"><span>Encrypted vault path</span><input id="cloudPath" maxlength="300" autocapitalize="none" spellcheck="false"></label><label class="field full"><span>Fine-grained access token</span><input id="cloudToken" type="password" autocomplete="off" autocapitalize="none" spellcheck="false"></label></div><label class="cloud-remember"><input id="cloudRememberToken" type="checkbox"> Remember token on this device <small>Otherwise it lasts only for this browser tab.</small></label><div class="button-row"><button id="cloudForgetButton" class="button danger-text" type="button">Forget Connection</button><button id="cloudTestButton" class="button" type="button">Test Connection</button><button id="cloudSaveButton" class="button primary" type="button">Save Settings</button></div></div></details>
         <section class="cloud-section cloud-overview" aria-labelledby="cloudOverviewTitle" data-legacy-cloud hidden><div class="cloud-overview-copy"><h3 id="cloudOverviewTitle">Legacy cloud handoff</h3></div><div class="cloud-actions"><button id="cloudDownloadButton" class="button" type="button">Get latest copy</button><button id="cloudUploadButton" class="button primary" type="button">Publish edited ZIP</button><input id="cloudUploadInput" type="file" accept="application/zip,.zip" hidden></div></section>
