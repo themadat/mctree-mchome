@@ -13,11 +13,11 @@ Use synthetic families only.
 
 ## Hosted access, current schema, and portability
 
-- [ ] Every ordinary load shows only the hosted access gate until a current public ciphertext vault is fetched and a valid named passphrase decrypts its authorized package.
+- [ ] Every ordinary load shows only the hosted access gate until a current public ciphertext vault is fetched and one valid passphrase automatically identifies exactly one grant and decrypts its authorized package; no account or role selector appears.
 - [ ] A missing vault shows a clear connection/setup status and one Owner Recovery ZIP action; a validated Editor recovery package enters Owner Setup, while invalid files leave the gate locked.
 - [ ] No demo family, blank-family action, GEDCOM action, loose-CSV action, stored-passphrase bypass, or local-state-only viewer bypass appears.
 - [ ] The vault rejects wrong format/version, malformed base64, unsupported KDF/cipher parameters, missing full/redacted payloads, duplicate/unknown grants, oversized content, and invalid revisions before decrypting anything.
-- [ ] Correct Owner, multiple named Editors, multiple Private Viewers, and multiple Redacted Viewers open only their assigned package; wrong, rotated, and removed passphrases fail without exposing the workspace.
+- [ ] Correct Owner, multiple named Editors, multiple Private Viewers, and multiple Redacted Viewers open only their assigned package from the same passphrase field; wrong, rotated, and removed passphrases fail without exposing the workspace or listing configured accounts on the locked screen.
 - [ ] Full and redacted packages use independent random data keys. Owner/Editor can unwrap both, Private Viewer can unwrap only full, and Redacted Viewer can unwrap only redacted.
 - [ ] Neither the serialized vault nor its public metadata contains a passphrase, GitHub token, readable CSV filename, person/contact/address value, or decrypted ZIP bytes.
 - [ ] A valid dataset 16 ZIP with at least one person shows access mode, people, relationship, place, residence, dataset, state, and validation-group summaries before opening the family.
@@ -48,7 +48,7 @@ Use synthetic families only.
 - [ ] Dataset `16.0.0`, `16.0.1`, and later `16.0.x` packages with the same five exact schemas validate; a different major/minor series is rejected.
 - [ ] Hosted publication rejects malformed current data, schema/count/reference/date/cycle failures, a stale vault revision, changed GitHub file SHA, non-public target, missing token permissions, or wrong configured path without altering local or remote data.
 - [ ] A valid family publication requires What changed, ignores any legacy connection name, records the signed-in grant label as `recordedBy`, advances exactly one dataset patch, appends one `published-hosted-family` event, validates and encrypts both packages, writes one ciphertext vault, and keeps existing grants usable.
-- [ ] Access validation rejects duplicate grant ids, duplicate shown names, more than 20 grants per recipient role, malformed dynamic role ids, missing Owner, and passphrases shorter than eight characters; original fixed `editor`, `pii`, and `redacted` grants remain readable.
+- [ ] Access validation rejects duplicate grant ids, duplicate shown names, duplicate new passphrases, a new passphrase matching any retained grant, more than 20 grants per recipient role, malformed dynamic role ids, missing Owner, and passphrases shorter than eight characters; ambiguous older vaults with duplicate passphrases cannot sign in, while original fixed `editor`, `pii`, and `redacted` grants remain readable.
 - [ ] First access publication creates all enabled grants and one hosted-access audit event. Later Owner publication preserves blank passphrase rows, rotates nonblank rows, removes disabled viewers and revoked Editors, never records secret values, and keeps Owner mandatory.
 - [ ] Lock clears decrypted browser state and requires a fresh online passphrase check. Tokens, settings, passphrases, and unencrypted family values never enter the vault, recovery state, PDF metadata, audit details, or service-worker cache.
 - [ ] Missing required Birth First/Last values normalize to `UNKNOWN`; the importer does not derive structured names from removed flat columns.

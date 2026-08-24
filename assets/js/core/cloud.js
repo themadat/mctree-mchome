@@ -240,11 +240,7 @@
     return keys;
   }
 
-  async function decryptVaultRecord(vaultInput, grantId, passphrase) {
-    const vault = validateVault(vaultInput);
-    const grant = vault.grants.find(function (item) { return item.id === grantId; });
-    if (!grant) throw new Error("That access grant is no longer active.");
-    const keys = await unwrapGrant(grant, passphrase);
+  async function prepareDecryptedVaultRecord(vault, grant, keys) {
     const definition = definitionForGrant(grant);
     const dataKind = definition.stateMode === "redacted-viewer" ? "redacted" : "full";
     const rawKey = dataKind === "redacted" ? keys.redacted : keys.full;
@@ -256,6 +252,29 @@
     if (portability.datasetVersionFor(prepared.state) !== vault.datasetVersion) throw new Error("The encrypted vault and family package versions do not match.");
     prepared.state.meta.package.accessMode = definition.stateMode;
     return { vault: vault, grant: grant, keys: keys, prepared: prepared };
+  }
+
+  async function decryptVaultRecord(vaultInput, grantId, passphrase) {
+    const vault = validateVault(vaultInput);
+    const grant = vault.grants.find(function (item) { return item.id === grantId; });
+    if (!grant) throw new Error("That access grant is no longer active.");
+    return prepareDecryptedVaultRecord(vault, grant, await unwrapGrant(grant, String(passphrase || "").trim()));
+  }
+
+  async function decryptVaultRecordByPassphrase(vaultInput, passphrase) {
+    const vault = validateVault(vaultInput);
+    const cleanPassphrase = String(passphrase || "").trim();
+    const matches = [];
+    for (const grant of vault.grants) {
+      try {
+        matches.push({ grant: grant, keys: await unwrapGrant(grant, cleanPassphrase) });
+      } catch (error) {
+        // A failed unwrap is intentionally indistinguishable from an unknown account.
+      }
+    }
+    if (!matches.length) throw new Error("The passphrase is incorrect or that access is no longer active.");
+    if (matches.length > 1) throw new Error("This passphrase is assigned to more than one account. Ask the Owner to rotate it.");
+    return prepareDecryptedVaultRecord(vault, matches[0].grant, matches[0].keys);
   }
 
   function validateEncryptedPayload(payload, label) {
@@ -553,31 +572,14 @@
   }
 
   function showGate(vault, error) {
-    const select = $("#accessGrantSelect");
-    select.replaceChildren();
+    $("#accessPassphrase").value = "";
     if (vault) {
-      const prompt = document.createElement("option");
-      prompt.value = "";
-      prompt.textContent = "Choose your access";
-      select.appendChild(prompt);
-      vault.grants.forEach(function (grant) {
-        const option = document.createElement("option");
-        option.value = grant.id;
-        option.textContent = grant.label;
-        select.appendChild(option);
-      });
-      select.disabled = false;
       $("#accessPassphrase").disabled = false;
       $("#accessUnlockButton").disabled = false;
       $("#accessRetryButton").hidden = true;
       $("#accessOwnerRecovery").hidden = true;
-      gateStatus("The latest encrypted family record is ready. Your passphrase stays on this device.", "success");
+      gateStatus("The latest encrypted family record is ready. Enter your assigned passphrase.", "success");
     } else {
-      const option = document.createElement("option");
-      option.value = "";
-      option.textContent = "Access is not available";
-      select.appendChild(option);
-      select.disabled = true;
       $("#accessPassphrase").disabled = true;
       $("#accessUnlockButton").disabled = true;
       $("#accessRetryButton").hidden = false;
@@ -595,17 +597,14 @@
     if (gateResolve) { const resolve = gateResolve; gateResolve = null; resolve(); }
   }
 
-  async function unlockSelected(event) {
+  async function unlockWithPassphrase(event) {
     event.preventDefault();
     if (busy || !currentVault) return;
-    const id = $("#accessGrantSelect").value;
-    const grant = currentVault.grants.find(function (item) { return item.id === id; });
-    if (!grant) { gateStatus("Choose your name first.", "danger"); return; }
     const passphrase = $("#accessPassphrase").value;
     if (!passphrase) { gateStatus("Enter your passphrase.", "danger"); return; }
     try {
       setBusy(true, "Opening the encrypted family record…");
-      const opened = await decryptVaultRecord(currentVault, grant.id, passphrase);
+      const opened = await decryptVaultRecordByPassphrase(currentVault, passphrase);
       activeSession = { grant: opened.grant, keys: opened.keys };
       localStorage.setItem(config.storage.hostedSeenKey, "1");
       storage.replace(opened.prepared.state, { saveRecovery: false, reason: "hosted-unlock", touch: false });
@@ -626,8 +625,9 @@
 
   async function collectGrants(keys) {
     const existing = new Map((currentVault && currentVault.grants || []).map(function (grant) { return [grant.id, grant]; }));
-    const grants = [];
+    const drafts = [];
     const usedLabels = new Set();
+    const usedPassphrases = new Set();
     for (const row of $$("[data-grant-row]")) {
       const id = row.dataset.grantRow;
       const mode = row.dataset.grantMode || modeForGrant(id);
@@ -637,14 +637,34 @@
       const label = u.cleanLine($("[data-grant-label]", row).value, 80);
       if (!label) throw new Error((mode === "editor" ? "Every editor needs a username" : definitionForGrant(id, mode).label + " needs a shown name") + ".");
       const normalizedLabel = label.toLowerCase();
-      if (usedLabels.has(normalizedLabel)) throw new Error("Each person needs a unique shown name for sign-in and auditing.");
+      if (usedLabels.has(normalizedLabel)) throw new Error("Each person needs a unique shown name for access management and auditing.");
       usedLabels.add(normalizedLabel);
-      const passphrase = $("[data-grant-passphrase]", row).value;
-      if (!passphrase && existing.has(id)) grants.push(Object.assign({}, existing.get(id), { label: label }));
-      else if (passphrase) grants.push(await wrapGrant(id, label, passphrase, keys, mode));
-      else throw new Error(label + " needs a new passphrase before it can be enabled.");
+      const passphrase = $("[data-grant-passphrase]", row).value.trim();
+      if (!passphrase && !existing.has(id)) throw new Error(label + " needs a new passphrase before it can be enabled.");
+      if (passphrase) {
+        const normalizedPassphrase = passphrase.normalize("NFKC");
+        if (usedPassphrases.has(normalizedPassphrase)) throw new Error("Each access account needs a unique passphrase.");
+        usedPassphrases.add(normalizedPassphrase);
+      }
+      drafts.push({ id: id, label: label, mode: mode, passphrase: passphrase, existingGrant: existing.get(id) || null });
     }
-    if (!grants.some(function (grant) { return grant.id === "owner"; })) throw new Error("Owner access cannot be removed.");
+    if (!drafts.some(function (draft) { return draft.id === "owner"; })) throw new Error("Owner access cannot be removed.");
+    const retained = drafts.filter(function (draft) { return !draft.passphrase && draft.existingGrant; });
+    for (const draft of drafts) {
+      if (!draft.passphrase) continue;
+      for (const other of retained) {
+        if (draft.id === other.id) continue;
+        let matchesRetained = false;
+        try { await unwrapGrant(other.existingGrant, draft.passphrase); matchesRetained = true; }
+        catch (error) { matchesRetained = false; }
+        if (matchesRetained) throw new Error("Each access account needs a unique passphrase.");
+      }
+    }
+    const grants = [];
+    for (const draft of drafts) {
+      if (draft.passphrase) grants.push(await wrapGrant(draft.id, draft.label, draft.passphrase, keys, draft.mode));
+      else grants.push(Object.assign({}, draft.existingGrant, { label: draft.label }));
+    }
     return grants;
   }
 
@@ -806,7 +826,7 @@
   }
 
   function bindEvents() {
-    $("#accessGateForm").addEventListener("submit", unlockSelected);
+    $("#accessGateForm").addEventListener("submit", unlockWithPassphrase);
     $("#accessRetryButton").addEventListener("click", loadHostedGate);
     $("#accessOwnerRecoveryButton").addEventListener("click", function () { $("#accessOwnerRecoveryInput").click(); });
     $("#accessPassphraseVisibility").addEventListener("click", function () {
@@ -885,6 +905,7 @@
     buildVault: buildVault,
     wrapGrant: wrapGrant,
     unwrapGrant: unwrapGrant,
-    decryptVaultRecord: decryptVaultRecord
+    decryptVaultRecord: decryptVaultRecord,
+    decryptVaultRecordByPassphrase: decryptVaultRecordByPassphrase
   };
 })();

@@ -2,13 +2,13 @@
 
 McFamily is a private family atlas that runs as a static GitHub Pages app. It visualizes family relationships, keeps addresses and other profile information together, builds a print-ready atlas, and opens the latest encrypted family record from one public link.
 
-There is no custom backend, account provider, cloud database, or runtime dependency. A separate public `app-data` repository contains only an AES-GCM encrypted vault; readable family CSVs, passphrases, and GitHub tokens never belong in either public repository.
+There is no custom backend, account provider, cloud database, or runtime dependency. The separate public `mcdata` repository contains only an AES-GCM encrypted vault; readable family CSVs, passphrases, and GitHub tokens never belong in either public repository.
 
-Current version: `0.0.1.64` (`major.minor.patch.build`).
+Current version: `0.0.1.65` (`major.minor.patch.build`).
 
 ## What it does
 
-- Automatically fetches the encrypted hosted vault and opens only after a valid Owner, Editor, Private Viewer, or Redacted Viewer passphrase decrypts and validates it.
+- Automatically fetches the encrypted hosted vault, identifies the matching access grant from one passphrase field, and opens only after its authorized package decrypts and validates.
 - Shows a Lineage tree around a selected person and a Full Tree view of connected and isolated people.
 - Supports two-axis scrolling, pan, directly editable zoom and 0-10 depth numbers, fit, keyboard selection, touch, and accessible relationship descriptions.
 - Orders each Family Tree generation by numeric lineage ID; up to two prior partners appear chronologically at two-thirds size to the left of the Lineal person, while the current or latest death-ended spouse remains full-size on the right. One prior partner is vertically centered; two align to the full-size cards' top and bottom, with their parallel links attached one-quarter from the outer edge of each compact card. Bright gold partner lines distinguish current marriages (solid), previous marriages (dashed), never-married partnerships (dotted), and unknown relationships (question marks), with a floating key in the corner of the tree.
@@ -65,7 +65,7 @@ Everyone uses the same public application link. Passphrases wrap random AES-256 
 - Do not commit real names, addresses, phone numbers, email addresses, heritage notes, or family notes.
 - Use synthetic people for tests and screenshots.
 - Browser storage is per browser profile and device. Lock clears the decrypted local family and requires the passphrase again.
-- Each publisher still needs a fine-grained GitHub token limited to `app-data` with Contents read/write permission; the token stays outside the vault.
+- Each publisher still needs a fine-grained GitHub token limited to `mcdata` with Contents read/write permission; the token stays outside the vault.
 - Viewer sign-ins cannot be centrally recorded without a backend or a viewer write credential. Published family and access changes remain in McMetadata and Git history.
 
 ## Project structure
@@ -97,12 +97,12 @@ McFamily uses a v13-only browser-storage namespace and does not load or migrate 
 
 ## Encrypted hosted access workflow
 
-The default vault is `themadat/app-data`, branch `main`, at `data/mcfamily/McFamily-access.json`. That repository must be public so link-only readers can download the ciphertext anonymously. It must contain no readable family CSV or ZIP.
+The default vault is `themadat/mcdata`, branch `main`, at `data/mcfamily/McFamily-access.json`. That repository must be public so link-only readers can download the ciphertext anonymously. It must contain no readable family CSV or ZIP.
 
-1. The Owner opens their current Editor recovery ZIP once, opens **Access & Audit**, and enters a fine-grained GitHub token limited to `app-data` with Contents read/write access.
-2. Set the Owner username and passphrase, then add every Editor, Private Viewer, and Redacted Viewer with a unique shown name and passphrase. Save new phrases before closing the dialog.
+1. The Owner opens their current Editor recovery ZIP once, opens **Access & Audit**, and enters a fine-grained GitHub token limited to `mcdata` with Contents read/write access.
+2. Set the Owner username and passphrase, then add every Editor, Private Viewer, and Redacted Viewer with a unique shown name and a unique passphrase. Names remain public audit metadata but are not shown on the sign-in screen. Save new phrases before closing the dialog.
 3. Choose **Publish Access Changes**. McFamily validates the family, builds full and physically redacted packages in memory, encrypts them with different random data keys, wraps only the appropriate key for each passphrase, and publishes one ciphertext-only JSON vault.
-4. Send everyone the ordinary Pages link plus their shown name and passphrase. They never receive a ZIP.
+4. Send everyone the ordinary Pages link plus their passphrase. They do not choose an account or role and never receive a ZIP; McFamily identifies the matching grant locally.
 5. Editors record what changed and choose **Publish Family Update**. McFamily uses the signed-in username as the audit actor, advances the dataset patch, appends the event, revalidates, encrypts both current views with the existing data keys, checks the remote revision/SHA, and replaces the vault.
 6. To revoke an Editor, the Owner chooses **Revoke** on that username and publishes Access Changes. To rotate access, enter a new passphrase for that person and publish. Viewer grants remain checkbox-controlled.
 

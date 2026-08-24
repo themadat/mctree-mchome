@@ -26,8 +26,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 13,
   "meta": {
-    "appVersion": "0.0.1.64",
-    "buildId": "0.0.1.64",
+    "appVersion": "0.0.1.65",
+    "buildId": "0.0.1.65",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -63,13 +63,13 @@ The dataset 16 ZIP package preserves the current state model through five exact 
 
 ## Initialization and persistence
 
-A normal load is locked behind the hosted passphrase gate. `cloud.js` fetches and validates the ciphertext envelope, lists only its configured grant labels, decrypts the selected full or redacted record, and hands the decrypted bytes to `portability.js`. That parser still accepts only a dataset 16 package with exactly `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`, and requires at least one valid person. Before the first vault exists, an existing local Editor copy becomes Owner Setup; a fresh Owner browser can open one validated private recovery ZIP directly from the missing-vault gate. There is no blank-family or demo bypass.
+A normal load is locked behind the hosted passphrase gate. `cloud.js` fetches and validates the ciphertext envelope, tests the entered passphrase against every configured grant locally, requires exactly one match, decrypts that grant's full or redacted record, and hands the decrypted bytes to `portability.js`. No account label or role is listed before sign-in. That parser still accepts only a dataset 16 package with exactly `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`, and requires at least one valid person. Before the first vault exists, an existing local Editor copy becomes Owner Setup; a fresh Owner browser can open one validated private recovery ZIP directly from the missing-vault gate. There is no blank-family or demo bypass.
 
 McPeople contains one stable P-referenced row per person and no parent or partner columns. McRelations contains all authoritative Person-to-Person parent and partner links, with parent lineage role separated from parent type. McPlaces contains reusable physical addresses, while McResidences assigns people to places. McMetadata declares package/dataset/file-schema versions, exact record counts, access mode, family settings, compatibility details, and append-only audit events. Package validation completes before any current state is touched and rejects ZIP damage, wrong filenames, schema drift, count mismatches, invalid identifiers/dates, broken cross-file references, false redaction claims, duplicate links, multiple Lineal parents, Lineage inconsistencies, and ancestry cycles.
 
 ## Encrypted hosted access
 
-The Pages repository and public ciphertext-only `app-data` repository are intentionally separate. The vault uses random AES-256-GCM full and redacted data keys. Each named grant derives a wrapping key from its passphrase with PBKDF2-SHA-256 and a unique salt, then wraps only the data key that role may open. The fixed Owner and every Editor grant wrap both data keys, each Private Viewer wraps the full-data key, and each Redacted Viewer wraps only the redacted-data key. Passphrases, readable CSV, and GitHub tokens never enter the vault. Version-1 vaults with the original fixed `editor`, `pii`, and `redacted` ids remain valid; new recipient grants use stable random role-prefixed ids and unique shown names.
+The Pages repository and public ciphertext-only `mcdata` repository are intentionally separate. The vault uses random AES-256-GCM full and redacted data keys. Each named grant derives a wrapping key from its unique passphrase with PBKDF2-SHA-256 and a unique salt, then wraps only the data key that role may open. The fixed Owner and every Editor grant wrap both data keys, each Private Viewer wraps the full-data key, and each Redacted Viewer wraps only the redacted-data key. Passphrases, readable CSV, and GitHub tokens never enter the vault. Version-1 vaults with the original fixed `editor`, `pii`, and `redacted` ids remain valid; new recipient grants use stable random role-prefixed ids and unique shown names retained for access management and audit identity.
 
 Every online load fetches `McFamily-access.json` anonymously with `no-store`, validates its format, and requires a current passphrase. A wrong, removed, or rotated grant cannot unwrap a data key. The decrypted package must pass the same strict parser as a recovery import, including physical redaction checks for Redacted Viewer. Lock removes the decrypted browser state. Revocation applies on the recipient's next reload; a static web application cannot retract information already seen or copied.
 
