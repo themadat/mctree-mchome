@@ -12,14 +12,14 @@
   const ROLE_DEFINITIONS = {
     owner: { mode: "owner", label: "Owner", stateMode: "editor", fullKey: true, redactedKey: true, canManage: true, canPublish: true },
     editor: { mode: "editor", label: "Editor", stateMode: "editor", fullKey: true, redactedKey: true, canManage: false, canPublish: true },
-    "pii-viewer": { mode: "pii-viewer", label: "Private Viewer", stateMode: "pii-viewer", fullKey: true, redactedKey: false, canManage: false, canPublish: false },
-    "redacted-viewer": { mode: "redacted-viewer", label: "Redacted Viewer", stateMode: "redacted-viewer", fullKey: false, redactedKey: true, canManage: false, canPublish: false }
+    "pii-viewer": { mode: "pii-viewer", label: "Member", stateMode: "pii-viewer", fullKey: true, redactedKey: false, canManage: false, canPublish: false },
+    "redacted-viewer": { mode: "redacted-viewer", label: "Viewer", stateMode: "redacted-viewer", fullKey: false, redactedKey: true, canManage: false, canPublish: false }
   };
   const LEGACY_GRANT_MODES = { owner: "owner", editor: "editor", pii: "pii-viewer", redacted: "redacted-viewer" };
   const GRANT_GROUPS = {
     editor: { prefix: "editor", title: "Editor", nameLabel: "Editor username", placeholder: "For example: Mama", description: "Can edit and publish. Audit entries use this username automatically.", maxKey: "maxEditors", listId: "hostedEditorGrantList", emptyId: "hostedEditorEmpty" },
-    "pii-viewer": { prefix: "pii", title: "Private Viewer", nameLabel: "Viewer name", placeholder: "For example: Family Friend", description: "Can see addresses and contacts, but cannot edit, export, or open Notes.", maxKey: "maxPiiViewers", listId: "hostedPiiGrantList", emptyId: "hostedPiiEmpty" },
-    "redacted-viewer": { prefix: "redacted", title: "Redacted Viewer", nameLabel: "Viewer name", placeholder: "For example: Family Guest", description: "Cannot see addresses, contacts, private notes, editing, exports, or Notes.", maxKey: "maxRedactedViewers", listId: "hostedRedactedGrantList", emptyId: "hostedRedactedEmpty" }
+    "pii-viewer": { prefix: "pii", title: "Member", nameLabel: "Member name", placeholder: "For example: Family Friend", description: "Can see addresses and contacts, but cannot edit, export, open Notes, or use Access & Audit.", maxKey: "maxPiiViewers", listId: "hostedPiiGrantList", emptyId: "hostedPiiEmpty" },
+    "redacted-viewer": { prefix: "redacted", title: "Viewer", nameLabel: "Viewer name", placeholder: "For example: Family Guest", description: "Cannot see addresses, contacts, private notes, editing, exports, PDF, Notes, or Access & Audit.", maxKey: "maxRedactedViewers", listId: "hostedRedactedGrantList", emptyId: "hostedRedactedEmpty" }
   };
   const PASSPHRASE_WORDS = [
     "amber", "apple", "atlas", "basil", "beacon", "birch", "bluebird", "brook", "cedar", "clover", "copper", "cove",
@@ -31,6 +31,7 @@
   let currentVault = null;
   let activeSession = null;
   let gateResolve = null;
+  let githubConnectionStatus = null;
 
   function $(selector, root) { return (root || document).querySelector(selector); }
   function $$(selector, root) { return Array.from((root || document).querySelectorAll(selector)); }
@@ -101,6 +102,7 @@
     $("#cloudToken").value = storedToken();
     $("#cloudRememberToken").checked = Boolean(localStorage.getItem(config.storage.cloudTokenKey));
     $("#cloudSettingsSummary").textContent = settings.owner + "/" + settings.repository + " · " + settings.branch + " · " + settings.path;
+    renderGithubConnection();
   }
 
   function repositoryUrl(settings) {
@@ -314,8 +316,8 @@
     });
     if (!used.has("owner")) throw new Error("The encrypted vault has no Owner grant.");
     if (modeCounts.editor > config.cloud.maxEditors) throw new Error("The encrypted vault contains more editors than McFamily allows.");
-    if (modeCounts["pii-viewer"] > config.cloud.maxPiiViewers) throw new Error("The encrypted vault contains more Private Viewers than McFamily allows.");
-    if (modeCounts["redacted-viewer"] > config.cloud.maxRedactedViewers) throw new Error("The encrypted vault contains more Redacted Viewers than McFamily allows.");
+    if (modeCounts["pii-viewer"] > config.cloud.maxPiiViewers) throw new Error("The encrypted vault contains more Members than McFamily allows.");
+    if (modeCounts["redacted-viewer"] > config.cloud.maxRedactedViewers) throw new Error("The encrypted vault contains more Viewers than McFamily allows.");
     const datasetVersion = u.cleanLine(source.datasetVersion, 40);
     if (!portability.isSupportedDatasetVersion(datasetVersion)) throw new Error("The encrypted vault dataset version is not supported.");
     const updatedAtValue = u.cleanLine(source.updatedAt, 80);
@@ -416,29 +418,40 @@
   function accessProfile() {
     if (!activeSession) return null;
     const definition = definitionForGrant(activeSession.grant);
-    return { id: activeSession.grant.id, mode: definition.stateMode, label: activeSession.grant.label || definition.label, canManage: definition.canManage, canPublish: definition.canPublish };
+    return { id: activeSession.grant.id, mode: definition.stateMode, label: activeSession.grant.label || definition.label, roleLabel: definition.label, canManage: definition.canManage, canPublish: definition.canPublish };
   }
 
   function setStatus(kind, title, message) {
-    const pill = $("#cloudStatusPill");
-    pill.textContent = title;
-    pill.dataset.kind = kind;
+    const statusKind = kind === "success" ? "success" : "danger";
+    $("#cloudVaultSummary").dataset.kind = statusKind;
+    $("#cloudAuditButton").dataset.cloudState = statusKind;
     $("#cloudHeaderStatus").textContent = title;
+    $("#cloudConnectionState").textContent = title;
     $("#cloudStatusText").textContent = message;
-    const summary = $(".cloud-connection-summary");
-    if (summary) summary.dataset.kind = kind;
   }
 
   function renderConnection() {
-    const target = settingsDefaults();
-    $("#cloudConnectionTarget").textContent = target.owner + "/" + target.repository + " · " + target.branch + " · " + target.path;
     if (currentVault) {
-      $("#cloudConnectionState").textContent = "Encrypted vault revision " + currentVault.revision;
       setStatus("success", "Dataset " + currentVault.datasetVersion, "Latest encrypted family record: dataset " + currentVault.datasetVersion + " · published " + new Date(currentVault.updatedAt).toLocaleString() + ".");
     } else {
-      $("#cloudConnectionState").textContent = "Not published yet";
       setStatus("warning", "Owner setup", "Connect the public encrypted-data repository and publish the first passphrase vault.");
     }
+  }
+
+  function renderGithubConnection() {
+    const target = storedSettings();
+    const tokenAvailable = Boolean(storedToken());
+    const status = githubConnectionStatus || (tokenAvailable
+      ? { kind: "success", title: "Credentials ready", detail: "Fine-grained token available on this device." }
+      : { kind: "danger", title: "Not configured", detail: "Add a fine-grained GitHub token." });
+    $("#githubConnectionSummary").dataset.kind = status.kind === "success" ? "success" : "danger";
+    $("#githubConnectionState").textContent = status.title;
+    $("#githubConnectionTarget").textContent = target.owner + "/" + target.repository + " · " + status.detail;
+  }
+
+  function setGithubConnectionStatus(kind, title, detail) {
+    githubConnectionStatus = { kind: kind, title: title, detail: detail };
+    renderGithubConnection();
   }
 
   function displayAction(value) {
@@ -541,14 +554,11 @@
     const owner = Boolean(profile && profile.canManage);
     document.querySelectorAll("[data-editor-only]").forEach(function (element) { element.classList.toggle("access-hidden", !editor); });
     document.querySelectorAll("[data-owner-only]").forEach(function (element) { element.classList.toggle("access-hidden", !owner); });
-    const pill = $("#currentAccessName");
-    pill.textContent = profile ? profile.label : "Locked";
-    pill.dataset.kind = owner ? "success" : editor ? "success" : profile && profile.mode === "pii-viewer" ? "warning" : "neutral";
-    if (!profile) $("#currentAccessDescription").textContent = "Enter an active passphrase to open the encrypted family record.";
-    else if (owner) $("#currentAccessDescription").textContent = "Owner access can view and edit the full family, publish changes, and add, rotate, or revoke passphrases.";
-    else if (editor) $("#currentAccessDescription").textContent = "Editor access can view and edit the full family and publish an audited update. Passphrase management is reserved for the Owner.";
-    else if (profile.mode === "pii-viewer") $("#currentAccessDescription").textContent = "Private read-only access includes addresses and contacts. Editing, recovery files, PDF, developer data, and publishing are unavailable.";
-    else $("#currentAccessDescription").textContent = "Redacted read-only access includes lineage and family relationships without addresses, contacts, or private notes. Editing and exports are unavailable.";
+    $("#currentAccessSummary").dataset.kind = profile ? "success" : "danger";
+    $("#currentAccessName").textContent = profile ? profile.label : "Locked";
+    $("#currentAccessRole").textContent = "Permission: " + (profile ? profile.roleLabel : "None");
+    const dialog = $("#cloudAuditDialog");
+    if (!editor && dialog.open) dialog.close("access-unavailable");
     $("#hostedPublishSection").classList.toggle("access-hidden", !editor || !currentVault);
     $("#hostedVersionChange").textContent = currentVault ? currentVault.datasetVersion + " → next patch" : "First publication";
     renderConnection();
@@ -679,6 +689,7 @@
       saveCredentials(credentials.settings, credentials.token);
       setBusy(true, currentVault ? "Encrypting new access grants…" : "Creating the first encrypted family vault…");
       await verifyTarget(credentials.settings, credentials.token);
+      setGithubConnectionStatus("success", "Connection verified", "GitHub accepted this repository and token.");
       const remote = await readVaultApi(credentials.settings, credentials.token, true);
       if (currentVault && (!remote || remote.vault.revision !== currentVault.revision)) throw new Error("The hosted vault changed. Reload and sign in again before changing access.");
       if (!currentVault && remote) throw new Error("An encrypted vault already exists. Reload and sign in as Owner before replacing it.");
@@ -721,6 +732,7 @@
       saveCredentials(credentials.settings, credentials.token);
       setBusy(true, "Validating and encrypting the family update…");
       await verifyTarget(credentials.settings, credentials.token);
+      setGithubConnectionStatus("success", "Connection verified", "GitHub accepted this repository and token.");
       const remote = await readVaultApi(credentials.settings, credentials.token, false);
       if (remote.vault.revision !== currentVault.revision) throw new Error("Someone published a newer vault. Reload and sign in again before publishing your changes.");
       const nextState = publishedState("published-hosted-family", actor, summary);
@@ -743,8 +755,12 @@
       const credentials = formCredentials();
       saveCredentials(credentials.settings, credentials.token);
       populateSettings();
+      setGithubConnectionStatus("success", "Credentials ready", "Connection settings are saved and ready to test.");
       components.toast("GitHub connection settings were saved on this device.", { title: "Connection saved", kind: "success" });
-    } catch (error) { components.message("Connection not saved", error.message, { trigger: $("#cloudSaveButton") }); }
+    } catch (error) {
+      setGithubConnectionStatus("danger", "Configuration error", error.message || "The connection settings are incomplete.");
+      components.message("Connection not saved", error.message, { trigger: $("#cloudSaveButton") });
+    }
   }
 
   async function testConnection() {
@@ -754,8 +770,12 @@
       setBusy(true, "Testing the public encrypted-data repository…");
       await verifyTarget(credentials.settings, credentials.token);
       const remote = await readVaultApi(credentials.settings, credentials.token, true);
+      setGithubConnectionStatus("success", "Connection verified", remote ? "Repository and encrypted family file are accessible." : "Repository is ready for the first encrypted family file.");
       components.toast(remote ? "The public repository and encrypted vault are accessible." : "The public repository is ready for the first encrypted vault.", { title: "Connection verified", kind: "success" });
-    } catch (error) { components.message("Connection error", error.message, { trigger: $("#cloudTestButton") }); }
+    } catch (error) {
+      setGithubConnectionStatus("danger", "Connection failed", error.message || "GitHub could not verify this connection.");
+      components.message("Connection error", error.message, { trigger: $("#cloudTestButton") });
+    }
     finally { setBusy(false); }
   }
 
@@ -763,6 +783,7 @@
     localStorage.removeItem(config.storage.cloudSettingsKey);
     localStorage.removeItem(config.storage.cloudTokenKey);
     sessionStorage.removeItem(config.storage.cloudTokenKey);
+    githubConnectionStatus = null;
     populateSettings();
     components.toast("The GitHub token and local connection settings were removed from this device.", { title: "Connection forgotten", kind: "success" });
   }
@@ -784,6 +805,8 @@
   }
 
   function openDialog() {
+    const profile = accessProfile();
+    if (!profile || !profile.canPublish) return;
     populateSettings();
     if (activeSession && activeSession.grant) $("#hostedRecordedBy").value = activeSession.grant.label;
     renderAccessState();
