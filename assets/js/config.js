@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.54",
-      buildId: "0.0.1.54",
+      version: "0.0.1.55",
+      buildId: "0.0.1.55",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -112,6 +112,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.55",
+        date: "2026-08-24T02:00:00.000Z",
+        title: "Roomier person names",
+        summary: "Search and selected-person profiles now give structured name variants more room to remain readable.",
+        features: [],
+        improvements: ["A wider, taller search-results panel uses horizontal columns for Preferred, Current, and Lineal names", "Selected-person property labels use a wider column", "Preferred (Display) remains on one line"],
+        fixes: [],
+        knownIssues: []
+      },
       {
         version: "0.0.1.54",
         date: "2026-08-23T21:00:00.000Z",
