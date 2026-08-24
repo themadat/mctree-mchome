@@ -4,13 +4,13 @@ McFamily is a private family atlas that runs as a static GitHub Pages app. It vi
 
 There is no custom backend, account provider, cloud database, or runtime dependency. The separate public `mcdata` repository contains only an AES-GCM encrypted vault; readable family CSVs, passphrases, and GitHub tokens never belong in either public repository.
 
-Current version: `0.0.1.71` (`major.minor.patch.build`).
+Current version: `0.0.1.72` (`major.minor.patch.build`).
 
 ## What it does
 
 - Automatically fetches the encrypted hosted vault, identifies the matching access grant from one passphrase field, and opens only after its authorized package decrypts and validates.
 - Shows a Lineage tree around a selected person and a Full Tree view of connected and isolated people.
-- Supports two-axis scrolling, pan, directly editable zoom and 0-10 depth numbers, fit, keyboard selection, touch, and accessible relationship descriptions.
+- Supports two-axis scrolling, pan, directly editable zoom with stacked one-percent steppers, 0-10 depth numbers, fit, keyboard selection, touch, and accessible relationship descriptions.
 - Orders each Family Tree generation by numeric lineage ID; up to two prior partners appear chronologically at two-thirds size to the left of the Lineal person, while the current or latest death-ended spouse remains full-size on the right. One prior partner is vertically centered; two align to the full-size cards' top and bottom, with their parallel links attached one-quarter from the outer edge of each compact card. Bright gold partner lines distinguish current marriages (solid), previous marriages (dashed), never-married partnerships (dotted), and unknown relationships (question marks), with a floating key in the corner of the tree.
 - Draws any number of recorded Non-Lineal parent links as dashed branches only while the two-line Non-Lineal Lines control is on. Lineal parent edges use faded muted red, with adoption dashed and explained in the Key, without changing relationship records. Its filled symbol remains fixed in both states. Selected Lineal and Non-Lineal cards share the same accent border.
 - Marks Lineal tree cards with a bold muted-red outline and a compact lineage symbol beside the lifespan while preserving the standard living or deceased fill.
@@ -18,6 +18,7 @@ Current version: `0.0.1.71` (`major.minor.patch.build`).
 - Records out-of-wedlock partnerships as never-married relationships with no start date, sequenced by relationship order.
 - Provides a header-toggled directory with title-bar search and result count, visible Filter By and Sort By controls, combinable status and Lineal/Non-Lineal checkbox filters, A–Z quick jumps, lifespan and lineage context, and broad search across names, contact details, places, heritage, and notes.
 - Lets people be starred directly in search or from the selected-person panel, remembers those favorites separately on the device through hosted refreshes and Lock, and toggles the complete Favorites list directly below Search without changing the query. Developer Mode adds a Restore shortcut beside Favorites for a saved Favorites JSON file.
+- Centers a larger global search in the title bar, keeps its dropdown exactly as wide as the field, and shows each display name followed only by differing Birth and Current names.
 - Shows Preferred (Display), Legal (Current), Lineal (Birth), and Maiden names as four compact profile rows; the Family Tree can use any of the first three as its name source and can show Short or Full names.
 - Keeps local save/backup status in the top toolbar and provides D, F, K, X, and R shortcuts for Directory, Favorites, the tree Key, What's New dismissal, and update reload.
 - Supports partial/fuzzy matches that return the tree to Lineage, collapsible side panels, compact 20/50/30 default desktop splits with persistent resizing, and Summary tree cards that balance names with four or more parts across three fitted lines without widening the card.
@@ -32,7 +33,8 @@ Current version: `0.0.1.71` (`major.minor.patch.build`).
 - Uses absolute lineage generations rooted at George McMillen (1745) as Gen 0; readings use concise forms such as `Gen 6, 5th Child of Max`.
 - Lets the person panel close and clear selection; choosing any Family Tree person reopens it without a separate Show person control.
 - Enables family-record Add, Connect, Edit, Delete, person and family Notes, family-title, recovery ZIP, PDF, publishing, and imported-source inspection only for Owner or Editor access; imported source additionally requires Developer Mode. Member and Viewer modes omit Add from the title bar and omit Add, Connect, Edit, and Delete from Selected Person, along with Audit, Notes, imported-source search, routine import, export, PDF, developer-data, and publishing controls.
-- Uses a compact person form whose Birth (Lineal), Current (Legal), and Preferred (Display) names each stay on one weighted five-part row. Birth typing seeds Current and Preferred until either target field is edited. Date descriptors are derived from blank, exact, or question-mark partial values; invalid formats are marked and blocked.
+- Uses a one-page desktop person form whose Birth (Lineal), Current (Legal), Preferred (Display), and Maiden names stay on weighted rows beside compact details. Birth typing seeds Current and Preferred until either target field is edited. At least one First name is required; invalid dates, emails, and empty address rows are marked and block Save; a valid death date selects Deceased.
+- Lets Add Person select existing parents, spouses or partners, and children before Save, while preserving relationship validation and ancestry-cycle checks.
 - Retains structured profiles for people, multiple addresses, phones, emails, life events, and typed parent or partner relationships.
 - Rejects a damaged or malformed ZIP, missing/extra/reordered columns, bad metadata counts, missing references, duplicate relationships, self-links, and ancestry cycles before replacement.
 - Keeps a recovery snapshot before destructive replacement or deletion.

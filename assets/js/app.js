@@ -60,12 +60,17 @@
     return [parts.prefix, parts.first, parts.middle, parts.last, parts.suffix].filter(Boolean).join(" ");
   }
 
-  function personNameVariants(person) {
-    return [
-      { label: "Preferred", value: fullStructuredName(person, "preferred") || "----" },
-      { label: "Current", value: fullStructuredName(person, "current") || "----" },
-      { label: "Lineal", value: fullStructuredName(person, "birth") || "----" }
-    ];
+  function personAlternateNames(person) {
+    const display = model.displayName(person).replace(/\s+/g, " ").trim().toLocaleLowerCase();
+    const seen = new Set([display]);
+    return [fullStructuredName(person, "birth"), fullStructuredName(person, "current")].map(function (value) {
+      return value.replace(/\s+/g, " ").trim();
+    }).filter(function (value) {
+      const normalized = value.toLocaleLowerCase();
+      if (!value || seen.has(normalized)) return false;
+      seen.add(normalized);
+      return true;
+    });
   }
 
   function accessMode() {
@@ -1238,7 +1243,17 @@
       return '<button type="button" class="tree-name-option" data-tree-name-length="' + length + '" aria-pressed="' + String(state().ui.treeNameLength === length) + '"><span class="tree-name-option-icon" data-symbol="' + symbol + '" aria-hidden="true"></span><span>' + label + "</span></button>";
     };
     const treeNameControls = '<div class="tree-control-section tree-name-preferences"><span class="tree-control-heading">Name Preferences</span><div class="tree-name-controls" role="group" aria-label="Tree name preferences"><div class="tree-name-setting tree-name-source"><div class="segmented" aria-label="Tree name source">' + treeNameOption("preferred", "preferredName", "Preferred", "Display") + treeNameOption("legal", "legalName", "Legal", "Current") + treeNameOption("lineal", "linealName", "Lineal", "Birth") + '</div></div><div class="tree-name-setting tree-name-length"><div class="segmented" aria-label="Tree name length">' + treeLengthOption("short", "shortName", "Short") + treeLengthOption("full", "fullName", "Full") + "</div></div></div></div>";
-    $("#mainContent").innerHTML = '<section class="family-workspace" aria-label="Family workspace"><nav class="mobile-workspace-tabs segmented" aria-label="Workspace views"><button type="button" data-mobile-view="directory" aria-pressed="' + String(state().ui.mobileView === "directory") + '">Directory</button><button type="button" data-mobile-view="tree" aria-pressed="' + String(state().ui.mobileView === "tree") + '">Family Tree</button><button type="button" data-mobile-view="profile" aria-pressed="' + String(state().ui.mobileView === "profile") + '"' + personTabDisabled + '>Person</button></nav><div class="family-workspace-grid" data-mobile-view="' + u.escapeHtml(state().ui.mobileView) + '" data-directory-collapsed="' + String(directoryCollapsed) + '" data-profile-collapsed="' + String(profileCollapsed) + '"><aside id="directoryPanel" class="directory-panel workspace-card' + (directoryCollapsed ? " is-collapsed" : "") + '" aria-label="Family directory">' + directoryHeader + directoryControls + '<div class="directory-body"><div id="directoryList" class="directory-list"></div><nav id="directoryAlphaRail" class="directory-alpha-rail" aria-label="Jump to directory letter"></nav></div></aside><section class="tree-panel workspace-card" aria-label="Family Tree"><header class="tree-toolbar"><div class="tree-view-controls"><div class="segmented" aria-label="Tree mode"><button type="button" data-tree-mode="focus" aria-pressed="' + String(state().ui.treeMode === "focus") + '"' + lineageDisabled + '>Focus</button><button type="button" data-tree-mode="overview" aria-pressed="' + String(state().ui.treeMode === "overview") + '">Overview</button></div><div class="segmented" aria-label="Person card detail"><button type="button" data-tree-node-view="condensed" aria-pressed="' + String(state().ui.treeNodeView === "condensed") + '">Condensed</button><button type="button" data-tree-node-view="detailed" aria-pressed="' + String(state().ui.treeNodeView === "detailed") + '">Detailed</button></div><label class="depth-control"><span>Ancestors</span><input id="ancestorDepth" type="number" min="0" max="' + config.controls.maxTreeDepth + '" step="1" value="' + state().ui.ancestorDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><label class="depth-control"><span>Descendants</span><input id="descendantDepth" type="number" min="0" max="' + config.controls.maxTreeDepth + '" step="1" value="' + state().ui.descendantDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><div class="zoom-controls" role="group" aria-label="Tree zoom controls"><button type="button" class="zoom-action" data-zoom="out" aria-label="Zoom out" title="Zoom out"><span class="zoom-action-icon" data-symbol="zoomOut" aria-hidden="true"></span><span>Out</span></button><label class="zoom-value-control"><span class="visually-hidden">Zoom percentage</span><span class="zoom-value-box"><input id="zoomValue" type="number" min="1" max="250" step="1" value="100" inputmode="numeric"><span aria-hidden="true">%</span></span></label><button type="button" class="zoom-action" data-zoom="in" aria-label="Zoom in" title="Zoom in"><span class="zoom-action-icon" data-symbol="zoomIn" aria-hidden="true"></span><span>In</span></button><button type="button" class="zoom-action" data-fit-tree aria-label="Fit tree" title="Fit tree"><span class="zoom-action-icon" data-symbol="fit" aria-hidden="true"></span><span>Fit</span></button><span id="zoomStatus" class="visually-hidden" aria-live="polite">100% zoom</span></div></div></header><div class="tree-canvas"><svg id="familyTreeSvg" role="group" aria-label="Interactive Family Tree. Scroll horizontally or vertically, drag to pan, use the zoom controls, and select a person to focus." tabindex="0"></svg></div>' + treeKeyHtml() + '</section><aside id="profilePanel" class="profile-panel workspace-card' + (profileCollapsed ? " is-collapsed" : "") + '" aria-label="Selected person profile"><div id="profilePanelContent" class="profile-panel-content"></div></aside></div></section>';
+    $("#mainContent").innerHTML = '<section class="family-workspace" aria-label="Family workspace"><nav class="mobile-workspace-tabs segmented" aria-label="Workspace views"><button type="button" data-mobile-view="directory" aria-pressed="' + String(state().ui.mobileView === "directory") + '">Directory</button><button type="button" data-mobile-view="tree" aria-pressed="' + String(state().ui.mobileView === "tree") + '">Family Tree</button><button type="button" data-mobile-view="profile" aria-pressed="' + String(state().ui.mobileView === "profile") + '"' + personTabDisabled + '>Person</button></nav><div class="family-workspace-grid" data-mobile-view="' + u.escapeHtml(state().ui.mobileView) + '" data-directory-collapsed="' + String(directoryCollapsed) + '" data-profile-collapsed="' + String(profileCollapsed) + '"><aside id="directoryPanel" class="directory-panel workspace-card' + (directoryCollapsed ? " is-collapsed" : "") + '" aria-label="Family directory">' + directoryHeader + directoryControls + '<div class="directory-body"><div id="directoryList" class="directory-list"></div><nav id="directoryAlphaRail" class="directory-alpha-rail" aria-label="Jump to directory letter"></nav></div></aside><section class="tree-panel workspace-card" aria-label="Family Tree"><header class="tree-toolbar"><div class="tree-view-controls"><div class="segmented" aria-label="Tree mode"><button type="button" data-tree-mode="focus" aria-pressed="' + String(state().ui.treeMode === "focus") + '"' + lineageDisabled + '>Focus</button><button type="button" data-tree-mode="overview" aria-pressed="' + String(state().ui.treeMode === "overview") + '">Overview</button></div><div class="segmented" aria-label="Person card detail"><button type="button" data-tree-node-view="condensed" aria-pressed="' + String(state().ui.treeNodeView === "condensed") + '">Condensed</button><button type="button" data-tree-node-view="detailed" aria-pressed="' + String(state().ui.treeNodeView === "detailed") + '">Detailed</button></div><label class="depth-control"><span>Ancestors</span><input id="ancestorDepth" type="number" min="0" max="' + config.controls.maxTreeDepth + '" step="1" value="' + state().ui.ancestorDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><label class="depth-control"><span>Descendants</span><input id="descendantDepth" type="number" min="0" max="' + config.controls.maxTreeDepth + '" step="1" value="' + state().ui.descendantDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><div class="zoom-controls" role="group" aria-label="Tree zoom controls"><button type="button" class="zoom-action" data-zoom="out" aria-label="Zoom out" title="Zoom out"><span class="zoom-action-icon" data-symbol="zoomOut" aria-hidden="true"></span><span>Out</span></button><label class="zoom-value-control"><span class="visually-hidden">Zoom percentage</span><span class="zoom-value-box"><input id="zoomValue" type="text" pattern="[0-9]{1,3}" maxlength="3" value="100" inputmode="numeric" autocomplete="off"><span class="zoom-percent" aria-hidden="true">%</span><span class="zoom-stepper"><button type="button" data-zoom-step="1" aria-label="Increase zoom by one percent" title="Increase zoom"><span data-symbol="up" aria-hidden="true"></span></button><button type="button" data-zoom-step="-1" aria-label="Decrease zoom by one percent" title="Decrease zoom"><span data-symbol="down" aria-hidden="true"></span></button></span></span></label><button type="button" class="zoom-action" data-zoom="in" aria-label="Zoom in" title="Zoom in"><span class="zoom-action-icon" data-symbol="zoomIn" aria-hidden="true"></span><span>In</span></button><button type="button" class="zoom-action" data-fit-tree aria-label="Fit tree" title="Fit tree"><span class="zoom-action-icon" data-symbol="fit" aria-hidden="true"></span><span>Fit</span></button><span id="zoomStatus" class="visually-hidden" aria-live="polite">100% zoom</span></div></div></header><div class="tree-canvas"><svg id="familyTreeSvg" role="group" aria-label="Interactive Family Tree. Scroll horizontally or vertically, drag to pan, use the zoom controls, and select a person to focus." tabindex="0"></svg></div>' + treeKeyHtml() + '</section><aside id="profilePanel" class="profile-panel workspace-card' + (profileCollapsed ? " is-collapsed" : "") + '" aria-label="Selected person profile"><div id="profilePanelContent" class="profile-panel-content"></div></aside></div></section>';
+    const zoomValueLabel = $(".zoom-value-control", $("#mainContent"));
+    const zoomValueBox = $(".zoom-value-box", zoomValueLabel);
+    const zoomValueControl = document.createElement("div");
+    const zoomValueAccessibleLabel = document.createElement("label");
+    zoomValueControl.className = "zoom-value-control";
+    zoomValueAccessibleLabel.className = "visually-hidden";
+    zoomValueAccessibleLabel.htmlFor = "zoomValue";
+    zoomValueAccessibleLabel.textContent = "Zoom percentage";
+    zoomValueLabel.replaceWith(zoomValueControl);
+    zoomValueControl.append(zoomValueAccessibleLabel, zoomValueBox);
     const treeStage = document.createElement("div");
     treeStage.className = "tree-stage";
     const treeCanvas = $(".tree-canvas", $("#mainContent"));
@@ -1348,7 +1363,8 @@
   }
 
   function addressRow(address, index) {
-    return '<fieldset class="repeatable-card" data-address-index="' + index + '"><legend>Address ' + (index + 1) + '</legend><div class="repeatable-card-actions"><button type="button" class="button small danger-text" data-remove-address="' + index + '">Remove</button></div><div class="form-grid"><label class="field"><span>Label</span><input data-address-field="label" value="' + u.escapeHtml(address.label || "Home") + '"></label><label class="check-field"><input type="checkbox" data-address-field="current" ' + (address.current !== false ? "checked" : "") + '><span>Current address</span></label><label class="field full"><span>Address line 1</span><input data-address-field="line1" value="' + u.escapeHtml(address.line1 || "") + '"></label><label class="field full"><span>Address line 2</span><input data-address-field="line2" value="' + u.escapeHtml(address.line2 || "") + '"></label><label class="field"><span>City / locality</span><input data-address-field="city" value="' + u.escapeHtml(address.city || "") + '"></label><label class="field"><span>State / region</span><input data-address-field="region" value="' + u.escapeHtml(address.region || "") + '"></label><label class="field"><span>Postal code</span><input data-address-field="postalCode" value="' + u.escapeHtml(address.postalCode || "") + '"></label><label class="field"><span>Country</span><input data-address-field="country" value="' + u.escapeHtml(address.country || "") + '"></label><label class="field"><span>Start date</span><input data-address-field="startDate" data-person-date placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" inputmode="text" maxlength="10" autocomplete="off" spellcheck="false" value="' + u.escapeHtml(addressDateValue(address, "start")) + '"></label><label class="field"><span>End date</span><input data-address-field="endDate" data-person-date placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" inputmode="text" maxlength="10" autocomplete="off" spellcheck="false" value="' + u.escapeHtml(addressDateValue(address, "end")) + '"></label><label class="field full"><span>Address notes</span><textarea data-address-field="notes" rows="2">' + u.escapeHtml(address.notes || "") + "</textarea></label></div></fieldset>";
+    const dateHelp = "Use YYYY, YYYY-MM, or YYYY-MM-DD. Any digit may be ?. Examples: 1984 · 19?? · ???? · 1984-07 · 1984-?? · ????-?? · 1984-07-23 · 1984-07-?? · 1984-??-?? · ????-??-??. Known months must be 01–12 and known days must be valid for the month.";
+    return '<fieldset class="repeatable-card" data-address-index="' + index + '"><legend>Address ' + (index + 1) + '</legend><div class="repeatable-card-actions"><button type="button" class="button small danger-text" data-remove-address="' + index + '">Remove</button></div><div class="address-editor-grid"><label class="field"><span>Label</span><input data-address-field="label" value="' + u.escapeHtml(address.label || "Home") + '"></label><label class="field"><span>Address line 1</span><input data-address-field="line1" value="' + u.escapeHtml(address.line1 || "") + '"></label><label class="field"><span>Address line 2</span><input data-address-field="line2" value="' + u.escapeHtml(address.line2 || "") + '"></label><label class="field"><span>City / locality</span><input data-address-field="city" value="' + u.escapeHtml(address.city || "") + '"></label><label class="field"><span>State / region</span><input data-address-field="region" value="' + u.escapeHtml(address.region || "") + '"></label><label class="field"><span>Postal code</span><input data-address-field="postalCode" value="' + u.escapeHtml(address.postalCode || "") + '"></label><label class="field"><span>Country</span><input data-address-field="country" value="' + u.escapeHtml(address.country || "") + '"></label><label class="check-field address-current-field"><input type="checkbox" data-address-field="current" ' + (address.current !== false ? "checked" : "") + '><span>Current address</span></label><label class="field address-start-field date-input-field"><span>Start date</span><input data-address-field="startDate" data-person-date placeholder="YYYY-MM-DD" inputmode="text" maxlength="10" autocomplete="off" spellcheck="false" aria-describedby="addressStartDateError' + index + '" value="' + u.escapeHtml(addressDateValue(address, "start")) + '"><small id="addressStartDateError' + index + '" class="date-validation-message" data-date-error hidden>' + dateHelp + '</small></label><label class="field address-end-field date-input-field"><span>End date</span><input data-address-field="endDate" data-person-date placeholder="YYYY-MM-DD" inputmode="text" maxlength="10" autocomplete="off" spellcheck="false" aria-describedby="addressEndDateError' + index + '" value="' + u.escapeHtml(addressDateValue(address, "end")) + '"><small id="addressEndDateError' + index + '" class="date-validation-message" data-date-error hidden>' + dateHelp + '</small></label><label class="field address-notes-field"><span>Address notes</span><textarea data-address-field="notes" rows="1">' + u.escapeHtml(address.notes || "") + '</textarea></label></div><small class="address-validation-message" data-address-error hidden>Add at least one physical address field, or remove this address.</small></fieldset>';
   }
 
   function contactRow(item, index, type) {
@@ -1360,6 +1376,57 @@
     $("#addressEditor").innerHTML = personDraft.addresses.length ? personDraft.addresses.map(addressRow).join("") : '<p class="muted-copy">No addresses recorded.</p>';
     $("#phoneEditor").innerHTML = personDraft.phones.length ? personDraft.phones.map(function (item, index) { return contactRow(item, index, "phone"); }).join("") : '<p class="muted-copy">No phone numbers recorded.</p>';
     $("#emailEditor").innerHTML = personDraft.emails.length ? personDraft.emails.map(function (item, index) { return contactRow(item, index, "email"); }).join("") : '<p class="muted-copy">No email addresses recorded.</p>';
+  }
+
+  function selectedNewPersonRelationshipIds(kind) {
+    return $$('[data-new-person-relationship="' + kind + '"]:checked', $("#personRelationshipsSection")).map(function (input) { return input.value; });
+  }
+
+  function updateNewPersonRelationshipCounts() {
+    $$('[data-new-person-relationship-picker]', $("#personRelationshipsSection")).forEach(function (picker) {
+      const selected = selectedNewPersonRelationshipIds(picker.dataset.newPersonRelationshipPicker);
+      const count = $("[data-relationship-selection-count]", picker);
+      if (count) count.textContent = selected.length ? selected.length + " selected" : "None";
+    });
+  }
+
+  function renderNewPersonRelationshipPickers(person) {
+    const section = $("#personRelationshipsSection");
+    const hidden = Boolean(person || pendingRelative);
+    section.hidden = hidden;
+    const people = hidden ? [] : state().workspace.people.slice().sort(function (a, b) { return model.sortName(a).localeCompare(model.sortName(b)); });
+    ["parents", "partners", "children"].forEach(function (kind) {
+      const container = $("#newPerson" + kind[0].toUpperCase() + kind.slice(1));
+      container.innerHTML = people.length ? people.map(function (candidate, index) {
+        const id = "new-person-" + kind + "-" + index;
+        const label = model.displayName(candidate) + (developerReferencesEnabled() ? " · " + candidate.reference : "");
+        return '<label for="' + id + '"><input id="' + id + '" type="checkbox" value="' + u.escapeHtml(candidate.id) + '" data-new-person-relationship="' + kind + '"><span>' + u.escapeHtml(label) + "</span></label>";
+      }).join("") : '<p class="relationship-picker-empty">No existing people available.</p>';
+    });
+    $$('[data-new-person-relationship-picker]', section).forEach(function (picker) { picker.open = false; });
+    updateNewPersonRelationshipCounts();
+  }
+
+  function addressEditorRowValid(row) {
+    return ["line1", "line2", "city", "region", "postalCode", "country"].some(function (field) {
+      return Boolean(String(row.querySelector('[data-address-field="' + field + '"]')?.value || "").trim());
+    });
+  }
+
+  function updatePersonFormValidity() {
+    const firstNamePresent = ["birthNameFirst", "currentNameFirst", "preferredNameFirst"].some(function (id) { return Boolean($("#" + id).value.trim()); });
+    const datesValid = $$('[data-person-date]', $("#personDialog")).map(validatePersonDateInput).every(Boolean);
+    const emailsValid = $$('input[type="email"]', $("#personDialog")).every(function (input) { return input.checkValidity(); });
+    const addressesValid = $$('[data-address-index]', $("#addressEditor")).map(function (row) {
+      const valid = addressEditorRowValid(row);
+      row.classList.toggle("is-invalid", !valid);
+      const message = $("[data-address-error]", row);
+      if (message) message.hidden = valid;
+      return valid;
+    }).every(Boolean);
+    const valid = firstNamePresent && datesValid && emailsValid && addressesValid;
+    $("#savePersonButton").disabled = !valid;
+    return valid;
   }
 
   function syncPersonRepeatables() {
@@ -1484,6 +1551,8 @@
   function validatePersonDateInput(input) {
     const valid = validDateInput(input.value);
     input.setAttribute("aria-invalid", String(!valid));
+    const message = input.closest("label") && $("[data-date-error]", input.closest("label"));
+    if (message) message.hidden = valid;
     return valid;
   }
 
@@ -1530,8 +1599,11 @@
       emails: u.clone(person && person.emails || [])
     };
     renderPersonRepeatables();
+    renderNewPersonRelationshipPickers(person);
     $$('[data-person-date]', $("#personDialog")).forEach(function (input) { input.setAttribute("aria-invalid", "false"); });
+    $$('[data-date-error]', $("#personDialog")).forEach(function (message) { message.hidden = true; });
     $("#personFormError").hidden = true;
+    updatePersonFormValidity();
   }
 
   function openPersonEditor(id, trigger) {
@@ -1590,19 +1662,58 @@
     };
   }
 
+  function newPersonRelationshipDrafts(person) {
+    if (!person || ($("#personRelationshipsSection").hidden && !pendingRelative)) return [];
+    const choices = [];
+    selectedNewPersonRelationshipIds("parents").forEach(function (id) { choices.push({ kind: "parent", id: id }); });
+    selectedNewPersonRelationshipIds("partners").forEach(function (id) { choices.push({ kind: "partner", id: id }); });
+    selectedNewPersonRelationshipIds("children").forEach(function (id) { choices.push({ kind: "child", id: id }); });
+    if (pendingRelative) {
+      choices.push({ kind: pendingRelative.role === "parent" ? "child" : pendingRelative.role === "child" ? "parent" : "partner", id: pendingRelative.sourceId });
+    }
+    const seen = new Set();
+    const now = u.isoNow();
+    return choices.map(function (choice) {
+      const parentId = choice.kind === "parent" ? choice.id : person.id;
+      const childId = choice.kind === "child" ? choice.id : person.id;
+      const pair = [person.id, choice.id].sort();
+      const key = choice.kind === "partner" ? "partner|" + pair.join("|") : "parent-child|" + parentId + "|" + childId;
+      if (seen.has(key)) return null;
+      seen.add(key);
+      const relationship = {
+        id: u.uid("relationship"), type: choice.kind === "partner" ? "partner" : "parent-child",
+        startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, place: "", notes: "",
+        source: { format: "mcrelations-v2", fields: {} }, order: state().workspace.relationships.length + seen.size, createdAt: now, updatedAt: now
+      };
+      if (choice.kind === "partner") Object.assign(relationship, { person1Id: person.id, person2Id: choice.id, status: "unknown" });
+      else Object.assign(relationship, { parentId: parentId, childId: childId, lineage: "non-lineal", kind: "unknown" });
+      return relationship;
+    }).filter(Boolean);
+  }
+
   function savePerson(event) {
     event.preventDefault();
     if (!familyEditingEnabled()) return;
     const id = $("#personId").value;
     const existing = id ? state().workspace.people.find(function (person) { return person.id === id; }) : null;
-    const enteredNames = ["birthNameFirst", "birthNameLast", "currentNameFirst", "currentNameLast", "preferredNameFirst", "preferredNameLast"].some(function (idValue) { return $("#" + idValue).value.trim(); });
-    if (!enteredNames) return showPersonError("Enter at least a birth, current, or preferred name.");
+    const firstNamePresent = ["birthNameFirst", "currentNameFirst", "preferredNameFirst"].some(function (idValue) { return $("#" + idValue).value.trim(); });
+    if (!firstNamePresent) return showPersonError("Enter at least one First name in Birth, Current, or Preferred.");
     syncPersonRepeatables();
     const dateInputs = $$('[data-person-date]', $("#personDialog"));
-    if (!dateInputs.map(validatePersonDateInput).every(Boolean)) return showPersonError("Dates must be blank or use YYYY, YYYY-MM, or YYYY-MM-DD. Any digit may be ? when it is unknown.");
+    if (!dateInputs.map(validatePersonDateInput).every(Boolean)) return showPersonError("Correct every date marked in red. The examples below each date show every accepted format.");
+    if (!$$('input[type="email"]', $("#personDialog")).every(function (input) { return input.checkValidity(); })) return showPersonError("Correct the email address marked as invalid.");
     if (personDraft.addresses.some(function (address) { return ![address.line1, address.line2, address.city, address.region, address.postalCode, address.country].some(function (value) { return Boolean(String(value || "").trim()); }); })) return showPersonError("Every address needs at least one physical address field, or remove the empty address.");
     const person = collectPersonForm(existing);
-    let relationshipError = "";
+    const relationshipDrafts = existing ? [] : newPersonRelationshipDrafts(person);
+    if (relationshipDrafts.length) {
+      const validationState = u.clone(state());
+      validationState.workspace.people.push(person);
+      for (const relationship of relationshipDrafts) {
+        const relationshipError = family.validateRelationshipDraft(relationship, validationState);
+        if (relationshipError) return showPersonError("The selected relationships cannot be added: " + relationshipError);
+        validationState.workspace.relationships.push(relationship);
+      }
+    }
     storage.mutate(function (next) {
       if (existing) next.workspace.people[next.workspace.people.findIndex(function (item) { return item.id === existing.id; })] = person;
       else next.workspace.people.push(person);
@@ -1610,22 +1721,14 @@
       if (!next.workspace.family.homePersonId) next.workspace.family.homePersonId = person.id;
       next.ui.selectedPersonId = person.id;
       next.ui.treeFocusId = person.id;
-      if (pendingRelative) {
-        const sourceId = pendingRelative.sourceId;
-        let relationship;
-        if (pendingRelative.role === "parent") relationship = { id: u.uid("relationship"), type: "parent-child", parentId: person.id, childId: sourceId, lineage: "non-lineal", kind: "unknown", startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, place: "", notes: "", order: next.workspace.relationships.length + 1, createdAt: u.isoNow(), updatedAt: u.isoNow() };
-        else if (pendingRelative.role === "child") relationship = { id: u.uid("relationship"), type: "parent-child", parentId: sourceId, childId: person.id, lineage: "non-lineal", kind: "unknown", startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, place: "", notes: "", order: next.workspace.relationships.length + 1, createdAt: u.isoNow(), updatedAt: u.isoNow() };
-        else relationship = { id: u.uid("relationship"), type: "partner", person1Id: sourceId, person2Id: person.id, status: "unknown", startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, place: "", notes: "", order: next.workspace.relationships.length + 1, createdAt: u.isoNow(), updatedAt: u.isoNow() };
-        relationshipError = family.validateRelationshipDraft(relationship, next);
-        if (!relationshipError) next.workspace.relationships.push(relationship);
-      }
+      relationshipDrafts.forEach(function (relationship) { next.workspace.relationships.push(relationship); });
     }, { reason: existing ? "edit-person" : "add-person" });
     const message = existing ? "Updated " + model.displayName(person) + "." : "Added " + model.displayName(person) + ".";
     pendingRelative = null;
     treeNeedsFit = true;
     components.closeDialog("#personDialog", "saved");
     renderAll();
-    components.toast(relationshipError ? message + " The relative link was not added: " + relationshipError : message, { title: existing ? "Person updated" : "Person added", kind: relationshipError ? "warning" : "success" });
+    components.toast(message + (relationshipDrafts.length ? " Added " + relationshipDrafts.length + " relationship" + (relationshipDrafts.length === 1 ? "." : "s.") : ""), { title: existing ? "Person updated" : "Person added", kind: "success" });
   }
 
   function personOptions(selectedId) {
@@ -2005,7 +2108,7 @@
     const favoriteIds = new Set(state().ui.favoritePersonIds);
     state().workspace.people.forEach(function (person) {
       const favorite = favoriteIds.has(person.id);
-      if ((favoritesPreviewOpen ? favorite : model.fuzzySearchMatch(needle, model.personSearchText(person, { includeNotes: familyEditingEnabled(), includeSource: developerReferencesEnabled() })))) results.push({ type: "person", id: person.id, title: model.displayName(person), names: personNameVariants(person), meta: "Person" + (developerReferencesEnabled() ? " · " + person.reference : ""), favorite: favorite });
+      if ((favoritesPreviewOpen ? favorite : model.fuzzySearchMatch(needle, model.personSearchText(person, { includeNotes: familyEditingEnabled(), includeSource: developerReferencesEnabled() })))) results.push({ type: "person", id: person.id, title: model.displayName(person), alternateNames: personAlternateNames(person), meta: developerReferencesEnabled() ? person.reference : "", favorite: favorite });
     });
     results.sort(function (a, b) { return Number(b.favorite) - Number(a.favorite) || a.title.localeCompare(b.title); });
     if (favoritesPreviewOpen) return results;
@@ -2027,7 +2130,7 @@
     $("#globalSearch").setAttribute("aria-expanded", "true");
     container.innerHTML = results.length ? results.map(function (result, index) {
       const content = result.type === "person"
-        ? '<span class="search-person-copy"><span class="search-person-names">' + result.names.map(function (name, nameIndex) { return '<span class="search-person-name' + (nameIndex === 0 ? " is-primary" : "") + '"><small>' + u.escapeHtml(name.label) + '</small><strong>' + u.escapeHtml(name.value) + "</strong></span>"; }).join("") + '</span><small class="search-result-meta">' + u.escapeHtml(result.meta) + "</small></span>"
+        ? '<span class="search-person-copy"><strong>' + u.escapeHtml(result.title) + '</strong>' + (result.alternateNames.length ? '<span class="search-person-alternates">(' + result.alternateNames.map(u.escapeHtml).join(", ") + ")</span>" : "") + (result.meta ? '<small class="search-result-meta">' + u.escapeHtml(result.meta) + "</small>" : "") + "</span>"
         : '<span><strong>' + u.escapeHtml(result.title) + '</strong><small>' + u.escapeHtml(result.meta) + "</small></span>";
       const main = '<button type="button" class="global-search-result-main" id="global-result-' + index + '" data-search-type="' + result.type + '" data-search-id="' + u.escapeHtml(result.id) + '">' + content + '<span class="search-result-arrow" aria-hidden="true">→</span></button>';
       if (result.type !== "person") return '<div class="global-search-result-row no-favorite" role="listitem">' + main + "</div>";
@@ -2463,6 +2566,13 @@
     if (nameBasisButton) { storage.mutate(function (next) { next.ui.treeNameBasis = nameBasisButton.dataset.treeNameBasis; }, { touch: false, reason: "tree-name-basis" }); treeNeedsFit = true; renderWorkspace(); return; }
     const nameLengthButton = target.closest("[data-tree-name-length]");
     if (nameLengthButton) { storage.mutate(function (next) { next.ui.treeNameLength = nameLengthButton.dataset.treeNameLength; }, { touch: false, reason: "tree-name-length" }); treeNeedsFit = true; renderWorkspace(); return; }
+    const zoomStepButton = target.closest("[data-zoom-step]");
+    if (zoomStepButton) {
+      const input = $("#zoomValue");
+      input.value = String(Math.round(treeTransform.scale * 100) + Number(zoomStepButton.dataset.zoomStep));
+      updateTreeZoomControl(input, true);
+      return;
+    }
     const zoomButton = target.closest("[data-zoom]");
     if (zoomButton) { treeSurfaceMode = "natural"; treeTransform.scale = u.clamp(treeTransform.scale * (zoomButton.dataset.zoom === "in" ? 1.2 : 0.833), 0.01, 2.5, treeTransform.scale); applyTreeTransform(); return; }
     if (target.closest("[data-fit-tree]")) { fitTree(); return; }
@@ -2642,15 +2752,17 @@
         const valid = validatePersonDateInput(event.target);
         if (event.target.id === "deathDate" && valid && event.target.value.trim()) $("#livingStatus").value = "deceased";
       }
+      if (event.target.matches("[data-new-person-relationship]")) updateNewPersonRelationshipCounts();
+      if (updatePersonFormValidity()) $("#personFormError").hidden = true;
     });
     $("#personDialog").addEventListener("click", function (event) {
-      if (event.target.closest("[data-add-address]")) { syncPersonRepeatables(); personDraft.addresses.push({ id: u.uid("address"), label: "Home", current: true, startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, order: personDraft.addresses.length }); renderPersonRepeatables(); }
-      if (event.target.closest("[data-add-phone]")) { syncPersonRepeatables(); personDraft.phones.push({ id: u.uid("phone"), label: "Mobile", value: "", order: personDraft.phones.length }); renderPersonRepeatables(); }
-      if (event.target.closest("[data-add-email]")) { syncPersonRepeatables(); personDraft.emails.push({ id: u.uid("email"), label: "Personal", value: "", order: personDraft.emails.length }); renderPersonRepeatables(); }
+      if (event.target.closest("[data-add-address]")) { syncPersonRepeatables(); personDraft.addresses.push({ id: u.uid("address"), label: "Home", current: true, startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, order: personDraft.addresses.length }); renderPersonRepeatables(); updatePersonFormValidity(); }
+      if (event.target.closest("[data-add-phone]")) { syncPersonRepeatables(); personDraft.phones.push({ id: u.uid("phone"), label: "Mobile", value: "", order: personDraft.phones.length }); renderPersonRepeatables(); updatePersonFormValidity(); }
+      if (event.target.closest("[data-add-email]")) { syncPersonRepeatables(); personDraft.emails.push({ id: u.uid("email"), label: "Personal", value: "", order: personDraft.emails.length }); renderPersonRepeatables(); updatePersonFormValidity(); }
       const removeAddress = event.target.closest("[data-remove-address]");
-      if (removeAddress) { syncPersonRepeatables(); personDraft.addresses.splice(Number(removeAddress.dataset.removeAddress), 1); renderPersonRepeatables(); }
+      if (removeAddress) { syncPersonRepeatables(); personDraft.addresses.splice(Number(removeAddress.dataset.removeAddress), 1); renderPersonRepeatables(); updatePersonFormValidity(); }
       const removeContact = event.target.closest("[data-remove-contact]");
-      if (removeContact) { syncPersonRepeatables(); const parts = removeContact.dataset.removeContact.split(":"); personDraft[parts[0] + "s"].splice(Number(parts[1]), 1); renderPersonRepeatables(); }
+      if (removeContact) { syncPersonRepeatables(); const parts = removeContact.dataset.removeContact.split(":"); personDraft[parts[0] + "s"].splice(Number(parts[1]), 1); renderPersonRepeatables(); updatePersonFormValidity(); }
     });
     document.addEventListener("click", function (event) {
       const action = event.target.closest("[data-action]");
