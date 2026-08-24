@@ -40,7 +40,7 @@
     { keys: "V", label: "Open What’s New", group: "Actions" },
     { keys: "X", label: "Dismiss the What’s New banner", group: "Actions" },
     { keys: "R", label: "Reload when a new version is available", group: "Actions" },
-    { keys: "E", label: "Export a private CSV backup", group: "Actions" },
+    { keys: "E", label: "Export a private ZIP backup", group: "Actions" },
     { keys: "T", label: "Switch color theme", group: "Actions" },
     { keys: "Arrow keys", label: "Move through tree relatives, tabs, menus, and choices", group: "Navigation" }
   ];
@@ -185,7 +185,7 @@
     $("[data-floating-local-label]").textContent = available ? "Saved locally" : "Storage unavailable";
     $("[data-floating-backup-label]").textContent = initialized() ? state().workspace.people.length + " people · export backup" : "Import required";
     $("[data-floating-status-icon]").innerHTML = icons.markup(available ? "check" : "close");
-    button.title = available ? "Saved only in this browser. Open private CSV settings." : "Browser storage is unavailable. Export a private CSV.";
+    button.title = available ? "Saved only in this browser. Open private ZIP settings." : "Browser storage is unavailable. Export a private ZIP.";
     button.setAttribute("aria-label", button.title);
   }
 
@@ -221,7 +221,7 @@
 
   function renderOnboarding() {
     const icon = document.documentElement.dataset.theme === "dark" ? config.identity.assets.appIconDark : config.identity.assets.appIconLight;
-    $("#mainContent").innerHTML = '<section class="onboarding-screen" aria-labelledby="onboardingTitle"><div class="onboarding-card"><img src="' + u.escapeHtml(versionedAsset(icon)) + '" alt="" class="onboarding-icon"><span class="eyebrow">Private local family atlas</span><h1 id="onboardingTitle">Open McFamily</h1><p>Choose the exact McLineage v14 CSV for the initial load, or a current native McFamily CSV exported by this app. McFamily maps and validates people, relationships, source fields, and ancestry before storing a private copy in this browser.</p><div class="privacy-callout"><strong>This is not a login.</strong><span>The import gate controls first-run setup only. The static GitHub Pages app cannot authenticate users or revoke access.</span></div><button id="firstImportButton" type="button" class="button primary large-button">Choose family CSV</button><input id="onboardingImportInput" type="file" accept="text/csv,.csv" data-import-file-input hidden><small>No demo family, blank-family option, JSON/GEDCOM import, cloud sync, or bypass is available.</small></div></section>';
+    $("#mainContent").innerHTML = '<section class="onboarding-screen" aria-labelledby="onboardingTitle"><div class="onboarding-card"><img src="' + u.escapeHtml(versionedAsset(icon)) + '" alt="" class="onboarding-icon"><span class="eyebrow">Private local family atlas</span><h1 id="onboardingTitle">Open McFamily</h1><p>Choose the current McFamily ZIP package. It must contain exactly McPeople, McPlaces, McRelations, McResidences, and McMetadata CSV files. McFamily validates ZIP integrity, every schema, record count, identifier, and cross-file reference before storing a private copy in this browser.</p><div class="privacy-callout"><strong>This is not a login.</strong><span>The import gate controls first-run setup only. The static GitHub Pages app cannot authenticate users or revoke access.</span></div><button id="firstImportButton" type="button" class="button primary large-button">Choose family ZIP</button><input id="onboardingImportInput" type="file" accept="application/zip,.zip" data-import-file-input hidden><small>No loose CSV, demo family, blank-family option, JSON/GEDCOM import, cloud sync, or bypass is available.</small></div></section>';
     icons.mount($("#mainContent"));
   }
 
@@ -243,7 +243,7 @@
 
   function directoryKinship(person, graph, homePersonId) {
     const fields = u.plainObject(person && person.source && person.source.fields);
-    const importedMcLineage = String(person && person.source && person.source.format || "").startsWith("mclineage-cleaned");
+    const importedMcLineage = ["mclineage-cleaned", "mcpeople-v1"].includes(String(person && person.source && person.source.format || ""));
     if (importedMcLineage && Object.prototype.hasOwnProperty.call(fields, "lineage-id")) {
       const consanguineal = Boolean(u.cleanLine(fields["lineage-id"], 200));
       return { consanguineal: consanguineal, affinal: !consanguineal };
@@ -496,12 +496,6 @@
   }
 
   function parentContext(child, entry) {
-    const parent = entry.person || entry;
-    const recordId = sourceField(parent, "record-id").toUpperCase();
-    const consanguinityId = sourceField(child, CONSANGUINITY_FIELD).toUpperCase();
-    const affinityId = sourceField(child, AFFINITY_FIELD).toUpperCase();
-    if (recordId && recordId === consanguinityId) return "(Lineal)";
-    if (recordId && recordId === affinityId) return "(Non-Lineal)";
     return entry.relationship && entry.relationship.kind === "biological" ? "(Lineal)" : "(Non-Lineal)";
   }
 
@@ -515,7 +509,8 @@
   }
 
   function partnerStartYear(relationship) {
-    const sourceValue = String(relationship && relationship.source && relationship.source.fields && relationship.source.fields.date_start_value || "");
+    const fields = relationship && relationship.source && relationship.source.fields || {};
+    const sourceValue = String(fields["date-start-value"] || fields.date_start_value || "");
     const value = sourceValue || String(relationship && relationship.startDate && relationship.startDate.value || "");
     const year = value.match(/^[\d?]{4}/);
     return year ? year[0] : "????";
@@ -580,9 +575,6 @@
     return String(key || "").replace(/[-_]/g, " ").replace(/\b\w/g, function (character) { return character.toUpperCase(); });
   }
 
-  const CONSANGUINITY_FIELD = "parent-consanguinity-person-id";
-  const AFFINITY_FIELD = "parent-affinal-person-id";
-
   function sourceField(person, key) {
     return u.cleanLine(person && person.source && person.source.fields && person.source.fields[key], 4000);
   }
@@ -627,20 +619,15 @@
   function lineageChain(person) {
     const current = state();
     const numbers = lineageId(person);
-    const byRecordId = new Map();
-    current.workspace.people.forEach(function (candidate) {
-      const recordId = sourceField(candidate, "record-id").toUpperCase();
-      if (recordId && !byRecordId.has(recordId)) byRecordId.set(recordId, candidate);
-    });
+    const graph = family.indexes(current);
     const members = [];
     const used = new Set();
     let cursor = person;
     while (cursor && !used.has(cursor.id) && members.length <= config.controls.maxPeople) {
       used.add(cursor.id);
       members.push({ name: lineageName(cursor), person: cursor, number: lineageOwnNumber(cursor) });
-      const parentRecordId = sourceField(cursor, CONSANGUINITY_FIELD).toUpperCase();
-      if (!parentRecordId) break;
-      const parent = byRecordId.get(parentRecordId);
+      const parentEntry = (graph.parents.get(cursor.id) || []).find(function (entry) { return entry.relationship && entry.relationship.kind === "biological"; });
+      const parent = parentEntry && parentEntry.person;
       if (!parent || used.has(parent.id)) break;
       cursor = parent;
     }
@@ -1597,14 +1584,8 @@
     while (cursor && !used.has(cursor.id) && names.length <= config.controls.maxPeople) {
       used.add(cursor.id);
       names.push(firstName(model.displayName(cursor)));
-      const linealReference = sourceField(cursor, CONSANGUINITY_FIELD).toUpperCase();
       const parents = graph.parents.get(cursor.id) || [];
       const linealParent = parents.find(function (entry) {
-        return linealReference && sourceField(entry.person, "record-id").toUpperCase() === linealReference;
-      }) || parents.find(function (entry) {
-        const relationshipReference = u.cleanLine(entry.relationship && entry.relationship.source && entry.relationship.source.fields && entry.relationship.source.fields[CONSANGUINITY_FIELD], 4000).toUpperCase();
-        return relationshipReference && relationshipReference === sourceField(entry.person, "record-id").toUpperCase();
-      }) || parents.find(function (entry) {
         return entry.relationship && entry.relationship.kind === "biological";
       }) || parents.find(function (entry) {
         return !entry.relationship || entry.relationship.kind !== "affinal";
@@ -1940,7 +1921,7 @@
     const localAvailable = storage.isPersistent();
     $("#localStorageSettingsState").textContent = localAvailable ? "Saved locally" : "Unavailable";
     $("#localStorageSettingsState").dataset.kind = localAvailable ? "success" : "danger";
-    $("#localStorageSettingsSummary").innerHTML = '<span aria-hidden="true">' + icons.markup(localAvailable ? "check" : "close") + '</span><span><strong>' + (localAvailable ? "Browser storage is working" : "Browser storage is unavailable") + '</strong><small>' + (localAvailable ? state().workspace.people.length + " people and " + state().workspace.relationships.length + " relationships save automatically on this browser." : "Changes may not survive a reload. Export a private CSV before continuing.") + "</small></span>";
+    $("#localStorageSettingsSummary").innerHTML = '<span aria-hidden="true">' + icons.markup(localAvailable ? "check" : "close") + '</span><span><strong>' + (localAvailable ? "Browser storage is working" : "Browser storage is unavailable") + '</strong><small>' + (localAvailable ? state().workspace.people.length + " people and " + state().workspace.relationships.length + " relationships save automatically on this browser." : "Changes may not survive a reload. Export a private ZIP before continuing.") + "</small></span>";
   }
 
   function renderHelp() {
@@ -2016,7 +1997,7 @@
   }
 
   async function eraseAllData() {
-    const accepted = await components.confirm({ title: "Erase all local McFamily data?", message: "This permanently removes every person, address, relationship, Note, preference, and recovery copy from this browser and returns to the strict import screen. Export a private CSV first.", confirmLabel: "Erase everything", cancelLabel: "Keep my family", danger: true });
+    const accepted = await components.confirm({ title: "Erase all local McFamily data?", message: "This permanently removes every person, place, residence, relationship, Note, preference, metadata event, and recovery copy from this browser and returns to the strict import screen. Export a private ZIP first.", confirmLabel: "Erase everything", cancelLabel: "Keep my family", danger: true });
     if (!accepted) return;
     storage.clearAll();
     components.closeDialog("#supportDialog", "erased");
@@ -2257,7 +2238,7 @@
     $("#motionPreference").addEventListener("change", function (event) { storage.mutate(function (next) { next.preferences.appearance.reducedMotion = event.target.value; }, { reason: "appearance" }); applyAppearance(); });
     $("#hintsToggle").addEventListener("click", function () { storage.mutate(function (next) { next.preferences.hints.enabled = !next.preferences.hints.enabled; }, { reason: "hints" }); renderHeader(); renderSettings(); });
     $("#restoreHintsButton").addEventListener("click", function () { storage.mutate(function (next) { next.preferences.hints.dismissed = []; next.ui.dismissedHints = []; }, { reason: "hints" }); renderHeader(); renderSettings(); components.toast("All contextual hints are available again.", { title: "Hints restored", kind: "success" }); });
-    $("#exportButton").addEventListener("click", portability.exportCsv);
+    $("#exportButton").addEventListener("click", portability.exportPackage);
     $("#importButton").addEventListener("click", function () { $("#importFileInput").click(); });
     $("#resetPreferencesButton").addEventListener("click", resetPreferences);
     $("#eraseAllButton").addEventListener("click", eraseAllData);

@@ -13,28 +13,30 @@ Use synthetic families only.
 
 ## Initialization, current schema, and portability
 
-- [ ] A fresh profile shows only the introduction, privacy warning, and CSV picker.
+- [ ] A fresh profile shows only the introduction, privacy warning, and ZIP picker.
 - [ ] No demo family, blank-family action, GEDCOM action, or bypass appears.
-- [ ] An exact McLineage v14 or current native McFamily CSV with at least one person shows a summary and opens the family.
-- [ ] Unknown headers, missing required cells, zero-person first import, malformed CSV, oversized file, duplicate ids, unsafe headers, self-links, duplicate links, and ancestry cycles are rejected without replacing state.
-- [ ] McLineage v14 has exactly 30 ordered, hyphenated headers; `record-id` is first, both parent-role fields are adjacent, `source-row-number` immediately precedes `data-quality-notes`, the four obsolete legacy display-name headers are absent, and every underscore-named, missing, extra, or reordered source schema is rejected.
+- [ ] A valid dataset 15 ZIP with at least one person shows people, relationship, place, residence, dataset, state, and validation-group summaries before opening the family.
+- [ ] The ZIP contains exactly the five root files `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`; missing, extra, duplicate, nested, encrypted, unsupported-compression, truncated, bad-checksum, multi-disk, and oversized packages are rejected without replacing state.
+- [ ] Every file uses its exact ordered, hyphenated schema 1.0.0 header; unknown, missing, duplicate, unsafe, underscore-named, or reordered headers and malformed/oversized CSVs are rejected.
 - [ ] Structured Birth, Current, and Preferred name parts plus Maiden Last import directly; `person-first-names`, `person-last-name`, and `person-name-sort` are absent.
-- [ ] Every populated `parent-affinal-person-id` resolves to a distinct person paired with the Lineal parent through `partner-relationships-json` and imports as an `affinal`-kind second parent; missing, self, duplicate, non-partner, and partial parent-role schemas are rejected.
-- [ ] Current partner rows import as their own P-referenced people; their source-row and lineage fields are blank, each JSON partner P reference resolves, and no duplicate people are synthesized.
-- [ ] Each current partner relationship has one unique R ID and unordered person pair; malformed JSON, missing/self references, invalid types/orders/end reasons, inconsistent date pairs, and duplicate relationships are rejected.
+- [ ] McPeople contains no parent or partner columns. McRelations holds every Lineal/Non-Lineal parent and partner row with unique IDs, positive order, resolvable people, and consistent type-specific fields.
+- [ ] Every Non-Lineal parent is paired with the child's one Lineal parent by a partner relationship; missing, self, duplicate, non-partner, and multiple-Lineal-parent cases are rejected.
+- [ ] Each partner relationship has one unique ID and unordered person pair; missing/self references, invalid types/orders/end reasons, inconsistent date pairs, and duplicate relationships are rejected.
 - [ ] Relationship type plus end reason maps to married, partnered, widowed, divorced, separated, former, or unknown without a redundant source status field; an `UNKNOWN` end reason reads as former, so no partner of a person whose partnerships all ended is shown as current.
-- [ ] A McLineage file that does not exactly match v14 is rejected with missing, unexpected, or ordering details and never replaces current state.
 - [ ] Every current non-root lineage path extends its direct parent's path by exactly one segment; blank unlineaged people are accepted, while malformed, duplicate, or parent-mismatched paths are rejected.
 - [ ] Current source date values accept blank, `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, or the same shapes with `?` in unknown digit positions; question-mark values require `partial`, `invalid` descriptors are rejected, and birth descriptors reject blank.
 - [ ] Current `person-*` identity/date columns import lineage and partner rows consistently: a known death value imports as deceased; a blank death value requires `NONE`, `UNKNOWN`, or `UNKNOWN PRESUMED`; those descriptors import as living, deceased, and presumed deceased respectively.
+- [ ] McPlaces requires unique L IDs and a physical address value. McResidences requires unique RS IDs, exact TRUE/FALSE current flags, resolvable P/L references, and unique person/place/start links.
+- [ ] The requested private residence resolves through its McResidences row to its McPlaces row and displays the complete address without embedding it in McPeople.
+- [ ] McMetadata declares the supported package/dataset versions, exact counts, family data, all five schema rows, and at least one valid audit event; duplicates, missing rows, count mismatches, bad timestamps/JSON, and unresolved home person are rejected.
 - [ ] Profile life details use one ordinary one-line `Age` row: living ages are compact, ages below two use months, deceased ages read `#y at death · #y today`, and unavailable ages read `UNKNOWN`.
 - [ ] Desktop defaults to a thin-gutter 20/50/30 Directory/Tree/Profile split, both separators resize with pointer and keyboard input, the first resize persists both widths, a usable tree width remains, and live position percentages appear only in Developer Mode.
-- [ ] State v11 reloads from `mcfamily.state.v11`; older state and recovery keys are ignored and the v14 import gate appears instead.
-- [ ] A state with any schema version other than v11 is rejected rather than unwrapped or migrated.
-- [ ] A native `mcfamily-csv-v2` round trip preserves all 16 name columns; v1 native exports and incomplete v2 headers are rejected as older schemas.
+- [ ] State v12 reloads from `mcfamily.state.v12`; older state and recovery keys are ignored and the dataset 15 import gate appears instead.
+- [ ] Startup removes only older versioned `mcfamily.state.v#` and `mcfamily.recovery.v#` keys, preserving current state and unrelated local-storage entries so the package has quota to persist.
+- [ ] A state with any schema version other than v12 is rejected rather than unwrapped or migrated.
+- [ ] One ZIP export/import round trip preserves all five files, 16 name columns, people, places, residences, relationships, preferences, Notes, package metadata, and audit history.
 - [ ] Missing required Birth First/Last values normalize to `UNKNOWN`; the importer does not derive structured names from removed flat columns.
 - [ ] Partial source dates remain in source details, produce a partial-only preview warning, and do not become invented normalized dates in editable/native state.
-- [ ] Export/import round trips every person field, relationship field, preference, and Note.
 - [ ] Later replacement creates recovery before changing state; Restore recovery returns the prior family.
 - [ ] Private export and PDF warnings are visible.
 - [ ] Reload restores the current family, selection, tree mode, node detail mode, collapsed panes, filters, theme, and Notes.

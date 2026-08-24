@@ -45,6 +45,20 @@
     try { localStorage.removeItem(key); } catch (error) { persistentStorageAvailable = false; }
   }
 
+  function removeHistoricalStateKeys() {
+    try {
+      const keep = new Set([config.storage.stateKey, config.storage.recoveryKey]);
+      const stale = [];
+      for (let index = 0; index < localStorage.length; index += 1) {
+        const key = localStorage.key(index);
+        if (/^mcfamily\.(?:state|recovery)\.v\d+$/.test(key) && !keep.has(key)) stale.push(key);
+      }
+      stale.forEach(function (key) { localStorage.removeItem(key); });
+    } catch (error) {
+      persistentStorageAvailable = false;
+    }
+  }
+
   function readRecovery() {
     const raw = readLocal(config.storage.recoveryKey);
     if (!raw) return null;
@@ -58,6 +72,7 @@
   }
 
   function load() {
+    removeHistoricalStateKeys();
     let parseError = "";
     const raw = readLocal(config.storage.stateKey);
     if (raw) {
@@ -164,6 +179,7 @@
 
   function clearAll() {
     scheduleSave.cancel();
+    removeHistoricalStateKeys();
     [config.storage.stateKey, config.storage.recoveryKey].filter(Boolean).forEach(removeLocal);
     lastSavedJson = "";
     currentState = model.createDefaultState({ demo: false });

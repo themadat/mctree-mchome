@@ -66,12 +66,15 @@
         createdAt: now,
         updatedAt: now,
         lastMutationId: u.uid("mutation"),
-        tombstones: { records: [], documents: [], people: [], relationships: [] }
+        tombstones: { records: [], documents: [], people: [], relationships: [], places: [], residences: [] },
+        package: { format: "", version: "", datasetVersion: "", auditHistory: [] }
       },
       workspace: {
         family: { title: "McFamily", initializedAt: "", homePersonId: "" },
         people: [],
         relationships: [],
+        places: [],
+        residences: [],
         records: [],
         documents: [blankDocument(now)]
       },
@@ -136,7 +139,7 @@
   function mcLineageLivingStatus(person, fallback) {
     const source = u.plainObject(person);
     const imported = u.plainObject(source.source);
-    if (imported.format !== "mclineage-cleaned") return fallback;
+    if (!["mclineage-cleaned", "mcpeople-v1"].includes(imported.format)) return fallback;
     const fields = u.plainObject(imported.fields);
     const deathValue = u.cleanLine(fields["person-date-death-value"], 40) || u.cleanLine(source.death && source.death.date && source.death.date.value, 40);
     if (deathValue) return "deceased";
@@ -186,7 +189,7 @@
     const next = u.clone(u.plainObject(input));
     const version = Number(next.schemaVersion);
     if (version !== config.schemaVersion) {
-      throw new Error("This state model is no longer supported. Import the current McLineage v14 or McFamily CSV.");
+      throw new Error("This state model is no longer supported. Import the current McFamily data package.");
     }
     return next;
   }
@@ -257,6 +260,66 @@
       value: u.cleanLine(source.value, 240),
       order: Number.isFinite(Number(source.order)) ? Math.round(Number(source.order)) : index
     };
+  }
+
+  function normalizePlace(input, index, usedIds) {
+    const source = u.plainObject(input);
+    let id = cleanId(source.id, "place");
+    if (usedIds.has(id)) id = u.uid("place");
+    usedIds.add(id);
+    return {
+      id: id,
+      label: u.cleanLine(source.label || "Home", 60) || "Home",
+      line1: u.cleanLine(source.line1, 200),
+      line2: u.cleanLine(source.line2, 200),
+      city: u.cleanLine(source.city, 100),
+      region: u.cleanLine(source.region, 100),
+      postalCode: u.cleanLine(source.postalCode, 40),
+      country: u.cleanLine(source.country, 100),
+      notes: u.cleanText(source.notes, 1000).trim(),
+      source: normalizeSource(source.source),
+      order: Number.isFinite(Number(source.order)) ? Math.round(Number(source.order)) : index
+    };
+  }
+
+  function normalizeResidence(input, index, usedIds, personIds, placeIds) {
+    const source = u.plainObject(input);
+    let id = cleanId(source.id, "residence");
+    if (usedIds.has(id)) id = u.uid("residence");
+    usedIds.add(id);
+    const personId = cleanId(source.personId, "missing");
+    const placeId = cleanId(source.placeId, "missing");
+    if (!personIds.has(personId) || !placeIds.has(placeId)) return null;
+    return {
+      id: id,
+      personId: personId,
+      placeId: placeId,
+      label: u.cleanLine(source.label || "Home", 60) || "Home",
+      current: source.current !== false,
+      startDate: normalizeFlexibleDate(source.startDate),
+      endDate: normalizeFlexibleDate(source.endDate),
+      notes: u.cleanText(source.notes, 1000).trim(),
+      source: normalizeSource(source.source),
+      order: Number.isFinite(Number(source.order)) ? Math.round(Number(source.order)) : index
+    };
+  }
+
+  function normalizeAuditHistory(input) {
+    const usedIds = new Set();
+    return (Array.isArray(input) ? input : []).map(function (item, index) {
+      const source = u.plainObject(item);
+      let id = cleanId(source.id, "audit");
+      if (usedIds.has(id)) id = "audit-" + String(index + 1);
+      usedIds.add(id);
+      return {
+        id: id,
+        subject: u.cleanLine(source.subject, 160),
+        action: u.cleanLine(source.action, 120),
+        recordedAt: u.ensureIso(source.recordedAt),
+        recordedBy: u.cleanLine(source.recordedBy, 160),
+        details: u.cleanText(source.details, 4000).trim()
+      };
+    }).filter(function (item) { return item.action; }).slice(0, 5000);
   }
 
   function normalizePerson(input, index, usedIds, now) {
@@ -437,6 +500,27 @@
     const legacyDirectoryFilter = ["living", "deceased", "unknown"].includes(sourceUi.livingFilter) ? [sourceUi.livingFilter] : [];
     const directoryFilters = Array.from(new Set((Array.isArray(sourceUi.directoryFilters) ? sourceUi.directoryFilters : legacyDirectoryFilter).map(function (filter) { return u.cleanLine(filter, 40); }).filter(function (filter) { return validDirectoryFilters.has(filter); })));
     const sourceTombstones = u.plainObject(sourceMeta.tombstones);
+    const sourcePackage = u.plainObject(sourceMeta.package);
+    const placeIds = new Set();
+    const places = (Array.isArray(sourceWorkspace.places) ? sourceWorkspace.places : []).slice(0, config.controls.maxPlaces).map(function (place, index) { return normalizePlace(place, index, placeIds); });
+    const residenceIds = new Set();
+    const residences = (Array.isArray(sourceWorkspace.residences) ? sourceWorkspace.residences : []).slice(0, config.controls.maxResidences).map(function (residence, index) { return normalizeResidence(residence, index, residenceIds, personIds, placeIds); }).filter(Boolean);
+    if (places.length || residences.length) {
+      const peopleById = new Map(people.map(function (person) { return [person.id, person]; }));
+      const placesById = new Map(places.map(function (place) { return [place.id, place]; }));
+      people.forEach(function (person) { person.addresses = []; });
+      residences.forEach(function (residence) {
+        const person = peopleById.get(residence.personId);
+        const place = placesById.get(residence.placeId);
+        if (!person || !place) return;
+        person.addresses.push({
+          id: residence.id, placeId: place.id, residenceId: residence.id, label: residence.label || place.label,
+          current: residence.current, line1: place.line1, line2: place.line2, city: place.city, region: place.region,
+          postalCode: place.postalCode, country: place.country, startDate: residence.startDate, endDate: residence.endDate,
+          notes: [place.notes, residence.notes].filter(Boolean).join(" · "), order: residence.order
+        });
+      });
+    }
     const state = {
       schemaVersion: config.schemaVersion,
       meta: {
@@ -449,7 +533,15 @@
           records: normalizeTombstones(sourceTombstones.records),
           documents: normalizeTombstones(sourceTombstones.documents),
           people: normalizeTombstones(sourceTombstones.people),
-          relationships: normalizeTombstones(sourceTombstones.relationships)
+          relationships: normalizeTombstones(sourceTombstones.relationships),
+          places: normalizeTombstones(sourceTombstones.places),
+          residences: normalizeTombstones(sourceTombstones.residences)
+        },
+        package: {
+          format: u.cleanLine(sourcePackage.format, 80),
+          version: u.cleanLine(sourcePackage.version, 40),
+          datasetVersion: u.cleanLine(sourcePackage.datasetVersion, 40),
+          auditHistory: normalizeAuditHistory(sourcePackage.auditHistory)
         }
       },
       workspace: {
@@ -460,6 +552,8 @@
         },
         people: people,
         relationships: relationships,
+        places: places,
+        residences: residences,
         records: records,
         documents: documents
       },
@@ -578,6 +672,42 @@
     return Array.from(new Set(errors));
   }
 
+  function rawPlaceErrors(input) {
+    const source = u.plainObject(input);
+    const workspace = u.plainObject(source.workspace);
+    const people = Array.isArray(workspace.people) ? workspace.people : [];
+    const places = Array.isArray(workspace.places) ? workspace.places : [];
+    const residences = Array.isArray(workspace.residences) ? workspace.residences : [];
+    const personIds = new Set(people.map(function (person) { return u.cleanLine(u.plainObject(person).id, 100); }));
+    const placeIds = new Set();
+    const residenceIds = new Set();
+    const links = new Set();
+    const errors = [];
+    if (places.length > config.controls.maxPlaces) errors.push("The import contains more than " + config.controls.maxPlaces + " places.");
+    if (residences.length > config.controls.maxResidences) errors.push("The import contains more than " + config.controls.maxResidences + " residences.");
+    places.forEach(function (item) {
+      const id = u.cleanLine(u.plainObject(item).id, 100);
+      if (!id) errors.push("Every imported place must have a stable id.");
+      else if (placeIds.has(id)) errors.push("The import contains duplicate place ids.");
+      else placeIds.add(id);
+    });
+    residences.forEach(function (item) {
+      const residence = u.plainObject(item);
+      const id = u.cleanLine(residence.id, 100);
+      const personId = u.cleanLine(residence.personId, 100);
+      const placeId = u.cleanLine(residence.placeId, 100);
+      const link = personId + "|" + placeId + "|" + String(residence.startDate && residence.startDate.value || "");
+      if (!id) errors.push("Every imported residence must have a stable id.");
+      else if (residenceIds.has(id)) errors.push("The import contains duplicate residence ids.");
+      else residenceIds.add(id);
+      if (!personIds.has(personId)) errors.push("A residence references a person that is not in the import.");
+      if (!placeIds.has(placeId)) errors.push("A residence references a place that is not in the import.");
+      if (links.has(link)) errors.push("The import contains a duplicate residence link.");
+      links.add(link);
+    });
+    return Array.from(new Set(errors));
+  }
+
   function parentAdjacency(relationships) {
     const children = new Map();
     relationships.filter(function (item) { return item.type === "parent-child"; }).forEach(function (item) {
@@ -613,14 +743,14 @@
     const warnings = [];
     if (!state || typeof state !== "object") errors.push("The root value must be an object.");
     if (state.schemaVersion !== config.schemaVersion) errors.push("The state-model version is not supported.");
-    if (!state.workspace || !Array.isArray(state.workspace.people) || !Array.isArray(state.workspace.relationships)) errors.push("Family people or relationships are missing.");
+    if (!state.workspace || !Array.isArray(state.workspace.people) || !Array.isArray(state.workspace.relationships) || !Array.isArray(state.workspace.places) || !Array.isArray(state.workspace.residences)) errors.push("Family people, places, residences, or relationships are missing.");
     if (state.workspace && hasAncestryCycle(state.workspace.relationships)) errors.push("Parent-child relationships contain an ancestry cycle.");
     return { ok: errors.length === 0, errors: errors, warnings: warnings };
   }
 
   function prepare(input) {
     const currentInput = requireCurrentState(input);
-    const rawErrors = rawRelationshipErrors(currentInput);
+    const rawErrors = rawRelationshipErrors(currentInput).concat(rawPlaceErrors(currentInput));
     if (rawErrors.length) throw new Error(rawErrors.join(" "));
     const state = normalize(currentInput);
     const validation = validate(state);

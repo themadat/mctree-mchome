@@ -11,26 +11,27 @@ McFamily is an ordered-script static page with no module loader or runtime packa
 5. `core/storage.js` loads and autosaves browser state and manages one recovery snapshot.
 6. `core/components.js` implements dialogs, menus, toasts, loading UI, and focus restoration.
 7. `core/family.js` derives relationship indexes, ancestors, descendants, siblings, connected components, generations, and tree layout.
-8. `core/portability.js` handles cleaned-source mapping plus complete private CSV export and replacement import.
+8. `core/portability.js` validates, imports, and exports the complete five-file private ZIP package.
 9. `core/pwa.js` manages appearance-aware install metadata, service-worker registration, and updates.
 10. `app.js` renders the onboarding gate, family workspace, editors, Settings, search, SVG interaction, and print atlas.
 
 All modules attach to `window.LocalApp`. Application runtime has no family-data network path.
 
-## Schema v11
+## Schema v12
 
 The durable state is normalized into this shape:
 
 ```json
 {
-  "schemaVersion": 11,
+  "schemaVersion": 12,
   "meta": {
-    "appVersion": "0.0.1.56",
-    "buildId": "0.0.1.56",
+    "appVersion": "0.0.1.57",
+    "buildId": "0.0.1.57",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
-    "tombstones": { "records": [], "documents": [] }
+    "tombstones": { "records": [], "documents": [], "people": [], "relationships": [], "places": [], "residences": [] },
+    "package": { "format": "mcfamily-package", "version": "1", "datasetVersion": "15.0.0", "auditHistory": [] }
   },
   "workspace": {
     "family": {
@@ -40,6 +41,8 @@ The durable state is normalized into this shape:
     },
     "people": [],
     "relationships": [],
+    "places": [],
+    "residences": [],
     "records": [],
     "documents": [{ "id": "app-notes", "title": "Notes", "html": "Escaped plain text" }]
   },
@@ -49,23 +52,25 @@ The durable state is normalized into this shape:
 }
 ```
 
-Each person has a stable id, a stable display reference, timestamps, structured name fields, status, optional gender and pronouns, birth and death events, repeated addresses/phones/emails, heritage text, general notes, and optional cleaned-source metadata. Flexible dates use a `value` plus an exact/about/before/after qualifier.
+Each person has a stable id, timestamps, structured name fields, status, optional gender and pronouns, birth and death events, repeated phones/emails, heritage text, general notes, and source metadata. Places are reusable physical-address records. Residences are explicit Person-to-Place records; normalization derives each person's visible addresses from those two arrays. Flexible dates use a `value` plus an exact/about/before/after qualifier.
 
 Relationships are independent records. Parent-child records contain `parentId`, `childId`, and biological/adoptive/step/foster/guardian/unknown type. Partner records contain two person ids, status, optional start/end dates and place, and notes. Validation rejects missing people, self-links, duplicate unordered partner pairs, duplicate typed parent-child pairs, and directed parent ancestry cycles.
 
 Derived family concepts are never copied onto people. `family.js` builds them from relationships so edits cannot leave contradictory ancestor, sibling, descendant, or family-unit arrays behind.
 
-The native v2 transfer format preserves the current state model. Historical application-state schemas are intentionally unsupported.
+The dataset 15 ZIP package preserves the current state model through five exact CSV schemas. Historical application-state and transfer schemas are intentionally unsupported.
 
 ## Initialization and persistence
 
-A fresh default has no `initializedAt` value and no people. `app.js` renders only the introduction and file input in that state. `portability.js` accepts the exact documented McLineage v14 columns or current native `mcfamily-csv-v2` rows and requires at least one valid person before the first local state is stored.
+A fresh default has no `initializedAt` value and no people. `app.js` renders only the introduction and ZIP input in that state. `portability.js` accepts only a dataset 15 package with exactly `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`, and requires at least one valid person before the first local state is stored.
 
-McLineage v14 rows represent every person and partner as a stable P-referenced row. All 30 top-level source headers use hyphens and must match the documented order exactly. Lineal people use complete root-to-person paths that extend each direct parent's path by one two-digit segment; Non-Lineal partner-only rows intentionally leave lineage fields blank. The originating person's `partner-relationships-json` array expands into authoritative app relationship records with stable R IDs, partner P references, relationship types, ordering, dates, and ending reasons. The `parent-affinal-person-id` reference must resolve through those normalized partner pairs. A known death value marks a person deceased. Without one, `person-date-death-descriptor` is authoritative: `NONE` means living, `UNKNOWN` means explicitly deceased with no known date, and `UNKNOWN PRESUMED` means age, early-generation, or partner evidence presumes death. Partial source dates remain in source details because the editable/native date model accepts only normalized known values. The four former legacy spouse-directory display-name columns are rejected; structured names are the only name source fields.
+McPeople contains one stable P-referenced row per person and no parent or partner columns. McRelations contains all authoritative Person-to-Person parent and partner links. McPlaces contains reusable physical addresses, while McResidences assigns people to places. McMetadata declares package/dataset/file-schema versions, exact record counts, family settings, and append-only audit events. Package validation completes before any current state is touched and rejects ZIP damage, wrong filenames, schema drift, count mismatches, invalid identifiers/dates, broken cross-file references, duplicate links, invalid Non-Lineal parents, Lineage inconsistencies, and ancestry cycles.
+
+Lineal people use complete root-to-person paths that extend each direct Lineal parent's path by one two-digit segment; Non-Lineal partner-only rows intentionally leave lineage blank. A known death value marks a person deceased. Without one, `person-date-death-descriptor` is authoritative: `NONE` means living, `UNKNOWN` means explicitly deceased with no known date, and `UNKNOWN PRESUMED` means source evidence presumes death. Partial source dates remain in source details because the editable date model accepts only normalized known values.
 
 After initialization, deleting the last person does not clear `initializedAt`; the workspace remains open and offers Add Person. Subsequent imports may contain an initialized empty family, but replacement always shows a summary, asks for confirmation, and writes the current state to recovery first.
 
-Startup checks only `mcfamily.state.v11` and the matching `mcfamily.recovery.v3` snapshot. State v11 passes through normalization, sanitization, and validation; every other state version is rejected. Earlier state keys and recovery snapshots are ignored, so a v14 deployment opens the import gate until a current source is loaded. A corrupt current copy falls back to the current recovery snapshot or to the uninitialized gate. Ordinary mutations update metadata and are saved locally with a short debounce.
+Startup checks only `mcfamily.state.v12` and the matching `mcfamily.recovery.v4` snapshot. State v12 passes through normalization, sanitization, and validation; every other state version is rejected. McFamily removes its own older versioned state/recovery keys before loading so obsolete copies cannot consume the local-storage quota; this deployment then opens the import gate until a dataset 15 package is loaded. A corrupt current copy falls back to the current recovery snapshot or to the uninitialized gate. Ordinary mutations update metadata and are saved locally with a short debounce.
 
 Person deletion also writes recovery before removing that person's relationship records. Recovery is a single last-known snapshot, not a history or merge log. Favorite person IDs ordinarily live in normalized UI state; Developer Mode can additionally download a small private `mcfamily-favorites` JSON envelope and restore that exact ID set without depending on browser storage.
 
@@ -85,15 +90,15 @@ The layout is deterministic and dependency-free. Desktop opens with a thin-gutte
 
 The print action constructs hidden semantic HTML before calling `window.print()`. Print CSS suppresses application controls and exposes only the report. Developer Mode copies the same generated report into a modal preview and deliberately skips `window.print()`.
 
-The compact cover, counts, relationship legend, and six-column Family Maps flow together without forced opening-page breaks. The George McMillen (1745) component is first and identifies him as Generation 0; every component uses its Root Ancestor label. Generation 4 and later are partitioned beneath Generation 3 descendants, including Non-Lineal partners assigned through their Lineal partner. Unresolved `99`/`??` lineage branches are excluded from the printable atlas. Lineal map cards use faded-red outlines; Theophilus, Albon, and Lucian have stronger orientation highlights, and adaptive map-name type is constrained to two lines. Alphabetical profiles follow without internal P references, individual Notes, or Imported Source fields; Family Notes remain a separate final section. Cross-references avoid scaling one enormous SVG tree to illegible size. Page-break rules prefer intact profiles and repeat important section headings where supported.
+The compact cover, counts, relationship legend, and six-column Family Maps flow together without forced opening-page breaks. The George McMillen (1745) component is first and identifies him as Generation 0; every component uses its Root Ancestor label. Generation 4 and later are partitioned beneath Generation 3 descendants, including Non-Lineal partners assigned through their Lineal partner. Unresolved `99`/`??` lineage branches are excluded from the printable atlas. Lineal map cards use faded-red outlines; Newton, Albon, and Lucian have stronger orientation highlights, and adaptive map-name type is constrained to two lines. A dense Person Directory follows without internal P references, individual Notes, or Imported Source fields; Family Notes remain a separate final section. Cross-references avoid scaling one enormous SVG tree to illegible size. Page-break rules prefer intact entries and repeat important section headings where supported.
 
 The browser owns PDF generation. McFamily does not create a binary PDF directly.
 
 ## Security and privacy boundaries
 
-The import gate is not authentication. Browser storage, exported CSV, and printed PDFs all contain sensitive plaintext. The static application has no owner/editor/viewer roles, revocation, or usage audit. Those wishlist features require a future authenticated backend and are explicitly marked that way in the Roadmap.
+The import gate is not authentication. Browser storage, extracted package CSVs, exported ZIPs, and printed PDFs all contain sensitive plaintext. The static application has no owner/editor/viewer roles, revocation, or server-side usage audit. Those wishlist features require a future authenticated backend and are explicitly marked that way in the Roadmap.
 
-No real family CSV or export belongs in the repository. Only synthetic data should be used for committed tests or documentation.
+No real family CSV, ZIP, or export belongs in the repository. Only synthetic data should be used for committed tests or documentation.
 
 ## PWA and offline strategy
 

@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.56",
-      buildId: "0.0.1.56",
+      version: "0.0.1.57",
+      buildId: "0.0.1.57",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -27,11 +27,13 @@
       }
     },
 
-    schemaVersion: 11,
-    csvFormat: "mcfamily-csv-v2",
+    schemaVersion: 12,
+    packageFormat: "mcfamily-package",
+    packageVersion: "1",
+    datasetVersion: "15.0.0",
     storage: {
-      stateKey: "mcfamily.state.v11",
-      recoveryKey: "mcfamily.recovery.v3"
+      stateKey: "mcfamily.state.v12",
+      recoveryKey: "mcfamily.recovery.v4"
     },
 
     features: {
@@ -50,6 +52,8 @@
       maxImportBytes: 5 * 1024 * 1024,
       maxPeople: 1500,
       maxRelationships: 6000,
+      maxPlaces: 5000,
+      maxResidences: 10000,
       maxAddressesPerPerson: 20,
       maxContactsPerPerson: 20,
       maxTextLength: 20000,
@@ -112,6 +116,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.57",
+        date: "2026-08-24T03:30:00.000Z",
+        title: "Validated five-file data packages",
+        summary: "McFamily now imports and exports one private ZIP containing separate people, places, relationships, residences, and metadata CSV files.",
+        features: ["McPeople, McPlaces, McRelations, McResidences, and McMetadata schemas", "Strict cross-file validation before import", "Package audit history for schema changes, imports, and exports"],
+        improvements: ["Parent and partner records now live in McRelations", "Addresses are normalized as reusable Places plus Person-to-Place Residences", "The import preview reports every validation group before replacement", "Older versioned McFamily state copies are removed so they cannot consume the current package's browser-storage quota"],
+        fixes: ["Bad checksums, missing files, wrong headers, count mismatches, missing references, duplicates, self-links, and ancestry cycles are rejected without replacing local data"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.56",
         date: "2026-08-24T03:00:00.000Z",
@@ -672,12 +686,12 @@
     ],
 
     help: [
-      { id: "start", title: "Getting started", section: "Basics", keywords: "start import csv backup seed first launch", html: "<p>McFamily opens after you import the exact McLineage v14 CSV or a current native McFamily CSV export. The file is mapped, validated, and previewed before it replaces local data. Earlier source schemas and browser states are not migrated. There is no demo-family or blank-family bypass.</p>" },
+      { id: "start", title: "Getting started", section: "Basics", keywords: "start import zip package csv backup seed first launch", html: "<p>McFamily opens after you import the current private ZIP data package. The archive must contain exactly McPeople.csv, McPlaces.csv, McRelations.csv, McResidences.csv, and McMetadata.csv. ZIP integrity, exact schemas, record counts, identifiers, dates, cross-file references, duplicates, residences, relationships, and ancestry are validated before the preview can open. Earlier loose CSV schemas and browser states are not migrated. There is no demo-family or blank-family bypass.</p>" },
       { id: "tree", title: "Exploring the Family Tree", section: "Family", keywords: "tree focus overview zoom pan scroll horizontal vertical generation ancestor descendant home person condensed detailed co-parent non-lineal resize preferred legal birth name", html: "<p>Lineage shows the selected person and nearby generations; choosing a person from search returns here automatically. Full Tree clears and closes the selected-person panel, and Lineage stays disabled until another person is selected. Set the grouped Ancestor and Descendant depth numbers, or switch between Summary and Details cards. Name Preferences groups Preferred (Display), Legal (Current), and Lineal (Birth) with Short and Full choices. The selected-person panel follows this source preference, while its Lineage section always uses full Lineal Birth names. Both generation depths default to 10. Narrow cards place each name word on its own line; Lineal people keep the standard living or deceased card fill and use a bold muted-red outline plus a small lineage symbol beside the lifespan. Selection temporarily replaces that outline with the same accent border used for every person. Faded muted-red parent edges follow the Lineal bloodline. <strong>Non-Lineal Lines</strong> adds the lighter dashed branch from each recorded Non-Lineal parent to their child while keeping one fixed filled icon. Gold partner links distinguish current marriages (solid), previous marriages (dashed), never-married relationships (dotted), and unknown relationships (question marks). Up to two prior partners appear at two-thirds size on the left: one is centered; two align with the top and bottom of the full-size spouse and use evenly spaced parallel links. The current or latest death-ended spouse remains full-size on the right. The Key at the upper right of the canvas names each line and can be collapsed. <strong>?? Lineal</strong> appears only in Full Tree and reveals people whose stored source lineage is 99, plus anyone connected only to them; enabling it centers those people without changing its outlined icon. They always remain in the directory and search. On desktop, drag the divider beside the selected person panel to resize both modules; Developer Mode shows its percentage only while dragging. Scroll horizontally or vertically to explore larger layouts; enter a zoom percentage or use the right-aligned Out, In, and Fit actions.</p>" },
       { id: "people", title: "People and relationships", section: "Family", keywords: "people directory favorites star search sort filter blood lineal non-lineal alphabet address phone email parent child partner ancestry lineage generation names preferred legal birth maiden", html: "<p>Use Directory to the left of Search to open or close the pane. Its title-bar search contains the current result count. Filter By combines any living-status, Lineal, and Non-Lineal checkboxes; Sort By switches between first and last name; the A–Z rail follows the filtered results. Global person results show Preferred, Current, and Lineal names together. Select the strongly highlighted star beside a person search result or use Favorite in the selected-person panel to pin them above other matches. Favorites to the right of Search opens a one-time dropdown of every starred person without changing the search scope. Developer Mode can save a private Favorites JSON file outside browser storage and restore it after a reset. The person panel closes and deselects with its X; selecting a person in the Family Tree reopens it. Names lists Preferred (Display), Legal (Current), Lineal (Birth), and Maiden as four compact full-name rows; unrecorded values use ----. Lineage uses a compact Family Line with each name followed by its lineage number and generation; readings use the generation and the parent's first name, such as Gen 6, 5th Child of Max. Lineage sits directly under identity details, above Relationships. Identity details show Born, Died, Age, Living Status, and Marital Status; Gender and Pronouns are hidden for now. Missing values use UNKNOWN except a living person's Died value, which is ----. Age uses natural years or months on one line and adds the emphasized would-be age for deceased people. McLineage death descriptors distinguish no recorded death (NONE), an explicitly unknown death date (UNKNOWN), and a presumed death (UNKNOWN PRESUMED). A deceased spouse in a marriage ended by death reads Married while the surviving spouse reads Widowed. Relationship groups label parent, sibling, and child generations; each Partners row adds its year and perspective-aware status; parents identify recorded Lineal or Non-Lineal roles, siblings and children show birth order and year, and partners show marriage year. Partners puts the displayed spouse first in bold before reverse-ordered prior partners. Notes follow Relationships, and Imported Source finishes the profile. Generations are rooted at George McMillen (1745) as G0.</p>" },
       { id: "print", title: "Print or save a PDF", section: "Family", keywords: "print pdf atlas directory lineage family maps generation developer preview", html: "<p>Choose <strong>Print / Save PDF</strong> to build the atlas and open the browser print dialog. Its compact opening flows into six-column Family Maps; George McMillen (1745) is Generation 0, and Generation 4 and later are grouped beneath Generation 3 family lines. Lineal cards have a clearly visible faded-red outline; stronger Newton, Albon, and Lucian orientation highlights include a Bloodline symbol, deceased entries use brown shading, and unresolved 99/?? lineage branches are omitted. Jon Couts remains in the directory but is not presented as a map root. The dense three-column Person Directory shows only each full name, styled Lineage ID, and root-to-person first-name progression. In Developer Mode, the same action opens an in-app preview instead of printing.</p>" },
       { id: "notes", title: "Working with Notes", section: "Features", keywords: "notes text edit modal autosave", html: "<p>Notes is a single local plain-text scratchpad. Open it from the top bar or press <kbd>N</kbd>; it is included in McFamily backups.</p>" },
-      { id: "backup", title: "CSV backup and restore", section: "Data", keywords: "csv export import backup restore recovery private", html: "<p>CSV export is the complete editable copy of the family and contains private contact information. Native exports use typed rows for people, contacts, relationships, Notes, and settings. Store them securely. Replacement imports are previewed and confirmed; the prior local copy becomes the recovery snapshot.</p>" },
+      { id: "backup", title: "ZIP backup and restore", section: "Data", keywords: "zip csv package export import backup restore recovery private metadata audit", html: "<p>The ZIP export is the complete editable copy of the family and contains five private CSV files: McPeople, McPlaces, McRelations, McResidences, and McMetadata. McMetadata carries file schema versions, record counts, family settings, and audit events. Store the ZIP securely. Replacement imports are accepted only after every file and cross-file link validates; the prior local copy becomes the recovery snapshot.</p>" },
       { id: "privacy", title: "Privacy and local data", section: "Data", keywords: "privacy local storage static gate authentication", html: "<p>Family data stays in this browser unless you export it. The first-run import gate is an onboarding step, not authentication. Never commit a private family backup into the public Pages repository.</p>" },
       { id: "install", title: "Install McFamily", section: "Installation", keywords: "install home screen pwa offline", html: "<p>Use the browser’s Install app, Add to Home Screen, or Add to Dock command. After the shell has loaded once, local features continue to work offline.</p>" },
       { id: "shortcuts", title: "Keyboard access", section: "Accessibility", keywords: "keyboard shortcuts search directory favorites key print notes update reload", html: "<p>Press <kbd>/</kbd> for search, <kbd>D</kbd> for Directory, <kbd>F</kbd> for Favorites, <kbd>K</kbd> for the tree Key, <kbd>P</kbd> to print, <kbd>N</kbd> for Notes, <kbd>X</kbd> to dismiss What’s New, <kbd>R</kbd> to reload when an update is ready, <kbd>T</kbd> for theme, and <kbd>?</kbd> for Help. Visible controls provide every shortcut action.</p>" }
