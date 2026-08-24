@@ -7,10 +7,11 @@
   const storage = App.storage;
   const portability = App.portability;
   const components = App.components;
+  const model = App.stateModel;
   const encoder = new TextEncoder();
   const decoder = new TextDecoder("utf-8", { fatal: true });
   const ROLE_DEFINITIONS = {
-    owner: { mode: "owner", label: "Owner", stateMode: "editor", fullKey: true, redactedKey: true, canManage: true, canPublish: true },
+    owner: { mode: "owner", label: "Admin", stateMode: "editor", fullKey: true, redactedKey: true, canManage: true, canPublish: true },
     editor: { mode: "editor", label: "Editor", stateMode: "editor", fullKey: true, redactedKey: true, canManage: false, canPublish: true },
     "pii-viewer": { mode: "pii-viewer", label: "Member", stateMode: "pii-viewer", fullKey: true, redactedKey: false, canManage: false, canPublish: false },
     "redacted-viewer": { mode: "redacted-viewer", label: "Viewer", stateMode: "redacted-viewer", fullKey: false, redactedKey: true, canManage: false, canPublish: false }
@@ -102,7 +103,6 @@
     $("#cloudPath").value = settings.path;
     $("#cloudToken").value = storedToken();
     $("#cloudRememberToken").checked = Boolean(localStorage.getItem(config.storage.cloudTokenKey));
-    $("#cloudSettingsSummary").textContent = settings.owner + "/" + settings.repository + " · " + settings.branch + " · " + settings.path;
     renderGithubConnection();
   }
 
@@ -416,6 +416,159 @@
     });
   }
 
+  function comparableValue(value) {
+    if (Array.isArray(value)) return value.map(comparableValue);
+    if (!value || typeof value !== "object") return value;
+    return Object.keys(value).sort().reduce(function (result, key) {
+      if (key !== "createdAt" && key !== "updatedAt") result[key] = comparableValue(value[key]);
+      return result;
+    }, {});
+  }
+
+  function valuesDiffer(before, after) {
+    return JSON.stringify(comparableValue(before)) !== JSON.stringify(comparableValue(after));
+  }
+
+  function personLabel(person) {
+    return person ? model.displayName(person) : "Unknown person";
+  }
+
+  function personById(state, id) {
+    return state.workspace.people.find(function (person) { return person.id === id; }) || null;
+  }
+
+  function placeById(state, id) {
+    return state.workspace.places.find(function (place) { return place.id === id; }) || null;
+  }
+
+  function placeLabel(place) {
+    return place && (place.label || [place.line1, place.city, place.region].filter(Boolean).join(", ")) || "Unnamed place";
+  }
+
+  function changedAreaLabels(before, after, fields) {
+    return fields.filter(function (field) { return valuesDiffer(before[field[0]], after[field[0]]); }).map(function (field) { return field[1]; });
+  }
+
+  function recordChanges(beforeRecords, afterRecords, callbacks) {
+    const before = new Map(beforeRecords.map(function (record) { return [record.id, record]; }));
+    const after = new Map(afterRecords.map(function (record) { return [record.id, record]; }));
+    afterRecords.forEach(function (record) {
+      const previous = before.get(record.id);
+      if (!previous) callbacks.added(record);
+      else if (valuesDiffer(previous, record)) callbacks.updated(previous, record);
+    });
+    beforeRecords.forEach(function (record) { if (!after.has(record.id)) callbacks.removed(record); });
+  }
+
+  function relationshipLabel(relationship, state) {
+    if (relationship.type === "parent-child") {
+      return personLabel(personById(state, relationship.parentId)) + " → " + personLabel(personById(state, relationship.childId));
+    }
+    return personLabel(personById(state, relationship.person1Id)) + " ↔ " + personLabel(personById(state, relationship.person2Id));
+  }
+
+  function residenceLabel(residence, state) {
+    return personLabel(personById(state, residence.personId)) + " · " + placeLabel(placeById(state, residence.placeId));
+  }
+
+  function familyChanges(baseline, current) {
+    if (!baseline || !current) return [];
+    const changes = [];
+    const beforeFamily = baseline.workspace.family;
+    const afterFamily = current.workspace.family;
+    if (beforeFamily.title !== afterFamily.title) changes.push("Changed family title: " + beforeFamily.title + " → " + afterFamily.title);
+    if (beforeFamily.homePersonId !== afterFamily.homePersonId) {
+      changes.push("Changed root ancestor: " + personLabel(personById(baseline, beforeFamily.homePersonId)) + " → " + personLabel(personById(current, afterFamily.homePersonId)));
+    }
+    const beforeNotes = baseline.workspace.documents[0] && baseline.workspace.documents[0].html || "";
+    const afterNotes = current.workspace.documents[0] && current.workspace.documents[0].html || "";
+    if (beforeNotes !== afterNotes) changes.push("Updated family Notes");
+
+    recordChanges(baseline.workspace.people, current.workspace.people, {
+      added: function (person) { changes.push("Added person: " + personLabel(person)); },
+      removed: function (person) { changes.push("Removed person: " + personLabel(person)); },
+      updated: function (before, after) {
+        const areas = changedAreaLabels(before, after, [
+          ["names", "names"], ["reference", "reference"], ["livingStatus", "living status"], ["birth", "birth details"], ["death", "death details"],
+          ["addresses", "addresses"], ["phones", "phone numbers"], ["emails", "email addresses"], ["notes", "Notes"], ["heritageNote", "heritage details"],
+          ["gender", "gender"], ["pronouns", "pronouns"], ["source", "source details"], ["order", "sort order"]
+        ]);
+        changes.push("Updated person: " + personLabel(after) + " — " + (areas.join(", ") || "details"));
+      }
+    });
+
+    recordChanges(baseline.workspace.relationships, current.workspace.relationships, {
+      added: function (relationship) { changes.push("Added relationship: " + relationshipLabel(relationship, current)); },
+      removed: function (relationship) { changes.push("Removed relationship: " + relationshipLabel(relationship, baseline)); },
+      updated: function (before, after) {
+        const areas = changedAreaLabels(before, after, [
+          ["type", "type"], ["parentId", "parent"], ["childId", "child"], ["person1Id", "first person"], ["person2Id", "second person"],
+          ["lineage", "lineage"], ["kind", "parent type"], ["status", "status"], ["order", "order"], ["startDate", "start date"], ["endDate", "end date"],
+          ["place", "place"], ["notes", "Notes"], ["source", "source details"]
+        ]);
+        changes.push("Updated relationship: " + relationshipLabel(after, current) + " — " + (areas.join(", ") || "details"));
+      }
+    });
+
+    recordChanges(baseline.workspace.places, current.workspace.places, {
+      added: function (place) { changes.push("Added place: " + placeLabel(place)); },
+      removed: function (place) { changes.push("Removed place: " + placeLabel(place)); },
+      updated: function (before, after) {
+        const areas = changedAreaLabels(before, after, [
+          ["label", "label"], ["line1", "address"], ["line2", "address line 2"], ["city", "city"], ["region", "region"],
+          ["postalCode", "postal code"], ["country", "country"], ["notes", "Notes"], ["source", "source details"]
+        ]);
+        changes.push("Updated place: " + placeLabel(after) + " — " + (areas.join(", ") || "details"));
+      }
+    });
+
+    recordChanges(baseline.workspace.residences, current.workspace.residences, {
+      added: function (residence) { changes.push("Added residence: " + residenceLabel(residence, current)); },
+      removed: function (residence) { changes.push("Removed residence: " + residenceLabel(residence, baseline)); },
+      updated: function (before, after) {
+        const areas = changedAreaLabels(before, after, [
+          ["personId", "person"], ["placeId", "place"], ["label", "label"], ["current", "current status"], ["startDate", "start date"],
+          ["endDate", "end date"], ["notes", "Notes"], ["source", "source details"]
+        ]);
+        changes.push("Updated residence: " + residenceLabel(after, current) + " — " + (areas.join(", ") || "details"));
+      }
+    });
+    return changes;
+  }
+
+  function unpublishedChanges() {
+    const baseline = activeSession && activeSession.baselineState;
+    if (!baseline || !currentVault) return [];
+    return familyChanges(baseline, storage.getState());
+  }
+
+  function publicationActor(profile) {
+    const actual = actualAccessProfile();
+    return actual && actual.canManage ? "Admin" : actual && actual.label || profile && profile.label || "Editor";
+  }
+
+  function renderPublishChanges() {
+    const list = $("#hostedChangeList");
+    const button = $("#hostedPublishButton");
+    if (!list || !button) return [];
+    const changes = unpublishedChanges();
+    list.replaceChildren();
+    if (!changes.length) {
+      const item = document.createElement("li");
+      item.className = "no-change";
+      item.textContent = "No Updates";
+      list.appendChild(item);
+    } else {
+      changes.forEach(function (change) {
+        const item = document.createElement("li");
+        item.textContent = change;
+        list.appendChild(item);
+      });
+    }
+    button.disabled = busy || !changes.length;
+    return changes;
+  }
+
   function actualAccessProfile() {
     if (!activeSession) return null;
     const definition = definitionForGrant(activeSession.grant);
@@ -424,7 +577,7 @@
 
   function accessProfile() {
     const actual = actualAccessProfile();
-    if (!actual || actual.roleLabel !== "Owner" || !rolePreview) return actual;
+    if (!actual || !actual.canManage || !rolePreview) return actual;
     const definition = ROLE_DEFINITIONS[rolePreview];
     if (!definition) return actual;
     return { id: actual.id, mode: definition.stateMode, label: actual.label, roleLabel: definition.label, canManage: definition.canManage, canPublish: definition.canPublish, preview: true, previewRole: definition.mode };
@@ -433,7 +586,7 @@
   function setRolePreview(mode) {
     const actual = actualAccessProfile();
     const requested = mode === "owner" ? "" : u.cleanLine(mode, 40);
-    if (!actual || actual.roleLabel !== "Owner" || (requested && !ROLE_DEFINITIONS[requested])) {
+    if (!actual || !actual.canManage || (requested && !ROLE_DEFINITIONS[requested])) {
       rolePreview = "";
       renderAccessState();
       return false;
@@ -578,10 +731,12 @@
     $("#currentAccessSummary").dataset.kind = profile ? "success" : "danger";
     $("#currentAccessName").textContent = profile ? profile.label : "Locked";
     $("#currentAccessRole").textContent = "Permission: " + (profile ? profile.roleLabel : "None");
+    $("#hostedRecordedBy").value = profile ? publicationActor(profile) : "";
     const dialog = $("#cloudAuditDialog");
     if (!editor && dialog.open) dialog.close("access-unavailable");
     $("#hostedPublishSection").classList.toggle("access-hidden", !editor || !currentVault);
     $("#hostedVersionChange").textContent = currentVault ? currentVault.datasetVersion + " → next patch" : "First publication";
+    renderPublishChanges();
     renderConnection();
     renderAudit();
     if (owner) renderGrantRows();
@@ -592,7 +747,7 @@
     components.setLoading(value, message || "Working with the encrypted family record…");
     ["hostedPublishButton", "hostedAccessPublishButton", "cloudTestButton", "cloudSaveButton", "cloudForgetButton", "hostedLockButton"].forEach(function (id) {
       const button = $("#" + id);
-      if (button) button.disabled = value;
+      if (button) button.disabled = value || (id === "hostedPublishButton" && !unpublishedChanges().length);
     });
   }
 
@@ -637,7 +792,7 @@
       setBusy(true, "Opening the encrypted family record…");
       const opened = await decryptVaultRecordByPassphrase(currentVault, passphrase);
       rolePreview = "";
-      activeSession = { grant: opened.grant, keys: opened.keys };
+      activeSession = { grant: opened.grant, keys: opened.keys, baselineState: u.clone(opened.prepared.state) };
       localStorage.setItem(config.storage.hostedSeenKey, "1");
       storage.replace(opened.prepared.state, { saveRecovery: false, reason: "hosted-unlock", touch: false });
       $("#accessPassphrase").value = "";
@@ -703,6 +858,11 @@
   async function publishAccessChanges() {
     const profile = accessProfile();
     if (busy || !profile || !profile.canManage) return;
+    if (currentVault && unpublishedChanges().length) {
+      components.message("Family update required", "Use Update to publish the listed family changes before changing access.", { trigger: $("#hostedAccessPublishButton") });
+      $("#hostedAuditSummary").focus();
+      return;
+    }
     const visiblePassphrases = new Map($$("[data-grant-row]").map(function (row) {
       return [row.dataset.grantRow, $("[data-grant-passphrase]", row).value];
     }));
@@ -718,15 +878,14 @@
       const keys = activeSession && activeSession.keys && activeSession.keys.full && activeSession.keys.redacted
         ? activeSession.keys : { full: randomBytes(32), redacted: randomBytes(32) };
       const grants = await collectGrants(keys);
-      const ownerGrant = grants.find(function (grant) { return grant.id === "owner"; });
-      const actor = currentVault ? profile.label : ownerGrant.label;
+      const actor = "Admin";
       const action = currentVault ? "updated-hosted-access" : "created-hosted-access";
       const nextState = publishedState(action, actor, currentVault ? "Added, rotated, or revoked hosted passphrase access. Secret values are not recorded." : "Created the encrypted hosted family record and its first access grants.");
       const nextVault = await buildVault(nextState, keys, grants, (currentVault ? currentVault.revision : 0) + 1);
       const written = await writeVault(credentials.settings, credentials.token, nextVault, remote && remote.sha || "", currentVault ? "update passphrase access" : "create encrypted family vault");
       currentVault = written.vault;
       rolePreview = "";
-      activeSession = { grant: currentVault.grants.find(function (grant) { return grant.id === "owner"; }), keys: keys };
+      activeSession = { grant: currentVault.grants.find(function (grant) { return grant.id === "owner"; }), keys: keys, baselineState: u.clone(nextState) };
       localStorage.setItem(config.storage.hostedSeenKey, "1");
       storage.replace(nextState, { saveRecovery: true, recoveryReason: "Before hosted access publication", reason: "hosted-access-publish", touch: false });
       renderAccessState();
@@ -743,7 +902,9 @@
   async function publishCurrentFamily() {
     const profile = accessProfile();
     if (busy || !profile || !profile.canPublish || !currentVault || !activeSession.keys.full || !activeSession.keys.redacted) return;
-    const actor = profile.label;
+    const changes = unpublishedChanges();
+    if (!changes.length) { renderPublishChanges(); return; }
+    const actor = publicationActor(profile);
     const summary = u.cleanText($("#hostedAuditSummary").value, 4000).trim();
     if (!summary) {
       components.message("Audit summary required", "Enter a short description of what changed before publishing.", { trigger: $("#hostedPublishButton") });
@@ -758,11 +919,13 @@
       setGithubConnectionStatus("success", "Connection verified", "GitHub accepted this repository and token.");
       const remote = await readVaultApi(credentials.settings, credentials.token, false);
       if (remote.vault.revision !== currentVault.revision) throw new Error("Someone published a newer vault. Reload and sign in again before publishing your changes.");
-      const nextState = publishedState("published-hosted-family", actor, summary);
+      const detailedSummary = u.cleanText(summary + "\n\nDetailed changes:\n" + changes.map(function (change) { return "- " + change; }).join("\n"), 4000).trim();
+      const nextState = publishedState("published-hosted-family", actor, detailedSummary);
       const nextVault = await buildVault(nextState, activeSession.keys, currentVault.grants, currentVault.revision + 1);
       const written = await writeVault(credentials.settings, credentials.token, nextVault, remote.sha, "publish dataset " + portability.datasetVersionFor(nextState));
       currentVault = written.vault;
       activeSession.grant = currentVault.grants.find(function (grant) { return grant.id === activeSession.grant.id; });
+      activeSession.baselineState = u.clone(nextState);
       storage.replace(nextState, { saveRecovery: true, recoveryReason: "Before hosted dataset " + portability.datasetVersionFor(nextState), reason: "hosted-family-publish", touch: false });
       $("#hostedAuditSummary").value = "";
       renderAccessState();
@@ -832,7 +995,7 @@
     const profile = accessProfile();
     if (!profile || !profile.canPublish) return;
     populateSettings();
-    if (activeSession && activeSession.grant) $("#hostedRecordedBy").value = activeSession.grant.label;
+    $("#hostedRecordedBy").value = publicationActor(profile);
     renderAccessState();
     components.openDialog("#cloudAuditDialog", { trigger: $("#cloudAuditButton"), focus: currentVault ? "#hostedLockButton" : "#cloudToken" });
   }
@@ -846,7 +1009,7 @@
       const id = mode === "pii-viewer" ? "pii" : mode === "redacted-viewer" ? "redacted" : "owner";
       const definition = definitionForGrant(id);
       rolePreview = "";
-      activeSession = { grant: { id: id, mode: definition.mode, label: "Local " + definition.label }, keys: {} };
+      activeSession = { grant: { id: id, mode: definition.mode, label: "Local " + definition.label }, keys: {}, baselineState: u.clone(storage.getState()) };
       renderAccessState();
       finishUnlock();
       return;
@@ -863,7 +1026,7 @@
       const localOwner = initialized() && portability.accessModeFor(storage.getState()) === "editor" && !seen;
       if (localOwner) {
         rolePreview = "";
-        activeSession = { grant: { id: "owner", mode: "owner", label: "Owner Setup" }, keys: {} };
+        activeSession = { grant: { id: "owner", mode: "owner", label: "Owner Setup" }, keys: {}, baselineState: u.clone(storage.getState()) };
         renderAccessState();
         finishUnlock();
         return;
@@ -886,6 +1049,15 @@
       this.setAttribute("aria-pressed", String(!showing));
     });
     $("#cloudAuditButton").addEventListener("click", openDialog);
+    $("#githubConnectionSummary").addEventListener("click", function () {
+      const details = $("#hostedConnectionDetails");
+      const expanded = this.getAttribute("aria-expanded") === "true";
+      this.setAttribute("aria-expanded", String(!expanded));
+      this.setAttribute("aria-label", (expanded ? "Show" : "Hide") + " GitHub connection details");
+      details.hidden = expanded;
+      if (!expanded) $("#cloudOwner").focus();
+      else this.focus();
+    });
     $("#hostedLockButton").addEventListener("click", lockApplication);
     $("#hostedPublishButton").addEventListener("click", publishCurrentFamily);
     $("#hostedAccessPublishButton").addEventListener("click", publishAccessChanges);
@@ -927,7 +1099,7 @@
       if (activeSession) { renderAccessState(); return; }
       if (currentVault || !initialized() || portability.accessModeFor(storage.getState()) !== "editor") return;
       rolePreview = "";
-      activeSession = { grant: { id: "owner", mode: "owner", label: "Owner Setup" }, keys: {} };
+      activeSession = { grant: { id: "owner", mode: "owner", label: "Owner Setup" }, keys: {}, baselineState: u.clone(storage.getState()) };
       renderAccessState();
       finishUnlock();
     });
@@ -957,6 +1129,7 @@
     buildVault: buildVault,
     wrapGrant: wrapGrant,
     unwrapGrant: unwrapGrant,
+    familyChanges: familyChanges,
     decryptVaultRecord: decryptVaultRecord,
     decryptVaultRecordByPassphrase: decryptVaultRecordByPassphrase
   };

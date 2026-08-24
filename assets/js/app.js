@@ -96,7 +96,7 @@
 
   function rolePreviewAvailable() {
     const actualAccess = App.cloud && App.cloud.actualAccess ? App.cloud.actualAccess() : null;
-    return Boolean(developerModeAuthorized() && actualAccess && actualAccess.roleLabel === "Owner");
+    return Boolean(developerModeAuthorized() && actualAccess && actualAccess.canManage);
   }
 
   function openRolePreviewMenu(trigger) {
@@ -104,7 +104,7 @@
     const current = App.cloud.currentAccess();
     const selectedRole = current.previewRole || "owner";
     const roles = [
-      { id: "owner", label: "Owner" },
+      { id: "owner", label: "Admin" },
       { id: "editor", label: "Editor" },
       { id: "pii-viewer", label: "Member" },
       { id: "redacted-viewer", label: "Viewer" }
@@ -119,7 +119,7 @@
           App.cloud.setRolePreview(role.id);
           treeNeedsFit = true;
           renderAll();
-          components.toast(role.id === "owner" ? "Owner view restored." : role.label + " behavior is being previewed. Data and sign-in access were not changed.", { title: role.id === "owner" ? "Role preview ended" : role.label + " preview", kind: "info" });
+          components.toast(role.id === "owner" ? "Admin view restored." : role.label + " behavior is being previewed. Data and sign-in access were not changed.", { title: role.id === "owner" ? "Role preview ended" : role.label + " preview", kind: "info" });
         }
       };
     }), { focus: true });
@@ -226,7 +226,8 @@
     const favoriteCountLabel = favoriteCount + " favorite " + (favoriteCount === 1 ? "person" : "people");
     $("#favoritesButton").disabled = !isInitialized;
     $("#favoritesButton").setAttribute("aria-expanded", String(isInitialized && favoritesPreviewOpen));
-    $("#favoritesButton").title = "Show " + favoriteCountLabel;
+    $("#favoritesButton").title = (favoritesPreviewOpen ? "Hide " : "Show ") + favoriteCountLabel;
+    $("#favoritesButton").setAttribute("aria-label", (favoritesPreviewOpen ? "Hide " : "Show ") + favoriteCountLabel);
     const restoreFavoritesHeaderButton = $("#restoreFavoritesHeaderButton");
     restoreFavoritesHeaderButton.hidden = !developerReferences;
     restoreFavoritesHeaderButton.disabled = !isInitialized || !developerReferences;
@@ -2122,6 +2123,7 @@
   }
 
   function activateGlobalSearchResult(type, id) {
+    const favoritesWereOpen = favoritesPreviewOpen;
     favoritesPreviewOpen = false;
     if (type === "person") selectPerson(id, { focus: true, mobileProfile: true, focusMode: true });
     else if (type === "notes") openNotes($("#globalSearch"));
@@ -2131,6 +2133,7 @@
     $("#globalSearchResults").hidden = true;
     $("#globalSearch").setAttribute("aria-expanded", "false");
     $("#favoritesButton").setAttribute("aria-expanded", "false");
+    if (favoritesWereOpen) renderHeader();
   }
 
   function openSupport(tab, trigger) {
@@ -2584,12 +2587,20 @@
       announce(willOpen ? "Opened the directory." : "Closed the directory.");
     });
     $("#favoritesButton").addEventListener("click", function () {
-      favoritesPreviewOpen = true;
-      $("#globalSearch").focus();
-      renderGlobalSearchResults();
+      favoritesPreviewOpen = !favoritesPreviewOpen;
+      if (favoritesPreviewOpen) {
+        $("#globalSearch").focus();
+        renderGlobalSearchResults();
+      } else {
+        $("#globalSearchResults").hidden = true;
+        $("#globalSearch").setAttribute("aria-expanded", "false");
+        this.setAttribute("aria-expanded", "false");
+      }
+      renderHeader();
     });
     $("#restoreFavoritesHeaderButton").addEventListener("click", function () {
       favoritesPreviewOpen = false;
+      renderHeader();
       $("#restoreFavoritesInput").click();
     });
     $("#supportButton").addEventListener("click", function (event) { openSupport(state().ui.supportTab, event.currentTarget); });
@@ -2651,12 +2662,12 @@
       const safeLink = event.target.closest("[data-open-url]");
       if (safeLink && !u.safeExternalOpen(safeLink.dataset.openUrl)) components.toast("That external address is not allowed.", { title: "Link unavailable", kind: "warning" });
     });
-    $("#globalSearch").addEventListener("input", function (event) { favoritesPreviewOpen = false; storage.mutate(function (next) { next.ui.search = u.cleanLine(event.target.value, 200); }, { touch: false, reason: "global-search" }); renderGlobalSearchResults(); });
+    $("#globalSearch").addEventListener("input", function (event) { const favoritesWereOpen = favoritesPreviewOpen; favoritesPreviewOpen = false; storage.mutate(function (next) { next.ui.search = u.cleanLine(event.target.value, 200); }, { touch: false, reason: "global-search" }); if (favoritesWereOpen) renderHeader(); renderGlobalSearchResults(); });
     $("#globalSearch").addEventListener("focus", renderGlobalSearchResults);
-    $("#globalSearch").addEventListener("keydown", function (event) { const results = $$(".global-search-result-main", $("#globalSearchResults")); if (event.key === "ArrowDown" && results.length) { event.preventDefault(); results[0].focus(); } if (event.key === "Escape") { favoritesPreviewOpen = false; $("#globalSearchResults").hidden = true; event.target.setAttribute("aria-expanded", "false"); $("#favoritesButton").setAttribute("aria-expanded", "false"); event.target.select(); } });
+    $("#globalSearch").addEventListener("keydown", function (event) { const results = $$(".global-search-result-main", $("#globalSearchResults")); if (event.key === "ArrowDown" && results.length) { event.preventDefault(); results[0].focus(); } if (event.key === "Escape") { const favoritesWereOpen = favoritesPreviewOpen; favoritesPreviewOpen = false; $("#globalSearchResults").hidden = true; event.target.setAttribute("aria-expanded", "false"); $("#favoritesButton").setAttribute("aria-expanded", "false"); if (favoritesWereOpen) renderHeader(); event.target.select(); } });
     $("#globalSearchResults").addEventListener("click", function (event) { const favorite = event.target.closest("[data-toggle-favorite]"); if (favorite) { toggleFavoritePerson(favorite.dataset.toggleFavorite, favorite); return; } const result = event.target.closest("[data-search-type]"); if (result) activateGlobalSearchResult(result.dataset.searchType, result.dataset.searchId); });
-    $("#globalSearchResults").addEventListener("keydown", function (event) { const button = event.target.closest(".global-search-result-main"); const buttons = $$(".global-search-result-main", event.currentTarget); if (button && (event.key === "ArrowDown" || event.key === "ArrowUp")) { event.preventDefault(); const index = buttons.indexOf(button); buttons[(index + (event.key === "ArrowDown" ? 1 : -1) + buttons.length) % buttons.length]?.focus(); } else if (event.key === "Escape") { event.preventDefault(); favoritesPreviewOpen = false; $("#globalSearch").focus(); $("#globalSearchResults").hidden = true; $("#globalSearch").setAttribute("aria-expanded", "false"); $("#favoritesButton").setAttribute("aria-expanded", "false"); } });
-    document.addEventListener("focusin", function (event) { if (!event.target.closest(".global-search-wrap") && !event.target.closest("#favoritesButton")) { favoritesPreviewOpen = false; $("#globalSearchResults").hidden = true; $("#globalSearch").setAttribute("aria-expanded", "false"); $("#favoritesButton").setAttribute("aria-expanded", "false"); } });
+    $("#globalSearchResults").addEventListener("keydown", function (event) { const button = event.target.closest(".global-search-result-main"); const buttons = $$(".global-search-result-main", event.currentTarget); if (button && (event.key === "ArrowDown" || event.key === "ArrowUp")) { event.preventDefault(); const index = buttons.indexOf(button); buttons[(index + (event.key === "ArrowDown" ? 1 : -1) + buttons.length) % buttons.length]?.focus(); } else if (event.key === "Escape") { event.preventDefault(); const favoritesWereOpen = favoritesPreviewOpen; favoritesPreviewOpen = false; $("#globalSearch").focus(); $("#globalSearchResults").hidden = true; $("#globalSearch").setAttribute("aria-expanded", "false"); $("#favoritesButton").setAttribute("aria-expanded", "false"); if (favoritesWereOpen) renderHeader(); } });
+    document.addEventListener("focusin", function (event) { if (!event.target.closest(".global-search-wrap") && !event.target.closest("#favoritesButton")) { const favoritesWereOpen = favoritesPreviewOpen; favoritesPreviewOpen = false; $("#globalSearchResults").hidden = true; $("#globalSearch").setAttribute("aria-expanded", "false"); $("#favoritesButton").setAttribute("aria-expanded", "false"); if (favoritesWereOpen) renderHeader(); } });
     bindSupportEvents();
     document.addEventListener("keydown", handleGlobalKeydown);
     document.addEventListener("keyup", function (event) { updateShortcutHints(event, false); });
