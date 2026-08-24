@@ -26,8 +26,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 13,
   "meta": {
-    "appVersion": "0.0.1.70",
-    "buildId": "0.0.1.70",
+    "appVersion": "0.0.1.71",
+    "buildId": "0.0.1.71",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -75,7 +75,7 @@ The Pages repository and public ciphertext-only `mcdata` repository are intentio
 
 Every online load fetches `McFamily-access.json` anonymously with `no-store`, validates its format, and requires a current passphrase. A wrong, removed, or rotated grant cannot unwrap a data key. The decrypted package must pass the same strict parser as a recovery import, including physical redaction checks for Viewer. Lock removes the decrypted browser state and recovery snapshot, reloads the application, and requires the passphrase again without publishing or modifying the hosted vault. Revocation applies on the recipient's next reload; a static web application cannot retract information already seen or copied.
 
-Owner and Editor publication requires a fine-grained GitHub token limited to the public encrypted-data repository with Contents read/write access. Tokens live only in session or local browser storage. A family publication requires a summary and binds its actor to the signed-in grant label, advances the `16.0.x` patch, appends an audit event, revalidates and encrypts full and redacted packages, and uses both vault revision and GitHub SHA to reject stale writes. Owner-only access publication creates, rotates, or removes grants without recording secret values. Successful publications remain visible in McMetadata and Git history; Member and Viewer sign-ins are not centrally logged and the in-package audit is not tamper-proof.
+Admin and Editor publication requires a fine-grained GitHub token limited to the public encrypted-data repository with Contents read/write access. Tokens live only in session or local browser storage. A family publication compares the opened hosted baseline with publishable family content, excluding device-only preferences, and requires a manual Summary of What Changed only when generated Detailed Changes exist. It records the Owner as `Admin` or a named Editor by their signed-in label, advances the `16.0.x` patch, appends the summary plus generated details to one audit event, revalidates and encrypts full and redacted packages, and uses both vault revision and GitHub SHA to reject stale writes. Owner-only access publication creates, rotates, or removes grants without recording secret values; Owner Recovery is also Owner-only in Audit. Successful publications remain visible in McMetadata and Git history; Member and Viewer sign-ins are not centrally logged and the in-package audit is not tamper-proof.
 
 Lineal people use complete root-to-person paths that extend each direct Lineal parent's path by one two-digit segment; Non-Lineal partner-only rows intentionally leave lineage blank. A known death value marks a person deceased. Without one, `person-date-death-descriptor` is authoritative: `NONE` means living, `UNKNOWN` means explicitly deceased with no known date, and `UNKNOWN PRESUMED` means source evidence presumes death. Partial source dates remain in source details because the editable date model accepts only normalized known values.
 

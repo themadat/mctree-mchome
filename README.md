@@ -4,7 +4,7 @@ McFamily is a private family atlas that runs as a static GitHub Pages app. It vi
 
 There is no custom backend, account provider, cloud database, or runtime dependency. The separate public `mcdata` repository contains only an AES-GCM encrypted vault; readable family CSVs, passphrases, and GitHub tokens never belong in either public repository.
 
-Current version: `0.0.1.70` (`major.minor.patch.build`).
+Current version: `0.0.1.71` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -17,14 +17,14 @@ Current version: `0.0.1.70` (`major.minor.patch.build`).
 - Can hide `99`-lineage people from Full Tree with a persisted `?? Lineal` control whose outlined symbol remains fixed; enabling it centers the revealed people. The control is hidden in Lineage view, while those people remain available in directory and search. Printable atlases omit unresolved `99`/`??` lineage branches.
 - Records out-of-wedlock partnerships as never-married relationships with no start date, sequenced by relationship order.
 - Provides a header-toggled directory with title-bar search and result count, visible Filter By and Sort By controls, combinable status and Lineal/Non-Lineal checkbox filters, A–Z quick jumps, lifespan and lineage context, and broad search across names, contact details, places, heritage, and notes.
-- Lets people be starred directly in search or from the selected-person panel, remembers those favorites separately on the device through hosted refreshes and Lock, and opens them as a one-time dropdown without changing or highlighting the ordinary search scope. Developer Mode adds a Restore shortcut beside Favorites for a saved Favorites JSON file.
+- Lets people be starred directly in search or from the selected-person panel, remembers those favorites separately on the device through hosted refreshes and Lock, and toggles the complete Favorites list directly below Search without changing the query. Developer Mode adds a Restore shortcut beside Favorites for a saved Favorites JSON file.
 - Shows Preferred (Display), Legal (Current), Lineal (Birth), and Maiden names as four compact profile rows; the Family Tree can use any of the first three as its name source and can show Short or Full names.
 - Keeps local save/backup status in the top toolbar and provides D, F, K, X, and R shortcuts for Directory, Favorites, the tree Key, What's New dismissal, and update reload.
 - Supports partial/fuzzy matches that return the tree to Lineage, collapsible side panels, compact 20/50/30 default desktop splits with persistent resizing, and Summary tree cards that balance names with four or more parts across three fitted lines without widening the card.
 - Keeps portrait placeholders and internal person references out of the ordinary workspace; Developer Mode reveals references and a left-side generation bubble scale for visual troubleshooting.
 - Presents complete oldest-to-newest, two-digit Lineage IDs with the first three ancestral segments italicized and the selected person's final segment bold, followed by a compact direct-parent-linked Family Line with each name's lineage number and generation.
 - Keeps people, places, person-to-person relationships, person-to-place residences, and package metadata in separate exact-schema CSV files inside one ZIP artifact.
-- Opens Audit immediately left of Add so separately named Editors can publish under their own audit username and Owners can add, rotate, or revoke each passphrase independently.
+- Opens Audit immediately left of Add. The Owner's permission is shown as Admin and records updates as Admin; separately named Editors publish under their own audit username. Audit generates a detailed unpublished-change list, enables Update only when family content changed, and lets the Owner add, rotate, or revoke each passphrase independently.
 - Lets the signed-in Owner click the role pill in Developer Mode to preview Editor, Member, or Viewer behavior without changing the vault, package, or active credentials.
 - Imports known and question-mark partial source dates; person death descriptors explicitly distinguish living (`NONE`), deceased with an unknown date (`UNKNOWN`), and presumed deceased (`UNKNOWN PRESUMED`).
 - Shows partial source dates such as `December ??, 1979`, keeps a natural-language Age property on one line, and fills unknown visible identity properties with `UNKNOWN`. Living profiles use `----` for Died, and living people show only their birth year in directory and tree lifespans. Gender and Pronouns remain stored but are temporarily hidden from person details.
@@ -106,7 +106,7 @@ The default vault is `themadat/mcdata`, branch `main`, at `data/mcfamily/McFamil
 2. Set the Owner username and passphrase, then add every Editor, Member, and Viewer with a unique shown name and a unique passphrase. Names remain public audit metadata but are not shown on the sign-in screen. Save new phrases before closing the dialog.
 3. Choose **Publish Access Changes**. McFamily validates the family, builds full and physically redacted packages in memory, encrypts them with different random data keys, wraps only the appropriate key for each passphrase, and publishes one ciphertext-only JSON vault.
 4. Send everyone the ordinary Pages link plus their passphrase. They do not choose an account or role and never receive a ZIP; McFamily identifies the matching grant locally.
-5. Editors record what changed and choose **Publish Family Update**. McFamily uses the signed-in username as the audit actor, advances the dataset patch, appends the event, revalidates, encrypts both current views with the existing data keys, checks the remote revision/SHA, and replaces the vault.
+5. An Admin or Editor enters a **Summary of What Changed** and chooses **Update**. McFamily lists the detailed family changes automatically and leaves Update disabled when there are none. It records Admin publications as `Admin` and Editor publications under the signed-in username, advances the dataset patch, appends the event, revalidates, encrypts both current views with the existing data keys, checks the remote revision/SHA, and replaces the vault.
 6. To revoke an Editor, the Owner chooses **Revoke** on that username and publishes Access Changes. To rotate access, enter a new passphrase for that person and publish. Member and Viewer grants remain independently revocable.
 
 If somebody publishes first, the stale publication is rejected. Reload, sign in again, and reapply the edit; McFamily never guesses at a merge. GitHub history and McMetadata preserve successful publications, but the in-package audit is not cryptographically tamper-proof.
