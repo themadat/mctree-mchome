@@ -12,9 +12,10 @@
   const ROLE_DEFINITIONS = {
     owner: { mode: "owner", label: "Owner", stateMode: "editor", fullKey: true, redactedKey: true, canManage: true, canPublish: true },
     editor: { mode: "editor", label: "Editor", stateMode: "editor", fullKey: true, redactedKey: true, canManage: false, canPublish: true },
-    pii: { mode: "pii-viewer", label: "Private Viewer", stateMode: "pii-viewer", fullKey: true, redactedKey: false, canManage: false, canPublish: false },
-    redacted: { mode: "redacted-viewer", label: "Redacted Viewer", stateMode: "redacted-viewer", fullKey: false, redactedKey: true, canManage: false, canPublish: false }
+    "pii-viewer": { mode: "pii-viewer", label: "Private Viewer", stateMode: "pii-viewer", fullKey: true, redactedKey: false, canManage: false, canPublish: false },
+    "redacted-viewer": { mode: "redacted-viewer", label: "Redacted Viewer", stateMode: "redacted-viewer", fullKey: false, redactedKey: true, canManage: false, canPublish: false }
   };
+  const FIXED_GRANT_MODES = { owner: "owner", pii: "pii-viewer", redacted: "redacted-viewer" };
   const PASSPHRASE_WORDS = [
     "amber", "apple", "atlas", "basil", "beacon", "birch", "bluebird", "brook", "cedar", "clover", "copper", "cove",
     "dahlia", "ember", "fern", "field", "garden", "harbor", "hazel", "hickory", "iris", "juniper", "lantern", "laurel",
@@ -31,7 +32,7 @@
   function initialized() { return Boolean(storage.getState().workspace.family.initializedAt); }
 
   function settingsDefaults() {
-    return { editor: "", owner: config.cloud.owner, repository: config.cloud.repository, branch: config.cloud.branch, path: config.cloud.path };
+    return { owner: config.cloud.owner, repository: config.cloud.repository, branch: config.cloud.branch, path: config.cloud.path };
   }
 
   function readJson(key) {
@@ -61,7 +62,7 @@
 
   function cleanSettings(source) {
     const settings = {
-      editor: u.cleanLine(source.editor, 160), owner: u.cleanLine(source.owner, 39),
+      owner: u.cleanLine(source.owner, 39),
       repository: u.cleanLine(source.repository, 100).replace(/\.git$/i, ""), branch: u.cleanLine(source.branch, 100) || "main",
       path: u.cleanLine(source.path, 300).replace(/^\/+/, "")
     };
@@ -78,7 +79,7 @@
 
   function formCredentials() {
     const settings = cleanSettings({
-      editor: $("#cloudEditorName").value, owner: $("#cloudOwner").value, repository: $("#cloudRepository").value,
+      owner: $("#cloudOwner").value, repository: $("#cloudRepository").value,
       branch: $("#cloudBranch").value, path: $("#cloudPath").value
     });
     const token = $("#cloudToken").value.trim() || storedToken();
@@ -88,7 +89,6 @@
 
   function populateSettings() {
     const settings = storedSettings();
-    $("#cloudEditorName").value = settings.editor;
     $("#cloudOwner").value = settings.owner;
     $("#cloudRepository").value = settings.repository;
     $("#cloudBranch").value = settings.branch;
@@ -190,15 +190,27 @@
     }
   }
 
+  function modeForGrant(id, suppliedMode) {
+    const cleanId = u.cleanLine(id, 64);
+    const expectedMode = FIXED_GRANT_MODES[cleanId] || (/^editor(?:-[a-f0-9]{16})?$/.test(cleanId) ? "editor" : "");
+    if (!expectedMode || (suppliedMode && suppliedMode !== expectedMode)) throw new Error("The encrypted vault contains an invalid access grant.");
+    return expectedMode;
+  }
+
+  function definitionForGrant(grantOrId, suppliedMode) {
+    const id = typeof grantOrId === "string" ? grantOrId : grantOrId && grantOrId.id;
+    const mode = typeof grantOrId === "string" ? suppliedMode : grantOrId && grantOrId.mode;
+    return ROLE_DEFINITIONS[modeForGrant(id, mode)];
+  }
+
   function validatePassphrase(passphrase) {
     const clean = String(passphrase || "").trim();
-    const words = clean.split(/[\s-]+/).filter(Boolean);
-    if (clean.length < 24 || words.length < 5) throw new Error("Use a passphrase containing at least five unrelated words and 24 characters.");
+    if (clean.length < config.cloud.minPassphraseLength) throw new Error("Use a passphrase containing at least " + config.cloud.minPassphraseLength + " characters.");
     return clean;
   }
 
-  async function wrapGrant(id, label, passphrase, keys) {
-    const definition = ROLE_DEFINITIONS[id];
+  async function wrapGrant(id, label, passphrase, keys, mode) {
+    const definition = definitionForGrant(id, mode);
     const salt = randomBytes(16);
     const iterations = config.cloud.passphraseIterations;
     const passphraseKey = await derivePassphraseKey(validatePassphrase(passphrase), salt, iterations);
@@ -215,7 +227,7 @@
     let payload;
     try { payload = JSON.parse(decoder.decode(bytes)); } catch (error) { throw new Error("The passphrase is incorrect or its access grant is damaged."); }
     if (Number(payload.version) !== 1) throw new Error("The passphrase access grant uses an unsupported key format.");
-    const definition = ROLE_DEFINITIONS[grant.id];
+    const definition = definitionForGrant(grant);
     const keys = {};
     if (definition.fullKey) keys.full = base64ToBytes(payload.fullKey, "Full-data key");
     if (definition.redactedKey) keys.redacted = base64ToBytes(payload.redactedKey, "Redacted-data key");
@@ -227,7 +239,7 @@
     const grant = vault.grants.find(function (item) { return item.id === grantId; });
     if (!grant) throw new Error("That access grant is no longer active.");
     const keys = await unwrapGrant(grant, passphrase);
-    const definition = ROLE_DEFINITIONS[grant.id];
+    const definition = definitionForGrant(grant);
     const dataKind = definition.stateMode === "redacted-viewer" ? "redacted" : "full";
     const rawKey = dataKind === "redacted" ? keys.redacted : keys.full;
     const bytes = await decryptBytes(vault.data[dataKind], await importDataKey(rawKey), config.cloud.vaultFormat + ":data:" + dataKind);
@@ -254,21 +266,29 @@
     const revision = Number(source.revision);
     if (!Number.isInteger(revision) || revision < 1) throw new Error("The encrypted vault revision is invalid.");
     const grants = Array.isArray(source.grants) ? source.grants : [];
-    if (!grants.length || grants.length > 4) throw new Error("The encrypted vault must contain one to four access grants.");
+    if (!grants.length || grants.length > config.cloud.maxAccessGrants) throw new Error("The encrypted vault contains too many access grants.");
     const used = new Set();
+    const usedLabels = new Set();
+    let editorCount = 0;
     const normalizedGrants = grants.map(function (item) {
       const grant = u.plainObject(item);
-      const id = u.cleanLine(grant.id, 20);
-      const definition = ROLE_DEFINITIONS[id];
-      if (!definition || used.has(id) || grant.mode !== definition.mode) throw new Error("The encrypted vault contains an invalid or duplicate access grant.");
+      const id = u.cleanLine(grant.id, 64);
+      const definition = definitionForGrant(id, grant.mode);
+      if (used.has(id)) throw new Error("The encrypted vault contains a duplicate access grant.");
       used.add(id);
+      if (definition.mode === "editor") editorCount += 1;
+      const label = u.cleanLine(grant.label, 80);
+      const normalizedLabel = label.toLowerCase();
+      if (!label || usedLabels.has(normalizedLabel)) throw new Error("Every access grant must have a unique shown name.");
+      usedLabels.add(normalizedLabel);
       const iterations = Number(grant.iterations);
       if (!Number.isInteger(iterations) || iterations < 100000 || iterations > 1000000) throw new Error("An access grant uses an unsupported passphrase strength.");
       const salt = base64ToBytes(grant.salt, "Passphrase salt");
       if (salt.length !== 16) throw new Error("An access grant salt is damaged.");
-      return { id: id, label: u.cleanLine(grant.label, 80) || definition.label, mode: grant.mode, iterations: iterations, salt: grant.salt, wrapped: validateEncryptedPayload(grant.wrapped, "Access grant") };
+      return { id: id, label: label, mode: definition.mode, iterations: iterations, salt: grant.salt, wrapped: validateEncryptedPayload(grant.wrapped, "Access grant") };
     });
     if (!used.has("owner")) throw new Error("The encrypted vault has no Owner grant.");
+    if (editorCount > config.cloud.maxEditors) throw new Error("The encrypted vault contains more editors than McFamily allows.");
     const datasetVersion = u.cleanLine(source.datasetVersion, 40);
     if (!portability.isSupportedDatasetVersion(datasetVersion)) throw new Error("The encrypted vault dataset version is not supported.");
     const updatedAtValue = u.cleanLine(source.updatedAt, 80);
@@ -368,7 +388,7 @@
 
   function accessProfile() {
     if (!activeSession) return null;
-    const definition = ROLE_DEFINITIONS[activeSession.grant.id] || ROLE_DEFINITIONS.owner;
+    const definition = definitionForGrant(activeSession.grant);
     return { id: activeSession.grant.id, mode: definition.stateMode, label: activeSession.grant.label || definition.label, canManage: definition.canManage, canPublish: definition.canPublish };
   }
 
@@ -430,20 +450,61 @@
     });
   }
 
+  function uniqueEditorGrantId() {
+    const existing = new Set($$("[data-grant-row]").map(function (row) { return row.dataset.grantRow; }));
+    let id = "";
+    do { id = "editor-" + Array.from(randomBytes(8), function (byte) { return byte.toString(16).padStart(2, "0"); }).join(""); }
+    while (existing.has(id));
+    return id;
+  }
+
+  function createEditorGrantRow(grant) {
+    const fragment = $("#hostedEditorGrantTemplate").content.cloneNode(true);
+    const row = $("[data-grant-row]", fragment);
+    const id = grant && grant.id || uniqueEditorGrantId();
+    row.dataset.grantRow = id;
+    row.dataset.grantMode = "editor";
+    $("[data-grant-label]", row).value = grant && grant.label || "";
+    const passphrase = $("[data-grant-passphrase]", row);
+    passphrase.placeholder = grant ? "Keep current passphrase" : "Enter 8+ characters";
+    $("[data-remove-editor]", row).textContent = grant ? "Revoke" : "Remove";
+    return row;
+  }
+
+  function addEditorGrantRow(grant) {
+    const list = $("#hostedEditorGrantList");
+    const row = createEditorGrantRow(grant);
+    list.appendChild(row);
+    $("#hostedEditorEmpty").hidden = true;
+    return row;
+  }
+
+  function updateDraftGrantCount() {
+    const enabledFixed = $$("[data-grant-row]:not([data-grant-mode='editor'])").filter(function (row) {
+      return row.dataset.grantRow === "owner" || $("[data-grant-enabled]", row).checked;
+    }).length;
+    $("#hostedGrantCount").textContent = (enabledFixed + $$("#hostedEditorGrantList [data-grant-row]").length) + " active after publishing";
+  }
+
   function renderGrantRows() {
-    const grants = new Map((currentVault && currentVault.grants || []).map(function (grant) { return [grant.id, grant]; }));
-    Object.keys(ROLE_DEFINITIONS).forEach(function (id) {
+    const allGrants = currentVault && currentVault.grants || [];
+    const grants = new Map(allGrants.map(function (grant) { return [grant.id, grant]; }));
+    ["owner", "pii", "redacted"].forEach(function (id) {
       const row = $('[data-grant-row="' + id + '"]');
       const grant = grants.get(id);
       const enabled = $("[data-grant-enabled]", row);
       enabled.checked = id === "owner" || (currentVault ? Boolean(grant) : true);
       const label = $("[data-grant-label]", row);
-      label.value = grant && grant.label || ROLE_DEFINITIONS[id].label;
+      label.value = grant && grant.label || definitionForGrant(id).label;
       const passphrase = $("[data-grant-passphrase]", row);
       passphrase.value = "";
-      passphrase.placeholder = grant ? "Keep current passphrase" : "Enter or generate five words";
+      passphrase.placeholder = grant ? "Keep current passphrase" : "Enter 8+ characters";
     });
-    $("#hostedGrantCount").textContent = (currentVault ? currentVault.grants.length : 0) + " active";
+    const editorList = $("#hostedEditorGrantList");
+    editorList.replaceChildren();
+    allGrants.filter(function (grant) { return grant.mode === "editor"; }).forEach(addEditorGrantRow);
+    $("#hostedEditorEmpty").hidden = Boolean(editorList.children.length);
+    $("#hostedGrantCount").textContent = (currentVault ? allGrants.length : 0) + " active";
   }
 
   function renderAccessState() {
@@ -550,21 +611,28 @@
 
   function generatePassphrase() {
     const words = [];
-    for (let index = 0; index < 6; index += 1) words.push(PASSPHRASE_WORDS[randomBytes(1)[0] % PASSPHRASE_WORDS.length]);
+    for (let index = 0; index < 3; index += 1) words.push(PASSPHRASE_WORDS[randomBytes(1)[0] % PASSPHRASE_WORDS.length]);
     return words.join("-");
   }
 
   async function collectGrants(keys) {
     const existing = new Map((currentVault && currentVault.grants || []).map(function (grant) { return [grant.id, grant]; }));
     const grants = [];
-    for (const id of Object.keys(ROLE_DEFINITIONS)) {
-      const row = $('[data-grant-row="' + id + '"]');
-      const enabled = id === "owner" || $("[data-grant-enabled]", row).checked;
+    const usedLabels = new Set();
+    for (const row of $$("[data-grant-row]")) {
+      const id = row.dataset.grantRow;
+      const mode = row.dataset.grantMode || modeForGrant(id);
+      const enabledControl = $("[data-grant-enabled]", row);
+      const enabled = id === "owner" || !enabledControl || enabledControl.checked;
       if (!enabled) continue;
-      const label = u.cleanLine($("[data-grant-label]", row).value, 80) || ROLE_DEFINITIONS[id].label;
+      const label = u.cleanLine($("[data-grant-label]", row).value, 80);
+      if (!label) throw new Error((mode === "editor" ? "Every editor needs a username" : definitionForGrant(id, mode).label + " needs a shown name") + ".");
+      const normalizedLabel = label.toLowerCase();
+      if (usedLabels.has(normalizedLabel)) throw new Error("Each person needs a unique shown name for sign-in and auditing.");
+      usedLabels.add(normalizedLabel);
       const passphrase = $("[data-grant-passphrase]", row).value;
       if (!passphrase && existing.has(id)) grants.push(Object.assign({}, existing.get(id), { label: label }));
-      else if (passphrase) grants.push(await wrapGrant(id, label, passphrase, keys));
+      else if (passphrase) grants.push(await wrapGrant(id, label, passphrase, keys, mode));
       else throw new Error(label + " needs a new passphrase before it can be enabled.");
     }
     if (!grants.some(function (grant) { return grant.id === "owner"; })) throw new Error("Owner access cannot be removed.");
@@ -588,7 +656,8 @@
       const keys = activeSession && activeSession.keys && activeSession.keys.full && activeSession.keys.redacted
         ? activeSession.keys : { full: randomBytes(32), redacted: randomBytes(32) };
       const grants = await collectGrants(keys);
-      const actor = u.cleanLine(credentials.settings.editor, 160) || grants.find(function (grant) { return grant.id === "owner"; }).label;
+      const ownerGrant = grants.find(function (grant) { return grant.id === "owner"; });
+      const actor = currentVault ? profile.label : ownerGrant.label;
       const action = currentVault ? "updated-hosted-access" : "created-hosted-access";
       const nextState = publishedState(action, actor, currentVault ? "Added, rotated, or revoked hosted passphrase access. Secret values are not recorded." : "Created the encrypted hosted family record and its first access grants.");
       const nextVault = await buildVault(nextState, keys, grants, (currentVault ? currentVault.revision : 0) + 1);
@@ -611,11 +680,11 @@
   async function publishCurrentFamily() {
     const profile = accessProfile();
     if (busy || !profile || !profile.canPublish || !currentVault || !activeSession.keys.full || !activeSession.keys.redacted) return;
-    const actor = u.cleanLine($("#hostedRecordedBy").value, 160);
+    const actor = profile.label;
     const summary = u.cleanText($("#hostedAuditSummary").value, 4000).trim();
-    if (!actor || !summary) {
-      components.message("Audit details required", "Enter who made the changes and a short description before publishing.", { trigger: $("#hostedPublishButton") });
-      (!actor ? $("#hostedRecordedBy") : $("#hostedAuditSummary")).focus();
+    if (!summary) {
+      components.message("Audit summary required", "Enter a short description of what changed before publishing.", { trigger: $("#hostedPublishButton") });
+      $("#hostedAuditSummary").focus();
       return;
     }
     try {
@@ -687,7 +756,7 @@
 
   function openDialog() {
     populateSettings();
-    if (activeSession && activeSession.grant) $("#hostedRecordedBy").value = storedSettings().editor || activeSession.grant.label;
+    if (activeSession && activeSession.grant) $("#hostedRecordedBy").value = activeSession.grant.label;
     renderAccessState();
     components.openDialog("#cloudAuditDialog", { trigger: $("#cloudAuditButton"), focus: currentVault ? "#hostedLockButton" : "#cloudToken" });
   }
@@ -699,7 +768,8 @@
     if (localDevelopment && initialized()) {
       const mode = portability.accessModeFor(storage.getState());
       const id = mode === "pii-viewer" ? "pii" : mode === "redacted-viewer" ? "redacted" : "owner";
-      activeSession = { grant: { id: id, mode: ROLE_DEFINITIONS[id].mode, label: "Local " + ROLE_DEFINITIONS[id].label }, keys: {} };
+      const definition = definitionForGrant(id);
+      activeSession = { grant: { id: id, mode: definition.mode, label: "Local " + definition.label }, keys: {} };
       renderAccessState();
       finishUnlock();
       return;
@@ -745,12 +815,33 @@
     $("#cloudTestButton").addEventListener("click", testConnection);
     $("#cloudForgetButton").addEventListener("click", forgetConnection);
     $("#hostedAccessManager").addEventListener("click", function (event) {
+      const addEditor = event.target.closest("#hostedAddEditorButton");
+      if (addEditor) {
+        if ($$("#hostedEditorGrantList [data-grant-row]").length >= config.cloud.maxEditors) {
+          components.message("Editor limit reached", "McFamily allows up to " + config.cloud.maxEditors + " separately named editors.", { trigger: addEditor });
+          return;
+        }
+        const row = addEditorGrantRow();
+        updateDraftGrantCount();
+        $("[data-grant-label]", row).focus();
+        return;
+      }
+      const removeEditor = event.target.closest("[data-remove-editor]");
+      if (removeEditor) {
+        removeEditor.closest("[data-grant-row]").remove();
+        $("#hostedEditorEmpty").hidden = Boolean($("#hostedEditorGrantList").children.length);
+        updateDraftGrantCount();
+        return;
+      }
       const generate = event.target.closest("[data-generate-passphrase]");
       if (!generate) return;
       const input = $("[data-grant-passphrase]", generate.closest("[data-grant-row]"));
       input.value = generatePassphrase();
       input.focus();
       input.select();
+    });
+    $("#hostedAccessManager").addEventListener("change", function (event) {
+      if (event.target.matches("[data-grant-enabled]")) updateDraftGrantCount();
     });
     window.addEventListener("app:statechange", function () {
       if (activeSession) { renderAccessState(); return; }

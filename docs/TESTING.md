@@ -17,7 +17,7 @@ Use synthetic families only.
 - [ ] A missing vault shows a clear connection/setup status and one Owner Recovery ZIP action; a validated Editor recovery package enters Owner Setup, while invalid files leave the gate locked.
 - [ ] No demo family, blank-family action, GEDCOM action, loose-CSV action, stored-passphrase bypass, or local-state-only viewer bypass appears.
 - [ ] The vault rejects wrong format/version, malformed base64, unsupported KDF/cipher parameters, missing full/redacted payloads, duplicate/unknown grants, oversized content, and invalid revisions before decrypting anything.
-- [ ] Correct Owner, Editor, Private Viewer, and Redacted Viewer passphrases open only their assigned package; wrong, rotated, disabled, and removed passphrases fail without exposing the workspace.
+- [ ] Correct Owner, multiple named Editors, Private Viewer, and Redacted Viewer passphrases open only their assigned package; wrong, rotated, disabled, and removed passphrases fail without exposing the workspace.
 - [ ] Full and redacted packages use independent random data keys. Owner/Editor can unwrap both, Private Viewer can unwrap only full, and Redacted Viewer can unwrap only redacted.
 - [ ] Neither the serialized vault nor its public metadata contains a passphrase, GitHub token, readable CSV filename, person/contact/address value, or decrypted ZIP bytes.
 - [ ] A valid dataset 16 ZIP with at least one person shows access mode, people, relationship, place, residence, dataset, state, and validation-group summaries before opening the family.
@@ -38,7 +38,7 @@ Use synthetic families only.
 - [ ] Redacted Read-only export contains zero place/residence rows and no family Notes, person notes, relationship notes, or relationship place references; adding any of those back while retaining the redacted label makes import fail.
 - [ ] Private Viewer and Redacted Viewer disable person, relationship, family-title, and Notes mutations and omit routine recovery ZIP import/export, PDF, Developer data, publishing, GitHub-token, and passphrase-management surfaces. Search, favorites, display preferences, Lock, and audit history remain available.
 - [ ] Private Viewer can read contact/address data from the full package. Redacted Viewer receives zero places/residences and no contacts, family Notes, person/relationship notes, or supplemental private detail maps.
-- [ ] Owner and Editor enable family-record editing, recovery ZIP, PDF, and audited family publication. Owner alone can create, rotate, enable, and revoke the four hosted grants.
+- [ ] Owner and every named Editor enable family-record editing, recovery ZIP, PDF, and audited family publication. Owner alone can create, rename, rotate, and revoke up to 20 Editor grants plus the fixed viewer grants.
 - [ ] Profile life details use one ordinary one-line `Age` row: living ages are compact, ages below two use months, deceased ages read `#y at death · #y today`, and unavailable ages read `UNKNOWN`.
 - [ ] Desktop defaults to a thin-gutter 20/50/30 Directory/Tree/Profile split, both separators resize with pointer and keyboard input, the first resize persists both widths, a usable tree width remains, and live position percentages appear only in Developer Mode.
 - [ ] State v13 reloads from `mcfamily.state.v13`; older state and recovery keys are ignored and the dataset 16 import gate appears instead.
@@ -47,8 +47,9 @@ Use synthetic families only.
 - [ ] One ZIP export/import round trip preserves all five files, 16 name columns, people, places, residences, relationships, preferences, Notes, package metadata, and audit history.
 - [ ] Dataset `16.0.0`, `16.0.1`, and later `16.0.x` packages with the same five exact schemas validate; a different major/minor series is rejected.
 - [ ] Hosted publication rejects malformed current data, schema/count/reference/date/cycle failures, a stale vault revision, changed GitHub file SHA, non-public target, missing token permissions, or wrong configured path without altering local or remote data.
-- [ ] A valid family publication requires Recorded by and What changed, advances exactly one dataset patch, appends one `published-hosted-family` event, validates and encrypts both packages, writes one ciphertext vault, and keeps existing grants usable.
-- [ ] First access publication creates all enabled grants and one hosted-access audit event. Later Owner publication preserves blank passphrase rows, rotates nonblank rows, removes unchecked grants, never records secret values, and keeps Owner mandatory.
+- [ ] A valid family publication requires What changed, ignores any legacy connection name, records the signed-in grant label as `recordedBy`, advances exactly one dataset patch, appends one `published-hosted-family` event, validates and encrypts both packages, writes one ciphertext vault, and keeps existing grants usable.
+- [ ] Access validation rejects duplicate grant ids, duplicate shown names, more than 20 Editors, malformed dynamic Editor ids, missing Owner, and passphrases shorter than eight characters; original fixed `editor` grants remain readable.
+- [ ] First access publication creates all enabled grants and one hosted-access audit event. Later Owner publication preserves blank passphrase rows, rotates nonblank rows, removes disabled viewers and revoked Editors, never records secret values, and keeps Owner mandatory.
 - [ ] Lock clears decrypted browser state and requires a fresh online passphrase check. Tokens, settings, passphrases, and unencrypted family values never enter the vault, recovery state, PDF metadata, audit details, or service-worker cache.
 - [ ] Missing required Birth First/Last values normalize to `UNKNOWN`; the importer does not derive structured names from removed flat columns.
 - [ ] Partial source dates remain in source details, produce a partial-only preview warning, and do not become invented normalized dates in editable/native state.

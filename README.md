@@ -4,7 +4,7 @@ McFamily is a private family atlas that runs as a static GitHub Pages app. It vi
 
 There is no custom backend, account provider, cloud database, or runtime dependency. A separate public `app-data` repository contains only an AES-GCM encrypted vault; readable family CSVs, passphrases, and GitHub tokens never belong in either public repository.
 
-Current version: `0.0.1.62` (`major.minor.patch.build`).
+Current version: `0.0.1.63` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -24,7 +24,7 @@ Current version: `0.0.1.62` (`major.minor.patch.build`).
 - Keeps portrait placeholders and internal person references out of the ordinary workspace; Developer Mode reveals references and a left-side generation bubble scale for visual troubleshooting.
 - Presents complete oldest-to-newest, two-digit Lineage IDs with the first three ancestral segments italicized and the selected person's final segment bold, followed by a compact direct-parent-linked Family Line with each name's lineage number and generation.
 - Keeps people, places, person-to-person relationships, person-to-place residences, and package metadata in separate exact-schema CSV files inside one ZIP artifact.
-- Opens Access & Audit from the title bar so Editors can publish the current family and Owners can create, rotate, or revoke hosted passphrases.
+- Opens Access & Audit from the title bar so separately named Editors can publish under their own audit username and Owners can add, rotate, or revoke each passphrase independently.
 - Imports known and question-mark partial source dates; person death descriptors explicitly distinguish living (`NONE`), deceased with an unknown date (`UNKNOWN`), and presumed deceased (`UNKNOWN PRESUMED`).
 - Shows partial source dates such as `December ??, 1979`, keeps a natural-language Age property on one line, and fills unknown visible identity properties with `UNKNOWN`. Living profiles use `----` for Died, and living people show only their birth year in directory and tree lifespans. Gender and Pronouns remain stored but are temporarily hidden from person details.
 - Uses compact open Parents, Siblings, Partners, and Children groups near the top of each profile, with combined parent role/type labels such as `Lineal :: Adopted` and `Non-Lineal :: Biological`, birth order and year for siblings and children, marriage years for partners, and current-first partner history; Imported Source finishes each profile.
@@ -51,16 +51,17 @@ On a fresh browser profile, McFamily intentionally has no demo family or blank-w
 
 ## Privacy model
 
-Everyone uses the same public application link. Long passphrases wrap random AES-256 data keys with PBKDF2 and AES-GCM; the passphrase itself never leaves the browser:
+Everyone uses the same public application link. Passphrases wrap random AES-256 data keys with PBKDF2 and AES-GCM; the passphrase itself never leaves the browser:
 
 - **Owner** decrypts full data and may edit, publish, add or rotate passphrases, and revoke grants.
-- **Editor** decrypts full data and may edit and publish, but cannot manage passphrases.
+- Each named **Editor** decrypts full data and may edit and publish under their own automatic audit identity, but cannot manage passphrases.
 - **Private Viewer** decrypts full data read-only, including addresses and contacts, without routine export controls.
 - **Redacted Viewer** can decrypt only a separately encrypted record where places, residences, contacts, family Notes, and unstructured record notes were physically removed before encryption.
 
-- Treat passphrases like private links and use at least five unrelated words.
+- Passphrases require eight characters. Three unrelated words are recommended because short phrases are easier to guess from the public encrypted file; never reuse a personal password.
 - Revocation removes future online sign-in after reload; it cannot erase information already viewed, copied, photographed, or retained in a running browser session.
 - The public data repository must contain ciphertext only. Store Owner recovery ZIPs and PDFs privately.
+- Access usernames are non-secret vault metadata. Use a first name or nickname, not an email address or another sensitive identifier.
 - Do not commit real names, addresses, phone numbers, email addresses, heritage notes, or family notes.
 - Use synthetic people for tests and screenshots.
 - Browser storage is per browser profile and device. Lock clears the decrypted local family and requires the passphrase again.
@@ -99,11 +100,11 @@ McFamily uses a v13-only browser-storage namespace and does not load or migrate 
 The default vault is `themadat/app-data`, branch `main`, at `data/mcfamily/McFamily-access.json`. That repository must be public so link-only readers can download the ciphertext anonymously. It must contain no readable family CSV or ZIP.
 
 1. The Owner opens their current Editor recovery ZIP once, opens **Access & Audit**, and enters a fine-grained GitHub token limited to `app-data` with Contents read/write access.
-2. Generate or enter Owner, Editor, Private Viewer, and Redacted Viewer passphrases. Save the generated phrases before closing the dialog.
+2. Set the Owner username and passphrase, add each Editor with a unique username and passphrase, and set the Private Viewer and Redacted Viewer grants you want. Save new phrases before closing the dialog.
 3. Choose **Publish Access Changes**. McFamily validates the family, builds full and physically redacted packages in memory, encrypts them with different random data keys, wraps only the appropriate key for each passphrase, and publishes one ciphertext-only JSON vault.
 4. Send everyone the ordinary Pages link plus their shown name and passphrase. They never receive a ZIP.
-5. Editors record what changed and choose **Publish Family Update**. McFamily advances the dataset patch, appends an audit event, revalidates, encrypts both current views with the existing data keys, checks the remote revision/SHA, and replaces the vault.
-6. To revoke someone, the Owner unchecks their grant and publishes Access Changes. To rotate access, enter a new passphrase for that grant and publish.
+5. Editors record what changed and choose **Publish Family Update**. McFamily uses the signed-in username as the audit actor, advances the dataset patch, appends the event, revalidates, encrypts both current views with the existing data keys, checks the remote revision/SHA, and replaces the vault.
+6. To revoke an Editor, the Owner chooses **Revoke** on that username and publishes Access Changes. To rotate access, enter a new passphrase for that person and publish. Viewer grants remain checkbox-controlled.
 
 If somebody publishes first, the stale publication is rejected. Reload, sign in again, and reapply the edit; McFamily never guesses at a merge. GitHub history and McMetadata preserve successful publications, but the in-package audit is not cryptographically tamper-proof.
 
