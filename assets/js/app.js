@@ -66,8 +66,20 @@
     ];
   }
 
+  function accessMode() {
+    return portability.accessModeFor(state());
+  }
+
+  function accessProfile() {
+    return config.accessModes[accessMode()];
+  }
+
   function familyEditingEnabled() {
-    return config.features.familyEditing !== false;
+    return config.features.familyEditing !== false && accessProfile().editable;
+  }
+
+  function piiVisible() {
+    return accessProfile().pii;
   }
 
   function developerReferencesEnabled() {
@@ -75,7 +87,7 @@
   }
 
   function mutationDisabledAttributes() {
-    return familyEditingEnabled() ? "" : ' disabled aria-disabled="true" title="Family editing is paused while McFamily is being built"';
+    return familyEditingEnabled() ? "" : ' disabled aria-disabled="true" title="This access package is read-only"';
   }
 
   function setInputValue(input, value) {
@@ -140,12 +152,17 @@
   function renderHeader() {
     const isInitialized = initialized();
     document.body.dataset.onboarding = isInitialized ? "false" : "true";
+    document.body.dataset.accessMode = isInitialized ? accessMode() : "uninitialized";
     const developerMode = developerReferencesEnabled();
     const versionButton = $("#versionButton");
     versionButton.textContent = "v" + config.identity.version + (developerMode ? " DEV" : "");
     versionButton.dataset.developer = developerMode ? "true" : "false";
     versionButton.setAttribute("aria-label", "Open release notes for version " + config.identity.version + (developerMode ? ". Developer Mode is enabled" : ""));
     $("#betaPill").hidden = !isBetaDeploy();
+    const accessPill = $("#accessModePill");
+    accessPill.hidden = !isInitialized;
+    accessPill.textContent = isInitialized ? accessProfile().shortLabel.toUpperCase() : "";
+    accessPill.dataset.accessMode = isInitialized ? accessMode() : "";
     document.documentElement.dataset.developer = developerMode ? "on" : "off";
     setInputValue($("#globalSearch"), state().ui.search);
     ["#printButton", "#notesButton", "#supportButton"].forEach(function (selector) { $(selector).disabled = !isInitialized; });
@@ -202,9 +219,13 @@
   function renderNotesEditor() {
     const documentItem = state().workspace.documents[0];
     setInputValue($("#notesTextarea"), documentText(documentItem));
+    $("#notesTextarea").readOnly = !familyEditingEnabled();
+    $("#notesTextarea").placeholder = familyEditingEnabled() ? "Jot down anything…" : "Notes are read-only in this access package.";
+    $("#notesDialogTitle").lastElementChild.textContent = familyEditingEnabled() ? "Notes" : "Notes (Read-only)";
   }
 
   function saveNotes(value) {
+    if (!familyEditingEnabled()) return;
     const normalized = u.cleanText(value, config.controls.maxDocumentHtmlLength);
     storage.mutate(function (next) {
       const documentItem = next.workspace.documents[0];
@@ -224,7 +245,7 @@
 
   function renderOnboarding() {
     const icon = document.documentElement.dataset.theme === "dark" ? config.identity.assets.appIconDark : config.identity.assets.appIconLight;
-    $("#mainContent").innerHTML = '<section class="onboarding-screen" aria-labelledby="onboardingTitle"><div class="onboarding-card"><img src="' + u.escapeHtml(versionedAsset(icon)) + '" alt="" class="onboarding-icon"><span class="eyebrow">Private local family atlas</span><h1 id="onboardingTitle">Open McFamily</h1><p>Choose the current McFamily ZIP package here, or use Audit in the title bar to download the latest package from a configured private GitHub repository. McFamily validates ZIP integrity, every schema, record count, identifier, and cross-file reference before storing a private copy in this browser.</p><div class="privacy-callout"><strong>This is not a login.</strong><span>The package gate controls first-run setup only. The static GitHub Pages app cannot authenticate users or revoke access.</span></div><button id="firstImportButton" type="button" class="button primary large-button">Choose family ZIP</button><input id="onboardingImportInput" type="file" accept="application/zip,.zip" data-import-file-input hidden><small>No loose CSV, demo family, blank-family option, JSON/GEDCOM import, automatic cloud sync, or bypass is available.</small></div></section>';
+    $("#mainContent").innerHTML = '<section class="onboarding-screen" aria-labelledby="onboardingTitle"><div class="onboarding-card"><img src="' + u.escapeHtml(versionedAsset(icon)) + '" alt="" class="onboarding-icon"><span class="eyebrow">Private local family atlas</span><h1 id="onboardingTitle">Open your family package</h1><p>Everyone can use this same McFamily link. Choose the ZIP your maintainer sent you; it determines whether this browser opens as Editor, PII Viewer, or Redacted Read-only. McFamily checks the complete package before storing a local copy.</p><div class="privacy-callout"><strong>The ZIP is your access handoff.</strong><span>This is not a password or account system. Keep full-data packages private; only the Redacted Read-only ZIP physically removes addresses, contact details, and notes.</span></div><button id="firstImportButton" type="button" class="button primary large-button">Choose McFamily ZIP</button><input id="onboardingImportInput" type="file" accept="application/zip,.zip" data-import-file-input hidden><small>Damaged, incomplete, mismatched, or falsely labelled redacted packages are rejected without replacing family data.</small></div></section>';
     icons.mount($("#mainContent"));
   }
 
@@ -746,8 +767,8 @@
     const profileLabels = (developerReferencesEnabled() ? [person.reference] : []).concat(isHome ? ["Root Ancestor"] : []);
     const profileEyebrow = profileLabels.length ? '<span class="eyebrow">' + u.escapeHtml(profileLabels.join(" · ")) + "</span>" : "";
     const contactBlocks = [];
-    if (person.addresses.length) contactBlocks.push('<section class="profile-section"><h3>Addresses</h3>' + person.addresses.slice().sort(function (a, b) { return a.order - b.order; }).map(function (address) { return '<article class="contact-card"><header><strong>' + u.escapeHtml(address.label) + '</strong><span class="status-pill" data-kind="' + (address.current ? "success" : "neutral") + '">' + (address.current ? "Current" : "Former") + '</span></header><address>' + u.escapeHtml(model.formatAddress(address)).replace(/\n/g, "<br>") + '</address>' + ((model.formatFlexibleDate(address.startDate) || model.formatFlexibleDate(address.endDate)) ? '<small>' + u.escapeHtml([model.formatFlexibleDate(address.startDate), model.formatFlexibleDate(address.endDate)].filter(Boolean).join(" – ")) + "</small>" : "") + (address.notes ? "<p>" + u.escapeHtml(address.notes) + "</p>" : "") + "</article>"; }).join("") + "</section>");
-    if (person.phones.length || person.emails.length) contactBlocks.push('<section class="profile-section"><h3>Contact</h3><dl class="profile-list">' + person.phones.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + person.emails.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + "</dl></section>");
+    if (piiVisible() && person.addresses.length) contactBlocks.push('<section class="profile-section"><h3>Addresses</h3>' + person.addresses.slice().sort(function (a, b) { return a.order - b.order; }).map(function (address) { return '<article class="contact-card"><header><strong>' + u.escapeHtml(address.label) + '</strong><span class="status-pill" data-kind="' + (address.current ? "success" : "neutral") + '">' + (address.current ? "Current" : "Former") + '</span></header><address>' + u.escapeHtml(model.formatAddress(address)).replace(/\n/g, "<br>") + '</address>' + ((model.formatFlexibleDate(address.startDate) || model.formatFlexibleDate(address.endDate)) ? '<small>' + u.escapeHtml([model.formatFlexibleDate(address.startDate), model.formatFlexibleDate(address.endDate)].filter(Boolean).join(" – ")) + "</small>" : "") + (address.notes ? "<p>" + u.escapeHtml(address.notes) + "</p>" : "") + "</article>"; }).join("") + "</section>");
+    if (piiVisible() && (person.phones.length || person.emails.length)) contactBlocks.push('<section class="profile-section"><h3>Contact</h3><dl class="profile-list">' + person.phones.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + person.emails.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + "</dl></section>");
     const actionButton = function (label, symbol, attribute, danger) {
       return '<button type="button" class="profile-action' + (danger ? " danger-text" : "") + '" ' + attribute + mutationDisabledAttributes() + ' aria-label="' + u.escapeHtml(label + " person") + '"><span class="profile-action-icon" data-symbol="' + symbol + '" aria-hidden="true"></span><span>' + u.escapeHtml(label) + "</span></button>";
     };
@@ -1272,8 +1293,9 @@
   function syncPersonRepeatables() {
     personDraft.addresses = $$("[data-address-index]", $("#addressEditor")).map(function (row, index) {
       const value = function (name) { return row.querySelector('[data-address-field="' + name + '"]')?.value || ""; };
+      const previous = personDraft.addresses[index] || {};
       return {
-        id: personDraft.addresses[index] && personDraft.addresses[index].id || u.uid("address"),
+        id: previous.id || u.uid("address"), placeId: previous.placeId || "", residenceId: previous.residenceId || "",
         label: value("label"), current: row.querySelector('[data-address-field="current"]')?.checked !== false,
         line1: value("line1"), line2: value("line2"), city: value("city"), region: value("region"), postalCode: value("postalCode"), country: value("country"),
         startDate: { value: value("startDate"), qualifier: "exact" }, endDate: { value: value("endDate"), qualifier: "exact" }, notes: value("notes"), order: index
@@ -1284,6 +1306,58 @@
         return { id: personDraft[type + "s"][index] && personDraft[type + "s"][index].id || u.uid(type), label: row.querySelector('[data-contact-field="label"]').value, value: row.querySelector('[data-contact-field="value"]').value, order: index };
       });
     });
+  }
+
+  function nextNumericRecordId(prefix, records, minimumDigits) {
+    const expression = new RegExp("^" + prefix + "(\\d+)$", "i");
+    const highest = records.reduce(function (maximum, record) {
+      const match = String(record.id || "").match(expression);
+      return match ? Math.max(maximum, Number(match[1])) : maximum;
+    }, 0);
+    return prefix + String(highest + 1).padStart(minimumDigits, "0");
+  }
+
+  function referencedPlaceIds(sourceState) {
+    const ids = new Set(sourceState.workspace.residences.map(function (residence) { return residence.placeId; }));
+    sourceState.workspace.relationships.forEach(function (relationship) {
+      const placeId = u.cleanLine(relationship.source && relationship.source.fields && relationship.source.fields["place-id"], 100);
+      if (placeId) ids.add(placeId);
+    });
+    return ids;
+  }
+
+  function removeUnreferencedPlaces(sourceState) {
+    const referenced = referencedPlaceIds(sourceState);
+    sourceState.workspace.places = sourceState.workspace.places.filter(function (place) { return referenced.has(place.id); });
+  }
+
+  function syncPersonAddressRecords(sourceState, person) {
+    const previousResidences = sourceState.workspace.residences.filter(function (residence) { return residence.personId === person.id; });
+    const previousById = new Map(previousResidences.map(function (residence) { return [residence.id, residence]; }));
+    sourceState.workspace.residences = sourceState.workspace.residences.filter(function (residence) { return residence.personId !== person.id; });
+    person.addresses.forEach(function (address, index) {
+      let residenceId = /^RS\d{4,}$/i.test(address.residenceId || address.id || "") ? (address.residenceId || address.id).toUpperCase() : "";
+      if (!residenceId || sourceState.workspace.residences.some(function (residence) { return residence.id === residenceId; })) residenceId = nextNumericRecordId("RS", sourceState.workspace.residences.concat(previousResidences), 4);
+      const previousResidence = previousById.get(residenceId);
+      let placeId = /^L\d{4,}$/i.test(address.placeId || "") ? address.placeId.toUpperCase() : previousResidence && previousResidence.placeId || "";
+      if (!placeId || !sourceState.workspace.places.some(function (place) { return place.id === placeId; })) placeId = nextNumericRecordId("L", sourceState.workspace.places, 4);
+      let place = sourceState.workspace.places.find(function (item) { return item.id === placeId; });
+      if (!place) {
+        place = { id: placeId, source: { format: "mcplaces-v1", fields: {} }, order: sourceState.workspace.places.length };
+        sourceState.workspace.places.push(place);
+      }
+      Object.assign(place, {
+        label: address.label || "Home", line1: address.line1 || "", line2: address.line2 || "", city: address.city || "",
+        region: address.region || "", postalCode: address.postalCode || "", country: address.country || "", notes: ""
+      });
+      const residence = {
+        id: residenceId, personId: person.id, placeId: placeId, label: address.label || "Home", current: address.current !== false,
+        startDate: address.startDate, endDate: address.endDate, notes: address.notes || "", source: { format: "mcresidences-v1", fields: {} }, order: index
+      };
+      sourceState.workspace.residences.push(residence);
+      Object.assign(address, { id: residenceId, residenceId: residenceId, placeId: placeId });
+    });
+    removeUnreferencedPlaces(sourceState);
   }
 
   function fillPersonForm(person) {
@@ -1319,6 +1393,7 @@
   }
 
   function openPersonEditor(id, trigger) {
+    if (!familyEditingEnabled()) return;
     const person = id ? state().workspace.people.find(function (item) { return item.id === id; }) : null;
     $("#personDialogTitle").textContent = person ? "Edit " + model.displayName(person) : pendingRelative ? "Add " + pendingRelative.role : "Add Person";
     fillPersonForm(person);
@@ -1340,7 +1415,7 @@
     syncPersonRepeatables();
     const now = u.isoNow();
     return {
-      id: existing ? existing.id : u.uid("person"),
+      id: existing ? existing.id : nextNumericRecordId("P", state().workspace.people, 3),
       names: {
         birth: { prefix: $("#birthNamePrefix").value, first: $("#birthNameFirst").value, middle: $("#birthNameMiddle").value, last: $("#birthNameLast").value, suffix: $("#birthNameSuffix").value },
         current: { prefix: $("#currentNamePrefix").value, first: $("#currentNameFirst").value, middle: $("#currentNameMiddle").value, last: $("#currentNameLast").value, suffix: $("#currentNameSuffix").value },
@@ -1357,6 +1432,7 @@
       emails: personDraft.emails,
       heritageNote: $("#heritageNote").value,
       notes: $("#personNotes").value,
+      source: existing ? u.clone(existing.source) : { format: "mcpeople-v1", fields: {} },
       order: existing ? existing.order : state().workspace.people.length,
       createdAt: existing ? existing.createdAt : now,
       updatedAt: now
@@ -1365,6 +1441,7 @@
 
   function savePerson(event) {
     event.preventDefault();
+    if (!familyEditingEnabled()) return;
     const id = $("#personId").value;
     const existing = id ? state().workspace.people.find(function (person) { return person.id === id; }) : null;
     const enteredNames = ["birthNameFirst", "birthNameLast", "currentNameFirst", "currentNameLast", "preferredNameFirst", "preferredNameLast"].some(function (idValue) { return $("#" + idValue).value.trim(); });
@@ -1373,20 +1450,22 @@
     syncPersonRepeatables();
     personDraft.addresses.forEach(function (address) { dateValues.push(address.startDate.value, address.endDate.value); });
     if (dateValues.some(function (value) { return !validDateInput(value); })) return showPersonError("Use YYYY, YYYY-MM, or YYYY-MM-DD for every date.");
+    if (personDraft.addresses.some(function (address) { return ![address.line1, address.line2, address.city, address.region, address.postalCode, address.country].some(function (value) { return Boolean(String(value || "").trim()); }); })) return showPersonError("Every address needs at least one physical address field, or remove the empty address.");
     const person = collectPersonForm(existing);
     let relationshipError = "";
     storage.mutate(function (next) {
       if (existing) next.workspace.people[next.workspace.people.findIndex(function (item) { return item.id === existing.id; })] = person;
       else next.workspace.people.push(person);
+      syncPersonAddressRecords(next, person);
       if (!next.workspace.family.homePersonId) next.workspace.family.homePersonId = person.id;
       next.ui.selectedPersonId = person.id;
       next.ui.treeFocusId = person.id;
       if (pendingRelative) {
         const sourceId = pendingRelative.sourceId;
         let relationship;
-        if (pendingRelative.role === "parent") relationship = { id: u.uid("relationship"), type: "parent-child", parentId: person.id, childId: sourceId, lineage: "non-lineal", kind: "unknown", startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, place: "", notes: "", createdAt: u.isoNow(), updatedAt: u.isoNow() };
-        else if (pendingRelative.role === "child") relationship = { id: u.uid("relationship"), type: "parent-child", parentId: sourceId, childId: person.id, lineage: "non-lineal", kind: "unknown", startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, place: "", notes: "", createdAt: u.isoNow(), updatedAt: u.isoNow() };
-        else relationship = { id: u.uid("relationship"), type: "partner", person1Id: sourceId, person2Id: person.id, status: "unknown", startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, place: "", notes: "", createdAt: u.isoNow(), updatedAt: u.isoNow() };
+        if (pendingRelative.role === "parent") relationship = { id: u.uid("relationship"), type: "parent-child", parentId: person.id, childId: sourceId, lineage: "non-lineal", kind: "unknown", startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, place: "", notes: "", order: next.workspace.relationships.length + 1, createdAt: u.isoNow(), updatedAt: u.isoNow() };
+        else if (pendingRelative.role === "child") relationship = { id: u.uid("relationship"), type: "parent-child", parentId: sourceId, childId: person.id, lineage: "non-lineal", kind: "unknown", startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, place: "", notes: "", order: next.workspace.relationships.length + 1, createdAt: u.isoNow(), updatedAt: u.isoNow() };
+        else relationship = { id: u.uid("relationship"), type: "partner", person1Id: sourceId, person2Id: person.id, status: "unknown", startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, place: "", notes: "", order: next.workspace.relationships.length + 1, createdAt: u.isoNow(), updatedAt: u.isoNow() };
         relationshipError = family.validateRelationshipDraft(relationship, next);
         if (!relationshipError) next.workspace.relationships.push(relationship);
       }
@@ -1413,6 +1492,7 @@
   }
 
   function openRelationshipEditor(id, personId, trigger) {
+    if (!familyEditingEnabled()) return;
     const relationship = id ? state().workspace.relationships.find(function (item) { return item.id === id; }) : null;
     $("#relationshipDialogTitle").textContent = relationship ? "Edit Relationship" : "Connect Existing People";
     $("#relationshipId").value = relationship ? relationship.id : "";
@@ -1440,6 +1520,7 @@
 
   function saveRelationship(event) {
     event.preventDefault();
+    if (!familyEditingEnabled()) return;
     const id = $("#relationshipId").value;
     const existing = id ? state().workspace.relationships.find(function (item) { return item.id === id; }) : null;
     const type = $("#relationshipType").value;
@@ -1454,7 +1535,8 @@
     const relationship = {
       id: existing ? existing.id : u.uid("relationship"), type: type,
       startDate: startDate, endDate: endDate, place: $("#relationshipPlace").value, notes: $("#relationshipNotes").value,
-      order: existing ? existing.order : state().workspace.relationships.length, createdAt: existing ? existing.createdAt : now, updatedAt: now
+      source: existing ? u.clone(existing.source) : { format: "mcrelations-v2", fields: {} },
+      order: existing ? existing.order : state().workspace.relationships.length + 1, createdAt: existing ? existing.createdAt : now, updatedAt: now
     };
     if (type === "parent-child") Object.assign(relationship, { parentId: $("#relationPerson1").value, childId: $("#relationPerson2").value, lineage: $("#parentLineage").value, kind: $("#parentKind").value });
     else Object.assign(relationship, { person1Id: $("#relationPerson1").value, person2Id: $("#relationPerson2").value, status: $("#partnerStatus").value });
@@ -1475,6 +1557,7 @@
   }
 
   async function addRelative(personId, trigger) {
+    if (!familyEditingEnabled()) return;
     const choice = await components.choose({
       title: "Add a new relative",
       message: "Choose how the new person is related. You can refine the relationship details afterward.",
@@ -1491,6 +1574,7 @@
   }
 
   async function deleteRelationship(id, trigger) {
+    if (!familyEditingEnabled()) return;
     const relationship = state().workspace.relationships.find(function (item) { return item.id === id; });
     if (!relationship) return;
     const accepted = await components.confirm({ title: "Remove this relationship?", message: "The people will remain in the directory, but this link and its relationship notes will be removed from the tree and atlas.", confirmLabel: "Remove relationship", cancelLabel: "Keep relationship", danger: true, trigger: trigger });
@@ -1503,6 +1587,7 @@
   }
 
   async function deletePerson(id, trigger) {
+    if (!familyEditingEnabled()) return;
     const person = state().workspace.people.find(function (item) { return item.id === id; });
     if (!person) return;
     const linkCount = state().workspace.relationships.filter(function (relationship) { return relationship.type === "parent-child" ? relationship.parentId === id || relationship.childId === id : relationship.person1Id === id || relationship.person2Id === id; }).length;
@@ -1512,6 +1597,8 @@
     storage.mutate(function (next) {
       next.workspace.people = next.workspace.people.filter(function (item) { return item.id !== id; });
       next.workspace.relationships = next.workspace.relationships.filter(function (relationship) { return relationship.type === "parent-child" ? relationship.parentId !== id && relationship.childId !== id : relationship.person1Id !== id && relationship.person2Id !== id; });
+      next.workspace.residences = next.workspace.residences.filter(function (residence) { return residence.personId !== id; });
+      removeUnreferencedPlaces(next);
       next.ui.favoritePersonIds = next.ui.favoritePersonIds.filter(function (personId) { return personId !== id; });
       const fallback = next.workspace.people[0] && next.workspace.people[0].id || "";
       if (next.workspace.family.homePersonId === id) next.workspace.family.homePersonId = fallback;
@@ -1524,6 +1611,7 @@
   }
 
   function setHomePerson(id) {
+    if (!familyEditingEnabled()) return;
     storage.mutate(function (next) { next.workspace.family.homePersonId = id; next.ui.treeFocusId = id; }, { reason: "set-home-person" });
     treeNeedsFit = true;
     renderAll();
@@ -1928,6 +2016,8 @@
     $("#hintsToggle").setAttribute("aria-pressed", String(preferences.hints.enabled));
     $("#hintsToggle").textContent = preferences.hints.enabled ? "On" : "Off";
     setInputValue($("#familyTitle"), state().workspace.family.title);
+    $("#familyTitle").readOnly = !familyEditingEnabled();
+    $("#familyTitle").title = familyEditingEnabled() ? "" : "Family records are read-only in this access package";
     renderLocalStatus();
   }
 
@@ -1978,6 +2068,7 @@
     const recovery = storage.recoveryInfo();
     const diagnostics = [
       ["State model", "v" + state().schemaVersion], ["Application", "v" + config.identity.version + " · build " + config.identity.buildId],
+      ["Access package", accessProfile().label],
       ["People", String(state().workspace.people.length)], ["Relationships", String(state().workspace.relationships.length)], ["Addresses", String(state().workspace.people.reduce(function (sum, person) { return sum + person.addresses.length; }, 0))],
       ["Device", device.label], ["Layout", (window.innerWidth < 700 ? "Mobile" : window.innerWidth < 960 ? "Tablet" : "Desktop") + " · " + window.innerWidth + "×" + window.innerHeight],
       ["State size", u.formatBytes(usage.stateBytes)], ["Browser storage", usage.quota ? u.formatBytes(usage.usage) + " of " + u.formatBytes(usage.quota) : (usage.persistentStorageAvailable ? "Available" : "Unavailable")],
@@ -2237,7 +2328,7 @@
     dialog.addEventListener("keydown", function (event) { const tab = event.target.closest("[role='tab']"); if (!tab || !["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return; event.preventDefault(); const tabs = $$('[data-support-tab]:not([hidden])'); const index = tabs.indexOf(tab); const destination = event.key === "Home" ? tabs[0] : event.key === "End" ? tabs[tabs.length - 1] : tabs[(index + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length]; destination.focus(); switchSupportTab(destination.dataset.supportTab); });
     dialog.addEventListener("change", function (event) {
       if (event.target.matches("[data-color-setting]")) { const key = event.target.dataset.colorSetting; storage.mutate(function (next) { next.preferences.appearance[key] = u.normalizeColor(event.target.value, next.preferences.appearance[key]); }, { reason: "appearance" }); applyAppearance(); renderSettings(); }
-      if (event.target.id === "familyTitle") { storage.mutate(function (next) { next.workspace.family.title = u.cleanLine(event.target.value, 120) || "McFamily"; }, { reason: "family-title" }); renderMain(); }
+      if (event.target.id === "familyTitle" && familyEditingEnabled()) { storage.mutate(function (next) { next.workspace.family.title = u.cleanLine(event.target.value, 120) || "McFamily"; }, { reason: "family-title" }); renderMain(); }
     });
     dialog.addEventListener("blur", function (event) { if (!event.target.matches("[data-color-text]")) return; const key = event.target.dataset.colorText; const previous = state().preferences.appearance[key]; const normalized = u.normalizeColor(event.target.value, ""); if (!normalized) { event.target.value = previous; components.toast("Use a six-digit hex value such as #315f73.", { title: "Color not changed", kind: "warning" }); return; } storage.mutate(function (next) { next.preferences.appearance[key] = normalized; }, { reason: "appearance" }); applyAppearance(); renderSettings(); }, true);
     $("#appTextScale").addEventListener("input", function (event) { storage.mutate(function (next) { next.preferences.appearance.textScale = Number(event.target.value) / 100; }, { reason: "appearance" }); applyAppearance(); $("#appTextScaleValue").textContent = event.target.value + "%"; });
@@ -2246,6 +2337,8 @@
     $("#hintsToggle").addEventListener("click", function () { storage.mutate(function (next) { next.preferences.hints.enabled = !next.preferences.hints.enabled; }, { reason: "hints" }); renderHeader(); renderSettings(); });
     $("#restoreHintsButton").addEventListener("click", function () { storage.mutate(function (next) { next.preferences.hints.dismissed = []; next.ui.dismissedHints = []; }, { reason: "hints" }); renderHeader(); renderSettings(); components.toast("All contextual hints are available again.", { title: "Hints restored", kind: "success" }); });
     $("#exportButton").addEventListener("click", portability.exportPackage);
+    $("#exportPiiViewerButton").addEventListener("click", function () { portability.exportAccessPackage("pii-viewer"); });
+    $("#exportRedactedViewerButton").addEventListener("click", function () { portability.exportAccessPackage("redacted-viewer"); });
     $("#importButton").addEventListener("click", function () { $("#importFileInput").click(); });
     $("#resetPreferencesButton").addEventListener("click", resetPreferences);
     $("#eraseAllButton").addEventListener("click", eraseAllData);

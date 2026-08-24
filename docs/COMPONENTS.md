@@ -48,7 +48,7 @@ Family Tree generation rows compare the numeric lineage segments directly in roo
 
 The profile X closes the panel and clears the selected-person state. Full Tree also closes and deselects the profile, and Lineage remains disabled until selecting a person. Selecting a tree node reopens the profile. There is no separate Show person control.
 
-Family-record mutation controls remain visible but disabled while `features.familyEditing` is false. This includes adding, editing, connecting, removing, and deleting. Home-person assignment remains internal while editing is paused.
+Family-record mutation controls require both `features.familyEditing` and an Editor package. PII Viewer and Redacted Read-only keep adding, editing, connecting, removing, deleting, family-title changes, and Notes changes disabled. Home-person assignment remains internal. Personal view settings and Favorites stay available in every mode.
 
 ## Print report
 

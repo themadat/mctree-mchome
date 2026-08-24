@@ -15,7 +15,7 @@ Use synthetic families only.
 
 - [ ] A fresh profile shows the introduction, privacy warning, ZIP picker, and title-bar Audit action; only a validated local import or explicit Download Latest can initialize the workspace.
 - [ ] No demo family, blank-family action, GEDCOM action, or bypass appears.
-- [ ] A valid dataset 16 ZIP with at least one person shows people, relationship, place, residence, dataset, state, and validation-group summaries before opening the family.
+- [ ] A valid dataset 16 ZIP with at least one person shows access mode, people, relationship, place, residence, dataset, state, and validation-group summaries before opening the family.
 - [ ] The ZIP contains exactly the five root files `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`; missing, extra, duplicate, nested, encrypted, unsupported-compression, truncated, bad-checksum, multi-disk, and oversized packages are rejected without replacing state.
 - [ ] McRelations uses its exact ordered, hyphenated schema 2.0.0 header and every other file uses schema 1.0.0; unknown, missing, duplicate, unsafe, underscore-named, or reordered headers and malformed/oversized CSVs are rejected.
 - [ ] Structured Birth, Current, and Preferred name parts plus Maiden Last import directly; `person-first-names`, `person-last-name`, and `person-name-sort` are absent.
@@ -29,6 +29,10 @@ Use synthetic families only.
 - [ ] McPlaces requires unique L IDs and a physical address value. McResidences requires unique RS IDs, exact TRUE/FALSE current flags, resolvable P/L references, and unique person/place/start links.
 - [ ] The requested private residence resolves through its McResidences row to its McPlaces row and displays the complete address without embedding it in McPeople.
 - [ ] McMetadata declares the supported package/dataset versions, exact counts, family data, all five schema rows, and at least one valid audit event; duplicates, missing rows, count mismatches, bad timestamps/JSON, and unresolved home person are rejected.
+- [ ] New exports declare exactly one supported access mode. Pre-v0.0.1.61 dataset 16 packages without that row default to Editor; duplicate or unknown access rows are rejected.
+- [ ] Redacted Read-only export contains zero place/residence rows and no family Notes, person notes, relationship notes, or relationship place references; adding any of those back while retaining the redacted label makes import fail.
+- [ ] PII Viewer and Redacted Read-only disable person, relationship, family-title, and Notes mutations, hide cloud publishing, and keep replacement import, audit history, print, search, favorites, and display preferences available.
+- [ ] Editor mode enables family-record editing, all three access-package downloads, and the audited cloud handoff. The header and Save & Share both show the current mode.
 - [ ] Profile life details use one ordinary one-line `Age` row: living ages are compact, ages below two use months, deceased ages read `#y at death · #y today`, and unavailable ages read `UNKNOWN`.
 - [ ] Desktop defaults to a thin-gutter 20/50/30 Directory/Tree/Profile split, both separators resize with pointer and keyboard input, the first resize persists both widths, a usable tree width remains, and live position percentages appear only in Developer Mode.
 - [ ] State v13 reloads from `mcfamily.state.v13`; older state and recovery keys are ignored and the dataset 16 import gate appears instead.
@@ -47,10 +51,10 @@ Use synthetic families only.
 
 ## Editing and derived relationships
 
-- [ ] Selected-person Add, Connect, Edit, and Delete controls are disabled and greyed while `features.familyEditing` is false; Set as home is absent.
+- [ ] Selected-person Add, Connect, Edit, and Delete controls are enabled only when `features.familyEditing` is true and the loaded access package is Editor; they are disabled and greyed in both viewer modes. Set as home is absent.
 - [ ] The selected-person header orders Delete, Edit, and X; Relationships owns Add and Connect. All four mutation controls use the supplied icon-over-label symbols.
 - [ ] Identity properties appear as Born, Died, Age, Living Status, and Marital Status; Gender and Pronouns remain hidden. Missing values read `UNKNOWN`, except a living person's Died value is `----`. Ages use the same visual weight as adjacent values and natural years/months wording.
-- The remaining mutation checks in this section apply when a developer temporarily enables `features.familyEditing` for regression testing.
+- The remaining mutation checks in this section apply while an Editor package is open.
 - [ ] Add and remove repeated contacts without losing adjacent entries.
 - [ ] Connect biological, adopted, step, foster, guardian, and unknown parent types independently as Lineal or Non-Lineal, rejecting a second Lineal parent while accepting multiple Non-Lineal parents.
 - [ ] Connect every partner status with dates, place, and notes.

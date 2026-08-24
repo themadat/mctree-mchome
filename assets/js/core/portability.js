@@ -348,6 +348,10 @@
     if (one("package", "package-version") !== config.packageVersion) throw new Error("This McFamily package version is not supported.");
     const datasetVersion = one("package", "dataset-version");
     if (!isSupportedDatasetVersion(datasetVersion)) throw new Error("This website accepts only McFamily dataset " + config.datasetSeries + " patch versions.");
+    const accessRows = parsed.rows.filter(function (row) { return row["metadata-type"] === "access" && row.key === "access-mode"; });
+    if (accessRows.length > 1) throw new Error("McMetadata.csv may declare access / access-mode only once.");
+    const accessMode = accessRows.length ? originalCsvValue(accessRows[0].value) : "editor";
+    if (!Object.prototype.hasOwnProperty.call(config.accessModes, accessMode)) throw new Error("McMetadata.csv contains an unsupported access-mode.");
     const schemaRows = parsed.rows.filter(function (row) { return row["metadata-type"] === "schema" && row.key === "schema-version"; });
     const schemaSubjects = new Set(schemaRows.map(function (row) { return row.subject; }));
     if (schemaRows.length !== FILE_NAMES.length || FILE_NAMES.some(function (name) { return !schemaSubjects.has(name); }) || schemaRows.some(function (row) { return row.value !== FILE_SCHEMA_VERSIONS[row.subject]; })) {
@@ -372,7 +376,8 @@
         createdAt: one("family", "created-at"), updatedAt: one("family", "updated-at"), notes: one("family", "notes"), settings: settings
       },
       audits: audits,
-      datasetVersion: datasetVersion
+      datasetVersion: datasetVersion,
+      accessMode: accessMode
     };
   }
 
@@ -417,6 +422,17 @@
       return sourcePerson(row, index, counters);
     });
     if (!people.length) throw new Error("McPeople.csv must contain at least one person.");
+    const personDetails = u.plainObject(metadata.family.settings.personDetails);
+    people.forEach(function (person) {
+      const details = u.plainObject(personDetails[person.id]);
+      person.gender = details.gender;
+      person.pronouns = details.pronouns;
+      person.birth.place = details.birthPlace;
+      person.death.place = details.deathPlace;
+      person.heritageNote = details.heritageNote;
+      person.phones = Array.isArray(details.phones) ? details.phones : [];
+      person.emails = Array.isArray(details.emails) ? details.emails : [];
+    });
 
     const placeIds = new Set();
     const places = parsed["McPlaces.csv"].rows.map(function (row, index) {
@@ -468,6 +484,10 @@
         ]) }, order: order
       };
     });
+    const relationshipDetails = u.plainObject(metadata.family.settings.relationshipDetails);
+    relationships.forEach(function (relationship) {
+      relationship.place = u.cleanLine(u.plainObject(relationshipDetails[relationship.id]).place, 500);
+    });
 
     const parentsByChild = new Map();
     relationships.filter(function (relationship) { return relationship.type === "parent-child"; }).forEach(function (relationship) {
@@ -508,6 +528,13 @@
     Object.keys(actualCounts).forEach(function (key) {
       if (!Number.isInteger(metadata.counts[key]) || metadata.counts[key] !== actualCounts[key]) throw new Error("McMetadata.csv " + key + " count does not match the package files.");
     });
+    if (metadata.accessMode === "redacted-viewer") {
+      if (actualCounts.places || actualCounts.residences) throw new Error("A Redacted Read-only package cannot contain place or residence records.");
+      if (parsed["McPeople.csv"].rows.some(function (row) { return Boolean(u.cleanText(row.notes, 4000).trim() || u.cleanText(row["data-quality-notes"], 4000).trim()); })) throw new Error("A Redacted Read-only package cannot contain person notes.");
+      if (parsed["McRelations.csv"].rows.some(function (row) { return Boolean(u.cleanText(row.notes, 4000).trim() || u.cleanLine(row["place-id"], 100)); })) throw new Error("A Redacted Read-only package cannot contain relationship notes or place references.");
+      if (u.cleanText(metadata.family.notes, config.controls.maxDocumentHtmlLength).trim()) throw new Error("A Redacted Read-only package cannot contain family Notes.");
+      if (Object.keys(personDetails).length || Object.keys(relationshipDetails).length) throw new Error("A Redacted Read-only package cannot contain supplemental private profile or relationship details.");
+    }
     if (!personIds.has(metadata.family.homePersonId)) throw new Error("McMetadata.csv home-person-id does not resolve to McPeople.csv.");
     if (!metadata.family.initializedAt || !Number.isFinite(Date.parse(metadata.family.initializedAt))) throw new Error("McMetadata.csv requires a valid initialized-at timestamp.");
     const now = u.isoNow();
@@ -516,7 +543,7 @@
       schemaVersion: config.schemaVersion,
       meta: {
         createdAt: metadata.family.createdAt, updatedAt: metadata.family.updatedAt,
-        package: { format: config.packageFormat, version: config.packageVersion, datasetVersion: metadata.datasetVersion, auditHistory: metadata.audits }
+        package: { format: config.packageFormat, version: config.packageVersion, datasetVersion: metadata.datasetVersion, accessMode: metadata.accessMode, auditHistory: metadata.audits }
       },
       workspace: {
         family: { title: metadata.family.title || "McFamily", initializedAt: metadata.family.initializedAt, homePersonId: metadata.family.homePersonId },
@@ -533,16 +560,25 @@
     return Object.assign(prepared, {
       formatLabel: "McFamily package v" + config.packageVersion + " · dataset " + metadata.datasetVersion,
       sourceRows: Object.values(parsed).reduce(function (total, file) { return total + file.rows.length; }, 0),
-      fileName: fileName, checkCount: 12
+      fileName: fileName, checkCount: 13
     });
   }
 
   function sourceDateForExport(fields, prefix, date, fallbackDescriptor) {
     const rawValue = originalCsvValue(fields[prefix + "-value"] || "");
     const rawDescriptor = originalCsvValue(fields[prefix + "-descriptor"] || "");
-    if (rawValue && isPartialSourceDate(rawValue) && rawDescriptor === "partial") return { value: rawValue, descriptor: rawDescriptor };
     const value = date && date.value || "";
-    return { value: value, descriptor: value ? (value.length === 4 ? "year" : value.length === 7 ? "month" : "day") : (rawDescriptor || fallbackDescriptor || "") };
+    if (!value && date && date.qualifier === "about" && rawValue && isPartialSourceDate(rawValue) && rawDescriptor === "partial") return { value: rawValue, descriptor: rawDescriptor };
+    return {
+      value: value,
+      descriptor: value ? (value.length === 4 ? "year" : value.length === 7 ? "month" : "day") : (date && date.qualifier === "about" ? "UNKNOWN" : fallbackDescriptor || "")
+    };
+  }
+
+  function originalPersonNotes(fields) {
+    const notes = originalCsvValue(fields.notes || "");
+    const quality = originalCsvValue(fields["data-quality-notes"] || "");
+    return [notes, quality ? "Data quality: " + quality : ""].filter(Boolean).join("\n\n");
   }
 
   function nameFields(prefix, parts) {
@@ -562,15 +598,16 @@
       const birth = sourceDateForExport(fields, "person-date-birth", person.birth.date, "UNKNOWN");
       const deathFallback = person.livingStatus === "living" ? "NONE" : person.livingStatus === "deceased" ? "UNKNOWN" : "UNKNOWN";
       const death = sourceDateForExport(fields, "person-date-death", person.death.date, deathFallback);
+      const notesUnchanged = person.notes === originalPersonNotes(fields);
       return Object.assign({}, fields, {
         "record-id": person.id, "person-name-maiden-last": person.names.maidenLast, "lineage-id": fields["lineage-id"] || "",
         "person-date-birth-value": birth.value, "person-date-birth-descriptor": birth.descriptor,
         "person-date-death-value": death.value, "person-date-death-descriptor": death.descriptor,
-        notes: fields.notes != null ? fields.notes : person.notes,
-        "source-last-modified-date": fields["source-last-modified-date"] || person.updatedAt.slice(0, 10),
-        "source-last-modified-by": fields["source-last-modified-by"] || "McFamily",
+        notes: notesUnchanged ? originalCsvValue(fields.notes || "") : person.notes,
+        "source-last-modified-date": person.updatedAt.slice(0, 10),
+        "source-last-modified-by": "McFamily",
         "source-row-number": fields["source-row-number"] || String(index + 1),
-        "data-quality-notes": fields["data-quality-notes"] || ""
+        "data-quality-notes": notesUnchanged ? originalCsvValue(fields["data-quality-notes"] || "") : ""
       }, nameFields("birth", person.names.birth), nameFields("current", person.names.current), nameFields("preferred", person.names.preferred));
     });
   }
@@ -592,8 +629,8 @@
       const fields = Object.assign({}, u.plainObject(relationship.source && relationship.source.fields));
       const start = sourceDateForExport(fields, "date-start", relationship.startDate, "");
       const end = sourceDateForExport(fields, "date-end", relationship.endDate, "");
-      const partnerType = fields["partner-type"] || (relationship.status === "partnered" ? "partnership" : relationship.type === "partner" ? "marriage" : "");
-      const endReason = fields["end-reason"] || ({ widowed: "death", divorced: "divorce", separated: "separation", former: "UNKNOWN" }[relationship.status] || "");
+      const partnerType = relationship.type === "partner" ? (relationship.status === "partnered" ? "partnership" : relationship.status === "unknown" ? "UNKNOWN" : "marriage") : "";
+      const endReason = relationship.type === "partner" ? ({ widowed: "death", divorced: "divorce", separated: "separation", former: "UNKNOWN" }[relationship.status] || "") : "";
       return Object.assign({}, fields, {
         "relationship-id": relationship.id, "relationship-type": relationship.type,
         "person-1-id": relationship.type === "parent-child" ? relationship.parentId : relationship.person1Id,
@@ -603,8 +640,8 @@
         "partner-type": partnerType, "relationship-order": fields["relationship-order"] || relationship.order,
         "date-start-value": start.value, "date-start-descriptor": start.descriptor, "date-end-value": end.value, "date-end-descriptor": end.descriptor,
         "end-reason": endReason, "place-id": fields["place-id"] || "", notes: relationship.notes,
-        "source-last-modified-date": fields["source-last-modified-date"] || state.meta.updatedAt.slice(0, 10),
-        "source-last-modified-by": fields["source-last-modified-by"] || "McFamily"
+        "source-last-modified-date": relationship.updatedAt.slice(0, 10),
+        "source-last-modified-by": "McFamily"
       });
     });
   }
@@ -640,13 +677,24 @@
     add("package", "McFamily", "relationship-count", state.workspace.relationships.length);
     add("package", "McFamily", "place-count", state.workspace.places.length);
     add("package", "McFamily", "residence-count", state.workspace.residences.length);
+    add("access", "McFamily", "access-mode", accessModeFor(state));
     add("family", "McFamily", "title", state.workspace.family.title);
     add("family", "McFamily", "initialized-at", state.workspace.family.initializedAt);
     add("family", "McFamily", "home-person-id", state.workspace.family.homePersonId);
     add("family", "McFamily", "created-at", state.meta.createdAt);
     add("family", "McFamily", "updated-at", state.meta.updatedAt);
     add("family", "McFamily", "notes", u.richTextToPlainText(state.workspace.documents[0] && state.workspace.documents[0].html || "", config.controls.maxDocumentHtmlLength));
-    add("family", "McFamily", "settings-json", JSON.stringify({ preferences: state.preferences, ui: state.ui, modules: state.modules }));
+    const personDetails = {};
+    state.workspace.people.forEach(function (person) {
+      const details = {
+        gender: person.gender || "", pronouns: person.pronouns || "", birthPlace: person.birth.place || "", deathPlace: person.death.place || "",
+        heritageNote: person.heritageNote || "", phones: person.phones || [], emails: person.emails || []
+      };
+      if (details.gender || details.pronouns || details.birthPlace || details.deathPlace || details.heritageNote || details.phones.length || details.emails.length) personDetails[person.id] = details;
+    });
+    const relationshipDetails = {};
+    state.workspace.relationships.forEach(function (relationship) { if (relationship.place) relationshipDetails[relationship.id] = { place: relationship.place }; });
+    add("family", "McFamily", "settings-json", JSON.stringify({ preferences: state.preferences, ui: state.ui, modules: state.modules, personDetails: personDetails, relationshipDetails: relationshipDetails }));
     FILE_NAMES.forEach(function (name) { add("schema", name, "schema-version", FILE_SCHEMA_VERSIONS[name]); });
     state.meta.package.auditHistory.forEach(function (audit, index) {
       rows.push({
@@ -671,13 +719,62 @@
     return "A" + Date.now().toString(36).toUpperCase();
   }
 
+  function accessModeFor(state) {
+    const mode = u.cleanLine(state && state.meta && state.meta.package && state.meta.package.accessMode, 40);
+    return Object.prototype.hasOwnProperty.call(config.accessModes, mode) ? mode : "editor";
+  }
+
+  function accessState(sourceState, mode) {
+    if (!Object.prototype.hasOwnProperty.call(config.accessModes, mode)) throw new Error("Choose a supported McFamily access package.");
+    const next = u.clone(sourceState);
+    next.meta.package.accessMode = mode;
+    if (mode !== "redacted-viewer") return next;
+    next.workspace.places = [];
+    next.workspace.residences = [];
+    next.workspace.documents.forEach(function (documentItem) { documentItem.html = ""; });
+    next.workspace.people.forEach(function (person) {
+      person.addresses = [];
+      person.phones = [];
+      person.emails = [];
+      person.heritageNote = "";
+      person.notes = "";
+      person.gender = "";
+      person.pronouns = "";
+      person.birth.place = "";
+      person.death.place = "";
+      const fields = u.plainObject(person.source && person.source.fields);
+      fields.notes = "";
+      fields["data-quality-notes"] = "";
+      fields["source-last-modified-by"] = "McFamily";
+      person.source.fields = fields;
+    });
+    next.workspace.relationships.forEach(function (relationship) {
+      relationship.place = "";
+      relationship.notes = "";
+      const fields = u.plainObject(relationship.source && relationship.source.fields);
+      fields["place-id"] = "";
+      fields.notes = "";
+      fields["source-last-modified-by"] = "McFamily";
+      relationship.source.fields = fields;
+    });
+    next.ui.search = "";
+    next.ui.directorySearch = "";
+    next.ui.favoritePersonIds = [];
+    if (next.modules && next.modules.roadmap) next.modules.roadmap.search = "";
+    next.meta.package.auditHistory = next.meta.package.auditHistory.map(function (audit) {
+      return Object.assign({}, audit, { recordedBy: "McFamily", details: "Details omitted from the Redacted Read-only package." });
+    });
+    return next;
+  }
+
   function packageBytes(state) {
     return encodeZip(packageFiles(state));
   }
 
-  function packageFileName(state) {
+  function packageFileName(state, mode) {
     const title = state.workspace.family.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "mcfamily";
-    return title + "-private-package-" + new Date().toISOString().slice(0, 10) + "-v" + datasetVersionFor(state).replace(/\./g, "-") + ".zip";
+    const labels = { editor: "editor", "pii-viewer": "pii-viewer", "redacted-viewer": "redacted-readonly" };
+    return title + "-" + labels[mode || accessModeFor(state)] + "-" + new Date().toISOString().slice(0, 10) + "-v" + datasetVersionFor(state).replace(/\./g, "-") + ".zip";
   }
 
   function downloadBytes(bytes, fileName) {
@@ -692,22 +789,40 @@
     window.setTimeout(function () { URL.revokeObjectURL(url); }, 0);
   }
 
-  function exportPackage() {
+  function exportAccessPackage(mode) {
     if (!storage.getState().workspace.family.initializedAt) {
       App.components.message("No family to export", "Import the initial McFamily data package before creating an export.");
       return;
     }
+    if (accessModeFor(storage.getState()) !== "editor") {
+      App.components.message("Read-only family", "Only an Editor package can create replacement or handoff packages.");
+      return;
+    }
+    if (!Object.prototype.hasOwnProperty.call(config.accessModes, mode)) {
+      App.components.message("Package unavailable", "Choose Editor, PII Viewer, or Redacted Read-only access.");
+      return;
+    }
+    const profile = config.accessModes[mode];
     storage.mutate(function (state) {
+      const ids = new Set(state.meta.package.auditHistory.map(function (audit) { return audit.id; }));
+      let id = auditId();
+      let suffix = 1;
+      while (ids.has(id)) id = auditId() + "_" + suffix++;
       state.meta.package.auditHistory.push({
-        id: auditId(), subject: "McFamily", action: "exported-package", recordedAt: u.isoNow(),
-        recordedBy: "McFamily " + config.identity.version, details: "Exported the validated five-file private data package."
+        id: id, subject: "McFamily", action: "exported-" + mode + "-package", recordedAt: u.isoNow(),
+        recordedBy: "McFamily " + config.identity.version, details: "Created a validated " + profile.label + " access package."
       });
     }, { reason: "package-export" });
     storage.saveNow();
-    const state = storage.getState();
-    const bytes = packageBytes(state);
-    downloadBytes(bytes, packageFileName(state));
-    App.components.toast("The complete five-file private ZIP package was downloaded. Store it securely.", { title: "Package exported", kind: "success", duration: 5000 });
+    const packagedState = accessState(storage.getState(), mode);
+    const bytes = packageBytes(packagedState);
+    downloadBytes(bytes, packageFileName(packagedState, mode));
+    const privacy = profile.pii ? " It contains private family information, so send and store it securely." : " Address, contact, family Notes, and unstructured record notes were removed.";
+    App.components.toast(profile.label + " ZIP downloaded." + privacy, { title: "Access package created", kind: "success", duration: 6000 });
+  }
+
+  function exportPackage() {
+    exportAccessPackage("editor");
   }
 
   function readFile(file) {
@@ -739,6 +854,7 @@
       people: state.workspace.people.length, relationships: state.workspace.relationships.length,
       places: state.workspace.places.length, residences: state.workspace.residences.length,
       schemaVersion: state.schemaVersion, appVersion: state.meta.appVersion, updatedAt: state.meta.updatedAt,
+      accessMode: accessModeFor(state), accessLabel: config.accessModes[accessModeFor(state)].label,
       formatLabel: candidate && candidate.formatLabel || "Current local family", sourceRows: candidate && candidate.sourceRows || 0,
       checkCount: candidate && candidate.checkCount || 0
     };
@@ -758,6 +874,7 @@
     const current = summaryFor(storage.getState());
     document.querySelector("[data-import-file]").textContent = fileName || "Selected package";
     document.querySelector("[data-import-family]").textContent = summary.familyTitle;
+    document.querySelector("[data-import-access]").textContent = summary.accessLabel;
     document.querySelector("[data-import-people]").textContent = String(summary.people) + (candidate.initial ? "" : " (current: " + current.people + ")");
     document.querySelector("[data-import-relationships]").textContent = String(summary.relationships);
     document.querySelector("[data-import-places]").textContent = String(summary.places);
@@ -769,7 +886,7 @@
     warning.hidden = candidate.validation.warnings.length === 0;
     warning.textContent = candidate.validation.warnings.join(" ");
     document.querySelector("[data-import-recovery-note]").hidden = candidate.initial;
-    document.querySelector("[data-import-confirm]").textContent = candidate.initial ? "Open this family" : "Replace local family";
+    document.querySelector("[data-import-confirm]").textContent = candidate.initial ? "Open " + summary.accessLabel : "Replace local family";
   }
 
   async function previewFile(file, trigger) {
@@ -826,6 +943,7 @@
   App.portability = {
     init: init,
     exportPackage: exportPackage,
+    exportAccessPackage: exportAccessPackage,
     exportCsv: exportPackage,
     previewFile: previewFile,
     preparePackage: preparePackage,
@@ -834,6 +952,8 @@
     packageFiles: packageFiles,
     packageBytes: packageBytes,
     packageFileName: packageFileName,
+    accessModeFor: accessModeFor,
+    accessState: accessState,
     downloadBytes: downloadBytes,
     prepareBytes: prepareBytes,
     prepareFile: prepareFile,

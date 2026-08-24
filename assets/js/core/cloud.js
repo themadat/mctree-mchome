@@ -13,6 +13,58 @@
 
   function $(selector) { return document.querySelector(selector); }
 
+  function initialized() {
+    return Boolean(storage.getState().workspace.family.initializedAt);
+  }
+
+  function accessMode() {
+    return portability.accessModeFor(storage.getState());
+  }
+
+  function editorToolsAvailable() {
+    return !initialized() || accessMode() === "editor";
+  }
+
+  function renderAccessState() {
+    const mode = initialized() ? accessMode() : "";
+    const profile = mode ? config.accessModes[mode] : null;
+    const editorOnlyHidden = initialized() && !profile.editable;
+    if (editorOnlyHidden) {
+      remoteCache = null;
+      cancelUpload();
+    }
+    document.querySelectorAll("[data-editor-only]").forEach(function (element) { element.classList.toggle("access-hidden", editorOnlyHidden); });
+    const pill = $("#currentAccessName");
+    const description = $("#currentAccessDescription");
+    const security = $("#currentAccessSecurity");
+    const privacy = $("#localPrivacyMessage");
+    if (!profile) {
+      pill.textContent = "Not opened";
+      pill.dataset.kind = "neutral";
+      description.textContent = "Choose a validated McFamily ZIP to open its assigned access.";
+      security.textContent = "The same app link opens Editor, PII Viewer, or Redacted Read-only packages.";
+      privacy.textContent = "A replacement ZIP is fully validated before it replaces this browser's family copy.";
+      return;
+    }
+    pill.textContent = profile.label;
+    pill.dataset.kind = profile.editable ? "success" : profile.pii ? "warning" : "neutral";
+    if (mode === "editor") {
+      description.textContent = "Full family data is visible and family-record editing is enabled. You can create viewer packages or use the audited GitHub publish workflow.";
+      security.textContent = "Editor ZIPs are private plaintext files. Keep them off public repositories and send them through a private channel.";
+      privacy.textContent = "Open replacement ZIP validates a newer Editor package before replacing this browser's family copy.";
+    } else if (mode === "pii-viewer") {
+      description.textContent = "Addresses and private family details are visible. Add, edit, delete, Notes changes, and cloud publishing are disabled.";
+      security.textContent = "Read-only mode prevents ordinary UI edits; it is not encryption and cannot stop inspection of a ZIP someone possesses.";
+      privacy.textContent = "Ask the maintainer for a new PII Viewer ZIP when the family record changes.";
+      setStatus("warning", "PII Viewer", "Full private details are visible in read-only mode. Cloud publishing is disabled.");
+    } else {
+      description.textContent = "Names, dates, lineage, and relationships are available in read-only mode. Addresses, contacts, family Notes, and unstructured record notes are absent.";
+      security.textContent = "This ZIP is safer to share because private contact fields were removed before export.";
+      privacy.textContent = "Ask the maintainer for a new Redacted Read-only ZIP when the family record changes.";
+      setStatus("success", "Redacted", "Private contact details were removed from this read-only package.");
+    }
+  }
+
   function readJson(key) {
     try { return JSON.parse(localStorage.getItem(key) || "null"); }
     catch (error) { return null; }
@@ -185,6 +237,7 @@
     }
     const prepared = await portability.prepareBytes(bytes, settings.path);
     portability.requireInitialPackage(prepared);
+    if (portability.accessModeFor(prepared.state) !== "editor") throw new Error("The private GitHub latest file must be an Editor package, not a viewer handoff package.");
     return { sha: file.sha, bytes: bytes, prepared: prepared };
   }
 
@@ -231,7 +284,10 @@
     const actions = {
       "published-cloud-package": "Published family records",
       "imported-package": "Opened family records",
-      "exported-package": "Downloaded a private backup"
+      "exported-package": "Downloaded a private backup",
+      "exported-editor-package": "Created Editor package",
+      "exported-pii-viewer-package": "Created PII Viewer package",
+      "exported-redacted-viewer-package": "Created Redacted package"
     };
     return actions[value] || String(value || "Change").replace(/[-_]+/g, " ").replace(/\b\w/g, function (letter) { return letter.toUpperCase(); });
   }
@@ -386,6 +442,11 @@
     populateSettings();
     cancelUpload();
     renderAudit(remoteCache ? remoteCache.prepared.state : storage.getState());
+    renderAccessState();
+    if (!editorToolsAvailable()) {
+      components.openDialog("#cloudAuditDialog", { trigger: $("#cloudAuditButton"), focus: "#importButton" });
+      return;
+    }
     $("#cloudSettingsDetails").open = !configured();
     components.openDialog("#cloudAuditDialog", { trigger: $("#cloudAuditButton"), focus: configured() ? "#cloudDownloadButton" : "#cloudEditorName" });
     if (!configured() || busy) {
@@ -440,10 +501,12 @@
   async function selectUpload(file) {
     if (!file) return;
     try {
+      if (!editorToolsAvailable()) throw new Error("This access package is read-only. Open an Editor package before publishing changes.");
       const credentials = activeCredentials();
       setBusy(true, "Validating every file and checking the latest cloud package…");
       const candidate = await portability.prepareFile(file);
       portability.requireInitialPackage(candidate);
+      if (portability.accessModeFor(candidate.state) !== "editor") throw new Error("Only an Editor package can be published. Viewer handoff packages are read-only.");
       await verifyTarget(credentials.settings, credentials.token);
       const remote = await readLatest(credentials.settings, credentials.token, true);
       const candidateVersion = portability.datasetVersionFor(candidate.state);
@@ -488,6 +551,7 @@
 
   async function publishUpload() {
     if (!pendingUpload || busy) return;
+    if (!editorToolsAvailable()) return;
     const actor = u.cleanLine($("#cloudRecordedBy").value, 160);
     const summary = u.cleanText($("#cloudAuditSummary").value, 4000).trim();
     if (!actor || !summary) {
@@ -542,6 +606,7 @@
   async function downloadLatest() {
     if (busy) return;
     try {
+      if (!editorToolsAvailable()) throw new Error("Cloud download is disabled for viewer packages. Ask the maintainer for a replacement ZIP.");
       const credentials = activeCredentials();
       if (storage.getState().workspace.family.initializedAt) {
         const accepted = await components.confirm({
@@ -603,10 +668,13 @@
     $("#cloudDownloadButton").addEventListener("click", downloadLatest);
     $("#cloudAuditDialog").addEventListener("close", cancelUpload);
     window.addEventListener("app:statechange", function () {
+      renderAccessState();
       if ($("#cloudAuditDialog").open && !remoteCache) renderAudit(storage.getState());
     });
     populateSettings();
+    renderAccessState();
     if (!configured()) setStatus("warning", "Setup needed", "Connect a private GitHub repository to publish and download validated packages.");
+    if (!editorToolsAvailable()) renderAccessState();
   }
 
   App.cloud = { init: init, open: openDialog, refresh: refreshRemote };
