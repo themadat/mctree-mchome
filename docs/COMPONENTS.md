@@ -1,8 +1,8 @@
 # Shared components
 
-## Onboarding gate
+## Hosted access gate
 
-An uninitialized browser shows the McFamily introduction, privacy explanation, ZIP picker, and the title-bar Audit action. The workspace initializes only from an explicitly selected local package or Download Latest from a configured private repository. The archive must contain the exact five dataset 16 root CSVs. The import preview reports people, relationships, places, residences, package/version information, passed validation groups, and partial-date warnings before it can open the family. Older packages and loose CSVs are not compatible. There is no blank-family, demo, JSON/GEDCOM, or authentication bypass.
+Every normal browser load shows only the McFamily introduction, hosted status, named-access selector, and passphrase field until the latest public ciphertext vault is fetched. The passphrase stays in the browser, unwraps only the data key assigned to that grant, and must decrypt a strict dataset 16 package before the workspace opens. A missing vault exposes one clearly labelled Owner recovery ZIP path; after a validated Editor recovery import, that browser enters Owner Setup and can publish the first encrypted vault. Older packages, loose CSVs, blank families, demos, JSON/GEDCOM, and passphrase bypasses are unsupported.
 
 ## Family workspace
 
@@ -24,9 +24,11 @@ Destructive controls use the shared confirmation dialog. Deleting a person creat
 
 `components.toast()` reports saves, exports, imports, recovery, and update availability through reusable status UI. The floating status shows local save and backup state only. Completion and errors are also announced in polite or assertive live regions as appropriate.
 
-## Cloud records and audit
+## Access and audit
 
-Audit in the top toolbar uses the shared terminal-on-rectangle symbol and opens Cloud Records & Audit. The modal keeps the latest-package actions, required publication audit review, newest-first in-package audit history, and collapsible GitHub Connection settings together. Upload and Download are explicit operations; no background process sends family data. Busy, success, setup, validation, stale-copy, and network failures are exposed through labelled status text and live regions.
+Access & Audit in the top toolbar uses the shared terminal-on-rectangle symbol. Every role sees its current access, hosted revision/status, Lock action, and newest-first audit history. Owner and Editor additionally see the audited Publish Current Family workflow and GitHub connection. Owner alone sees four fixed grant rows for Owner, Editor, Private Viewer, and Redacted Viewer, with generated multiword passphrases and enable/revoke controls. Owner/Editor also see private recovery ZIP controls. Private Viewer and Redacted Viewer never receive routine import, download, PDF, Developer-data, publication, token, or passphrase-management controls.
+
+Publication is explicit. The full and physically redacted packages are validated and encrypted in memory before GitHub receives a ciphertext-only JSON vault. Busy, success, setup, validation, wrong-passphrase, stale-copy, and network failures use labelled status text and live regions. Viewer sign-ins do not write audit events because viewers have no GitHub write credential.
 
 ## Notes
 
@@ -48,7 +50,7 @@ Family Tree generation rows compare the numeric lineage segments directly in roo
 
 The profile X closes the panel and clears the selected-person state. Full Tree also closes and deselects the profile, and Lineage remains disabled until selecting a person. Selecting a tree node reopens the profile. There is no separate Show person control.
 
-Family-record mutation controls require both `features.familyEditing` and an Editor package. PII Viewer and Redacted Read-only keep adding, editing, connecting, removing, deleting, family-title changes, and Notes changes disabled. Home-person assignment remains internal. Personal view settings and Favorites stay available in every mode.
+Family-record mutation controls require both `features.familyEditing` and active Owner or Editor hosted access. Private Viewer and Redacted Viewer keep adding, editing, connecting, removing, deleting, family-title changes, and Notes changes disabled. Their routine ZIP import/export, PDF, Developer data, and publication surfaces are also absent. Home-person assignment remains internal. Personal view settings and Favorites stay available in every mode.
 
 ## Print report
 
