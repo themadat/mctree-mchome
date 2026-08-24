@@ -2,7 +2,7 @@
 
 ## Hosted access gate
 
-Every normal browser load shows only the McFamily introduction, hosted status, named-access selector, and passphrase field until the latest public ciphertext vault is fetched. The passphrase stays in the browser, unwraps only the data key assigned to that grant, and must decrypt a strict dataset 16 package before the workspace opens. A missing vault exposes one clearly labelled Owner recovery ZIP path; after a validated Editor recovery import, that browser enters Owner Setup and can publish the first encrypted vault. Older packages, loose CSVs, blank families, demos, JSON/GEDCOM, and passphrase bypasses are unsupported.
+Every normal browser load shows only the McFamily introduction, hosted status, and one passphrase field until the latest public ciphertext vault is fetched. The passphrase stays in the browser, is tested locally against every grant until exactly one match is found, unwraps only the data key assigned to that grant, and must decrypt a strict dataset 16 package before the workspace opens. Account labels and roles are not listed before sign-in. A missing vault exposes one clearly labelled Owner recovery ZIP path; after a validated Editor recovery import, that browser enters Owner Setup and can publish the first encrypted vault. Older packages, loose CSVs, blank families, demos, JSON/GEDCOM, and passphrase bypasses are unsupported.
 
 ## Family workspace
 
