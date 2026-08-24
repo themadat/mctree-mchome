@@ -68,7 +68,7 @@
         updatedAt: now,
         lastMutationId: u.uid("mutation"),
         tombstones: { records: [], documents: [], people: [], relationships: [], places: [], residences: [] },
-        package: { format: "", version: "", datasetVersion: "", auditHistory: [] }
+        package: { format: "", version: "", datasetVersion: "", accessMode: "editor", auditHistory: [] }
       },
       workspace: {
         family: { title: "McFamily", initializedAt: "", homePersonId: "" },
@@ -535,6 +535,7 @@
           format: u.cleanLine(sourcePackage.format, 80),
           version: u.cleanLine(sourcePackage.version, 40),
           datasetVersion: u.cleanLine(sourcePackage.datasetVersion, 40),
+          accessMode: Object.prototype.hasOwnProperty.call(config.accessModes, sourcePackage.accessMode) ? sourcePackage.accessMode : "editor",
           auditHistory: normalizeAuditHistory(sourcePackage.auditHistory)
         }
       },

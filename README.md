@@ -4,7 +4,7 @@ McFamily is a private, local-first family atlas that runs as a static GitHub Pag
 
 There is no custom backend, in-app account, cloud database, or runtime dependency. Family data stays in browser storage unless an editor explicitly imports, exports, uploads, or downloads the McFamily ZIP. The published Pages repository must never contain a real family package or private family data.
 
-Current version: `0.0.1.60` (`major.minor.patch.build`).
+Current version: `0.0.1.61` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -24,13 +24,13 @@ Current version: `0.0.1.60` (`major.minor.patch.build`).
 - Keeps portrait placeholders and internal person references out of the ordinary workspace; Developer Mode reveals references and a left-side generation bubble scale for visual troubleshooting.
 - Presents complete oldest-to-newest, two-digit Lineage IDs with the first three ancestral segments italicized and the selected person's final segment bold, followed by a compact direct-parent-linked Family Line with each name's lineage number and generation.
 - Keeps people, places, person-to-person relationships, person-to-place residences, and package metadata in separate exact-schema CSV files inside one ZIP artifact.
-- Opens Cloud Records & Audit from the title bar to validate edited ZIPs, require an audit entry, refuse stale overwrites, publish the next dataset patch to a private GitHub repository, and download the exact latest package for the next editor.
+- Opens Save & Share from the title bar to create Editor, PII Viewer, or Redacted Read-only ZIPs, and lets Editor packages validate, audit, and publish the canonical ZIP to a private GitHub repository.
 - Imports known and question-mark partial source dates; person death descriptors explicitly distinguish living (`NONE`), deceased with an unknown date (`UNKNOWN`), and presumed deceased (`UNKNOWN PRESUMED`).
 - Shows partial source dates such as `December ??, 1979`, keeps a natural-language Age property on one line, and fills unknown visible identity properties with `UNKNOWN`. Living profiles use `----` for Died, and living people show only their birth year in directory and tree lifespans. Gender and Pronouns remain stored but are temporarily hidden from person details.
 - Uses compact open Parents, Siblings, Partners, and Children groups near the top of each profile, with combined parent role/type labels such as `Lineal :: Adopted` and `Non-Lineal :: Biological`, birth order and year for siblings and children, marriage years for partners, and current-first partner history; Imported Source finishes each profile.
 - Uses absolute lineage generations rooted at George McMillen (1745) as Gen 0; readings use concise forms such as `Gen 6, 5th Child of Max`.
 - Lets the person panel close and clear selection; choosing any Family Tree person reopens it without a separate Show person control.
-- Keeps family-record Add, Connect, Edit, and Delete controls visibly paused during the current build-out; profile actions use icon-over-label controls in their relevant sections.
+- Enables family-record Add, Connect, Edit, Delete, Notes, and family-title changes only for Editor packages; viewer packages keep those controls read-only while preserving personal display preferences and favorites.
 - Retains structured profiles for people, multiple addresses, phones, emails, life events, and typed parent or partner relationships.
 - Rejects a damaged or malformed ZIP, missing/extra/reordered columns, bad metadata counts, missing references, duplicate relationships, self-links, and ancestry cycles before replacement.
 - Keeps a recovery snapshot before destructive replacement or deletion.
@@ -47,18 +47,22 @@ python3 -m http.server 8000
 
 Open `http://localhost:8000`. Use a local server rather than opening `index.html` directly so the service worker and install behavior can run.
 
-On a fresh browser profile, McFamily intentionally has no demo family or blank-workspace bypass. Select the current private package described in [`docs/MCFAMILY_CSV.md`](docs/MCFAMILY_CSV.md), or configure Audit and choose **Download Latest**.
+On a fresh browser profile, McFamily intentionally has no demo family or blank-workspace bypass. Select the access package sent by the maintainer, as described in [`docs/MCFAMILY_CSV.md`](docs/MCFAMILY_CSV.md), or use Save & Share to configure an Editor connection and get the canonical package.
 
 ## Privacy model
 
-The first-launch import is an onboarding gate, not authentication. Anyone who can open the deployed files can load the application, and anyone who possesses a backup or exported PDF can read its private contents.
+The first-launch import and access mode are onboarding and handoff controls, not authentication. Everyone can use the same public application link; the privately delivered ZIP selects the experience:
+
+- **Editor** contains full data, enables family-record editing, and exposes the audited GitHub publish workflow.
+- **PII Viewer** contains full data and disables ordinary record editing and publishing. It is plaintext, so this is an accidental-edit guard rather than security against a technically skilled recipient.
+- **Redacted Read-only** physically removes places, residences, addresses, contact details, family Notes, and unstructured person/relationship notes before export. It retains names, dates, lineage, and relationships.
 
 - Store ZIP exports and PDFs privately.
 - Do not commit real names, addresses, phone numbers, email addresses, heritage notes, or family notes.
 - Use synthetic people for tests and screenshots.
 - Browser storage is per browser profile and device. Clearing site data removes the active local copy.
 - Give every editor their own GitHub account and fine-grained token for the private data repository. Remove a collaborator or revoke their token to remove repository access.
-- The visible owner/editor/viewer and usage-audit wishlist still requires a future authenticated backend; the current GitHub handoff records published changes, not sign-ins or every read.
+- Passwords, authenticated revocation, and read/sign-in usage history still require a future backend; the current package modes do not claim those protections.
 
 ## Project structure
 
@@ -105,8 +109,8 @@ Without the cloud handoff, a maintainer can still keep one canonical private ZIP
 
 1. Import the latest McFamily ZIP.
 2. Add or update people and relationships.
-3. Export a new McFamily ZIP from Settings and store it privately.
-4. Distribute replacement ZIP files to editors or print/PDF atlases to readers.
+3. Open **Save & Share** and download the package that matches the recipient: Editor, PII Viewer, or Redacted Read-only.
+4. Send the same McFamily app link plus exactly that ZIP through a private channel. Redacted Read-only is the only package intended for someone who must not receive contact details or Notes.
 
 The ZIP contains `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`. Imports replace the current family only after ZIP integrity, all five exact schemas, metadata counts, IDs, links, lineage paths, and ancestry cycles pass validation. McFamily creates a recovery snapshot first; it does not merge concurrent copies.
 

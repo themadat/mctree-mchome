@@ -26,13 +26,13 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 13,
   "meta": {
-    "appVersion": "0.0.1.60",
-    "buildId": "0.0.1.60",
+    "appVersion": "0.0.1.61",
+    "buildId": "0.0.1.61",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
     "tombstones": { "records": [], "documents": [], "people": [], "relationships": [], "places": [], "residences": [] },
-    "package": { "format": "mcfamily-package", "version": "1", "datasetVersion": "16.0.0", "auditHistory": [] }
+    "package": { "format": "mcfamily-package", "version": "1", "datasetVersion": "16.0.0", "accessMode": "editor", "auditHistory": [] }
   },
   "workspace": {
     "family": {
@@ -59,13 +59,13 @@ Relationships are independent records. Parent-child records contain `parentId`, 
 
 Derived family concepts are never copied onto people. `family.js` builds them from relationships so edits cannot leave contradictory ancestor, sibling, descendant, or family-unit arrays behind.
 
-The dataset 16 ZIP package preserves the current state model through five exact CSV schemas. McRelations uses schema 2.0; the other files use schema 1.0. Historical application-state and transfer schemas are intentionally unsupported. Data-only publications advance through `16.0.x` patch versions without changing those schemas or the website build.
+The dataset 16 ZIP package preserves the current state model through five exact CSV schemas. McRelations uses schema 2.0; the other files use schema 1.0. McMetadata carries the Editor/PII Viewer/Redacted Read-only access mode and compatibility details without dedicated columns. Historical application-state and transfer schemas are intentionally unsupported. Data-only publications advance through `16.0.x` patch versions without changing those schemas or the website build.
 
 ## Initialization and persistence
 
-A fresh default has no `initializedAt` value and no people. `app.js` renders the introduction and ZIP input in that state while retaining the title-bar Audit action for an explicit cloud download. `portability.js` accepts only a dataset 16 package with exactly `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`, and requires at least one valid person before the first local state is stored.
+A fresh default has no `initializedAt` value and no people. `app.js` renders the introduction and ZIP input in that state while retaining title-bar Save & Share for an explicit Editor cloud download. `portability.js` accepts only a dataset 16 package with exactly `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`, and requires at least one valid person before the first local state is stored.
 
-McPeople contains one stable P-referenced row per person and no parent or partner columns. McRelations contains all authoritative Person-to-Person parent and partner links, with parent lineage role separated from parent type. McPlaces contains reusable physical addresses, while McResidences assigns people to places. McMetadata declares package/dataset/file-schema versions, exact record counts, family settings, and append-only audit events. Package validation completes before any current state is touched and rejects ZIP damage, wrong filenames, schema drift, count mismatches, invalid identifiers/dates, broken cross-file references, duplicate links, multiple Lineal parents, Lineage inconsistencies, and ancestry cycles.
+McPeople contains one stable P-referenced row per person and no parent or partner columns. McRelations contains all authoritative Person-to-Person parent and partner links, with parent lineage role separated from parent type. McPlaces contains reusable physical addresses, while McResidences assigns people to places. McMetadata declares package/dataset/file-schema versions, exact record counts, access mode, family settings, compatibility details, and append-only audit events. Package validation completes before any current state is touched and rejects ZIP damage, wrong filenames, schema drift, count mismatches, invalid identifiers/dates, broken cross-file references, false redaction claims, duplicate links, multiple Lineal parents, Lineage inconsistencies, and ancestry cycles.
 
 ## Private GitHub package transport
 

@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.60",
-      buildId: "0.0.1.60",
+      version: "0.0.1.61",
+      buildId: "0.0.1.61",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -32,6 +32,11 @@
     packageVersion: "1",
     datasetVersion: "16.0.0",
     datasetSeries: "16.0",
+    accessModes: {
+      editor: { label: "Editor", shortLabel: "Editor", editable: true, pii: true },
+      "pii-viewer": { label: "PII Viewer", shortLabel: "PII Viewer", editable: false, pii: true },
+      "redacted-viewer": { label: "Redacted Read-only", shortLabel: "Redacted", editable: false, pii: false }
+    },
     storage: {
       stateKey: "mcfamily.state.v13",
       recoveryKey: "mcfamily.recovery.v5",
@@ -50,7 +55,7 @@
 
     features: {
       family: true,
-      familyEditing: false,
+      familyEditing: true,
       cloudPackages: true,
       documents: true,
       roadmap: true,
@@ -133,6 +138,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.61",
+        date: "2026-08-24T07:00:00.000Z",
+        title: "Three clear family access packages",
+        summary: "One McFamily link now opens explicit Editor, PII Viewer, or physically redacted read-only ZIP handoffs.",
+        features: ["Editor package with family editing and audited GitHub publishing", "PII Viewer package with full private details and disabled record editing", "Redacted Read-only package that removes places, contacts, family Notes, and record notes before export"],
+        improvements: ["The current access mode stays visible beside the app version and at the top of Save & Share", "Import preview names the assigned access before opening a package", "Viewer modes hide cloud connection and publishing tools while preserving replacement import and audit history"],
+        fixes: ["Redacted packages are rejected if their files still contain place, residence, relationship-place, or note records", "Family title, Notes, person, and relationship mutations are guarded consistently in viewer modes"],
+        knownIssues: ["Static access packages are not authenticated accounts: a PII Viewer ZIP is plaintext and read-only mode cannot prevent deliberate external inspection or modification"]
+      },
       {
         version: "0.0.1.60",
         date: "2026-08-24T06:00:00.000Z",
@@ -739,8 +754,9 @@
       { id: "print", title: "Print or save a PDF", section: "Family", keywords: "print pdf atlas directory lineage family maps generation developer preview", html: "<p>Choose <strong>Print / Save PDF</strong> to build the atlas and open the browser print dialog. Its compact opening flows into six-column Family Maps; George McMillen (1745) is Generation 0, and Generation 4 and later are grouped beneath Generation 3 family lines. Lineal cards have a clearly visible faded-red outline; stronger Newton, Albon, and Lucian orientation highlights include a Bloodline symbol, deceased entries use brown shading, and unresolved 99/?? lineage branches are omitted. Jon Couts remains in the directory but is not presented as a map root. The dense three-column Person Directory shows only each full name, styled Lineage ID, and root-to-person first-name progression. In Developer Mode, the same action opens an in-app preview instead of printing.</p>" },
       { id: "notes", title: "Working with Notes", section: "Features", keywords: "notes text edit modal autosave", html: "<p>Notes is a single local plain-text scratchpad. Open it from the top bar or press <kbd>N</kbd>; it is included in McFamily backups.</p>" },
       { id: "backup", title: "ZIP backup and restore", section: "Data", keywords: "zip csv package export import backup restore recovery private metadata audit save share", html: "<p><strong>Save &amp; Share</strong> in the title bar shows whether this browser is saving successfully and provides the complete editable ZIP backup. It contains five private CSV files: McPeople, McPlaces, McRelations, McResidences, and McMetadata. McMetadata carries file schema versions, record counts, family settings, and audit events. Store the ZIP securely. Replacement imports are accepted only after every file and cross-file link validates; the prior local copy becomes the recovery snapshot.</p>" },
-      { id: "cloud", title: "Cloud records and editor handoff", section: "Data", keywords: "cloud github audit upload download latest patch editor handoff token conflict save share", html: "<p><strong>Save &amp; Share</strong> in the title bar opens one workspace for local backup, cloud handoff, connection status, and recent changes. Connect a separate <strong>private</strong> data repository with a fine-grained token limited to that repository and Contents read/write access. Get latest copy validates, opens, and saves the current ZIP. Extract it, edit the five CSV files directly, and re-create a ZIP with exactly those files at its root. Publish edited ZIP validates everything before showing the record differences and required audit entry. Publish checks the GitHub file SHA so a stale editor cannot overwrite a newer package, advances the dataset 16.0 patch number, appends the audit event to McMetadata, opens the result locally, and downloads the exact published copy. Each editor should use their own GitHub account and token; browser JavaScript cannot use SSH keys.</p>" },
-      { id: "privacy", title: "Privacy and local data", section: "Data", keywords: "privacy local storage static gate authentication github token", html: "<p>The first-run gate is onboarding, not authentication. Family data stays local unless you explicitly publish or download through Save &amp; Share. The Pages repository must remain public-data-free; configure a separate private GitHub data repository. Tokens stay outside family ZIPs and can be session-only. The McMetadata audit is durable change history but is not tamper-proof; GitHub owns repository access and revocation.</p>" },
+      { id: "cloud", title: "Cloud records and editor handoff", section: "Data", keywords: "cloud github audit upload download latest patch editor handoff token conflict save share", html: "<p><strong>Save &amp; Share</strong> in the title bar opens local copy, access-package, cloud handoff, connection, and recent-change tools. Cloud controls appear only for an Editor package. Connect a separate <strong>private</strong> data repository with a fine-grained token limited to that repository and Contents read/write access. Get latest copy validates and opens the canonical Editor ZIP. Publish edited ZIP validates everything, requires an audit entry, checks the GitHub file SHA, advances the dataset 16.0 patch, opens the result locally, and downloads the exact published copy.</p>" },
+      { id: "access-packages", title: "Editor and viewer packages", section: "Data", keywords: "access editor pii viewer redacted read only share family zip", html: "<p>Everyone uses the same public McFamily app link plus a privately delivered ZIP. <strong>Editor</strong> contains full data and enables record editing and GitHub publishing. <strong>PII Viewer</strong> contains full data but disables ordinary editing and publishing. <strong>Redacted Read-only</strong> physically removes places, residences, contact details, family Notes, and unstructured record notes. Open Save &amp; Share to see the current mode. These packages are not passwords or accounts: a technically skilled person who possesses a full-data ZIP can inspect or alter it outside the app.</p>" },
+      { id: "privacy", title: "Privacy and local data", section: "Data", keywords: "privacy local storage static gate authentication github token redacted", html: "<p>The first-run gate and package modes are practical handoff controls, not authentication. Family data stays local unless you explicitly import, export, publish, or download through Save &amp; Share. The Pages repository must remain public-data-free. Send Editor and PII Viewer ZIPs only through private channels; use Redacted Read-only when someone should not receive addresses, contacts, or notes. Tokens stay outside family ZIPs and can be session-only.</p>" },
       { id: "install", title: "Install McFamily", section: "Installation", keywords: "install home screen pwa offline", html: "<p>Use the browser’s Install app, Add to Home Screen, or Add to Dock command. After the shell has loaded once, local features continue to work offline.</p>" },
       { id: "shortcuts", title: "Keyboard access", section: "Accessibility", keywords: "keyboard shortcuts search directory favorites key print notes update reload", html: "<p>Press <kbd>/</kbd> for search, <kbd>D</kbd> for Directory, <kbd>F</kbd> for Favorites, <kbd>K</kbd> for the tree Key, <kbd>P</kbd> to print, <kbd>N</kbd> for Notes, <kbd>X</kbd> to dismiss What’s New, <kbd>R</kbd> to reload when an update is ready, <kbd>T</kbd> for theme, and <kbd>?</kbd> for Help. Visible controls provide every shortcut action.</p>" }
     ]
