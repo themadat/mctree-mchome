@@ -61,6 +61,15 @@
   }
 
   function updateAvailable(worker) {
+    const lockedNotice = document.querySelector("#accessUpdateNotice");
+    const lockedAction = document.querySelector("#accessUpdateButton");
+    if (document.body.classList.contains("access-locked") && lockedNotice && lockedAction) {
+      lockedNotice.hidden = false;
+      lockedAction.onclick = function () { forceRefresh(worker); };
+      lockedAction.setAttribute("aria-keyshortcuts", "R");
+      lockedAction.dataset.shortcut = "R";
+      return;
+    }
     App.components.toast("A newer app version is ready. Force refresh to install it now.", {
       title: "New version available",
       kind: "info",
@@ -73,6 +82,11 @@
     if (action) {
       action.setAttribute("aria-keyshortcuts", "R");
       action.dataset.shortcut = "R";
+    }
+    const close = document.querySelector("#appToast [data-toast-close]");
+    if (close) {
+      close.setAttribute("aria-keyshortcuts", "X");
+      close.dataset.shortcut = "X";
     }
   }
 
