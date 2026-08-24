@@ -79,10 +79,13 @@ metadata-id,metadata-type,subject,key,value,recorded-at,recorded-by,details
 Required single-value rows declare:
 
 - package format, package version, dataset version, and people/relationship/place/residence counts;
+- access mode as `editor`, `pii-viewer`, or `redacted-viewer` for newly exported packages (dataset 16 packages created before v0.0.1.61 default to `editor` on their first open);
 - family title, initialized timestamp, home person, created/updated timestamps, Notes, and settings JSON;
 - schema `2.0.0` exactly once for `McRelations.csv` and schema `1.0.0` exactly once for each other filename.
 
 At least one `audit` row is required. Audit rows record a stable ID, file or package subject, action, timestamp, actor, and details. Imports and exports append audit events, and the full history remains in future exports. Declared counts must exactly match the other four files; the home person must resolve.
+
+An Editor package contains the full record and enables application editing and cloud publishing. A PII Viewer package contains the same full record but opens the application read-only. The family `settings-json` carries compatibility details that have no dedicated column in the five current schemas: labelled phone/email arrays, gender/pronouns, life places, heritage background, and free-text relationship place. Addresses remain authoritative McPlaces plus McResidences records. A Redacted Read-only package must have zero McPlaces and McResidences rows, blank family Notes, blank person and relationship notes, no relationship place references, and no supplemental profile/relationship detail maps. Export also clears contact arrays and unstructured notes before CSV generation and scrubs audit actors/details. The importer rejects a package labelled `redacted-viewer` if those structural redaction rules do not hold. Access modes are not passwords or encryption; only physical redaction removes those fields from a recipient's ZIP.
 
 Data-only cloud publications increment the final dataset patch number (`16.0.0` → `16.0.1` → `16.0.2`) while all five schemas remain unchanged. Each publication appends a `published-cloud-package` audit event. An upload based on an earlier patch or missing/rewritten prior audit rows is rejected and must be reapplied to Download Latest.
 
