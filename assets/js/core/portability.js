@@ -32,8 +32,6 @@
     "person-name-preferred-prefix", "person-preferred-name-first", "person-preferred-name-middle", "person-preferred-name-last", "person-preferred-name-suffix",
     "person-name-maiden-last", "lineage-id", CONSANGUINITY_FIELD, AFFINITY_FIELD
   ].concat(MCLINEAGE_PERSON_DATE_HEADERS, [
-    "legacy-male-display-first-names", "legacy-male-display-last-name",
-    "legacy-female-display-first-names", "legacy-female-display-last-name",
     "partner-relationships-json", "notes", "source-last-modified-date", "source-last-modified-by", "source-row-number", "data-quality-notes"
   ]);
   let pendingImport = null;
@@ -517,7 +515,7 @@
     if (counters.partialDates) warnings.push(counters.partialDates + " partial source date" + (counters.partialDates === 1 ? " is" : "s are") + " preserved in source fields but not shown as a normalized date.");
     if (counters.unmappedDates) warnings.push(counters.unmappedDates + " unrecognized source date" + (counters.unmappedDates === 1 ? " is" : "s are") + " preserved in source fields but not shown as a normalized date.");
     prepared.validation.warnings = prepared.validation.warnings.concat(warnings);
-    return Object.assign(prepared, { formatLabel: "McLineage v13 CSV", sourceRows: parsed.rows.length, fileName: fileName });
+    return Object.assign(prepared, { formatLabel: "McLineage v14 CSV", sourceRows: parsed.rows.length, fileName: fileName });
   }
 
   function parseJsonObject(value, label) {
@@ -607,10 +605,10 @@
       const details = [];
       if (missing.length) details.push("missing: " + missing.join(", "));
       if (unexpected.length) details.push("unexpected: " + unexpected.join(", "));
-      if (!missing.length && !unexpected.length && !exactOrder) details.push("columns are not in the McLineage v13 order");
-      throw new Error("McFamily accepts only the exact McLineage v13 schema (" + details.join("; ") + ").");
+      if (!missing.length && !unexpected.length && !exactOrder) details.push("columns are not in the McLineage v14 order");
+      throw new Error("McFamily accepts only the exact McLineage v14 schema (" + details.join("; ") + ").");
     }
-    throw new Error("That CSV is neither a current McFamily export nor an exact McLineage v13 file.");
+    throw new Error("That CSV is neither a current McFamily export nor an exact McLineage v14 file.");
   }
 
   function summaryFor(state, candidate) {

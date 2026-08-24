@@ -4,16 +4,16 @@ McLineage Dataset Metadata
 Current dataset
 ---------------
 
-Version: 12.0.0
-Updated: 2026-08-21
-File: McLineage-12-0-0-2026-08-21.csv
+Version: 14.0.0
+Updated: 2026-08-24
+File: McLineage-14-0-0-2026-08-24.csv
 Source: McLineage.xlsx legacy database export
 Status: Private family data; do not commit to a public or shared source repository.
 
-Current v12 schema
+Current v14 schema
 ------------------
 
-The 12.0.0 schema uses kebab-case for every top-level CSV header and contains 36 fields. Structured names remain authoritative:
+The 14.0.0 schema uses kebab-case for every top-level CSV header and contains 30 fields. Structured names remain authoritative:
 
 - Birth Name: person-name-birth-prefix, person-birth-name-first, person-birth-name-middle, person-birth-name-last, and
   person-birth-name-suffix.
@@ -25,14 +25,35 @@ The 12.0.0 schema uses kebab-case for every top-level CSV header and contains 36
 
 Each part may contain multiple words. Preferred/display is the first display choice, followed by Current/Legal and then Birth. Birth and
 Current First/Last use UNKNOWN only when the source cannot supply a value; optional parts and unconfirmed Preferred names remain blank.
-The retired person-first-names, person-last-name, and person-name-sort fields are not part of v12. Relationship JSON property names remain
-snake_case because they are structured values inside partner-relationships-json, not CSV headers.
+The retired flat-name fields, retain-maiden flag, legacy deceased marker, and four legacy spouse-directory display-name fields are not part
+of v14. Relationship JSON property names remain snake_case because they are structured values inside partner-relationships-json, not CSV
+headers.
 
 Changelog
 ---------
 
+14.0.0 — 2026-08-24 — [209 KB (-15) | 913 records (±0) | 30 fields (-4)]
+Author: Adam Lauer [Agent GPT-5-based Codex | Model 5.6 Sol | Effort High | Speed Standard]
+Summary: Removed the obsolete legacy spouse-directory display-name columns.
+
+- Records: 913 changed | 0 added | 0 deleted.
+- Removed legacy-male-display-first-names, legacy-male-display-last-name, legacy-female-display-first-names, and
+  legacy-female-display-last-name without reconciling or replacing any name values.
+- Preserved all 913 rows, stable P and R identifiers, structured names, relationships, lineage paths, dates, notes, and every retained field
+  value exactly.
+
+13.0.0 — 2026-08-23 — [224 KB (-1) | 913 records (±0) | 34 fields (-2)]
+Author: Adam Lauer [Agent GPT-5-based Codex | Model 5.6 Sol | Effort High | Speed Standard]
+Summary: Made death status explicit and removed the last retired name-migration fields.
+
+- Records: 913 changed | 0 added | 0 deleted.
+- Removed legacy-male-display-deceased and retain-maiden-name; structured names remain authoritative.
+- Set blank-date death descriptors to NONE, UNKNOWN, or UNKNOWN PRESUMED so living, explicitly deceased, and presumed-deceased records are
+  distinguishable without browser-time inference.
+- Preserved all 913 rows, stable P and R identifiers, relationships, lineage paths, dates, notes, and retained field values.
+
 12.0.0 — 2026-08-21 — [225 KB (-21) | 913 records (±0) | 36 fields (-3)]
-Author: Adam Lauer [Agent GPT-5-based Codex | Model UNK | Effort UNK | Speed UNK]
+Author: Adam Lauer [Agent GPT-5-based Codex | Model 5.6 Sol | Effort High | Speed Standard]
 Summary: Cut McLineage to kebab-case v12 headers and removed retired flat-name columns.
 
 - Records: 913 changed | 0 added | 0 deleted.
@@ -44,7 +65,7 @@ Summary: Cut McLineage to kebab-case v12 headers and removed retired flat-name c
 - Preserved all 913 rows, stable P and R identifiers, relationships, lineage paths, dates, notes, and retained field values exactly.
 
 11.0.0 — 2026-08-21 — [246 KB (+52) | 913 records (±0) | 39 fields (+16)]
-Author: Adam Lauer [Agent GPT-5-based Codex | Model UNK | Effort UNK | Speed UNK]
+Author: Adam Lauer [Agent GPT-5-based Codex | Model 5.6 Sol | Effort Extra High | Speed Standard]
 Summary: Added structured Birth, Current/Legal, Preferred/display, and Maiden Last names.
 
 - Records: 913 changed | 0 added | 0 deleted.
