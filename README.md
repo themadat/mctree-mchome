@@ -4,7 +4,7 @@ McFamily is a private family atlas that runs as a static GitHub Pages app. It vi
 
 There is no custom backend, account provider, cloud database, or runtime dependency. The separate public `mcdata` repository contains only an AES-GCM encrypted vault; readable family CSVs, passphrases, and GitHub tokens never belong in either public repository.
 
-Current version: `0.0.1.69` (`major.minor.patch.build`).
+Current version: `0.0.1.70` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -31,7 +31,7 @@ Current version: `0.0.1.69` (`major.minor.patch.build`).
 - Uses compact open Parents, Siblings, Partners, and Children groups near the top of each profile, with combined parent role/type labels such as `Lineal :: Adopted` and `Non-Lineal :: Biological`, birth order and year for siblings and children, marriage years for partners, and current-first partner history. Imported Source appears only to Owner or Editor access in Developer Mode.
 - Uses absolute lineage generations rooted at George McMillen (1745) as Gen 0; readings use concise forms such as `Gen 6, 5th Child of Max`.
 - Lets the person panel close and clear selection; choosing any Family Tree person reopens it without a separate Show person control.
-- Enables family-record Add, Connect, Edit, Delete, person and family Notes, family-title, recovery ZIP, PDF, publishing, and imported-source inspection only for Owner or Editor access; imported source additionally requires Developer Mode. Member and Viewer modes expose no Audit, Notes, imported-source search, routine import, export, PDF, developer-data, or publishing controls.
+- Enables family-record Add, Connect, Edit, Delete, person and family Notes, family-title, recovery ZIP, PDF, publishing, and imported-source inspection only for Owner or Editor access; imported source additionally requires Developer Mode. Member and Viewer modes omit Add from the title bar and omit Add, Connect, Edit, and Delete from Selected Person, along with Audit, Notes, imported-source search, routine import, export, PDF, developer-data, and publishing controls.
 - Uses a compact person form whose Birth (Lineal), Current (Legal), and Preferred (Display) names each stay on one weighted five-part row. Birth typing seeds Current and Preferred until either target field is edited. Date descriptors are derived from blank, exact, or question-mark partial values; invalid formats are marked and blocked.
 - Retains structured profiles for people, multiple addresses, phones, emails, life events, and typed parent or partner relationships.
 - Rejects a damaged or malformed ZIP, missing/extra/reordered columns, bad metadata counts, missing references, duplicate relationships, self-links, and ancestry cycles before replacement.
@@ -100,7 +100,7 @@ McFamily uses a v13-only browser-storage namespace and does not load or migrate 
 
 ## Encrypted hosted access workflow
 
-The default vault is `themadat/mcdata`, branch `main`, at `data/mcfamily/McFamily-access.json`. That repository must be public so link-only readers can download the ciphertext anonymously. It must contain no readable family CSV or ZIP.
+The default vault is `themadat/mcdata`, branch `main`, at `data/mcfamily/McFamily-access.json`. That repository must be public so link-only readers can download the ciphertext anonymously. McFamily generates this one JSON file with the access grants and both encrypted family packages inside it; do not manually upload a ZIP or create a second encrypted-directory file. The repository must contain no readable family CSV or ZIP.
 
 1. The Owner opens their current Editor recovery ZIP once, opens **Audit**, and enters a fine-grained GitHub token limited to `mcdata` with Contents read/write access.
 2. Set the Owner username and passphrase, then add every Editor, Member, and Viewer with a unique shown name and a unique passphrase. Names remain public audit metadata but are not shown on the sign-in screen. Save new phrases before closing the dialog.
