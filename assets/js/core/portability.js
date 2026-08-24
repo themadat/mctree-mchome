@@ -6,37 +6,41 @@
   const u = App.utils;
   const model = App.stateModel;
   const storage = App.storage;
-  const NATIVE_HEADERS = [
-    "mcfamily_csv_version", "record_type", "id", "person_id", "family_title", "initialized_at", "home_person_id",
-    "created_at", "updated_at", "order",
-    "birth_prefix", "birth_first", "birth_middle", "birth_last", "birth_suffix",
-    "current_prefix", "current_first", "current_middle", "current_last", "current_suffix",
-    "preferred_prefix", "preferred_first", "preferred_middle", "preferred_last", "preferred_suffix", "maiden_last_name",
-    "living_status", "gender", "pronouns", "birth_date", "birth_date_qualifier", "birth_place", "death_date", "death_date_qualifier", "death_place",
-    "heritage_note", "person_notes", "address_label", "address_current", "address_line_1", "address_line_2", "city", "region", "postal_code", "country",
-    "address_start_date", "address_start_qualifier", "address_end_date", "address_end_qualifier", "address_notes", "contact_label", "contact_value",
-    "relationship_type", "parent_id", "child_id", "parent_kind", "person_1_id", "person_2_id", "partner_status", "relationship_start_date",
-    "relationship_start_qualifier", "relationship_end_date", "relationship_end_qualifier", "relationship_place", "relationship_notes", "family_notes",
-    "source_json", "settings_json"
-  ];
-  const MCLINEAGE_PERSON_DATE_HEADERS = [
-    "person-date-birth-value", "person-date-birth-descriptor",
-    "person-date-death-value", "person-date-death-descriptor"
-  ];
-  const CONSANGUINITY_FIELD = "parent-consanguinity-person-id";
-  const AFFINITY_FIELD = "parent-affinal-person-id";
-  const MCLINEAGE_HEADERS = [
+  const FILE_NAMES = ["McPeople.csv", "McPlaces.csv", "McRelations.csv", "McResidences.csv", "McMetadata.csv"];
+  const FILE_SCHEMA_VERSION = "1.0.0";
+  const PEOPLE_HEADERS = [
     "record-id",
     "person-name-birth-prefix", "person-birth-name-first", "person-birth-name-middle", "person-birth-name-last", "person-birth-name-suffix",
     "person-name-current-prefix", "person-current-name-first", "person-current-name-middle", "person-current-name-last", "person-current-name-suffix",
     "person-name-preferred-prefix", "person-preferred-name-first", "person-preferred-name-middle", "person-preferred-name-last", "person-preferred-name-suffix",
-    "person-name-maiden-last", "lineage-id", CONSANGUINITY_FIELD, AFFINITY_FIELD
-  ].concat(MCLINEAGE_PERSON_DATE_HEADERS, [
-    "partner-relationships-json", "notes", "source-last-modified-date", "source-last-modified-by", "source-row-number", "data-quality-notes"
-  ]);
+    "person-name-maiden-last", "lineage-id",
+    "person-date-birth-value", "person-date-birth-descriptor", "person-date-death-value", "person-date-death-descriptor",
+    "notes", "source-last-modified-date", "source-last-modified-by", "source-row-number", "data-quality-notes"
+  ];
+  const PLACE_HEADERS = [
+    "place-id", "place-label", "address-line-1", "address-line-2", "city", "region", "postal-code", "country", "notes",
+    "source-last-modified-date", "source-last-modified-by"
+  ];
+  const RELATION_HEADERS = [
+    "relationship-id", "relationship-type", "person-1-id", "person-2-id", "parent-kind", "partner-type", "relationship-order",
+    "date-start-value", "date-start-descriptor", "date-end-value", "date-end-descriptor", "end-reason", "place-id", "notes",
+    "source-last-modified-date", "source-last-modified-by"
+  ];
+  const RESIDENCE_HEADERS = [
+    "residence-id", "person-id", "place-id", "residence-label", "is-current", "date-start-value", "date-start-descriptor",
+    "date-end-value", "date-end-descriptor", "notes", "source-last-modified-date", "source-last-modified-by"
+  ];
+  const METADATA_HEADERS = ["metadata-id", "metadata-type", "subject", "key", "value", "recorded-at", "recorded-by", "details"];
+  const HEADERS_BY_FILE = {
+    "McPeople.csv": PEOPLE_HEADERS,
+    "McPlaces.csv": PLACE_HEADERS,
+    "McRelations.csv": RELATION_HEADERS,
+    "McResidences.csv": RESIDENCE_HEADERS,
+    "McMetadata.csv": METADATA_HEADERS
+  };
   let pendingImport = null;
 
-  function parseCsv(text) {
+  function parseCsv(text, fileName) {
     const source = String(text || "").replace(/^\uFEFF/, "");
     const matrix = [];
     let row = [];
@@ -57,22 +61,33 @@
         row = [];
       } else cell += character;
     }
-    if (quoted) throw new Error("The CSV ends inside a quoted field.");
+    if (quoted) throw new Error(fileName + " ends inside a quoted field.");
     row.push(cell);
     if (row.some(function (value) { return value !== ""; })) matrix.push(row);
-    if (matrix.length < 2) throw new Error("The CSV must contain a header and at least one data row.");
-    if (matrix[0].length > 200) throw new Error("The CSV contains too many columns.");
-    if (matrix.length > 12000) throw new Error("The CSV contains too many rows.");
+    if (!matrix.length) throw new Error(fileName + " is empty.");
+    if (matrix[0].length > 200 || matrix.length > 12000) throw new Error(fileName + " exceeds the supported row or column limit.");
     const headers = matrix.shift().map(function (value) { return u.cleanLine(value, 100); });
     const seen = new Set();
     headers.forEach(function (header) {
-      if (!header || ["__proto__", "prototype", "constructor"].includes(header)) throw new Error("The CSV contains an invalid header.");
-      if (seen.has(header)) throw new Error("The CSV contains a duplicate header: " + header + ".");
+      if (!header || ["__proto__", "prototype", "constructor"].includes(header)) throw new Error(fileName + " contains an invalid header.");
+      if (seen.has(header)) throw new Error(fileName + " contains a duplicate header: " + header + ".");
       seen.add(header);
     });
-    const rows = matrix.map(function (values) {
+    const expected = HEADERS_BY_FILE[fileName];
+    const missing = expected.filter(function (header) { return !headers.includes(header); });
+    const unexpected = headers.filter(function (header) { return !expected.includes(header); });
+    const exactOrder = headers.length === expected.length && headers.every(function (header, index) { return header === expected[index]; });
+    if (missing.length || unexpected.length || !exactOrder) {
+      const details = [];
+      if (missing.length) details.push("missing: " + missing.join(", "));
+      if (unexpected.length) details.push("unexpected: " + unexpected.join(", "));
+      if (!missing.length && !unexpected.length && !exactOrder) details.push("columns are out of order");
+      throw new Error(fileName + " does not match schema " + FILE_SCHEMA_VERSION + " (" + details.join("; ") + ").");
+    }
+    const rows = matrix.map(function (values, rowIndex) {
+      if (values.length > headers.length || values.slice(headers.length).some(Boolean)) throw new Error(fileName + " row " + (rowIndex + 2) + " has too many cells.");
       const item = Object.create(null);
-      headers.forEach(function (header, index) { item[header] = String(values[index] == null ? "" : values[index]); });
+      headers.forEach(function (header, index) { item[header] = originalCsvValue(values[index]); });
       return item;
     });
     return { headers: headers, rows: rows };
@@ -89,110 +104,132 @@
     return /^'[\t ]*[=+\-@]/.test(text) ? text.slice(1) : text;
   }
 
-  function encodeCsv(rows) {
-    return [NATIVE_HEADERS.join(",")].concat(rows.map(function (row) {
-      return NATIVE_HEADERS.map(function (header) { return csvValue(row[header]); }).join(",");
+  function encodeCsv(headers, rows) {
+    return [headers.join(",")].concat(rows.map(function (row) {
+      return headers.map(function (header) { return csvValue(row[header]); }).join(",");
     })).join("\r\n") + "\r\n";
   }
 
-  function rowOf(type, values) {
-    return Object.assign({ mcfamily_csv_version: config.csvFormat, record_type: type }, values || {});
-  }
-
-  function dateColumns(prefix, date) {
-    return {
-      [prefix + "_date"]: date && date.value || "",
-      [prefix + "_qualifier"]: date && date.qualifier || "exact"
-    };
-  }
-
-  function nameColumns(prefix, parts) {
-    const name = model.nameParts({ names: { [prefix]: parts } }, prefix);
-    return {
-      [prefix + "_prefix"]: name.prefix,
-      [prefix + "_first"]: name.first,
-      [prefix + "_middle"]: name.middle,
-      [prefix + "_last"]: name.last,
-      [prefix + "_suffix"]: name.suffix
-    };
-  }
-
-  function nativeNameParts(row, prefix) {
-    return {
-      prefix: originalCsvValue(row[prefix + "_prefix"]),
-      first: originalCsvValue(row[prefix + "_first"]),
-      middle: originalCsvValue(row[prefix + "_middle"]),
-      last: originalCsvValue(row[prefix + "_last"]),
-      suffix: originalCsvValue(row[prefix + "_suffix"])
-    };
-  }
-
-  function nativeRows(state) {
-    const rows = [];
-    rows.push(rowOf("family", {
-      id: "family", family_title: state.workspace.family.title, initialized_at: state.workspace.family.initializedAt,
-      home_person_id: state.workspace.family.homePersonId, created_at: state.meta.createdAt, updated_at: state.meta.updatedAt
-    }));
-    state.workspace.people.slice().sort(function (a, b) { return a.order - b.order; }).forEach(function (person) {
-      rows.push(rowOf("person", Object.assign({
-        id: person.id, created_at: person.createdAt, updated_at: person.updatedAt, order: person.order,
-        maiden_last_name: person.names.maidenLast, living_status: person.livingStatus,
-        gender: person.gender, pronouns: person.pronouns, birth_place: person.birth.place, death_place: person.death.place,
-        heritage_note: person.heritageNote, person_notes: person.notes, source_json: JSON.stringify(person.source || {})
-      }, nameColumns("birth", person.names.birth), nameColumns("current", person.names.current), nameColumns("preferred", person.names.preferred), dateColumns("birth", person.birth.date), dateColumns("death", person.death.date))));
-      person.addresses.forEach(function (address) {
-        rows.push(rowOf("address", Object.assign({
-          id: address.id, person_id: person.id, order: address.order, address_label: address.label, address_current: String(address.current),
-          address_line_1: address.line1, address_line_2: address.line2, city: address.city, region: address.region, postal_code: address.postalCode,
-          country: address.country, address_notes: address.notes
-        }, dateColumns("address_start", address.startDate), dateColumns("address_end", address.endDate))));
-      });
-      person.phones.forEach(function (contact) { rows.push(rowOf("phone", { id: contact.id, person_id: person.id, order: contact.order, contact_label: contact.label, contact_value: contact.value })); });
-      person.emails.forEach(function (contact) { rows.push(rowOf("email", { id: contact.id, person_id: person.id, order: contact.order, contact_label: contact.label, contact_value: contact.value })); });
-    });
-    state.workspace.relationships.slice().sort(function (a, b) { return a.order - b.order; }).forEach(function (relationship) {
-      rows.push(rowOf("relationship", Object.assign({
-        id: relationship.id, created_at: relationship.createdAt, updated_at: relationship.updatedAt, order: relationship.order,
-        relationship_type: relationship.type, parent_id: relationship.parentId, child_id: relationship.childId, parent_kind: relationship.kind,
-        person_1_id: relationship.person1Id, person_2_id: relationship.person2Id, partner_status: relationship.status,
-        relationship_place: relationship.place, relationship_notes: relationship.notes, source_json: JSON.stringify(relationship.source || {})
-      }, dateColumns("relationship_start", relationship.startDate), dateColumns("relationship_end", relationship.endDate))));
-    });
-    rows.push(rowOf("note", { id: "app-notes", family_notes: u.richTextToPlainText(state.workspace.documents[0] && state.workspace.documents[0].html || "", config.controls.maxDocumentHtmlLength) }));
-    rows.push(rowOf("settings", { id: "settings", settings_json: JSON.stringify({ meta: state.meta, preferences: state.preferences, ui: state.ui, modules: state.modules }) }));
-    return rows;
-  }
-
-  function exportCsv() {
-    const state = storage.getState();
-    if (!state.workspace.family.initializedAt) {
-      App.components.message("No family to export", "Import the initial family CSV before creating an export.");
-      return;
+  function crc32(bytes) {
+    let crc = 0xffffffff;
+    for (let index = 0; index < bytes.length; index += 1) {
+      crc ^= bytes[index];
+      for (let bit = 0; bit < 8; bit += 1) crc = (crc >>> 1) ^ ((crc & 1) ? 0xedb88320 : 0);
     }
-    storage.saveNow();
-    const csv = encodeCsv(nativeRows(state));
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    const slug = state.workspace.family.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "mcfamily";
-    link.href = url;
-    link.download = slug + "-private-backup-" + new Date().toISOString().slice(0, 10) + "-v" + config.identity.version + ".csv";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.setTimeout(function () { URL.revokeObjectURL(url); }, 0);
-    App.components.toast("The complete private family CSV was downloaded. Store it securely.", { title: "CSV exported", kind: "success", duration: 5000 });
+    return (crc ^ 0xffffffff) >>> 0;
   }
 
-  function readFile(file) {
-    if (!file) return Promise.reject(new Error("No file was selected."));
-    if (file.size > config.controls.maxImportBytes) return Promise.reject(new Error("That CSV is larger than the " + u.formatBytes(config.controls.maxImportBytes) + " import limit."));
-    return file.text ? file.text() : new Promise(function (resolve, reject) {
-      const reader = new FileReader();
-      reader.onload = function () { resolve(String(reader.result || "")); };
-      reader.onerror = function () { reject(new Error("The selected CSV could not be read.")); };
-      reader.readAsText(file);
+  function concatBytes(parts) {
+    const length = parts.reduce(function (total, part) { return total + part.length; }, 0);
+    const result = new Uint8Array(length);
+    let offset = 0;
+    parts.forEach(function (part) { result.set(part, offset); offset += part.length; });
+    return result;
+  }
+
+  function zipHeader(size) {
+    const bytes = new Uint8Array(size);
+    return { bytes: bytes, view: new DataView(bytes.buffer) };
+  }
+
+  function encodeZip(files) {
+    const encoder = new TextEncoder();
+    const localParts = [];
+    const centralParts = [];
+    let offset = 0;
+    Object.keys(files).forEach(function (name) {
+      const nameBytes = encoder.encode(name);
+      const data = encoder.encode(files[name]);
+      const crc = crc32(data);
+      const local = zipHeader(30);
+      local.view.setUint32(0, 0x04034b50, true);
+      local.view.setUint16(4, 20, true);
+      local.view.setUint16(6, 0x0800, true);
+      local.view.setUint32(14, crc, true);
+      local.view.setUint32(18, data.length, true);
+      local.view.setUint32(22, data.length, true);
+      local.view.setUint16(26, nameBytes.length, true);
+      localParts.push(local.bytes, nameBytes, data);
+      const central = zipHeader(46);
+      central.view.setUint32(0, 0x02014b50, true);
+      central.view.setUint16(4, 20, true);
+      central.view.setUint16(6, 20, true);
+      central.view.setUint16(8, 0x0800, true);
+      central.view.setUint32(16, crc, true);
+      central.view.setUint32(20, data.length, true);
+      central.view.setUint32(24, data.length, true);
+      central.view.setUint16(28, nameBytes.length, true);
+      central.view.setUint32(42, offset, true);
+      centralParts.push(central.bytes, nameBytes);
+      offset += local.bytes.length + nameBytes.length + data.length;
     });
+    const centralSize = centralParts.reduce(function (total, part) { return total + part.length; }, 0);
+    const end = zipHeader(22);
+    end.view.setUint32(0, 0x06054b50, true);
+    end.view.setUint16(8, Object.keys(files).length, true);
+    end.view.setUint16(10, Object.keys(files).length, true);
+    end.view.setUint32(12, centralSize, true);
+    end.view.setUint32(16, offset, true);
+    return concatBytes(localParts.concat(centralParts, end.bytes));
+  }
+
+  async function inflateRaw(bytes) {
+    if (typeof DecompressionStream !== "function") throw new Error("This browser cannot read compressed ZIP entries. Re-create the archive without compression.");
+    let stream;
+    try { stream = new DecompressionStream("deflate-raw"); }
+    catch (error) { throw new Error("This browser cannot read deflated ZIP entries. Re-create the archive without compression."); }
+    const response = new Response(new Blob([bytes]).stream().pipeThrough(stream));
+    return new Uint8Array(await response.arrayBuffer());
+  }
+
+  async function parseZip(buffer) {
+    const bytes = new Uint8Array(buffer);
+    const view = new DataView(buffer);
+    if (bytes.length < 22) throw new Error("The selected file is not a complete ZIP archive.");
+    let endOffset = -1;
+    for (let index = bytes.length - 22; index >= Math.max(0, bytes.length - 65557); index -= 1) {
+      if (view.getUint32(index, true) === 0x06054b50) { endOffset = index; break; }
+    }
+    if (endOffset < 0) throw new Error("The ZIP end record is missing or damaged.");
+    if (view.getUint16(endOffset + 4, true) !== 0 || view.getUint16(endOffset + 6, true) !== 0) throw new Error("Multi-disk ZIP archives are not supported.");
+    const entryCount = view.getUint16(endOffset + 10, true);
+    const centralSize = view.getUint32(endOffset + 12, true);
+    const centralOffset = view.getUint32(endOffset + 16, true);
+    if (entryCount !== FILE_NAMES.length || centralOffset + centralSize > endOffset) throw new Error("The package must contain exactly five root CSV files.");
+    const decoder = new TextDecoder("utf-8", { fatal: true });
+    const files = new Map();
+    let cursor = centralOffset;
+    let uncompressedTotal = 0;
+    for (let entryIndex = 0; entryIndex < entryCount; entryIndex += 1) {
+      if (cursor + 46 > bytes.length || view.getUint32(cursor, true) !== 0x02014b50) throw new Error("The ZIP directory is damaged.");
+      const flags = view.getUint16(cursor + 8, true);
+      const method = view.getUint16(cursor + 10, true);
+      const crc = view.getUint32(cursor + 16, true);
+      const compressedSize = view.getUint32(cursor + 20, true);
+      const uncompressedSize = view.getUint32(cursor + 24, true);
+      const nameLength = view.getUint16(cursor + 28, true);
+      const extraLength = view.getUint16(cursor + 30, true);
+      const commentLength = view.getUint16(cursor + 32, true);
+      const localOffset = view.getUint32(cursor + 42, true);
+      if ((flags & 1) || ![0, 8].includes(method)) throw new Error("Encrypted or unsupported ZIP entries are not allowed.");
+      const name = decoder.decode(bytes.slice(cursor + 46, cursor + 46 + nameLength));
+      if (!FILE_NAMES.includes(name) || files.has(name) || name.includes("/") || name.includes("\\")) throw new Error("The ZIP contains a missing, duplicate, nested, or unexpected file: " + name + ".");
+      if (localOffset + 30 > bytes.length || view.getUint32(localOffset, true) !== 0x04034b50) throw new Error(name + " has a damaged ZIP header.");
+      const localNameLength = view.getUint16(localOffset + 26, true);
+      const localExtraLength = view.getUint16(localOffset + 28, true);
+      const dataStart = localOffset + 30 + localNameLength + localExtraLength;
+      if (dataStart + compressedSize > bytes.length) throw new Error(name + " is truncated.");
+      const compressed = bytes.slice(dataStart, dataStart + compressedSize);
+      const data = method === 0 ? compressed : await inflateRaw(compressed);
+      if (data.length !== uncompressedSize || crc32(data) !== crc) throw new Error(name + " failed ZIP size or checksum validation.");
+      uncompressedTotal += data.length;
+      if (uncompressedTotal > config.controls.maxImportBytes) throw new Error("The extracted package is larger than the " + u.formatBytes(config.controls.maxImportBytes) + " import limit.");
+      files.set(name, decoder.decode(data));
+      cursor += 46 + nameLength + extraLength + commentLength;
+    }
+    const missing = FILE_NAMES.filter(function (name) { return !files.has(name); });
+    if (missing.length) throw new Error("The package is missing: " + missing.join(", ") + ".");
+    return files;
   }
 
   function isPartialSourceDate(value) {
@@ -200,429 +237,465 @@
     return raw.includes("?") && /^[\d?]{4}(?:-[\d?]{2}(?:-[\d?]{2})?)?$/.test(raw);
   }
 
-  function sourceDate(value, precision, counters) {
-    const raw = u.cleanLine(value, 40);
-    const kind = u.cleanLine(precision, 40).toLowerCase();
-    if (!raw) return { value: "", qualifier: "exact" };
-    if (kind === "partial" && isPartialSourceDate(raw)) {
-      return { value: "", qualifier: "about" };
-    }
-    if (/^\d{4}(?:-(?:0[1-9]|1[0-2])(?:-(?:0[1-9]|[12]\d|3[01]))?)?$/.test(raw)) {
-      return { value: raw, qualifier: kind === "partial" || kind === "ambiguous_year" ? "about" : "exact" };
-    }
-    counters.unmappedDates += 1;
-    return { value: "", qualifier: "exact" };
+  function validateSourceDate(value, descriptor, label, options) {
+    const settings = Object.assign({ allowBlankDescriptor: true, death: false }, options || {});
+    const cleanValue = u.cleanLine(value, 40);
+    const cleanDescriptor = u.cleanLine(descriptor, 40);
+    const allowed = settings.death
+      ? ["year", "month", "day", "partial", "NONE", "UNKNOWN", "UNKNOWN PRESUMED"]
+      : ["year", "month", "day", "partial", "UNKNOWN"].concat(settings.allowBlankDescriptor ? [""] : []);
+    if (!allowed.includes(cleanDescriptor)) throw new Error(label + " has an unsupported date descriptor.");
+    const partial = isPartialSourceDate(cleanValue);
+    if (cleanValue && !partial && !/^\d{4}(?:-(?:0[1-9]|1[0-2])(?:-(?:0[1-9]|[12]\d|3[01]))?)?$/.test(cleanValue)) throw new Error(label + " must use YYYY, YYYY-MM, YYYY-MM-DD, a question-mark partial date, or blank.");
+    const expected = partial ? "partial" : cleanValue.length === 4 ? "year" : cleanValue.length === 7 ? "month" : cleanValue.length === 10 ? "day" : "";
+    if (cleanValue && cleanDescriptor !== expected) throw new Error(label + " value and descriptor do not match.");
+    if (!cleanValue && settings.death && !["NONE", "UNKNOWN", "UNKNOWN PRESUMED"].includes(cleanDescriptor)) throw new Error(label + " without a value must use NONE, UNKNOWN, or UNKNOWN PRESUMED.");
+    if (!cleanValue && !settings.death && !settings.allowBlankDescriptor && cleanDescriptor !== "UNKNOWN") throw new Error(label + " without a value must use UNKNOWN.");
+    if (!cleanValue && !settings.death && settings.allowBlankDescriptor && !["", "UNKNOWN"].includes(cleanDescriptor)) throw new Error(label + " without a value must be blank or UNKNOWN.");
+    return { value: cleanValue, descriptor: cleanDescriptor, partial: partial };
   }
 
-  function personDateValue(row, kind) {
-    return row["person-date-" + kind + "-value"];
+  function sourceDate(value, descriptor, counters) {
+    const checked = validateSourceDate(value, descriptor, "A source date", { allowBlankDescriptor: true });
+    if (!checked.value) return { value: "", qualifier: checked.descriptor === "UNKNOWN" ? "about" : "exact" };
+    if (checked.partial) { counters.partialDates += 1; return { value: "", qualifier: "about" }; }
+    return { value: checked.value, qualifier: "exact" };
   }
 
-  function personDateDescriptor(row, kind) {
-    return row["person-date-" + kind + "-descriptor"];
-  }
-
-  function validatePersonDateSchema(parsed) {
-    const present = MCLINEAGE_PERSON_DATE_HEADERS.filter(function (header) { return parsed.headers.includes(header); });
-    if (present.length !== MCLINEAGE_PERSON_DATE_HEADERS.length) throw new Error("The current McLineage person date schema is incomplete.");
-    parsed.rows.forEach(function (row) {
-      ["birth", "death"].forEach(function (kind) {
-        const value = u.cleanLine(personDateValue(row, kind), 40);
-        const descriptor = u.cleanLine(personDateDescriptor(row, kind), 40);
-        const allowedDescriptors = kind === "death"
-          ? ["year", "month", "day", "partial", "NONE", "UNKNOWN", "UNKNOWN PRESUMED"]
-          : ["year", "month", "day", "partial", "UNKNOWN"];
-        if (!allowedDescriptors.includes(descriptor)) throw new Error("McLineage birth descriptors must be year, month, day, partial, or UNKNOWN; death descriptors must additionally support NONE and UNKNOWN PRESUMED.");
-        if (kind === "birth" && !descriptor) throw new Error("McLineage birth descriptors cannot be blank.");
-        const partial = isPartialSourceDate(value);
-        if (value && !partial && !/^\d{4}(?:-(?:0[1-9]|1[0-2])(?:-(?:0[1-9]|[12]\d|3[01]))?)?$/.test(value)) throw new Error("McLineage person date values must be a normalized date, a question-mark partial date, or blank.");
-        const expected = partial ? "partial" : value.length === 4 ? "year" : value.length === 7 ? "month" : value.length === 10 ? "day" : "";
-        if (value && descriptor !== expected) throw new Error("A McLineage person date descriptor does not match its value.");
-        if (!value && kind === "birth" && descriptor !== "UNKNOWN") throw new Error("A McLineage birth date without a value must use UNKNOWN.");
-        if (!value && kind === "death" && !["NONE", "UNKNOWN", "UNKNOWN PRESUMED"].includes(descriptor)) throw new Error("A McLineage death date without a value must use NONE, UNKNOWN, or UNKNOWN PRESUMED.");
-      });
-    });
-    return true;
-  }
-
-  function validateCurrentSourceDates(parsed, counters) {
-    const valueHeaders = parsed.headers.filter(function (header) { return header.includes("date") && header.endsWith("-value"); });
-    parsed.rows.forEach(function (row) {
-      valueHeaders.forEach(function (valueHeader) {
-        if (MCLINEAGE_PERSON_DATE_HEADERS.includes(valueHeader)) return;
-        const descriptorHeader = valueHeader.replace(/-value$/, "-descriptor");
-        if (!parsed.headers.includes(descriptorHeader)) throw new Error("The current McLineage date schema is incomplete at " + valueHeader + ".");
-        const value = u.cleanLine(row[valueHeader], 40);
-        const descriptor = u.cleanLine(row[descriptorHeader], 40);
-        if (descriptor.toLowerCase() === "invalid") throw new Error("Current McLineage date descriptors cannot be invalid.");
-        if (!["year", "month", "day", "UNKNOWN", "partial", ""].includes(descriptor)) throw new Error("Current McLineage date descriptors must be year, month, day, partial, UNKNOWN, or blank.");
-        if (value.includes("?") && (!isPartialSourceDate(value) || descriptor !== "partial")) {
-          throw new Error("Question-mark McLineage dates must use the partial descriptor.");
-        }
-        if (value.includes("?")) counters.partialDates += 1;
-        if (value && !value.includes("?")) {
-          if (!/^\d{4}(?:-(?:0[1-9]|1[0-2])(?:-(?:0[1-9]|[12]\d|3[01]))?)?$/.test(value)) throw new Error("Known McLineage dates must use YYYY, YYYY-MM, or YYYY-MM-DD.");
-          const expected = value.length === 4 ? "year" : value.length === 7 ? "month" : "day";
-          if (descriptor !== expected) throw new Error("A current McLineage date descriptor does not match its value.");
-        }
-        if (!value && !["UNKNOWN", ""].includes(descriptor)) throw new Error("A current McLineage date without a value must be UNKNOWN or blank.");
-      });
-    });
-  }
-
-  function validateRootToPersonLineage(parsed, byRecordId) {
-    const parentReferenceField = CONSANGUINITY_FIELD;
-    const byLineageId = new Map();
-    parsed.rows.forEach(function (row) {
-      const recordId = sourceRecordKey(row["record-id"]);
-      const lineageId = u.cleanLine(row["lineage-id"], 100);
-      const parentRecordId = sourceRecordKey(row[parentReferenceField]);
-      if (!lineageId) {
-        if (parentRecordId) throw new Error("A McLineage person with a lineage parent must also have a lineage-id: " + recordId + ".");
-        return;
-      }
-      if (!/^(?:\d{2})(?:\.\d{2})*$|^99$/.test(lineageId)) throw new Error("Current McLineage lineage-id values must use two-digit root-to-person segments.");
-      if (lineageId !== "99" && byLineageId.has(lineageId)) throw new Error("The McLineage CSV contains a duplicate lineage-id: " + lineageId + ".");
-      if (lineageId !== "99") byLineageId.set(lineageId, recordId);
-    });
-    parsed.rows.forEach(function (row) {
-      const recordId = sourceRecordKey(row["record-id"]);
-      const parentRecordId = sourceRecordKey(row[parentReferenceField]);
-      const lineageId = u.cleanLine(row["lineage-id"], 100);
-      if (!parentRecordId) return;
-      const parentPerson = (byRecordId.get(parentRecordId) || [])[0];
-      if (!parentPerson) return;
-      const parentFields = parentPerson && parentPerson.source && parentPerson.source.fields;
-      const parentLineageId = u.cleanLine(parentFields && parentFields["lineage-id"], 100);
-      if (!parentLineageId || !lineageId.startsWith(parentLineageId + ".") || lineageId.split(".").length !== parentLineageId.split(".").length + 1) {
-        throw new Error("The lineage-id for " + recordId + " must extend its direct parent's root-to-person lineage path by one segment.");
-      }
-    });
-  }
-
-  function stableId(prefix, value, fallback) {
-    const cleaned = u.cleanLine(value || fallback, 100).replace(/[^a-z0-9_-]/gi, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
-    return prefix + "-" + (cleaned || u.uid("source"));
-  }
-
-  function sourceRecordKey(value) {
-    const cleaned = u.cleanLine(value, 100);
-    return /^P\d{3,}$/i.test(cleaned) ? cleaned.toUpperCase() : cleaned;
-  }
-
-  function sourcePersonId(row, index) {
-    const recordId = sourceRecordKey(row["record-id"]);
-    return /^P\d{3,}$/.test(recordId) ? recordId : stableId("person", recordId, "row-" + (index + 1));
-  }
-
-  function sourceFields(row) {
+  function sourceFields(row, selectedKeys) {
     const fields = {};
-    Object.keys(row).forEach(function (key) { fields[key] = u.cleanText(row[key], 4000).trim(); });
+    (selectedKeys || Object.keys(row)).forEach(function (key) { fields[key] = u.cleanText(row[key], 4000).trim(); });
     return fields;
   }
 
   function sourcePerson(row, index, counters) {
-    const birthRaw = u.cleanLine(personDateValue(row, "birth"), 40);
-    const birthDescriptor = u.cleanLine(personDateDescriptor(row, "birth"), 40);
-    const deathRaw = u.cleanLine(personDateValue(row, "death"), 40);
-    const deathDescriptor = u.cleanLine(personDateDescriptor(row, "death"), 40);
+    ["person-birth-name-first", "person-birth-name-last", "person-current-name-first", "person-current-name-last"].forEach(function (field) {
+      if (!u.cleanLine(row[field], 120)) throw new Error("McPeople.csv " + row["record-id"] + " requires " + field + ".");
+    });
+    const birth = validateSourceDate(row["person-date-birth-value"], row["person-date-birth-descriptor"], "McPeople.csv birth date on " + row["record-id"], { allowBlankDescriptor: false });
+    const death = validateSourceDate(row["person-date-death-value"], row["person-date-death-descriptor"], "McPeople.csv death date on " + row["record-id"], { death: true });
     const notes = [];
     if (u.cleanText(row.notes, 4000).trim()) notes.push(u.cleanText(row.notes, 4000).trim());
     if (u.cleanText(row["data-quality-notes"], 4000).trim()) notes.push("Data quality: " + u.cleanText(row["data-quality-notes"], 4000).trim());
     const person = {
-      id: sourcePersonId(row, index),
+      id: row["record-id"],
       names: {
-        birth: {
-          prefix: row["person-name-birth-prefix"], first: row["person-birth-name-first"], middle: row["person-birth-name-middle"],
-          last: row["person-birth-name-last"], suffix: row["person-birth-name-suffix"]
-        },
-        current: {
-          prefix: row["person-name-current-prefix"], first: row["person-current-name-first"], middle: row["person-current-name-middle"],
-          last: row["person-current-name-last"], suffix: row["person-current-name-suffix"]
-        },
-        preferred: {
-          prefix: row["person-name-preferred-prefix"], first: row["person-preferred-name-first"], middle: row["person-preferred-name-middle"],
-          last: row["person-preferred-name-last"], suffix: row["person-preferred-name-suffix"]
-        },
+        birth: { prefix: row["person-name-birth-prefix"], first: row["person-birth-name-first"], middle: row["person-birth-name-middle"], last: row["person-birth-name-last"], suffix: row["person-birth-name-suffix"] },
+        current: { prefix: row["person-name-current-prefix"], first: row["person-current-name-first"], middle: row["person-current-name-middle"], last: row["person-current-name-last"], suffix: row["person-current-name-suffix"] },
+        preferred: { prefix: row["person-name-preferred-prefix"], first: row["person-preferred-name-first"], middle: row["person-preferred-name-middle"], last: row["person-preferred-name-last"], suffix: row["person-preferred-name-suffix"] },
         maidenLast: row["person-name-maiden-last"]
       },
-      livingStatus: deathRaw ? "deceased" : "unknown",
-      birth: { date: sourceDate(birthRaw, birthDescriptor, counters), place: "" },
-      death: { date: sourceDate(deathRaw, deathDescriptor, counters), place: "" },
-      addresses: [], phones: [], emails: [],
-      heritageNote: "",
-      notes: notes.join("\n\n"),
-      source: { format: "mclineage-cleaned", fields: sourceFields(row) },
-      order: index,
-      updatedAt: /^\d{4}-\d{2}-\d{2}$/.test(row["source-last-modified-date"] || "") ? row["source-last-modified-date"] + "T00:00:00.000Z" : ""
+      livingStatus: death.value || ["UNKNOWN", "UNKNOWN PRESUMED"].includes(death.descriptor) ? "deceased" : death.descriptor === "NONE" ? "living" : "unknown",
+      birth: { date: sourceDate(birth.value, birth.descriptor, counters), place: "" },
+      death: { date: death.value && !death.partial ? { value: death.value, qualifier: "exact" } : { value: "", qualifier: death.partial ? "about" : "exact" }, place: "" },
+      addresses: [], phones: [], emails: [], heritageNote: "", notes: notes.join("\n\n"),
+      source: { format: "mcpeople-v1", fields: sourceFields(row) }, order: index,
+      updatedAt: /^\d{4}-\d{2}-\d{2}$/.test(row["source-last-modified-date"]) ? row["source-last-modified-date"] + "T00:00:00.000Z" : ""
     };
-    person.livingStatus = model.mcLineageLivingStatus(person, person.livingStatus);
+    if (death.partial) counters.partialDates += 1;
     return person;
   }
 
-  function validatePartnerRelationshipDate(value, descriptor, label) {
-    const cleanValue = u.cleanLine(value, 40);
-    const cleanDescriptor = u.cleanLine(descriptor, 40);
-    if (!["year", "month", "day", "UNKNOWN", "partial", ""].includes(cleanDescriptor)) throw new Error(label + " descriptors must be year, month, day, partial, UNKNOWN, or blank.");
-    const partial = isPartialSourceDate(cleanValue);
-    if (cleanValue && !partial && !/^\d{4}(?:-(?:0[1-9]|1[0-2])(?:-(?:0[1-9]|[12]\d|3[01]))?)?$/.test(cleanValue)) throw new Error(label + " values must be normalized dates, question-mark partial dates, or blank.");
-    const expected = partial ? "partial" : cleanValue.length === 4 ? "year" : cleanValue.length === 7 ? "month" : cleanValue.length === 10 ? "day" : "";
-    if (cleanValue && cleanDescriptor !== expected) throw new Error(label + " value and descriptor do not match.");
-    if (!cleanValue && !["UNKNOWN", ""].includes(cleanDescriptor)) throw new Error(label + " without a value must be UNKNOWN or blank.");
-    return { value: cleanValue, descriptor: cleanDescriptor };
-  }
-
-  function partnerStatusFromSource(type, endReason) {
+  function partnerStatus(type, endReason) {
     if (endReason === "death") return "widowed";
     if (endReason === "divorce") return "divorced";
     if (endReason === "separation") return "separated";
-    if (endReason === "annulment") return "former";
-    if (endReason === "UNKNOWN") return "former";
+    if (["annulment", "UNKNOWN"].includes(endReason)) return "former";
     if (type === "marriage") return "married";
     if (type === "partnership") return "partnered";
     return "unknown";
   }
 
-  function sourcePartnerRelationships(row, owner, index, counters) {
-    const text = originalCsvValue(row["partner-relationships-json"]).trim();
-    if (!text) return [];
-    let entries;
-    try { entries = JSON.parse(text); }
-    catch (error) { throw new Error("partner-relationships-json on " + row["record-id"] + " contains invalid JSON."); }
-    if (!Array.isArray(entries)) throw new Error("partner-relationships-json on " + row["record-id"] + " must be a JSON array.");
-    return entries.map(function (input) {
-      if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Every partner relationship on " + row["record-id"] + " must be a JSON object.");
-      const required = ["relationship_id", "partner_person_id", "relationship_type", "relationship_order", "date_start_value", "date_start_descriptor", "date_end_value", "date_end_descriptor", "end_reason"];
-      const missing = required.find(function (key) { return !Object.prototype.hasOwnProperty.call(input, key); });
-      if (missing) throw new Error("A partner relationship on " + row["record-id"] + " is missing " + missing + ".");
-      const relationshipId = u.cleanLine(input.relationship_id, 100).toUpperCase();
-      const partnerId = sourceRecordKey(input.partner_person_id);
-      const type = u.cleanLine(input.relationship_type, 40);
-      const order = Number(input.relationship_order);
-      const endReason = u.cleanLine(input.end_reason, 40);
-      if (!/^R\d{3,}$/.test(relationshipId)) throw new Error("McLineage partner relationship IDs must use R references such as R001.");
-      if (!/^P\d{3,}$/.test(partnerId)) throw new Error("McLineage partner person references must use P references such as P001.");
-      if (!["marriage", "partnership", "UNKNOWN"].includes(type)) throw new Error("McLineage relationship types must be marriage, partnership, or UNKNOWN.");
-      if (!Number.isInteger(order) || order < 1 || order > config.controls.maxRelationships) throw new Error("McLineage relationship_order values must be positive integers within the relationship limit.");
-      if (!["death", "divorce", "separation", "annulment", "UNKNOWN", ""].includes(endReason)) throw new Error("McLineage relationship end reasons must be death, divorce, separation, annulment, UNKNOWN, or blank.");
-      const start = validatePartnerRelationshipDate(input.date_start_value, input.date_start_descriptor, "McLineage partner start date");
-      const end = validatePartnerRelationshipDate(input.date_end_value, input.date_end_descriptor, "McLineage partner end date");
-      if (end.value && !endReason) throw new Error("A McLineage partner end date requires an end_reason.");
-      const sourceFields = { originating_record_id: row["record-id"] || "" };
-      required.forEach(function (key) { sourceFields[key] = String(input[key] == null ? "" : input[key]); });
-      return {
-        id: relationshipId,
-        type: "partner",
-        person1Id: owner.id,
-        partnerPersonId: partnerId,
-        status: partnerStatusFromSource(type, endReason),
-        startDate: sourceDate(start.value, start.descriptor, counters),
-        endDate: sourceDate(end.value, end.descriptor, counters),
-        place: "",
-        notes: "Imported " + type + " relationship " + relationshipId + (endReason ? " · ended by " + endReason : ""),
-        source: { format: "mclineage-cleaned", fields: sourceFields },
-        order: 10000 + index * 10 + order
-      };
+  function prepareMetadata(parsed) {
+    const ids = new Set();
+    parsed.rows.forEach(function (row) {
+      const id = u.cleanLine(row["metadata-id"], 100).toUpperCase();
+      if (!/^[A-Z][A-Z0-9_-]{2,99}$/.test(id) || ids.has(id)) throw new Error("McMetadata.csv contains an invalid or duplicate metadata-id: " + (id || "(blank)") + ".");
+      ids.add(id);
+      if (!u.cleanLine(row["metadata-type"], 40) || !u.cleanLine(row.key, 120)) throw new Error("Every McMetadata.csv row requires metadata-type and key.");
+      if (row["recorded-at"] && !Number.isFinite(Date.parse(row["recorded-at"]))) throw new Error("McMetadata.csv contains an invalid recorded-at timestamp.");
     });
-  }
-
-  function prepareMcLineage(parsed, fileName) {
-    const counters = { sourceRows: parsed.rows.length, orphanParents: 0, ambiguousParents: 0, orphanAffinalParents: 0, partialDates: 0, unmappedDates: 0 };
-    validatePersonDateSchema(parsed);
-    validateCurrentSourceDates(parsed, counters);
-    const people = [];
-    const relationships = [];
-    const primaryByRow = [];
-    const byRecordId = new Map();
-    parsed.rows.forEach(function (row, index) {
-      if (!/^P\d{3,}$/.test(sourceRecordKey(row["record-id"]))) throw new Error("McLineage record-id values must use P references such as P001.");
-      const person = sourcePerson(row, index, counters);
-      people.push(person);
-      primaryByRow[index] = person;
-      const recordId = sourceRecordKey(row["record-id"]);
-      if (!byRecordId.has(recordId)) byRecordId.set(recordId, []);
-      byRecordId.get(recordId).push(person);
+    function one(type, key) {
+      const matches = parsed.rows.filter(function (row) { return row["metadata-type"] === type && row.key === key; });
+      if (matches.length !== 1) throw new Error("McMetadata.csv requires exactly one " + type + " / " + key + " row.");
+      return originalCsvValue(matches[0].value);
+    }
+    if (one("package", "package-format") !== config.packageFormat) throw new Error("This McFamily package format is not supported.");
+    if (one("package", "package-version") !== config.packageVersion) throw new Error("This McFamily package version is not supported.");
+    if (one("package", "dataset-version") !== config.datasetVersion) throw new Error("This McFamily dataset version is not supported.");
+    const schemaRows = parsed.rows.filter(function (row) { return row["metadata-type"] === "schema" && row.key === "schema-version"; });
+    const schemaSubjects = new Set(schemaRows.map(function (row) { return row.subject; }));
+    if (schemaRows.length !== FILE_NAMES.length || FILE_NAMES.some(function (name) { return !schemaSubjects.has(name); }) || schemaRows.some(function (row) { return row.value !== FILE_SCHEMA_VERSION; })) {
+      throw new Error("McMetadata.csv must declare schema " + FILE_SCHEMA_VERSION + " exactly once for all five files.");
+    }
+    const audits = parsed.rows.filter(function (row) { return row["metadata-type"] === "audit"; }).map(function (row) {
+      if (!u.cleanLine(row.value, 120) || !row["recorded-at"]) throw new Error("Every audit row requires an action and recorded-at timestamp.");
+      return { id: row["metadata-id"], subject: row.subject, action: originalCsvValue(row.value), recordedAt: row["recorded-at"], recordedBy: row["recorded-by"], details: originalCsvValue(row.details) };
     });
-    const duplicateRecordId = Array.from(byRecordId.entries()).find(function (entry) { return entry[1].length > 1; });
-    if (duplicateRecordId) throw new Error("The McLineage CSV contains a duplicate record-id: " + duplicateRecordId[0] + ".");
-    validateRootToPersonLineage(parsed, byRecordId);
-    const partnerPairs = new Set();
-    const relationshipIds = new Set();
-    parsed.rows.forEach(function (row, index) {
-      const primary = primaryByRow[index];
-      sourcePartnerRelationships(row, primary, index, counters).forEach(function (relationship) {
-        const candidates = byRecordId.get(relationship.partnerPersonId) || [];
-        if (candidates.length !== 1) throw new Error("McLineage partner reference " + relationship.partnerPersonId + " on " + row["record-id"] + " does not resolve to exactly one person.");
-        if (candidates[0].id === primary.id) throw new Error("McLineage partner references cannot point to the same person: " + row["record-id"] + ".");
-        if (relationshipIds.has(relationship.id)) throw new Error("The McLineage CSV contains a duplicate partner relationship ID: " + relationship.id + ".");
-        relationshipIds.add(relationship.id);
-        const pairKey = [primary.id, candidates[0].id].sort().join("|");
-        if (partnerPairs.has(pairKey)) throw new Error("The McLineage CSV contains a duplicate partner relationship for " + row["record-id"] + " and " + relationship.partnerPersonId + ".");
-        partnerPairs.add(pairKey);
-        relationship.person2Id = candidates[0].id;
-        delete relationship.partnerPersonId;
-        relationships.push(relationship);
-      });
-    });
-    parsed.rows.forEach(function (row, index) {
-      const primary = primaryByRow[index];
-      const parentReference = sourceRecordKey(row[CONSANGUINITY_FIELD]);
-      if (parentReference) {
-        if (!/^P\d{3,}$/.test(parentReference)) throw new Error("McLineage Lineal parent references must use P references such as P001.");
-        const candidates = byRecordId.get(parentReference) || [];
-        if (candidates.length === 1) relationships.push({
-          id: stableId("relationship", row["record-id"] + "-parent", "parent-" + index),
-          type: "parent-child", parentId: candidates[0].id, childId: primary.id, kind: "biological",
-          notes: "Imported Lineal parent " + parentReference,
-          source: { format: "mclineage-cleaned", fields: { "child-record-id": row["record-id"], [CONSANGUINITY_FIELD]: parentReference } },
-          order: relationships.length
-        });
-        else counters.orphanParents += 1;
-      }
-      const affinalParentReference = sourceRecordKey(row[AFFINITY_FIELD]);
-      if (affinalParentReference) {
-        if (!parentReference) throw new Error("A McLineage Non-Lineal parent requires a Lineal parent: " + row["record-id"] + ".");
-        if (!/^P\d{3,}$/.test(affinalParentReference)) throw new Error("McLineage Non-Lineal parent references must use P references such as P001.");
-        if (affinalParentReference === sourceRecordKey(row["record-id"]) || affinalParentReference === parentReference) throw new Error("McLineage Non-Lineal parents must differ from the child and Lineal parent: " + row["record-id"] + ".");
-        const affinalCandidates = byRecordId.get(affinalParentReference) || [];
-        if (!partnerPairs.has([parentReference, affinalParentReference].sort().join("|"))) throw new Error("McLineage Non-Lineal parent " + affinalParentReference + " is not a recorded partner of " + parentReference + ".");
-        if (affinalCandidates.length === 1) relationships.push({
-          id: stableId("relationship", row["record-id"] + "-affinal-parent", "affinal-parent-" + index),
-          type: "parent-child", parentId: affinalCandidates[0].id, childId: primary.id, kind: "affinal",
-          notes: "Imported Non-Lineal parent " + affinalParentReference,
-          source: { format: "mclineage-cleaned", fields: { "child-record-id": row["record-id"], [AFFINITY_FIELD]: affinalParentReference } },
-          order: relationships.length
-        });
-        else counters.orphanAffinalParents += 1;
-      }
-    });
-    const firstRoot = parsed.rows.findIndex(function (row) { return !u.cleanLine(row[CONSANGUINITY_FIELD], 100); });
-    const now = u.isoNow();
-    const rawState = {
-      schemaVersion: config.schemaVersion,
-      workspace: {
-        family: { title: "McLineage", initializedAt: now, homePersonId: primaryByRow[Math.max(0, firstRoot)] && primaryByRow[Math.max(0, firstRoot)].id || people[0] && people[0].id || "" },
-        people: people,
-        relationships: relationships,
-        documents: [{ id: "app-notes", title: "Notes", html: "", order: 0, createdAt: now, updatedAt: now }]
-      }
+    if (!audits.length) throw new Error("McMetadata.csv must contain at least one audit event.");
+    let settings = {};
+    try { settings = JSON.parse(originalCsvValue(one("family", "settings-json")) || "{}"); }
+    catch (error) { throw new Error("McMetadata.csv family settings-json is invalid JSON."); }
+    if (!settings || typeof settings !== "object" || Array.isArray(settings)) throw new Error("McMetadata.csv family settings-json must be an object.");
+    return {
+      counts: {
+        people: Number(one("package", "person-count")), relationships: Number(one("package", "relationship-count")),
+        places: Number(one("package", "place-count")), residences: Number(one("package", "residence-count"))
+      },
+      family: {
+        title: one("family", "title"), initializedAt: one("family", "initialized-at"), homePersonId: one("family", "home-person-id"),
+        createdAt: one("family", "created-at"), updatedAt: one("family", "updated-at"), notes: one("family", "notes"), settings: settings
+      },
+      audits: audits
     };
-    const prepared = model.prepare(rawState);
-    const warnings = [];
-    if (counters.orphanParents) warnings.push(counters.orphanParents + " lineage parent reference" + (counters.orphanParents === 1 ? " was" : "s were") + " not found and skipped.");
-    if (counters.ambiguousParents) warnings.push(counters.ambiguousParents + " ambiguous lineage parent reference" + (counters.ambiguousParents === 1 ? " was" : "s were") + " skipped.");
-    if (counters.orphanAffinalParents) warnings.push(counters.orphanAffinalParents + " Non-Lineal parent reference" + (counters.orphanAffinalParents === 1 ? " was" : "s were") + " not found and skipped.");
-    if (counters.partialDates) warnings.push(counters.partialDates + " partial source date" + (counters.partialDates === 1 ? " is" : "s are") + " preserved in source fields but not shown as a normalized date.");
-    if (counters.unmappedDates) warnings.push(counters.unmappedDates + " unrecognized source date" + (counters.unmappedDates === 1 ? " is" : "s are") + " preserved in source fields but not shown as a normalized date.");
-    prepared.validation.warnings = prepared.validation.warnings.concat(warnings);
-    return Object.assign(prepared, { formatLabel: "McLineage v14 CSV", sourceRows: parsed.rows.length, fileName: fileName });
   }
 
-  function parseJsonObject(value, label) {
-    const text = originalCsvValue(value).trim();
-    if (!text) return {};
-    try {
-      const parsed = JSON.parse(text);
-      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error();
-      return parsed;
-    } catch (error) { throw new Error(label + " contains invalid JSON."); }
-  }
-
-  function nativeDate(row, prefix) {
-    return { value: originalCsvValue(row[prefix + "_date"]), qualifier: originalCsvValue(row[prefix + "_qualifier"]) || "exact" };
-  }
-
-  function prepareNative(parsed, fileName) {
-    const missingHeaders = NATIVE_HEADERS.filter(function (header) { return !parsed.headers.includes(header); });
-    if (missingHeaders.length) throw new Error("That McFamily CSV is missing current schema columns: " + missingHeaders.join(", ") + ".");
-    const versions = new Set(parsed.rows.map(function (row) { return originalCsvValue(row.mcfamily_csv_version); }).filter(Boolean));
-    if (versions.size !== 1 || !versions.has(config.csvFormat)) throw new Error("This McFamily CSV version is not supported.");
-    const allowed = new Set(["family", "person", "address", "phone", "email", "relationship", "note", "settings"]);
-    parsed.rows.forEach(function (row) { if (!allowed.has(originalCsvValue(row.record_type))) throw new Error("The CSV contains an unsupported record type: " + originalCsvValue(row.record_type) + "."); });
-    const familyRow = parsed.rows.find(function (row) { return originalCsvValue(row.record_type) === "family"; });
-    if (!familyRow) throw new Error("The McFamily CSV is missing its family row.");
-    const personRows = parsed.rows.filter(function (row) { return originalCsvValue(row.record_type) === "person"; });
-    const people = personRows.map(function (row, index) {
-      return {
-        id: originalCsvValue(row.id), createdAt: originalCsvValue(row.created_at), updatedAt: originalCsvValue(row.updated_at), order: Number(originalCsvValue(row.order) || index),
-        names: {
-          birth: nativeNameParts(row, "birth"), current: nativeNameParts(row, "current"), preferred: nativeNameParts(row, "preferred"),
-          maidenLast: originalCsvValue(row.maiden_last_name)
-        },
-        livingStatus: originalCsvValue(row.living_status), gender: originalCsvValue(row.gender), pronouns: originalCsvValue(row.pronouns),
-        birth: { date: nativeDate(row, "birth"), place: originalCsvValue(row.birth_place) }, death: { date: nativeDate(row, "death"), place: originalCsvValue(row.death_place) },
-        addresses: [], phones: [], emails: [], heritageNote: originalCsvValue(row.heritage_note), notes: originalCsvValue(row.person_notes),
-        source: parseJsonObject(row.source_json, "A person source field")
-      };
-    });
+  function validateLineage(people, relationships) {
     const peopleById = new Map(people.map(function (person) { return [person.id, person]; }));
-    parsed.rows.filter(function (row) { return ["address", "phone", "email"].includes(originalCsvValue(row.record_type)); }).forEach(function (row) {
-      const type = originalCsvValue(row.record_type);
-      const person = peopleById.get(originalCsvValue(row.person_id));
-      if (!person) throw new Error("A " + type + " row references a person that is not in the CSV.");
-      if (type === "address") person.addresses.push({
-        id: originalCsvValue(row.id), label: originalCsvValue(row.address_label), current: originalCsvValue(row.address_current) !== "false",
-        line1: originalCsvValue(row.address_line_1), line2: originalCsvValue(row.address_line_2), city: originalCsvValue(row.city), region: originalCsvValue(row.region),
-        postalCode: originalCsvValue(row.postal_code), country: originalCsvValue(row.country), startDate: nativeDate(row, "address_start"), endDate: nativeDate(row, "address_end"),
-        notes: originalCsvValue(row.address_notes), order: Number(originalCsvValue(row.order) || person.addresses.length)
-      });
-      else person[type + "s"].push({ id: originalCsvValue(row.id), label: originalCsvValue(row.contact_label), value: originalCsvValue(row.contact_value), order: Number(originalCsvValue(row.order) || person[type + "s"].length) });
+    const linealParents = new Map();
+    relationships.filter(function (relationship) { return relationship.type === "parent-child" && relationship.kind === "biological"; }).forEach(function (relationship) {
+      if (linealParents.has(relationship.childId)) throw new Error("McRelations.csv gives " + relationship.childId + " more than one Lineal parent.");
+      linealParents.set(relationship.childId, relationship.parentId);
     });
-    const relationships = parsed.rows.filter(function (row) { return originalCsvValue(row.record_type) === "relationship"; }).map(function (row, index) {
+    const usedLineage = new Set();
+    people.forEach(function (person) {
+      const lineage = u.cleanLine(person.source.fields["lineage-id"], 100);
+      const parentId = linealParents.get(person.id);
+      if (!lineage) {
+        if (parentId) throw new Error(person.id + " has a Lineal parent but no lineage-id.");
+        return;
+      }
+      if (!/^(?:\d{2})(?:\.\d{2})*$|^99$/.test(lineage)) throw new Error("McPeople.csv lineage-id values must use two-digit root-to-person segments.");
+      if (lineage !== "99" && usedLineage.has(lineage)) throw new Error("McPeople.csv contains a duplicate lineage-id: " + lineage + ".");
+      if (lineage !== "99") usedLineage.add(lineage);
+      if (!parentId) return;
+      const parent = peopleById.get(parentId);
+      const parentLineage = parent && u.cleanLine(parent.source.fields["lineage-id"], 100);
+      if (!parentLineage || !lineage.startsWith(parentLineage + ".") || lineage.split(".").length !== parentLineage.split(".").length + 1) {
+        throw new Error("The lineage-id for " + person.id + " must extend its Lineal parent's path by one segment.");
+      }
+    });
+  }
+
+  function preparePackage(files, fileName) {
+    const parsed = {};
+    FILE_NAMES.forEach(function (name) { parsed[name] = parseCsv(files.get(name), name); });
+    const metadata = prepareMetadata(parsed["McMetadata.csv"]);
+    const counters = { partialDates: 0 };
+    const personIds = new Set();
+    const people = parsed["McPeople.csv"].rows.map(function (row, index) {
+      const id = u.cleanLine(row["record-id"], 100).toUpperCase();
+      if (!/^P\d{3,}$/.test(id) || personIds.has(id)) throw new Error("McPeople.csv contains an invalid or duplicate record-id: " + (id || "(blank)") + ".");
+      personIds.add(id);
+      row["record-id"] = id;
+      return sourcePerson(row, index, counters);
+    });
+    if (!people.length) throw new Error("McPeople.csv must contain at least one person.");
+
+    const placeIds = new Set();
+    const places = parsed["McPlaces.csv"].rows.map(function (row, index) {
+      const id = u.cleanLine(row["place-id"], 100).toUpperCase();
+      if (!/^L\d{4,}$/.test(id) || placeIds.has(id)) throw new Error("McPlaces.csv contains an invalid or duplicate place-id: " + (id || "(blank)") + ".");
+      if (![row["address-line-1"], row.city, row.region, row["postal-code"], row.country].some(function (value) { return Boolean(u.cleanLine(value, 200)); })) throw new Error("Every McPlaces.csv row must contain a physical place value.");
+      placeIds.add(id);
       return {
-        id: originalCsvValue(row.id), type: originalCsvValue(row.relationship_type), parentId: originalCsvValue(row.parent_id), childId: originalCsvValue(row.child_id),
-        kind: originalCsvValue(row.parent_kind), person1Id: originalCsvValue(row.person_1_id), person2Id: originalCsvValue(row.person_2_id), status: originalCsvValue(row.partner_status),
-        startDate: nativeDate(row, "relationship_start"), endDate: nativeDate(row, "relationship_end"), place: originalCsvValue(row.relationship_place),
-        notes: originalCsvValue(row.relationship_notes), source: parseJsonObject(row.source_json, "A relationship source field"), order: Number(originalCsvValue(row.order) || index),
-        createdAt: originalCsvValue(row.created_at), updatedAt: originalCsvValue(row.updated_at)
+        id: id, label: row["place-label"], line1: row["address-line-1"], line2: row["address-line-2"], city: row.city,
+        region: row.region, postalCode: row["postal-code"], country: row.country, notes: row.notes,
+        source: { format: "mcplaces-v1", fields: sourceFields(row, ["source-last-modified-date", "source-last-modified-by"]) }, order: index
       };
     });
-    const noteRow = parsed.rows.find(function (row) { return originalCsvValue(row.record_type) === "note"; });
-    const settingsRow = parsed.rows.find(function (row) { return originalCsvValue(row.record_type) === "settings"; });
-    const settings = settingsRow ? parseJsonObject(settingsRow.settings_json, "The settings row") : {};
+
+    const relationshipIds = new Set();
+    const relationships = parsed["McRelations.csv"].rows.map(function (row, index) {
+      const id = u.cleanLine(row["relationship-id"], 100).toUpperCase();
+      const type = u.cleanLine(row["relationship-type"], 40);
+      const person1 = u.cleanLine(row["person-1-id"], 100).toUpperCase();
+      const person2 = u.cleanLine(row["person-2-id"], 100).toUpperCase();
+      const order = Number(row["relationship-order"]);
+      if (!/^[A-Z][A-Z0-9_-]{2,99}$/.test(id) || relationshipIds.has(id)) throw new Error("McRelations.csv contains an invalid or duplicate relationship-id: " + (id || "(blank)") + ".");
+      if (!personIds.has(person1) || !personIds.has(person2) || person1 === person2) throw new Error("McRelations.csv " + id + " contains a missing or self person reference.");
+      if (!Number.isInteger(order) || order < 1 || order > config.controls.maxRelationships) throw new Error("McRelations.csv " + id + " requires a positive relationship-order.");
+      relationshipIds.add(id);
+      const start = validateSourceDate(row["date-start-value"], row["date-start-descriptor"], "McRelations.csv " + id + " start date", { allowBlankDescriptor: true });
+      const end = validateSourceDate(row["date-end-value"], row["date-end-descriptor"], "McRelations.csv " + id + " end date", { allowBlankDescriptor: true });
+      if (row["place-id"] && !placeIds.has(row["place-id"].toUpperCase())) throw new Error("McRelations.csv " + id + " references a missing place.");
+      if (type === "parent-child") {
+        if (!["lineal", "non-lineal"].includes(row["parent-kind"]) || row["partner-type"] || row["end-reason"]) throw new Error("McRelations.csv " + id + " has inconsistent parent fields.");
+        return {
+          id: id, type: type, parentId: person1, childId: person2, kind: row["parent-kind"] === "lineal" ? "biological" : "affinal",
+          startDate: sourceDate(start.value, start.descriptor, counters), endDate: sourceDate(end.value, end.descriptor, counters),
+          place: "", notes: row.notes, source: { format: "mcrelations-v1", fields: sourceFields(row, [
+            "date-start-value", "date-start-descriptor", "date-end-value", "date-end-descriptor", "place-id",
+            "source-last-modified-date", "source-last-modified-by"
+          ]) }, order: order
+        };
+      }
+      if (type !== "partner") throw new Error("McRelations.csv " + id + " must be parent-child or partner.");
+      if (row["parent-kind"] || !["marriage", "partnership", "UNKNOWN"].includes(row["partner-type"]) || !["death", "divorce", "separation", "annulment", "UNKNOWN", ""].includes(row["end-reason"])) throw new Error("McRelations.csv " + id + " has inconsistent partner fields.");
+      if (end.value && !row["end-reason"]) throw new Error("McRelations.csv " + id + " has an end date without an end reason.");
+      return {
+        id: id, type: type, person1Id: person1, person2Id: person2, status: partnerStatus(row["partner-type"], row["end-reason"]),
+        startDate: sourceDate(start.value, start.descriptor, counters), endDate: sourceDate(end.value, end.descriptor, counters),
+        place: "", notes: row.notes, source: { format: "mcrelations-v1", fields: sourceFields(row, [
+          "partner-type", "date-start-value", "date-start-descriptor", "date-end-value", "date-end-descriptor", "end-reason", "place-id",
+          "source-last-modified-date", "source-last-modified-by"
+        ]) }, order: order
+      };
+    });
+
+    const partnerPairs = new Set(relationships.filter(function (relationship) { return relationship.type === "partner"; }).map(function (relationship) { return [relationship.person1Id, relationship.person2Id].sort().join("|"); }));
+    const parentsByChild = new Map();
+    relationships.filter(function (relationship) { return relationship.type === "parent-child"; }).forEach(function (relationship) {
+      if (!parentsByChild.has(relationship.childId)) parentsByChild.set(relationship.childId, []);
+      parentsByChild.get(relationship.childId).push(relationship);
+    });
+    parentsByChild.forEach(function (parents, childId) {
+      const lineal = parents.filter(function (relationship) { return relationship.kind === "biological"; });
+      const nonLineal = parents.filter(function (relationship) { return relationship.kind === "affinal"; });
+      if (lineal.length > 1) throw new Error("McRelations.csv gives " + childId + " more than one Lineal parent.");
+      nonLineal.forEach(function (relationship) {
+        if (lineal.length !== 1 || !partnerPairs.has([lineal[0].parentId, relationship.parentId].sort().join("|"))) throw new Error("McRelations.csv Non-Lineal parent " + relationship.parentId + " is not partnered with " + childId + "'s Lineal parent.");
+      });
+    });
+    validateLineage(people, relationships);
+
+    const residenceIds = new Set();
+    const residenceLinks = new Set();
+    const residences = parsed["McResidences.csv"].rows.map(function (row, index) {
+      const id = u.cleanLine(row["residence-id"], 100).toUpperCase();
+      const personId = u.cleanLine(row["person-id"], 100).toUpperCase();
+      const placeId = u.cleanLine(row["place-id"], 100).toUpperCase();
+      if (!/^RS\d{4,}$/.test(id) || residenceIds.has(id)) throw new Error("McResidences.csv contains an invalid or duplicate residence-id: " + (id || "(blank)") + ".");
+      if (!personIds.has(personId) || !placeIds.has(placeId)) throw new Error("McResidences.csv " + id + " contains a missing person or place reference.");
+      if (!["TRUE", "FALSE"].includes(row["is-current"].toUpperCase())) throw new Error("McResidences.csv " + id + " is-current must be TRUE or FALSE.");
+      const start = validateSourceDate(row["date-start-value"], row["date-start-descriptor"], "McResidences.csv " + id + " start date", { allowBlankDescriptor: true });
+      const end = validateSourceDate(row["date-end-value"], row["date-end-descriptor"], "McResidences.csv " + id + " end date", { allowBlankDescriptor: true });
+      const link = personId + "|" + placeId + "|" + start.value;
+      if (residenceLinks.has(link)) throw new Error("McResidences.csv contains a duplicate Person-to-Place link.");
+      residenceIds.add(id); residenceLinks.add(link);
+      return {
+        id: id, personId: personId, placeId: placeId, label: row["residence-label"], current: row["is-current"].toUpperCase() === "TRUE",
+        startDate: sourceDate(start.value, start.descriptor, counters), endDate: sourceDate(end.value, end.descriptor, counters), notes: row.notes,
+        source: { format: "mcresidences-v1", fields: sourceFields(row, [
+          "date-start-value", "date-start-descriptor", "date-end-value", "date-end-descriptor",
+          "source-last-modified-date", "source-last-modified-by"
+        ]) }, order: index
+      };
+    });
+
+    const actualCounts = { people: people.length, relationships: relationships.length, places: places.length, residences: residences.length };
+    Object.keys(actualCounts).forEach(function (key) {
+      if (!Number.isInteger(metadata.counts[key]) || metadata.counts[key] !== actualCounts[key]) throw new Error("McMetadata.csv " + key + " count does not match the package files.");
+    });
+    if (!personIds.has(metadata.family.homePersonId)) throw new Error("McMetadata.csv home-person-id does not resolve to McPeople.csv.");
+    if (!metadata.family.initializedAt || !Number.isFinite(Date.parse(metadata.family.initializedAt))) throw new Error("McMetadata.csv requires a valid initialized-at timestamp.");
+    const now = u.isoNow();
+    const settings = metadata.family.settings;
     const rawState = {
       schemaVersion: config.schemaVersion,
-      meta: Object.assign({}, u.plainObject(settings.meta), { createdAt: originalCsvValue(familyRow.created_at) || u.plainObject(settings.meta).createdAt, updatedAt: originalCsvValue(familyRow.updated_at) || u.plainObject(settings.meta).updatedAt }),
+      meta: {
+        createdAt: metadata.family.createdAt, updatedAt: metadata.family.updatedAt,
+        package: { format: config.packageFormat, version: config.packageVersion, datasetVersion: config.datasetVersion, auditHistory: metadata.audits }
+      },
       workspace: {
-        family: { title: originalCsvValue(familyRow.family_title), initializedAt: originalCsvValue(familyRow.initialized_at), homePersonId: originalCsvValue(familyRow.home_person_id) },
-        people: people, relationships: relationships,
-        documents: [{ id: "app-notes", title: "Notes", html: u.escapeHtml(noteRow ? originalCsvValue(noteRow.family_notes) : "").replace(/\n/g, "<br>"), order: 0 }]
+        family: { title: metadata.family.title || "McFamily", initializedAt: metadata.family.initializedAt, homePersonId: metadata.family.homePersonId },
+        people: people, relationships: relationships, places: places, residences: residences,
+        documents: [{ id: "app-notes", title: "Notes", html: u.escapeHtml(metadata.family.notes).replace(/\n/g, "<br>"), order: 0, createdAt: now, updatedAt: now }]
       },
       preferences: u.plainObject(settings.preferences), ui: u.plainObject(settings.ui), modules: u.plainObject(settings.modules)
     };
     const prepared = model.prepare(rawState);
-    return Object.assign(prepared, { formatLabel: "McFamily CSV v2", sourceRows: parsed.rows.length, fileName: fileName });
+    if (prepared.state.workspace.people.length !== people.length || prepared.state.workspace.relationships.length !== relationships.length || prepared.state.workspace.places.length !== places.length || prepared.state.workspace.residences.length !== residences.length) {
+      throw new Error("Package normalization changed record counts; the import was rejected instead of silently dropping data.");
+    }
+    prepared.validation.warnings = counters.partialDates ? [counters.partialDates + " partial source dates were preserved and displayed approximately."] : [];
+    return Object.assign(prepared, {
+      formatLabel: "McFamily package v" + config.packageVersion + " · dataset " + config.datasetVersion,
+      sourceRows: Object.values(parsed).reduce(function (total, file) { return total + file.rows.length; }, 0),
+      fileName: fileName, checkCount: 11
+    });
   }
 
-  function prepareCsv(text, fileName) {
-    const parsed = parseCsv(text);
-    if (parsed.headers.includes("mcfamily_csv_version") && parsed.headers.includes("record_type")) return prepareNative(parsed, fileName);
-    const missing = MCLINEAGE_HEADERS.filter(function (header) { return !parsed.headers.includes(header); });
-    const unexpected = parsed.headers.filter(function (header) { return !MCLINEAGE_HEADERS.includes(header); });
-    const exactOrder = parsed.headers.length === MCLINEAGE_HEADERS.length && parsed.headers.every(function (header, index) { return header === MCLINEAGE_HEADERS[index]; });
-    if (!missing.length && !unexpected.length && exactOrder) return prepareMcLineage(parsed, fileName);
-    if (parsed.headers.some(function (header) { return header === "record-id" || header === "record_id" || header.startsWith("person-") || header.startsWith("person_"); })) {
-      const details = [];
-      if (missing.length) details.push("missing: " + missing.join(", "));
-      if (unexpected.length) details.push("unexpected: " + unexpected.join(", "));
-      if (!missing.length && !unexpected.length && !exactOrder) details.push("columns are not in the McLineage v14 order");
-      throw new Error("McFamily accepts only the exact McLineage v14 schema (" + details.join("; ") + ").");
+  function sourceDateForExport(fields, prefix, date, fallbackDescriptor) {
+    const rawValue = originalCsvValue(fields[prefix + "-value"] || "");
+    const rawDescriptor = originalCsvValue(fields[prefix + "-descriptor"] || "");
+    if (rawValue && isPartialSourceDate(rawValue) && rawDescriptor === "partial") return { value: rawValue, descriptor: rawDescriptor };
+    const value = date && date.value || "";
+    return { value: value, descriptor: value ? (value.length === 4 ? "year" : value.length === 7 ? "month" : "day") : (rawDescriptor || fallbackDescriptor || "") };
+  }
+
+  function nameFields(prefix, parts) {
+    const name = model.nameParts({ names: { [prefix]: parts } }, prefix);
+    return {
+      ["person-name-" + prefix + "-prefix"]: name.prefix,
+      ["person-" + prefix + "-name-first"]: name.first,
+      ["person-" + prefix + "-name-middle"]: name.middle,
+      ["person-" + prefix + "-name-last"]: name.last,
+      ["person-" + prefix + "-name-suffix"]: name.suffix
+    };
+  }
+
+  function peopleRows(state) {
+    return state.workspace.people.slice().sort(function (a, b) { return a.order - b.order; }).map(function (person, index) {
+      const fields = Object.assign({}, u.plainObject(person.source && person.source.fields));
+      const birth = sourceDateForExport(fields, "person-date-birth", person.birth.date, "UNKNOWN");
+      const deathFallback = person.livingStatus === "living" ? "NONE" : person.livingStatus === "deceased" ? "UNKNOWN" : "UNKNOWN";
+      const death = sourceDateForExport(fields, "person-date-death", person.death.date, deathFallback);
+      return Object.assign({}, fields, {
+        "record-id": person.id, "person-name-maiden-last": person.names.maidenLast, "lineage-id": fields["lineage-id"] || "",
+        "person-date-birth-value": birth.value, "person-date-birth-descriptor": birth.descriptor,
+        "person-date-death-value": death.value, "person-date-death-descriptor": death.descriptor,
+        notes: fields.notes != null ? fields.notes : person.notes,
+        "source-last-modified-date": fields["source-last-modified-date"] || person.updatedAt.slice(0, 10),
+        "source-last-modified-by": fields["source-last-modified-by"] || "McFamily",
+        "source-row-number": fields["source-row-number"] || String(index + 1),
+        "data-quality-notes": fields["data-quality-notes"] || ""
+      }, nameFields("birth", person.names.birth), nameFields("current", person.names.current), nameFields("preferred", person.names.preferred));
+    });
+  }
+
+  function placeRows(state) {
+    return state.workspace.places.map(function (place) {
+      const fields = Object.assign({}, u.plainObject(place.source && place.source.fields));
+      return Object.assign({}, fields, {
+        "place-id": place.id, "place-label": place.label, "address-line-1": place.line1, "address-line-2": place.line2,
+        city: place.city, region: place.region, "postal-code": place.postalCode, country: place.country, notes: place.notes,
+        "source-last-modified-date": fields["source-last-modified-date"] || state.meta.updatedAt.slice(0, 10),
+        "source-last-modified-by": fields["source-last-modified-by"] || "McFamily"
+      });
+    });
+  }
+
+  function relationshipRows(state) {
+    return state.workspace.relationships.map(function (relationship) {
+      const fields = Object.assign({}, u.plainObject(relationship.source && relationship.source.fields));
+      const start = sourceDateForExport(fields, "date-start", relationship.startDate, "");
+      const end = sourceDateForExport(fields, "date-end", relationship.endDate, "");
+      const partnerType = fields["partner-type"] || (relationship.status === "partnered" ? "partnership" : relationship.type === "partner" ? "marriage" : "");
+      const endReason = fields["end-reason"] || ({ widowed: "death", divorced: "divorce", separated: "separation", former: "UNKNOWN" }[relationship.status] || "");
+      return Object.assign({}, fields, {
+        "relationship-id": relationship.id, "relationship-type": relationship.type,
+        "person-1-id": relationship.type === "parent-child" ? relationship.parentId : relationship.person1Id,
+        "person-2-id": relationship.type === "parent-child" ? relationship.childId : relationship.person2Id,
+        "parent-kind": relationship.type === "parent-child" ? (relationship.kind === "affinal" ? "non-lineal" : "lineal") : "",
+        "partner-type": partnerType, "relationship-order": fields["relationship-order"] || relationship.order,
+        "date-start-value": start.value, "date-start-descriptor": start.descriptor, "date-end-value": end.value, "date-end-descriptor": end.descriptor,
+        "end-reason": endReason, "place-id": fields["place-id"] || "", notes: relationship.notes,
+        "source-last-modified-date": fields["source-last-modified-date"] || state.meta.updatedAt.slice(0, 10),
+        "source-last-modified-by": fields["source-last-modified-by"] || "McFamily"
+      });
+    });
+  }
+
+  function residenceRows(state) {
+    return state.workspace.residences.map(function (residence) {
+      const fields = Object.assign({}, u.plainObject(residence.source && residence.source.fields));
+      const start = sourceDateForExport(fields, "date-start", residence.startDate, "");
+      const end = sourceDateForExport(fields, "date-end", residence.endDate, "");
+      return Object.assign({}, fields, {
+        "residence-id": residence.id, "person-id": residence.personId, "place-id": residence.placeId, "residence-label": residence.label,
+        "is-current": residence.current ? "TRUE" : "FALSE", "date-start-value": start.value, "date-start-descriptor": start.descriptor,
+        "date-end-value": end.value, "date-end-descriptor": end.descriptor, notes: residence.notes,
+        "source-last-modified-date": fields["source-last-modified-date"] || state.meta.updatedAt.slice(0, 10),
+        "source-last-modified-by": fields["source-last-modified-by"] || "McFamily"
+      });
+    });
+  }
+
+  function metadataRows(state) {
+    let serial = 1;
+    const rows = [];
+    function add(type, subject, key, value, details) {
+      rows.push({
+        "metadata-id": "M" + String(serial++).padStart(4, "0"), "metadata-type": type, subject: subject, key: key, value: value,
+        "recorded-at": state.meta.updatedAt, "recorded-by": "McFamily " + config.identity.version, details: details || ""
+      });
     }
-    throw new Error("That CSV is neither a current McFamily export nor an exact McLineage v14 file.");
+    add("package", "McFamily", "package-format", config.packageFormat);
+    add("package", "McFamily", "package-version", config.packageVersion);
+    add("package", "McFamily", "dataset-version", config.datasetVersion);
+    add("package", "McFamily", "person-count", state.workspace.people.length);
+    add("package", "McFamily", "relationship-count", state.workspace.relationships.length);
+    add("package", "McFamily", "place-count", state.workspace.places.length);
+    add("package", "McFamily", "residence-count", state.workspace.residences.length);
+    add("family", "McFamily", "title", state.workspace.family.title);
+    add("family", "McFamily", "initialized-at", state.workspace.family.initializedAt);
+    add("family", "McFamily", "home-person-id", state.workspace.family.homePersonId);
+    add("family", "McFamily", "created-at", state.meta.createdAt);
+    add("family", "McFamily", "updated-at", state.meta.updatedAt);
+    add("family", "McFamily", "notes", u.richTextToPlainText(state.workspace.documents[0] && state.workspace.documents[0].html || "", config.controls.maxDocumentHtmlLength));
+    add("family", "McFamily", "settings-json", JSON.stringify({ preferences: state.preferences, ui: state.ui, modules: state.modules }));
+    FILE_NAMES.forEach(function (name) { add("schema", name, "schema-version", FILE_SCHEMA_VERSION); });
+    state.meta.package.auditHistory.forEach(function (audit, index) {
+      rows.push({
+        "metadata-id": audit.id || "A" + String(index + 1).padStart(4, "0"), "metadata-type": "audit", subject: audit.subject,
+        key: "action", value: audit.action, "recorded-at": audit.recordedAt, "recorded-by": audit.recordedBy, details: audit.details
+      });
+    });
+    return rows;
+  }
+
+  function packageFiles(state) {
+    return {
+      "McPeople.csv": encodeCsv(PEOPLE_HEADERS, peopleRows(state)),
+      "McPlaces.csv": encodeCsv(PLACE_HEADERS, placeRows(state)),
+      "McRelations.csv": encodeCsv(RELATION_HEADERS, relationshipRows(state)),
+      "McResidences.csv": encodeCsv(RESIDENCE_HEADERS, residenceRows(state)),
+      "McMetadata.csv": encodeCsv(METADATA_HEADERS, metadataRows(state))
+    };
+  }
+
+  function auditId() {
+    return "A" + Date.now().toString(36).toUpperCase();
+  }
+
+  function exportPackage() {
+    if (!storage.getState().workspace.family.initializedAt) {
+      App.components.message("No family to export", "Import the initial McFamily data package before creating an export.");
+      return;
+    }
+    storage.mutate(function (state) {
+      state.meta.package.auditHistory.push({
+        id: auditId(), subject: "McFamily", action: "exported-package", recordedAt: u.isoNow(),
+        recordedBy: "McFamily " + config.identity.version, details: "Exported the validated five-file private data package."
+      });
+    }, { reason: "package-export" });
+    storage.saveNow();
+    const state = storage.getState();
+    const bytes = encodeZip(packageFiles(state));
+    const blob = new Blob([bytes], { type: "application/zip" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const slug = state.workspace.family.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "mcfamily";
+    link.href = url;
+    link.download = slug + "-private-package-" + new Date().toISOString().slice(0, 10) + "-v" + config.datasetVersion.replace(/\./g, "-") + ".zip";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(function () { URL.revokeObjectURL(url); }, 0);
+    App.components.toast("The complete five-file private ZIP package was downloaded. Store it securely.", { title: "Package exported", kind: "success", duration: 5000 });
+  }
+
+  function readFile(file) {
+    if (!file) return Promise.reject(new Error("No file was selected."));
+    if (file.size > config.controls.maxImportBytes) return Promise.reject(new Error("That ZIP is larger than the " + u.formatBytes(config.controls.maxImportBytes) + " import limit."));
+    if (!/\.zip$/i.test(file.name || "")) return Promise.reject(new Error("Choose the current McFamily .zip data package."));
+    return file.arrayBuffer ? file.arrayBuffer() : new Promise(function (resolve, reject) {
+      const reader = new FileReader();
+      reader.onload = function () { resolve(reader.result); };
+      reader.onerror = function () { reject(new Error("The selected ZIP could not be read.")); };
+      reader.readAsArrayBuffer(file);
+    });
   }
 
   function summaryFor(state, candidate) {
     return {
-      familyTitle: state.workspace.family.title,
-      initialized: Boolean(state.workspace.family.initializedAt),
-      people: state.workspace.people.length,
-      relationships: state.workspace.relationships.length,
-      addresses: state.workspace.people.reduce(function (total, person) { return total + person.addresses.length; }, 0),
-      schemaVersion: state.schemaVersion,
-      appVersion: state.meta.appVersion,
-      updatedAt: state.meta.updatedAt,
-      formatLabel: candidate && candidate.formatLabel || "Current local family",
-      sourceRows: candidate && candidate.sourceRows || 0
+      familyTitle: state.workspace.family.title, initialized: Boolean(state.workspace.family.initializedAt),
+      people: state.workspace.people.length, relationships: state.workspace.relationships.length,
+      places: state.workspace.places.length, residences: state.workspace.residences.length,
+      schemaVersion: state.schemaVersion, appVersion: state.meta.appVersion, updatedAt: state.meta.updatedAt,
+      formatLabel: candidate && candidate.formatLabel || "Current local family", sourceRows: candidate && candidate.sourceRows || 0,
+      checkCount: candidate && candidate.checkCount || 0
     };
   }
 
@@ -630,21 +703,23 @@
     return !storage.getState().workspace.family.initializedAt;
   }
 
-  function requireInitialCsv(prepared) {
-    if (!prepared.state.workspace.family.initializedAt) throw new Error("That CSV is not marked as an initialized McFamily family.");
-    if (!prepared.state.workspace.people.length) throw new Error("The first CSV must contain at least one person.");
+  function requireInitialPackage(prepared) {
+    if (!prepared.state.workspace.family.initializedAt) throw new Error("McMetadata.csv does not mark this as an initialized family.");
+    if (!prepared.state.workspace.people.length) throw new Error("McPeople.csv must contain at least one person.");
   }
 
   function renderPreview(candidate, fileName) {
     const summary = summaryFor(candidate.state, candidate);
     const current = summaryFor(storage.getState());
-    document.querySelector("[data-import-file]").textContent = fileName || "Selected CSV";
+    document.querySelector("[data-import-file]").textContent = fileName || "Selected package";
     document.querySelector("[data-import-family]").textContent = summary.familyTitle;
     document.querySelector("[data-import-people]").textContent = String(summary.people) + (candidate.initial ? "" : " (current: " + current.people + ")");
     document.querySelector("[data-import-relationships]").textContent = String(summary.relationships);
-    document.querySelector("[data-import-addresses]").textContent = String(summary.addresses);
-    document.querySelector("[data-import-version]").textContent = summary.formatLabel + " · " + summary.sourceRows + " CSV rows · state v" + summary.schemaVersion;
+    document.querySelector("[data-import-places]").textContent = String(summary.places);
+    document.querySelector("[data-import-residences]").textContent = String(summary.residences);
+    document.querySelector("[data-import-version]").textContent = summary.formatLabel + " · " + summary.sourceRows + " rows · state v" + summary.schemaVersion;
     document.querySelector("[data-import-updated]").textContent = u.dateLabel(summary.updatedAt);
+    document.querySelector("[data-import-checks]").textContent = summary.checkCount + " validation groups passed";
     const warning = document.querySelector("[data-import-warning]");
     warning.hidden = candidate.validation.warnings.length === 0;
     warning.textContent = candidate.validation.warnings.join(" ");
@@ -654,17 +729,18 @@
 
   async function previewFile(file, trigger) {
     try {
-      App.components.setLoading(true, "Checking private CSV…");
-      const text = await readFile(file);
-      const prepared = prepareCsv(text, file.name);
+      App.components.setLoading(true, "Checking private data package…");
+      const buffer = await readFile(file);
+      const files = await parseZip(buffer);
+      const prepared = preparePackage(files, file.name);
       const initial = isInitialImport();
-      if (initial) requireInitialCsv(prepared);
+      if (initial) requireInitialPackage(prepared);
       pendingImport = Object.assign({}, prepared, { initial: initial });
       renderPreview(pendingImport, file.name);
       App.components.openDialog("#importPreviewDialog", { trigger: trigger, focus: "[data-import-confirm]" });
     } catch (error) {
       pendingImport = null;
-      App.components.message("Import unavailable", error.message || "That CSV could not be used.", { trigger: trigger });
+      App.components.message("Import unavailable", error.message || "That ZIP package could not be used.", { trigger: trigger });
     } finally {
       App.components.setLoading(false);
     }
@@ -675,17 +751,21 @@
     if (!pendingImport.initial) {
       const accepted = await App.components.confirm({
         title: "Replace the local family?",
-        message: "This validated CSV will replace all people, relationships, contacts, Notes, and preferences on this browser. A recovery copy will be saved first.",
+        message: "This validated ZIP will replace all people, places, residences, relationships, contacts, Notes, metadata, and preferences on this browser. A recovery copy will be saved first.",
         confirmLabel: "Replace local family", cancelLabel: "Keep current family", danger: true,
         trigger: document.querySelector("[data-import-confirm]")
       });
       if (!accepted) return;
     }
     const summary = summaryFor(pendingImport.state, pendingImport);
+    pendingImport.state.meta.package.auditHistory.push({
+      id: auditId(), subject: pendingImport.fileName, action: "imported-package", recordedAt: u.isoNow(),
+      recordedBy: "McFamily " + config.identity.version, details: "Validated and imported all five package files."
+    });
     storage.replace(pendingImport.state, { recoveryReason: "Before importing " + summary.familyTitle, saveRecovery: !pendingImport.initial, reason: "import" });
     pendingImport = null;
     App.components.closeDialog("#importPreviewDialog", "imported");
-    App.components.toast("Opened " + summary.familyTitle + " with " + summary.people + " people.", { title: "Family imported", kind: "success", duration: 5000 });
+    App.components.toast("Opened " + summary.familyTitle + " with " + summary.people + " people after all package checks passed.", { title: "Package imported", kind: "success", duration: 5000 });
   }
 
   function init() {
@@ -702,12 +782,14 @@
 
   App.portability = {
     init: init,
-    exportCsv: exportCsv,
+    exportPackage: exportPackage,
+    exportCsv: exportPackage,
     previewFile: previewFile,
-    prepareCsv: prepareCsv,
-    encodeCsv: encodeCsv,
-    nativeRows: nativeRows,
+    preparePackage: preparePackage,
+    parseZip: parseZip,
+    encodeZip: encodeZip,
+    packageFiles: packageFiles,
     summaryFor: summaryFor,
-    requireInitialCsv: requireInitialCsv
+    requireInitialPackage: requireInitialPackage
   };
 })();

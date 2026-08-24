@@ -2,6 +2,8 @@
 **/.DS_Store
 /assets/data/*
 /data/McLineage-*.csv
+/data/McFamily-*.zip
+/data/McFamily-private-config.json
 /data/McLineage-*-name-reconciliation.xlsx
 /data/*.inspect.ndjson
 /data/backups/

@@ -1,36 +1,31 @@
-McLineage Dataset Metadata
-==========================
+McFamily Dataset Metadata
+=========================
 
 Current dataset
 ---------------
 
-Version: 14.0.0
+Version: 15.0.0
 Updated: 2026-08-24
-File: McLineage-14-0-0-2026-08-24.csv
-Source: McLineage.xlsx legacy database export
+File: McFamily-15-0-0-2026-08-24.zip
+Files: McPeople.csv, McPlaces.csv, McRelations.csv, McResidences.csv, McMetadata.csv
+Source: McLineage 14.0.0 multi-file conversion
 Status: Private family data; do not commit to a public or shared source repository.
 
-Current v14 schema
-------------------
-
-The 14.0.0 schema uses kebab-case for every top-level CSV header and contains 30 fields. Structured names remain authoritative:
-
-- Birth Name: person-name-birth-prefix, person-birth-name-first, person-birth-name-middle, person-birth-name-last, and
-  person-birth-name-suffix.
-- Current/Legal Name: person-name-current-prefix, person-current-name-first, person-current-name-middle, person-current-name-last, and
-  person-current-name-suffix.
-- Preferred/display Name: person-name-preferred-prefix, person-preferred-name-first, person-preferred-name-middle,
-  person-preferred-name-last, and person-preferred-name-suffix.
-- Maiden Last Name: person-name-maiden-last.
-
-Each part may contain multiple words. Preferred/display is the first display choice, followed by Current/Legal and then Birth. Birth and
-Current First/Last use UNKNOWN only when the source cannot supply a value; optional parts and unconfirmed Preferred names remain blank.
-The retired flat-name fields, retain-maiden flag, legacy deceased marker, and four legacy spouse-directory display-name fields are not part
-of v14. Relationship JSON property names remain snake_case because they are structured values inside partner-relationships-json, not CSV
-headers.
 
 Changelog
 ---------
+
+15.0.0 — 2026-08-24 — [227 KB (+18) | 913 people | 1,467 relations | 1 place | 1 residence | 5 files]
+Author: Adam Lauer [Agent Codex | Model GPT-5 | Effort UNK | Speed UNK]
+Summary: Split the family dataset into five validated CSV files distributed as one private ZIP.
+
+- People: 913 changed | 0 added | 0 deleted. Removed the two parent columns and partner-relationships-json from McPeople.
+- Relations: 1,467 added. Moved 1,161 Lineal/Non-Lineal parent links and 306 partner links into McRelations.
+- Places: 1 added. Created the initial private physical place record.
+- Residences: 1 added. Created the initial current Home Person-to-Place assignment.
+- Metadata: 23 rows added. Declared package, dataset, and all five file-schema versions; exact per-file counts; family settings; and four
+  conversion audit events.
+- Package: one stored ZIP containing exactly McPeople.csv, McPlaces.csv, McRelations.csv, McResidences.csv, and McMetadata.csv.
 
 14.0.0 — 2026-08-24 — [209 KB (-15) | 913 records (±0) | 30 fields (-4)]
 Author: Adam Lauer [Agent GPT-5-based Codex | Model 5.6 Sol | Effort High | Speed Standard]
@@ -297,11 +292,11 @@ Versioning rules for humans and agents
      existing information.
    - A patch must not add a new column or change the meaning of a column.
 
-2. Name every released CSV using this exact pattern:
+2. Name every released package using this exact pattern:
 
-   McLineage-<major>-<minor>-<patch>-<YYYY>-<MM>-<DD>.csv
+   McFamily-<major>-<minor>-<patch>-<YYYY>-<MM>-<DD>.zip
 
-   Example: McLineage-1-2-3-2026-08-19.csv
+   Example: McFamily-15-1-0-2026-08-25.zip
 
    - Use integers for major, minor, and patch.
    - Use a four-digit year and two-digit month and day.
@@ -312,40 +307,38 @@ Versioning rules for humans and agents
    - Start from the latest validated version.
    - Choose the next version before editing and save the result under its new name.
    - Preserve stable P-formatted record-id values unless correcting an actual collision.
-   - Store every person, including each partner, as a separate row with a stable P record ID. Store each partner relationship exactly once
-     in the originating person's partner-relationships-json array, and leave source-row-number plus all lineage fields blank on partner-only
-     rows.
-   - Beginning with 12.0.0, use kebab-case for every top-level CSV header. Store Birth, Current/Legal, and Preferred/display names in their
-     five structured name fields and store a changed birth surname separately in person-name-maiden-last. The retired flat-name fields are
-     not part of the current schema. Display Preferred first, then Current/Legal, then Birth.
+   - Keep exactly McPeople.csv, McPlaces.csv, McRelations.csv, McResidences.csv, and McMetadata.csv at the ZIP root. Do not add loose files,
+     nested directories, or alternate filenames.
+   - Store every person, including each partner, as a separate McPeople row with a stable P record ID. McPeople contains no parent or
+     partner relationship columns.
+   - Use kebab-case for every CSV header. Store Birth, Current/Legal, and Preferred/display names in their five structured name fields and
+     store a changed birth surname separately in person-name-maiden-last. Display Preferred first, then Current/Legal, then Birth.
    - Prefix and suffix fields may be blank. Normalize known prefixes to Rev., Dr., Mr., Mrs., Ms., Miss, Fr., Father, Hon., Prof., Rabbi,
      Pastor, Capt., Col., Lt., Gen., Judge, or St.; normalize known suffixes to Jr., Sr., II, III, Esq., PhD, or MD. Do not infer an
      unrecognized prefix or suffix.
    - Birth and Current First/Last are required. Use UNKNOWN only when the source cannot supply a required value. Preferred/display and every
      other optional name part remain blank when they cannot be attributed confidently.
    - Keep lineage-id as the complete oldest-to-newest path with two-digit segments, such as 01.01.01.03.02.02.04.02.01.01. Every non-root
-     path must extend its direct parent's path by exactly one segment. Store the direct parent P reference in
-     parent-consanguinity-person-id. When evidence identifies the partner who is also a parent, store that P reference in
-     parent-affinal-person-id; otherwise leave it blank. The referenced parents must also form a recorded partner pair.
-   - Give each partner relationship a stable R-formatted relationship_id. Store its partner_person_id, relationship_type,
-     relationship_order, start/end date value and descriptor fields, and end_reason. Blank end_reason means no ending is recorded; UNKNOWN
-     preserves genuine ambiguity.
+     path must extend its direct Lineal parent's path by exactly one segment.
+   - Store every parent and partner exactly once in McRelations with a stable relationship-id and resolvable P references. Parent rows use
+     lineal or non-lineal parent-kind. Partner rows store partner-type, relationship-order, dates, and end-reason. A Non-Lineal parent must
+     be partnered with the child's Lineal parent.
+   - Store reusable physical addresses in McPlaces with stable L IDs. Link people to places only through McResidences with stable RS IDs.
    - Store known date values as YYYY, YYYY-MM, or YYYY-MM-DD. Unknown digits may be represented by question marks anywhere in the same
      shapes and must use the partial descriptor. Do not use invalid as a descriptor.
-   - Person date descriptors may be year, month, day, partial, UNKNOWN, or blank; birth descriptors cannot be blank, while a blank death
-     descriptor means living.
-   - Use UNKNOWN with a blank death value when the person is deceased but the date is unknown. Treat G0-G4 descendants without death values
-     as deceased.
+   - Birth descriptors may be year, month, day, partial, or UNKNOWN and cannot be blank. A blank death value must use NONE for living,
+     UNKNOWN for explicitly deceased, or UNKNOWN PRESUMED when source evidence presumes death.
    - Record unresolved source problems in data-quality-notes instead of silently inventing or discarding genealogy facts.
-   - Parse the complete CSV after editing and verify consistent column counts, unique record IDs, lineage/parent structure, and date
-     value/precision pairs.
+   - Update McMetadata package/dataset/schema rows, exact per-file counts, family data, and audit rows for every release.
+   - Validate ZIP integrity, exact filenames and schemas, counts, unique IDs, date pairs, lineage structure, cross-file references,
+     relationship rules, residence links, and ancestry cycles before accepting a release.
    - Update the Current dataset section and add a newest-first changelog entry.
    - Retain prior versions only in approved private storage. Never commit real family data, exported names, notes, or this private dataset
      to the source repository.
 
-4. Use this changelog entry format:
+4. Use this changelog entry format for package releases:
 
-   Version X.Y.Z — YYYY-MM-DD — [### KB (+#/-#/±0) | ### records (+#/-#/±0) | ## fields (+#/-#/±0)]
+   Version X.Y.Z — YYYY-MM-DD — [### KB (+#/-#/±0) | ### people | ### relations | ### places | ### residences | 5 files]
    Author: Person Name [Agent AGENT | Model MODEL | Effort EFFORT | Speed SPEED]
    Author: Person Name [Manual]
    Summary: One-line description of the release.
@@ -355,9 +348,8 @@ Versioning rules for humans and agents
    - Record-count or schema-count change, when applicable.
 
    The human author is required. Record assisted-agent details in the Author line; use [Manual] when no agent assisted. Ask the human author
-   to supply unknown author or agent details before finalizing. Record the released CSV's decimal kilobyte size, rounded to the nearest
-   whole KB, or "UNK" if the file is unavailable. In parentheses after each size, record count, and field count, record the change from the
-   immediately preceding release using +#, -#, or ±0. Mark the initial release as "baseline"; use "UNK" when a prior value is unavailable.
+   to supply unknown author or agent details before finalizing. Record the released ZIP's decimal kilobyte size, rounded to the nearest
+   whole KB, or "UNK" if the file is unavailable. Record per-file counts so McMetadata and the changelog can be compared directly.
    Copy model, effort, and speed from the active tool or interface when available. Never infer those settings; write "UNK" when they are
    unavailable. Begin every changelog bullet list with changed, added, and deleted record counts when they apply. Keep routine validation
    results out of changelog bullets; record only material limitations or unresolved data concerns. Wrap prose and bullet text to a maximum

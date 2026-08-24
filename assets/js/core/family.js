@@ -4,7 +4,6 @@
   const App = window.LocalApp;
   const config = App.config;
   const model = App.stateModel;
-  const CONSANGUINITY_FIELD = "parent-consanguinity-person-id";
 
   function indexes(state) {
     const people = state.workspace.people;
@@ -136,11 +135,13 @@
   }
 
   function partnerSourceType(relationship) {
-    return String(partnerSourceFields(relationship).relationship_type || "").trim();
+    const fields = partnerSourceFields(relationship);
+    return String(fields["partner-type"] || fields.relationship_type || "").trim();
   }
 
   function partnerEndReason(relationship) {
-    return String(partnerSourceFields(relationship).end_reason || "").trim();
+    const fields = partnerSourceFields(relationship);
+    return String(fields["end-reason"] || fields.end_reason || "").trim();
   }
 
   function isNeverMarriedPartnership(relationship) {
@@ -161,8 +162,8 @@
 
   function partnerHasRecordedEnd(relationship) {
     const fields = partnerSourceFields(relationship);
-    const sourceDefinesEndReason = Object.prototype.hasOwnProperty.call(fields, "end_reason");
-    const endDate = String(fields.date_end_value || relationship && relationship.endDate && relationship.endDate.value || "").trim();
+    const sourceDefinesEndReason = Object.prototype.hasOwnProperty.call(fields, "end-reason") || Object.prototype.hasOwnProperty.call(fields, "end_reason");
+    const endDate = String(fields["date-end-value"] || fields.date_end_value || relationship && relationship.endDate && relationship.endDate.value || "").trim();
     if (sourceDefinesEndReason) return Boolean(partnerEndReason(relationship) || endDate);
     return Boolean(endDate || relationship && ["divorced", "former", "separated", "widowed"].includes(relationship.status));
   }
@@ -205,11 +206,8 @@
   }
 
   function bloodlineParentRank(person, entry) {
-    const parent = relationPerson(entry);
-    const consanguinityId = sourceField(person, CONSANGUINITY_FIELD).toUpperCase();
-    const recordId = sourceField(parent, "record-id").toUpperCase();
-    if (consanguinityId && recordId === consanguinityId) return 0;
-    if (entry && entry.relationship && entry.relationship.kind === "biological") return 1;
+    if (entry && entry.relationship && entry.relationship.kind === "biological") return 0;
+    if (entry && entry.relationship && entry.relationship.kind !== "affinal") return 1;
     return 2;
   }
 
@@ -339,7 +337,8 @@
   }
 
   function relationshipOrderValue(relationship) {
-    const sourceOrder = Number(relationship && relationship.source && relationship.source.fields && relationship.source.fields.relationship_order);
+    const fields = relationship && relationship.source && relationship.source.fields || {};
+    const sourceOrder = Number(fields["relationship-order"] || fields.relationship_order);
     if (Number.isFinite(sourceOrder) && sourceOrder > 0) return sourceOrder;
     const order = Number(relationship && relationship.order);
     return Number.isFinite(order) ? order : Number.MAX_SAFE_INTEGER;
@@ -379,8 +378,8 @@
       const anchorId = componentIds.slice().sort(function (aId, bId) {
         const a = peopleById.get(aId);
         const b = peopleById.get(bId);
-        const aPrimary = a && a.source && a.source.format === "mclineage-cleaned" ? 1 : 0;
-        const bPrimary = b && b.source && b.source.format === "mclineage-cleaned" ? 1 : 0;
+        const aPrimary = a && a.source && ["mclineage-cleaned", "mcpeople-v1"].includes(a.source.format) ? 1 : 0;
+        const bPrimary = b && b.source && ["mclineage-cleaned", "mcpeople-v1"].includes(b.source.format) ? 1 : 0;
         return bPrimary - aPrimary
           || Number(lineageParts(b).length > 0) - Number(lineageParts(a).length > 0)
           || (itemOrder.get(aId) || 0) - (itemOrder.get(bId) || 0);

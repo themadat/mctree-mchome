@@ -25,9 +25,9 @@ Keep derived relationship information in `core/family.js`; do not duplicate ance
 
 ## Private seed preparation
 
-Follow `docs/MCFAMILY_CSV.md`. Keep the real canonical file private. This repository ignores `assets/data/`, allowing a maintainer to select a local working copy without publishing it. A committed test seed is allowed only when every value is unmistakably synthetic.
+Follow `docs/MCFAMILY_CSV.md`. Keep the real canonical ZIP and extracted CSVs private. This repository ignores private McLineage CSVs and McFamily ZIPs under `data/`; a committed test seed is allowed only when every value is unmistakably synthetic.
 
-The first-launch file must be a supported CSV with at least one person. Do not add a convenience bypass to production code.
+The first-launch file must be the supported five-file ZIP with at least one person. Do not add a convenience bypass to production code.
 
 ## Tree layout
 
@@ -49,6 +49,6 @@ Editable and generated assets are in `assets/icons/`. Keep current names unless 
 
 ## Publishing
 
-Never publish a real family CSV, exported PDF, screenshot with private information, authentication token, or generated family data. The Pages deployment consists only of public application code and assets.
+Never publish a real family ZIP or CSV, exported PDF, screenshot with private information, authentication token, or generated family data. The Pages deployment consists only of public application code and assets.
 
 Run the full checklist in `docs/TESTING.md` before publishing.

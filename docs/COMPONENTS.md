@@ -2,7 +2,7 @@
 
 ## Onboarding gate
 
-An uninitialized browser shows only the McFamily introduction, privacy explanation, and CSV picker. The import preview reports people, relationships, addresses, and source warnings before it can open the family. Current cleaned sources validate normalized descendant date values and explicit year, month, day, partial, unknown, or blank descriptors; older date-column names remain compatible. There is no blank-family, demo, JSON/GEDCOM, or authentication bypass.
+An uninitialized browser shows only the McFamily introduction, privacy explanation, and ZIP picker. The archive must contain the exact five dataset 15 root CSVs. The import preview reports people, relationships, places, residences, package/version information, passed validation groups, and partial-date warnings before it can open the family. Older packages and loose CSVs are not compatible. There is no blank-family, demo, JSON/GEDCOM, or authentication bypass.
 
 ## Family workspace
 
@@ -40,7 +40,7 @@ The selected-person profile places Names before Lineage. Its property labels use
 
 Relationships use compact, initially open Parents, Siblings, Partners, and Children groups in that order. Parents, siblings, and children show their generation. Parent names identify Lineal or Non-Lineal roles, siblings and children show two-digit birth order and birth year, and partners show marriage year. The recorded Lineal parent appears first, and the current partner appears first in bold before reverse-chronological, de-emphasized previous partners. Screen and print profiles preserve the same order and context. Notes appear after Relationships, and Imported Source is the final information section.
 
-Family Tree generation rows compare the numeric lineage segments directly in root-to-person order rather than falling back to display names. Name controls independently switch between Lineal (Birth) and Legal sources and between Short (First, Last, Suffix) and Full (all five parts); the defaults are Lineal and Short. Partner arrangement places every relationship with a recorded ending on the Lineal person's left in chronological order and exactly one unended current partner on the right. Cleaned McLineage JSON objects retain relationship type and end reason as the authoritative history; a blank ending can be interpreted against both people's living status without rewriting the imported record, and stable relationship order remains a deterministic fallback.
+Family Tree generation rows compare the numeric lineage segments directly in root-to-person order rather than falling back to display names. Name controls independently switch between Lineal (Birth) and Legal sources and between Short (First, Last, Suffix) and Full (all five parts); the defaults are Lineal and Short. Partner arrangement places every relationship with a recorded ending on the Lineal person's left in chronological order and exactly one unended current partner on the right. McRelations rows retain partner type and end reason as the authoritative history; a blank ending can be interpreted against both people's living status without rewriting the imported record, and stable relationship order remains a deterministic fallback.
 
 The profile X closes the panel and clears the selected-person state. Full Tree also closes and deselects the profile, and Lineage remains disabled until selecting a person. Selecting a tree node reopens the profile. There is no separate Show person control.
 
