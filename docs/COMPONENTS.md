@@ -34,7 +34,7 @@ While the Owner has Developer Mode enabled, the role pill opens a keyboard-acces
 
 Add/Edit Person uses a compact three-row Names editor. Birth (Lineal), Current (Legal), and Preferred (Display) each keep Prefix, First, Middle, Last, and Suffix on one `5/30/30/30/5` weighted row with narrow-part touch minimums. For a new person, each Birth field mirrors into Current and Preferred until its target is manually edited. Details contains Living status plus Birth and Death dates. Date descriptors are derived automatically from blank, exact, or question-mark partial values; invalid shapes and impossible known dates receive a red border and block saving. Gender, Pronouns, birth/death place, and lineage background are omitted while existing values remain preserved. Editor Notes ends the form with one Details textarea. Empty address, phone, and email sections share one compact row and expand when populated.
 
-Publication is explicit. The full and physically redacted packages are validated and encrypted in memory before GitHub receives a ciphertext-only JSON vault. Busy, success, setup, validation, wrong-passphrase, stale-copy, and network failures use labelled status text and live regions. Member and Viewer sign-ins do not write audit events because they have no GitHub write credential.
+Publication is explicit. The full and physically redacted packages are validated and encrypted in memory before GitHub receives one ciphertext-only `data/mcfamily/McFamily-access.json` vault containing both encrypted packages and their access grants. No second encrypted-directory file is used. Busy, success, setup, validation, wrong-passphrase, stale-copy, and network failures use labelled status text and live regions. Member and Viewer sign-ins do not write audit events because they have no GitHub write credential.
 
 ## Notes
 
@@ -56,7 +56,7 @@ Family Tree generation rows compare the numeric lineage segments directly in roo
 
 The profile X closes the panel and clears the selected-person state. Full Tree also closes and deselects the profile, and Lineage remains disabled until selecting a person. Selecting a tree node reopens the profile. There is no separate Show person control.
 
-Family-record mutation controls require both `features.familyEditing` and active Owner or Editor hosted access. Member and Viewer keep adding, editing, connecting, removing, deleting, family-title changes, and Notes changes disabled. Their routine ZIP import/export, PDF, Developer data, and publication surfaces are also absent. Home-person assignment remains internal. Personal view settings and Favorites stay available in every mode.
+Family-record mutation controls require both `features.familyEditing` and active Owner or Editor hosted access. Member and Viewer do not render Add in the title bar or Add, Connect, Edit, Delete, and empty-profile Add Person in Selected Person; family-title and Notes changes remain unavailable. Their routine ZIP import/export, PDF, Developer data, and publication surfaces are also absent. Home-person assignment remains internal. Personal view settings and Favorites stay available in every mode.
 
 ## Print report
 
