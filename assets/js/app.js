@@ -40,7 +40,7 @@
     { keys: "V", label: "Open What’s New", group: "Actions" },
     { keys: "X", label: "Dismiss the What’s New banner", group: "Actions" },
     { keys: "R", label: "Reload when a new version is available", group: "Actions" },
-    { keys: "E", label: "Export a private ZIP backup", group: "Actions" },
+    { keys: "E", label: "Open Save, Share & Audit", group: "Actions" },
     { keys: "T", label: "Switch color theme", group: "Actions" },
     { keys: "Arrow keys", label: "Move through tree relatives, tabs, menus, and choices", group: "Navigation" }
   ];
@@ -178,15 +178,17 @@
   }
 
   function renderLocalStatus() {
-    const button = $("#floatingStatusButton");
+    const button = $("#cloudAuditButton");
     const available = storage.isPersistent();
     button.dataset.storageState = available ? "saved" : "error";
     button.disabled = !initialized();
-    $("[data-floating-local-label]").textContent = available ? "Saved locally" : "Storage unavailable";
-    $("[data-floating-backup-label]").textContent = initialized() ? state().workspace.people.length + " people · export backup" : "Import required";
-    $("[data-floating-status-icon]").innerHTML = icons.markup(available ? "check" : "close");
-    button.title = available ? "Saved only in this browser. Open private ZIP settings." : "Browser storage is unavailable. Export a private ZIP.";
-    button.setAttribute("aria-label", button.title);
+    const pill = $("#localStorageSettingsState");
+    const summary = $("#localStorageSettingsSummary");
+    if (pill) {
+      pill.textContent = available ? "Saved locally" : "Unavailable";
+      pill.dataset.kind = available ? "success" : "danger";
+    }
+    if (summary) summary.innerHTML = '<span aria-hidden="true">' + icons.markup(available ? "check" : "close") + '</span><span><strong>' + (available ? "Browser storage is working" : "Browser storage is unavailable") + '</strong><small>' + (available ? state().workspace.people.length + " people and " + state().workspace.relationships.length + " relationships save automatically on this browser." : "Changes may not survive a reload. Download a private backup before continuing.") + "</small></span>";
   }
 
   function documentText(documentItem) {
@@ -209,7 +211,8 @@
       documentItem.html = documentHtml(normalized);
       documentItem.updatedAt = u.isoNow();
     }, { reason: "edit-document" });
-    $("[data-floating-local-label]").textContent = "Saving locally…";
+    const localPill = $("#localStorageSettingsState");
+    if (localPill) localPill.textContent = "Saving locally…";
     renderGlobalSearchResults();
   }
 
@@ -1925,10 +1928,7 @@
     $("#hintsToggle").setAttribute("aria-pressed", String(preferences.hints.enabled));
     $("#hintsToggle").textContent = preferences.hints.enabled ? "On" : "Off";
     setInputValue($("#familyTitle"), state().workspace.family.title);
-    const localAvailable = storage.isPersistent();
-    $("#localStorageSettingsState").textContent = localAvailable ? "Saved locally" : "Unavailable";
-    $("#localStorageSettingsState").dataset.kind = localAvailable ? "success" : "danger";
-    $("#localStorageSettingsSummary").innerHTML = '<span aria-hidden="true">' + icons.markup(localAvailable ? "check" : "close") + '</span><span><strong>' + (localAvailable ? "Browser storage is working" : "Browser storage is unavailable") + '</strong><small>' + (localAvailable ? state().workspace.people.length + " people and " + state().workspace.relationships.length + " relationships save automatically on this browser." : "Changes may not survive a reload. Export a private ZIP before continuing.") + "</small></span>";
+    renderLocalStatus();
   }
 
   function renderHelp() {
@@ -2309,7 +2309,7 @@
       const action = $("[data-toast-action]", toast);
       if (!toast.hidden && $("[data-toast-title]", toast).textContent === "New version available" && !action.hidden) { event.preventDefault(); action.click(); }
     }
-    else if (event.code === "KeyE") { event.preventDefault(); portability.exportCsv(); }
+    else if (event.code === "KeyE") { event.preventDefault(); App.cloud.open(); }
     else if (event.code === "KeyT") { event.preventDefault(); toggleThemeFromAppIcon(); }
   }
 
@@ -2344,7 +2344,6 @@
     $("#printButton").addEventListener("click", printAtlas);
     $("#printPreviewDialog").addEventListener("close", function () { $("#printPreviewContent").replaceChildren(); });
     $("#notesTextarea").addEventListener("input", function (event) { saveNotes(event.target.value); });
-    $("#floatingStatusButton").addEventListener("click", function (event) { openSupport("settings", event.currentTarget); requestAnimationFrame(function () { $("#storageSettings").scrollIntoView({ block: "start" }); }); });
     $("#mainContent").addEventListener("click", handleMainClick);
     $("#mainContent").addEventListener("change", function (event) {
       if (event.target.id === "onboardingImportInput") { portability.previewFile(event.target.files && event.target.files[0], $("#firstImportButton")); event.target.value = ""; }
