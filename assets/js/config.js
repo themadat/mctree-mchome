@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.67",
-      buildId: "0.0.1.67",
+      version: "0.0.1.68",
+      buildId: "0.0.1.68",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -34,8 +34,8 @@
     datasetSeries: "16.0",
     accessModes: {
       editor: { label: "Editor", shortLabel: "Editor", editable: true, pii: true },
-      "pii-viewer": { label: "PII Viewer", shortLabel: "PII Viewer", editable: false, pii: true },
-      "redacted-viewer": { label: "Redacted Read-only", shortLabel: "Redacted", editable: false, pii: false }
+      "pii-viewer": { label: "Member", shortLabel: "Member", editable: false, pii: true },
+      "redacted-viewer": { label: "Viewer", shortLabel: "Viewer", editable: false, pii: false }
     },
     storage: {
       stateKey: "mcfamily.state.v13",
@@ -150,6 +150,16 @@
 
     releases: [
       {
+        version: "0.0.1.68",
+        date: "2026-08-24T17:03:02.000Z",
+        title: "Simpler access and audit",
+        summary: "Access & Audit now opens with one compact status row for publishers, while read-only access uses the clearer Member and Viewer names without exposing publishing controls.",
+        features: ["Member replaces the full-detail read-only role name", "Viewer replaces the privacy-filtered read-only role name"],
+        improvements: ["Signed-in identity and permission, encrypted family file status, and GitHub connection now share one top row", "Encrypted file and GitHub connection summaries use clear green or red status treatment"],
+        fixes: ["Member and Viewer no longer see or open Access & Audit", "Read-only access does not expose PDF through its button, shortcut reference, or Help topic"],
+        knownIssues: ["Stable internal pii-viewer and redacted-viewer identifiers remain in packages and vaults for compatibility"]
+      },
+      {
         version: "0.0.1.67",
         date: "2026-08-24T16:41:27.000Z",
         title: "Local data and favorite recovery",
@@ -174,20 +184,20 @@
         date: "2026-08-24T15:59:19.000Z",
         title: "Passphrase-only access",
         summary: "McFamily now identifies each encrypted access grant from its unique passphrase, with the hosted vault fixed to the public themadat/mcdata repository.",
-        features: ["One passphrase field with no account or role selector", "Automatic local matching for Owner, Editor, Private Viewer, and Redacted Viewer access"],
+        features: ["One passphrase field with no account or role selector", "Automatic local matching for Owner, Editor, Member, and Viewer access"],
         improvements: ["Hosted ciphertext now targets themadat/mcdata", "Public grant labels remain available for access management and publication auditing without being listed before sign-in"],
         fixes: ["New and retained access grants cannot be published with the same passphrase", "The locked sign-in screen no longer reveals the configured account list"],
-        knownIssues: ["Every publishing device still needs its own fine-grained GitHub token", "Viewer sign-ins are not centrally audited because they have no write credential"]
+        knownIssues: ["Every publishing device still needs its own fine-grained GitHub token", "Member and Viewer sign-ins are not centrally audited because they have no write credential"]
       },
       {
         version: "0.0.1.64",
         date: "2026-08-24T15:00:00.000Z",
         title: "Named access for every recipient",
-        summary: "Owners can now create multiple independently revocable Editors, Private Viewers, and Redacted Viewers while keeping Notes and imported source details appropriately restricted.",
-        features: ["Multiple named Private Viewer and Redacted Viewer grants", "Independent passphrase rotation and revocation for every recipient", "Person and family Notes limited to Owner and Editor access"],
-        improvements: ["One consistent add, name, passphrase, and revoke workflow across recipient roles", "Imported Source appears and participates in search only for Owner or Editor while Developer Mode is enabled", "Viewer search, profiles, and shortcuts no longer expose Notes"],
-        fixes: ["Viewer-specific grants no longer share one fixed access slot", "The hidden Notes dialog is cleared for viewer access"],
-        knownIssues: ["Viewer sign-ins are not centrally audited because they have no write credential", "Short passphrases remain easier to guess from a public encrypted vault"]
+        summary: "Owners can now create multiple independently revocable Editors, Members, and Viewers while keeping Notes and imported source details appropriately restricted.",
+        features: ["Multiple named Member and Viewer grants", "Independent passphrase rotation and revocation for every recipient", "Person and family Notes limited to Owner and Editor access"],
+        improvements: ["One consistent add, name, passphrase, and revoke workflow across recipient roles", "Imported Source appears and participates in search only for Owner or Editor while Developer Mode is enabled", "Read-only search, profiles, and shortcuts no longer expose Notes"],
+        fixes: ["Read-only grants no longer share one fixed access slot", "The hidden Notes dialog is cleared for read-only access"],
+        knownIssues: ["Member and Viewer sign-ins are not centrally audited because they have no write credential", "Short passphrases remain easier to guess from a public encrypted vault"]
       },
       {
         version: "0.0.1.63",
@@ -203,21 +213,21 @@
         version: "0.0.1.62",
         date: "2026-08-24T12:00:00.000Z",
         title: "Passphrase access from one family link",
-        summary: "McFamily can now open an encrypted hosted family record with revocable Owner, Editor, Private Viewer, and Redacted Viewer passphrases.",
-        features: ["One public app link with an automatic encrypted-family download", "Long passphrases wrap separate full-data and redacted-data encryption keys", "Owner access management can add, rotate, or remove Editor and viewer grants"],
+        summary: "McFamily can now open an encrypted hosted family record with revocable Owner, Editor, Member, and Viewer passphrases.",
+        features: ["One public app link with an automatic encrypted-family download", "Long passphrases wrap separate full-data and redacted-data encryption keys", "Owner access management can add, rotate, or remove Editor, Member, and Viewer grants"],
         improvements: ["Editors publish the current browser family directly to the encrypted hosted vault", "Every hosted publication advances the dataset patch and appends an audit event", "Read-only modes omit ZIP import, backup, package creation, PDF, and developer-data export surfaces"],
         fixes: ["Readable family CSVs and GitHub tokens never enter the public vault", "Revoked grants disappear from the next online sign-in after the vault is republished"],
-        knownIssues: ["Revocation cannot erase information already viewed or copied", "Viewer sign-ins cannot be centrally logged without giving viewers a write credential or adding a backend"]
+        knownIssues: ["Revocation cannot erase information already viewed or copied", "Member and Viewer sign-ins cannot be centrally logged without giving them a write credential or adding a backend"]
       },
       {
         version: "0.0.1.61",
         date: "2026-08-24T07:00:00.000Z",
         title: "Three clear family access packages",
-        summary: "One McFamily link now opens explicit Editor, PII Viewer, or physically redacted read-only ZIP handoffs.",
-        features: ["Editor package with family editing and audited GitHub publishing", "PII Viewer package with full private details and disabled record editing", "Redacted Read-only package that removes places, contacts, family Notes, and record notes before export"],
-        improvements: ["The current access mode stays visible beside the app version and at the top of Save & Share", "Import preview names the assigned access before opening a package", "Viewer modes hide cloud connection and publishing tools while preserving replacement import and audit history"],
-        fixes: ["Redacted packages are rejected if their files still contain place, residence, relationship-place, or note records", "Family title, Notes, person, and relationship mutations are guarded consistently in viewer modes"],
-        knownIssues: ["Static access packages are not authenticated accounts: a PII Viewer ZIP is plaintext and read-only mode cannot prevent deliberate external inspection or modification"]
+        summary: "One McFamily link now opens explicit Editor, Member, or physically redacted read-only ZIP handoffs.",
+        features: ["Editor package with family editing and audited GitHub publishing", "Member package with full private details and disabled record editing", "Viewer package that removes places, contacts, family Notes, and record notes before export"],
+        improvements: ["The current access mode stays visible beside the app version and at the top of Save & Share", "Import preview names the assigned access before opening a package", "Read-only modes hide cloud connection and publishing tools"],
+        fixes: ["Redacted packages are rejected if their files still contain place, residence, relationship-place, or note records", "Family title, Notes, person, and relationship mutations are guarded consistently in read-only modes"],
+        knownIssues: ["Static access packages are not authenticated accounts: a Member ZIP is plaintext and read-only mode cannot prevent deliberate external inspection or modification"]
       },
       {
         version: "0.0.1.60",
@@ -824,12 +834,12 @@
       { id: "people", title: "People and relationships", section: "Family", keywords: "people directory favorites star search sort filter blood lineal non-lineal alphabet address phone email parent child partner ancestry lineage generation names preferred legal birth maiden", html: "<p>Use Directory to the left of Search to open or close the pane. Its title-bar search contains the current result count. Filter By combines any living-status, Lineal, and Non-Lineal checkboxes; Sort By switches between first and last name; the A–Z rail follows the filtered results. Global person results show Preferred, Current, and Lineal names together. Select the strongly highlighted star beside a person search result or use Favorite in the selected-person panel to pin them above other matches. Favorites to the right of Search opens a one-time dropdown of every starred person without changing the search scope. Developer Mode can save a private Favorites JSON file outside browser storage and restore it after a reset. The person panel closes and deselects with its X; selecting a person in the Family Tree reopens it. Names lists Preferred (Display), Legal (Current), Lineal (Birth), and Maiden as four compact full-name rows; unrecorded values use ----. Lineage uses a compact Family Line with each name followed by its lineage number and generation; readings use the generation and the parent's first name, such as Gen 6, 5th Child of Max. Lineage sits directly under identity details, above Relationships. Identity details show Born, Died, Age, Living Status, and Marital Status; Gender and Pronouns are hidden for now. Missing values use UNKNOWN except a living person's Died value, which is ----. Age uses natural years or months on one line and adds the emphasized would-be age for deceased people. McLineage death descriptors distinguish no recorded death (NONE), an explicitly unknown death date (UNKNOWN), and a presumed death (UNKNOWN PRESUMED). A deceased spouse in a marriage ended by death reads Married while the surviving spouse reads Widowed. Relationship groups label parent, sibling, and child generations; each Partners row adds its year and perspective-aware status; parents identify recorded Lineal or Non-Lineal roles, siblings and children show birth order and year, and partners show marriage year. Partners puts the displayed spouse first in bold before reverse-ordered prior partners. Notes follow Relationships, and Imported Source finishes the profile. Generations are rooted at George McMillen (1745) as G0.</p>" },
       { id: "print", title: "Print or save a PDF", section: "Family", keywords: "print pdf atlas directory lineage family maps generation developer preview", html: "<p>Choose <strong>Print / Save PDF</strong> to build the atlas and open the browser print dialog. Its compact opening flows into six-column Family Maps; George McMillen (1745) is Generation 0, and Generation 4 and later are grouped beneath Generation 3 family lines. Lineal cards have a clearly visible faded-red outline; stronger Newton, Albon, and Lucian orientation highlights include a Bloodline symbol, deceased entries use brown shading, and unresolved 99/?? lineage branches are omitted. Jon Couts remains in the directory but is not presented as a map root. The dense three-column Person Directory shows only each full name, styled Lineage ID, and root-to-person first-name progression. In Developer Mode, the same action opens an in-app preview instead of printing.</p>" },
       { id: "notes", title: "Working with Notes", section: "Features", keywords: "notes text edit modal autosave", html: "<p>Notes is a single private plain-text scratchpad available only to Owner and Editor access. Open it from the top bar or press <kbd>N</kbd>; it is included in private recovery files and encrypted family publications.</p>" },
-      { id: "backup", title: "Owner recovery file", section: "Data", keywords: "zip csv recovery backup restore owner private metadata audit", html: "<p>Owner and Editor access can download a private recovery ZIP containing McPeople, McPlaces, McRelations, McResidences, and McMetadata. It is not the normal sharing method and contains readable private information. Store it securely and use it only to recover or initialize the Owner workspace. Viewers receive no recovery import or download controls.</p>" },
+      { id: "backup", title: "Owner recovery file", section: "Data", keywords: "zip csv recovery backup restore owner private metadata audit", html: "<p>Owner and Editor access can download a private recovery ZIP containing McPeople, McPlaces, McRelations, McResidences, and McMetadata. It is not the normal sharing method and contains readable private information. Store it securely and use it only to recover or initialize the Owner workspace. Members and Viewers receive no recovery import or download controls.</p>" },
       { id: "cloud", title: "Publishing the encrypted family", section: "Data", keywords: "cloud github audit encrypted vault publish latest patch editor username token conflict", html: "<p><strong>Access &amp; Audit</strong> lets Owner and named Editor access publish the current family to the ciphertext-only public <code>mcdata</code> repository. Every publication uses the signed-in username as its audit actor, requires a summary, advances the dataset patch, validates full and redacted records, encrypts both in this browser, and checks the GitHub SHA/revision before writing. The fine-grained GitHub token stays outside the vault.</p>" },
-      { id: "access-packages", title: "Passphrases and access", section: "Data", keywords: "password passphrase access owner editor username pii private viewer redacted revoke rotate", html: "<p>Everyone uses the same public McFamily link and enters only their assigned passphrase; McFamily identifies the matching grant locally. <strong>Owner</strong> can edit, publish, and manage access. Each named <strong>Editor</strong> has a unique passphrase, can edit and publish, and is automatically named in publication history. Separately named <strong>Private Viewers</strong> see full profile details read-only, while named <strong>Redacted Viewers</strong> decrypt only a copy with places, contacts, and unstructured private notes physically removed. Neither viewer role can open family Notes. Owners can add, rename, rotate, or revoke every recipient independently, and McFamily rejects duplicate passphrases. Revocation blocks the next sign-in after reload but cannot erase information already seen or copied.</p>" },
-      { id: "privacy", title: "Privacy and local data", section: "Data", keywords: "privacy encryption aes gcm pbkdf2 passphrase github token redacted lock", html: "<p>The public data repository contains only AES-GCM ciphertext, salts, nonces, wrapped random keys, access labels, and non-secret version metadata. Passphrases and GitHub tokens are never written into the vault. Eight characters are required, but three unrelated words are recommended because short phrases are easier to guess from the public encrypted file. Send phrases privately and never reuse a personal password. <strong>Lock McFamily</strong> removes the decrypted family and recovery snapshot from this browser, reloads, and requires a passphrase again without changing the hosted vault. Dismissed hints, dismissed What’s New banners, and Directory visibility remain as non-sensitive device preferences. Viewer modes remove routine ZIP, PDF, developer-data, and publishing controls; Redacted Viewer also lacks the private fields cryptographically. Viewer sign-ins are not centrally recorded without a backend.</p>" },
+      { id: "access-packages", title: "Passphrases and access", section: "Data", keywords: "password passphrase access owner editor member viewer pii redacted revoke rotate", html: "<p>Everyone uses the same public McFamily link and enters only their assigned passphrase; McFamily identifies the matching grant locally. <strong>Owner</strong> can edit, publish, and manage access. Each named <strong>Editor</strong> has a unique passphrase, can edit and publish, and is automatically named in publication history. Separately named <strong>Members</strong> see full profile details read-only, while named <strong>Viewers</strong> decrypt only a copy with places, contacts, and unstructured private notes physically removed. Neither read-only role can open family Notes or Access &amp; Audit. Owners can add, rename, rotate, or revoke every recipient independently, and McFamily rejects duplicate passphrases. Revocation blocks the next sign-in after reload but cannot erase information already seen or copied.</p>" },
+      { id: "privacy", title: "Privacy and local data", section: "Data", keywords: "privacy encryption aes gcm pbkdf2 passphrase github token redacted lock", html: "<p>The public data repository contains only AES-GCM ciphertext, salts, nonces, wrapped random keys, access labels, and non-secret version metadata. Passphrases and GitHub tokens are never written into the vault. Eight characters are required, but three unrelated words are recommended because short phrases are easier to guess from the public encrypted file. Send phrases privately and never reuse a personal password. <strong>Lock McFamily</strong> removes the decrypted family and recovery snapshot from this browser, reloads, and requires a passphrase again without changing the hosted vault. Dismissed hints, dismissed What’s New banners, and Directory visibility remain as non-sensitive device preferences. Member and Viewer modes remove Access &amp; Audit, routine ZIP, PDF, developer-data, and publishing controls; Viewer also lacks the private fields cryptographically. Member and Viewer sign-ins are not centrally recorded without a backend.</p>" },
       { id: "install", title: "Install McFamily", section: "Installation", keywords: "install home screen pwa offline", html: "<p>Use the browser’s Install app, Add to Home Screen, or Add to Dock command. After the shell has loaded once, local features continue to work offline.</p>" },
-      { id: "shortcuts", title: "Keyboard access", section: "Accessibility", keywords: "keyboard shortcuts search directory favorites key print notes update reload", html: "<p>Press <kbd>/</kbd> for search, <kbd>D</kbd> for Directory, <kbd>F</kbd> for Favorites, <kbd>K</kbd> for the tree Key, <kbd>P</kbd> to print, <kbd>N</kbd> for Notes, <kbd>X</kbd> to dismiss What’s New, <kbd>R</kbd> to reload when an update is ready, <kbd>T</kbd> for theme, and <kbd>?</kbd> for Help. Visible controls provide every shortcut action.</p>" }
+      { id: "shortcuts", title: "Keyboard access", section: "Accessibility", keywords: "keyboard shortcuts search directory favorites key update reload", html: "<p>Press <kbd>/</kbd> for search, <kbd>D</kbd> for Directory, <kbd>F</kbd> for Favorites, <kbd>K</kbd> for the tree Key, <kbd>X</kbd> to dismiss What’s New, <kbd>R</kbd> to reload when an update is ready, <kbd>T</kbd> for theme, and <kbd>?</kbd> for Help. The Shortcut Reference lists any additional actions available to your permission role. Visible controls provide every shortcut action.</p>" }
     ]
   };
 

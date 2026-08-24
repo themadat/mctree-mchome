@@ -529,11 +529,11 @@
       if (!Number.isInteger(metadata.counts[key]) || metadata.counts[key] !== actualCounts[key]) throw new Error("McMetadata.csv " + key + " count does not match the package files.");
     });
     if (metadata.accessMode === "redacted-viewer") {
-      if (actualCounts.places || actualCounts.residences) throw new Error("A Redacted Read-only package cannot contain place or residence records.");
-      if (parsed["McPeople.csv"].rows.some(function (row) { return Boolean(u.cleanText(row.notes, 4000).trim() || u.cleanText(row["data-quality-notes"], 4000).trim()); })) throw new Error("A Redacted Read-only package cannot contain person notes.");
-      if (parsed["McRelations.csv"].rows.some(function (row) { return Boolean(u.cleanText(row.notes, 4000).trim() || u.cleanLine(row["place-id"], 100)); })) throw new Error("A Redacted Read-only package cannot contain relationship notes or place references.");
-      if (u.cleanText(metadata.family.notes, config.controls.maxDocumentHtmlLength).trim()) throw new Error("A Redacted Read-only package cannot contain family Notes.");
-      if (Object.keys(personDetails).length || Object.keys(relationshipDetails).length) throw new Error("A Redacted Read-only package cannot contain supplemental private profile or relationship details.");
+      if (actualCounts.places || actualCounts.residences) throw new Error("A Viewer package cannot contain place or residence records.");
+      if (parsed["McPeople.csv"].rows.some(function (row) { return Boolean(u.cleanText(row.notes, 4000).trim() || u.cleanText(row["data-quality-notes"], 4000).trim()); })) throw new Error("A Viewer package cannot contain person notes.");
+      if (parsed["McRelations.csv"].rows.some(function (row) { return Boolean(u.cleanText(row.notes, 4000).trim() || u.cleanLine(row["place-id"], 100)); })) throw new Error("A Viewer package cannot contain relationship notes or place references.");
+      if (u.cleanText(metadata.family.notes, config.controls.maxDocumentHtmlLength).trim()) throw new Error("A Viewer package cannot contain family Notes.");
+      if (Object.keys(personDetails).length || Object.keys(relationshipDetails).length) throw new Error("A Viewer package cannot contain supplemental private profile or relationship details.");
     }
     if (!personIds.has(metadata.family.homePersonId)) throw new Error("McMetadata.csv home-person-id does not resolve to McPeople.csv.");
     if (!metadata.family.initializedAt || !Number.isFinite(Date.parse(metadata.family.initializedAt))) throw new Error("McMetadata.csv requires a valid initialized-at timestamp.");
@@ -762,7 +762,7 @@
     next.ui.favoritePersonIds = [];
     if (next.modules && next.modules.roadmap) next.modules.roadmap.search = "";
     next.meta.package.auditHistory = next.meta.package.auditHistory.map(function (audit) {
-      return Object.assign({}, audit, { recordedBy: "McFamily", details: "Details omitted from the Redacted Read-only package." });
+      return Object.assign({}, audit, { recordedBy: "McFamily", details: "Details omitted from the Viewer package." });
     });
     return next;
   }
@@ -773,7 +773,7 @@
 
   function packageFileName(state, mode) {
     const title = state.workspace.family.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "mcfamily";
-    const labels = { editor: "editor", "pii-viewer": "pii-viewer", "redacted-viewer": "redacted-readonly" };
+    const labels = { editor: "editor", "pii-viewer": "member", "redacted-viewer": "viewer" };
     return title + "-" + labels[mode || accessModeFor(state)] + "-" + new Date().toISOString().slice(0, 10) + "-v" + datasetVersionFor(state).replace(/\./g, "-") + ".zip";
   }
 
@@ -799,7 +799,7 @@
       return;
     }
     if (!Object.prototype.hasOwnProperty.call(config.accessModes, mode)) {
-      App.components.message("Package unavailable", "Choose Editor, PII Viewer, or Redacted Read-only access.");
+      App.components.message("Package unavailable", "Choose Editor, Member, or Viewer access.");
       return;
     }
     const profile = config.accessModes[mode];
