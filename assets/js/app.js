@@ -166,7 +166,13 @@
     accessPill.dataset.accessMode = isInitialized ? accessMode() : "";
     document.documentElement.dataset.developer = developerMode ? "on" : "off";
     setInputValue($("#globalSearch"), state().ui.search);
-    ["#notesButton", "#supportButton"].forEach(function (selector) { $(selector).disabled = !isInitialized; });
+    const familyNotesVisible = isInitialized && familyEditingEnabled();
+    $("#notesButton").disabled = !familyNotesVisible;
+    $("#notesButton").hidden = isInitialized && !familyNotesVisible;
+    $("#supportButton").disabled = !isInitialized;
+    const searchLabel = familyNotesVisible ? "Search people, contacts, Notes, Help, releases, and Roadmap" : "Search people, contacts, Help, releases, and Roadmap";
+    $("label[for='globalSearch']").textContent = searchLabel;
+    $("#globalSearch").setAttribute("aria-label", searchLabel);
     $("#printButton").disabled = !isInitialized || !familyEditingEnabled();
     $("#printButton").hidden = isInitialized && !familyEditingEnabled();
     $("#addPersonButton").disabled = !isInitialized || !familyEditingEnabled();
@@ -221,10 +227,11 @@
 
   function renderNotesEditor() {
     const documentItem = state().workspace.documents[0];
-    setInputValue($("#notesTextarea"), documentText(documentItem));
-    $("#notesTextarea").readOnly = !familyEditingEnabled();
-    $("#notesTextarea").placeholder = familyEditingEnabled() ? "Jot down anything…" : "Notes are read-only in this access package.";
-    $("#notesDialogTitle").lastElementChild.textContent = familyEditingEnabled() ? "Notes" : "Notes (Read-only)";
+    const visible = familyEditingEnabled();
+    setInputValue($("#notesTextarea"), visible ? documentText(documentItem) : "");
+    $("#notesTextarea").readOnly = !visible;
+    $("#notesTextarea").placeholder = visible ? "Jot down anything…" : "Family Notes are unavailable for this access.";
+    $("#notesDialogTitle").lastElementChild.textContent = "Notes";
   }
 
   function saveNotes(value) {
@@ -241,7 +248,7 @@
   }
 
   function openNotes(trigger) {
-    if (!initialized()) return;
+    if (!initialized() || !familyEditingEnabled()) return;
     renderNotesEditor();
     components.openDialog("#notesDialog", { trigger: trigger, focus: "#notesTextarea" });
   }
@@ -264,7 +271,7 @@
       const kinship = directoryKinship(person, graph, current.workspace.family.homePersonId);
       const statusMatches = !statusFilters.length || statusFilters.includes(person.livingStatus);
       const kinshipMatches = !kinshipFilters.length || kinshipFilters.some(function (filter) { return kinship[filter]; });
-      return statusMatches && kinshipMatches && model.fuzzySearchMatch(query, model.personSearchText(person));
+      return statusMatches && kinshipMatches && model.fuzzySearchMatch(query, model.personSearchText(person, { includeNotes: familyEditingEnabled(), includeSource: developerReferencesEnabled() }));
     }).sort(function (a, b) { return directorySortName(a, sortMode).localeCompare(directorySortName(b, sortMode)) || a.id.localeCompare(b.id); });
   }
 
@@ -732,12 +739,14 @@
   }
 
   function profileSource(person) {
+    if (!developerReferencesEnabled()) return "";
     const entries = sourceEntries(person.source);
     if (!entries.length) return "";
     return '<section class="profile-section source-section"><details><summary>Imported Source · ' + entries.length + ' populated fields</summary><p class="source-format">' + u.escapeHtml(person.source.format || "Imported CSV") + '</p><dl class="profile-list source-list">' + entries.map(function (entry) { return '<div><dt>' + u.escapeHtml(sourceLabel(entry[0])) + '</dt><dd>' + u.escapeHtml(sourceDisplayValue(entry)) + "</dd></div>"; }).join("") + "</dl></details></section>";
   }
 
   function printSource(person) {
+    if (!developerReferencesEnabled()) return "";
     const entries = sourceEntries(person.source);
     if (!entries.length) return "";
     return '<section class="print-wide print-source"><h3>Imported Source Fields</h3><p>' + u.escapeHtml(person.source.format || "Imported CSV") + '</p><dl>' + entries.map(function (entry) { return '<div><dt>' + u.escapeHtml(sourceLabel(entry[0])) + '</dt><dd>' + u.escapeHtml(sourceDisplayValue(entry)) + "</dd></div>"; }).join("") + "</dl></section>";
@@ -781,7 +790,7 @@
     const favoriteAction = (isFavorite ? "Remove " : "Add ") + selectedName + (isFavorite ? " from" : " to") + " favorites";
     const favoriteButton = '<button type="button" class="profile-action profile-favorite-action" data-toggle-favorite="' + u.escapeHtml(person.id) + '" aria-pressed="' + String(isFavorite) + '" aria-label="' + u.escapeHtml(favoriteAction) + '" title="' + u.escapeHtml(favoriteAction) + '"><span class="profile-action-icon" data-symbol="favorite" aria-hidden="true"></span><span>Favorite</span></button>';
     const headerActions = '<div class="profile-header-actions">' + favoriteButton + actionButton("Delete", "deletePerson", 'data-delete-person="' + u.escapeHtml(person.id) + '"', true) + actionButton("Edit", "editPerson", 'data-edit-person="' + u.escapeHtml(person.id) + '"', false) + '<button type="button" class="icon-button profile-close" data-close-profile aria-controls="profilePanel" aria-label="Close and deselect person" title="Close and deselect person"><span data-symbol="close" aria-hidden="true"></span></button></div>';
-    container.innerHTML = '<article class="person-profile"><header class="profile-header"><div class="profile-title">' + profileEyebrow + '<h2>' + u.escapeHtml(selectedName) + '</h2><p>' + u.escapeHtml(family.lifespan(person)) + "</p></div>" + headerActions + '</header><dl class="profile-list identity-list">' + formatEvent("Born", person, "birth") + formatEvent("Died", person, "death") + ageDetail(person, false) + livingStatusDetail(person) + maritalStatusDetail(person, family.relationGroups(person.id, state()).partners) + "</dl>" + profileNames(person) + profileLineage(person) + relationships + contactBlocks.join("") + (person.notes ? '<section class="profile-section"><h3>Notes</h3><p class="preserve-lines">' + u.escapeHtml(person.notes) + "</p></section>" : "") + profileSource(person) + "</article>";
+    container.innerHTML = '<article class="person-profile"><header class="profile-header"><div class="profile-title">' + profileEyebrow + '<h2>' + u.escapeHtml(selectedName) + '</h2><p>' + u.escapeHtml(family.lifespan(person)) + "</p></div>" + headerActions + '</header><dl class="profile-list identity-list">' + formatEvent("Born", person, "birth") + formatEvent("Died", person, "death") + ageDetail(person, false) + livingStatusDetail(person) + maritalStatusDetail(person, family.relationGroups(person.id, state()).partners) + "</dl>" + profileNames(person) + profileLineage(person) + relationships + contactBlocks.join("") + (familyEditingEnabled() && person.notes ? '<section class="profile-section"><h3>Notes</h3><p class="preserve-lines">' + u.escapeHtml(person.notes) + "</p></section>" : "") + profileSource(person) + "</article>";
     icons.mount(container);
   }
 
@@ -1858,13 +1867,13 @@
     const favoriteIds = new Set(state().ui.favoritePersonIds);
     state().workspace.people.forEach(function (person) {
       const favorite = favoriteIds.has(person.id);
-      if ((favoritesPreviewOpen ? favorite : model.fuzzySearchMatch(needle, model.personSearchText(person)))) results.push({ type: "person", id: person.id, title: model.displayName(person), names: personNameVariants(person), meta: "Person" + (developerReferencesEnabled() ? " · " + person.reference : ""), favorite: favorite });
+      if ((favoritesPreviewOpen ? favorite : model.fuzzySearchMatch(needle, model.personSearchText(person, { includeNotes: familyEditingEnabled(), includeSource: developerReferencesEnabled() })))) results.push({ type: "person", id: person.id, title: model.displayName(person), names: personNameVariants(person), meta: "Person" + (developerReferencesEnabled() ? " · " + person.reference : ""), favorite: favorite });
     });
     results.sort(function (a, b) { return Number(b.favorite) - Number(a.favorite) || a.title.localeCompare(b.title); });
     if (favoritesPreviewOpen) return results;
-    const notes = state().workspace.documents[0];
+    const notes = familyEditingEnabled() ? state().workspace.documents[0] : null;
     if (notes && model.fuzzySearchMatch(needle, "notes " + documentText(notes))) results.push({ type: "notes", id: notes.id, title: "Notes", meta: "Private family notes" });
-    config.help.forEach(function (topic) { if (model.fuzzySearchMatch(needle, topic.title + " " + topic.keywords + " " + u.stripHtml(topic.html))) results.push({ type: "help", id: topic.id, title: topic.title, meta: "Help · " + topic.section }); });
+    config.help.forEach(function (topic) { if ((familyEditingEnabled() || topic.id !== "notes") && model.fuzzySearchMatch(needle, topic.title + " " + topic.keywords + " " + u.stripHtml(topic.html))) results.push({ type: "help", id: topic.id, title: topic.title, meta: "Help · " + topic.section }); });
     config.roadmap.forEach(function (item) { if (model.fuzzySearchMatch(needle, item.title + " " + item.description)) results.push({ type: "roadmap", id: item.id, title: item.title, meta: "Roadmap · " + item.state }); });
     config.releases.forEach(function (release) { const text = [release.version, release.title, release.summary].concat(release.features || [], release.improvements || [], release.fixes || [], release.knownIssues || []).join(" "); if (model.fuzzySearchMatch(needle, text)) results.push({ type: "release", id: release.version, title: release.title, meta: "Release · v" + release.version }); });
     return results.slice(0, 12);
@@ -1886,7 +1895,7 @@
       if (result.type !== "person") return '<div class="global-search-result-row no-favorite" role="listitem">' + main + "</div>";
       const action = result.favorite ? "Remove " + result.title + " from favorites" : "Star " + result.title;
       return '<div class="global-search-result-row' + (result.favorite ? " is-favorite" : "") + '" role="listitem">' + main + '<button type="button" class="search-favorite-toggle" data-toggle-favorite="' + u.escapeHtml(result.id) + '" aria-label="' + u.escapeHtml(action) + '" title="' + u.escapeHtml(action) + '" aria-pressed="' + String(result.favorite) + '"><span data-symbol="favorite" aria-hidden="true"></span></button></div>';
-    }).join("") : '<div class="search-empty">' + (favoritesPreviewOpen ? "No favorite people yet. Search for someone and select their star." : "No matches across people, contacts, Notes, Help, releases, or Roadmap.") + "</div>";
+    }).join("") : '<div class="search-empty">' + (favoritesPreviewOpen ? "No favorite people yet. Search for someone and select their star." : "No matches across people, contacts, " + (familyEditingEnabled() ? "Notes, " : "") + "Help, releases, or Roadmap.") + "</div>";
     $("#favoritesButton").setAttribute("aria-expanded", String(favoritesPreviewOpen));
     icons.mount(container);
   }
@@ -2030,7 +2039,7 @@
 
   function renderHelp() {
     const query = String($("#helpSearch")?.value || "").trim().toLowerCase();
-    const topics = config.help.filter(function (topic) { return !query || (topic.title + " " + topic.section + " " + topic.keywords + " " + u.stripHtml(topic.html)).toLowerCase().includes(query); });
+    const topics = config.help.filter(function (topic) { return (familyEditingEnabled() || topic.id !== "notes") && (!query || (topic.title + " " + topic.section + " " + topic.keywords + " " + u.stripHtml(topic.html)).toLowerCase().includes(query)); });
     $("#helpResultCount").textContent = topics.length + " topic" + (topics.length === 1 ? "" : "s");
     const groups = {};
     topics.forEach(function (topic) { (groups[topic.section] = groups[topic.section] || []).push(topic); });
@@ -2055,7 +2064,7 @@
 
   function renderShortcuts() {
     const groups = {};
-    SHORTCUTS.forEach(function (shortcut) { (groups[shortcut.group] = groups[shortcut.group] || []).push(shortcut); });
+    SHORTCUTS.filter(function (shortcut) { return shortcut.keys !== "N" || familyEditingEnabled(); }).forEach(function (shortcut) { (groups[shortcut.group] = groups[shortcut.group] || []).push(shortcut); });
     $("#shortcutContent").innerHTML = '<p class="section-intro">Listed shortcuts also work while Shift, Control, or Option is held. Command-key combinations remain available to the browser.</p>' + Object.keys(groups).map(function (group) { return '<section><h3>' + group + "</h3>" + groups[group].map(function (shortcut) { return '<div class="shortcut-row"><kbd>' + u.escapeHtml(shortcut.keys) + '</kbd><span>' + u.escapeHtml(shortcut.label) + "</span></div>"; }).join("") + "</section>"; }).join("");
   }
 
@@ -2401,7 +2410,7 @@
       const key = $(".tree-key details");
       if (key) { event.preventDefault(); key.open = !key.open; announce(key.open ? "Opened the Family Tree key." : "Closed the Family Tree key."); }
     }
-    else if (event.code === "KeyN") { event.preventDefault(); openNotes(event.target); }
+    else if (event.code === "KeyN" && familyEditingEnabled()) { event.preventDefault(); openNotes(event.target); }
     else if (event.code === "KeyV") { event.preventDefault(); openSupport("releases", event.target); }
     else if (event.code === "KeyX" && !$("#whatsNewBanner").hidden) { event.preventDefault(); $("[data-dismiss-release]").click(); }
     else if (event.code === "KeyR") {
