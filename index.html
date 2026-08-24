@@ -12,22 +12,22 @@
   <meta name="apple-mobile-web-app-title" content="McFamily">
   <meta name="mobile-web-app-capable" content="yes">
   <title>McFamily</title>
-  <link rel="manifest" href="manifest.webmanifest?v=0.0.1.56">
-  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg?v=0.0.1.56">
-  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=0.0.1.56">
-  <link rel="apple-touch-startup-image" href="assets/icons/splash-light.png?v=0.0.1.56" media="(prefers-color-scheme: light)">
-  <link rel="apple-touch-startup-image" href="assets/icons/splash-dark.png?v=0.0.1.56" media="(prefers-color-scheme: dark)">
-  <link rel="stylesheet" href="assets/css/app.css?v=0.0.1.56">
-  <script defer src="assets/js/config.js?v=0.0.1.56"></script>
-  <script defer src="assets/js/icons.js?v=0.0.1.56"></script>
-  <script defer src="assets/js/core/utils.js?v=0.0.1.56"></script>
-  <script defer src="assets/js/core/state.js?v=0.0.1.56"></script>
-  <script defer src="assets/js/core/storage.js?v=0.0.1.56"></script>
-  <script defer src="assets/js/core/components.js?v=0.0.1.56"></script>
-  <script defer src="assets/js/core/family.js?v=0.0.1.56"></script>
-  <script defer src="assets/js/core/portability.js?v=0.0.1.56"></script>
-  <script defer src="assets/js/core/pwa.js?v=0.0.1.56"></script>
-  <script defer src="assets/js/app.js?v=0.0.1.56"></script>
+  <link rel="manifest" href="manifest.webmanifest?v=0.0.1.57">
+  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg?v=0.0.1.57">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=0.0.1.57">
+  <link rel="apple-touch-startup-image" href="assets/icons/splash-light.png?v=0.0.1.57" media="(prefers-color-scheme: light)">
+  <link rel="apple-touch-startup-image" href="assets/icons/splash-dark.png?v=0.0.1.57" media="(prefers-color-scheme: dark)">
+  <link rel="stylesheet" href="assets/css/app.css?v=0.0.1.57">
+  <script defer src="assets/js/config.js?v=0.0.1.57"></script>
+  <script defer src="assets/js/icons.js?v=0.0.1.57"></script>
+  <script defer src="assets/js/core/utils.js?v=0.0.1.57"></script>
+  <script defer src="assets/js/core/state.js?v=0.0.1.57"></script>
+  <script defer src="assets/js/core/storage.js?v=0.0.1.57"></script>
+  <script defer src="assets/js/core/components.js?v=0.0.1.57"></script>
+  <script defer src="assets/js/core/family.js?v=0.0.1.57"></script>
+  <script defer src="assets/js/core/portability.js?v=0.0.1.57"></script>
+  <script defer src="assets/js/core/pwa.js?v=0.0.1.57"></script>
+  <script defer src="assets/js/app.js?v=0.0.1.57"></script>
 </head>
 <body>
   <a class="skip-link" href="#mainContent">Skip to main content</a>
@@ -35,12 +35,12 @@
   <header class="app-header">
     <div class="title-cluster">
       <button id="appIconButton" class="app-icon-button" type="button" aria-label="Switch color theme. Press and hold to toggle Developer Mode" title="Switch color theme · Press and hold for Developer Mode" aria-keyshortcuts="T" data-shortcut="T">
-        <img id="appIcon" src="assets/icons/app-icon-light.png?v=0.0.1.56" alt="">
+        <img id="appIcon" src="assets/icons/app-icon-light.png?v=0.0.1.57" alt="">
       </button>
       <div class="identity-copy">
         <span id="appName" class="app-name">McFamily</span>
         <div class="identity-pill-row">
-          <button id="versionButton" class="version-pill" type="button" aria-label="Open release notes" aria-keyshortcuts="V" data-shortcut="V">v0.0.1.56</button>
+          <button id="versionButton" class="version-pill" type="button" aria-label="Open release notes" aria-keyshortcuts="V" data-shortcut="V">v0.0.1.57</button>
           <span id="betaPill" class="environment-pill beta-pill" title="This is the beta application" hidden>BETA</span>
         </div>
       </div>
@@ -89,7 +89,7 @@
   </aside>
 
   <aside id="contextHint" class="context-hint" data-hint-key="workspace-basics" hidden>
-    <span aria-hidden="true">i</span><p>Select any person to focus the tree. Your private family data stays in this browser until you export a CSV.</p><button type="button" class="icon-button" data-dismiss-hint="workspace-basics" aria-label="Dismiss hint"><span aria-hidden="true" data-symbol="close"></span></button>
+    <span aria-hidden="true">i</span><p>Select any person to focus the tree. Your private family data stays in this browser until you export a ZIP package.</p><button type="button" class="icon-button" data-dismiss-hint="workspace-basics" aria-label="Dismiss hint"><span aria-hidden="true" data-symbol="close"></span></button>
   </aside>
 
   <main id="mainContent" tabindex="-1" aria-label="McFamily workspace"></main>
@@ -182,14 +182,14 @@
             </div>
             <div id="storageSettings" class="settings-section"><div class="section-heading"><div><span class="eyebrow">Private local data</span><h3>Backup, Restore & Storage</h3></div><span id="localStorageSettingsState" class="status-pill" data-kind="success">Saved locally</span></div>
               <div id="localStorageSettingsSummary" class="inline-status" role="status" aria-live="polite"></div>
-              <p class="section-intro privacy-warning"><strong>Private:</strong> CSV backups contain every address, phone number, email, note, source field, and relationship. Store them securely and never commit them to the public Pages repository.</p>
-              <div class="button-row"><button id="exportButton" class="button primary" type="button">Export private CSV</button><button id="importButton" class="button" type="button">Import replacement</button><input id="importFileInput" type="file" accept="text/csv,.csv" data-import-file-input data-import-trigger="#importButton" hidden></div>
+              <p class="section-intro privacy-warning"><strong>Private:</strong> ZIP backups contain five CSV files with every person, place, residence, relationship, note, source field, and audit event. Store them securely and never commit them to the public Pages repository.</p>
+              <div class="button-row"><button id="exportButton" class="button primary" type="button">Export private ZIP</button><button id="importButton" class="button" type="button">Import replacement</button><input id="importFileInput" type="file" accept="application/zip,.zip" data-import-file-input data-import-trigger="#importButton" hidden></div>
               <div class="danger-zone"><div><strong>Reset preferences</strong><small>Keep family data and Notes, but restore appearance and view settings.</small></div><button id="resetPreferencesButton" class="button danger-text" type="button">Reset preferences</button></div>
               <div class="danger-zone"><div><strong>Erase all local McFamily data</strong><small>Return this browser to the strict import screen.</small></div><button id="eraseAllButton" class="button danger" type="button">Erase all data</button></div>
             </div>
           </section>
           <section id="helpPanel" class="support-panel" role="tabpanel" aria-labelledby="helpTab" data-support-panel="help" hidden><div class="support-search sticky-controls"><label class="grow-control"><span class="visually-hidden">Search help</span><input id="helpSearch" type="search" placeholder="Search Help Center"></label><span id="helpResultCount" class="count-pill">0 topics</span></div><div id="helpContent" class="help-content"></div></section>
-          <section id="releasesPanel" class="support-panel" role="tabpanel" aria-labelledby="releasesTab" data-support-panel="releases" hidden><div class="release-summary"><div><span class="eyebrow">Current version</span><h3 id="releaseCurrentVersion">v0.0.1.56</h3></div><p>Browse released work and the McFamily roadmap.</p></div><div class="segmented version-views" role="group" aria-label="Version views"><button type="button" data-version-view="released" aria-pressed="true">Released</button><button type="button" data-version-view="planned" aria-pressed="false">Planned</button><button type="button" data-version-view="wishlist" aria-pressed="false">Wishlist</button></div><div id="releaseContent" class="release-list"></div></section>
+          <section id="releasesPanel" class="support-panel" role="tabpanel" aria-labelledby="releasesTab" data-support-panel="releases" hidden><div class="release-summary"><div><span class="eyebrow">Current version</span><h3 id="releaseCurrentVersion">v0.0.1.57</h3></div><p>Browse released work and the McFamily roadmap.</p></div><div class="segmented version-views" role="group" aria-label="Version views"><button type="button" data-version-view="released" aria-pressed="true">Released</button><button type="button" data-version-view="planned" aria-pressed="false">Planned</button><button type="button" data-version-view="wishlist" aria-pressed="false">Wishlist</button></div><div id="releaseContent" class="release-list"></div></section>
           <section id="shortcutsPanel" class="support-panel" role="tabpanel" aria-labelledby="shortcutsTab" data-support-panel="shortcuts" hidden><div class="release-summary"><div><span class="eyebrow">Keyboard</span><h3>Shortcut Reference</h3></div><p>Shortcuts never replace visible controls.</p></div><div id="shortcutContent" class="shortcut-content"></div></section>
           <section id="supportRoadmapPanel" class="support-panel" role="tabpanel" aria-labelledby="supportRoadmapTab" data-support-panel="roadmap" hidden><div class="support-search sticky-controls"><label class="grow-control"><span class="visually-hidden">Search roadmap</span><input id="supportRoadmapSearch" type="search" placeholder="Search roadmap"></label><select id="supportRoadmapState" aria-label="Roadmap view"><option value="all">All</option><option value="released">Released</option><option value="planned">Planned</option><option value="wishlist">Wishlist</option></select><select id="supportRoadmapSort" aria-label="Sort roadmap"><option value="priority">Priority</option><option value="target">Target release</option><option value="effort">Effort</option><option value="age">Age</option><option value="title">Title</option></select></div><div id="supportRoadmapList" class="roadmap-list compact-roadmap"></div></section>
           <section id="developerPanel" class="support-panel" role="tabpanel" aria-labelledby="developerTab" data-support-panel="developer" hidden><div class="release-summary"><div><span class="eyebrow">Hidden tools</span><h3>Developer Mode</h3></div><p>Diagnostics are read-only and contain private family data.</p></div><dl id="developerDiagnostics" class="diagnostic-grid"></dl><section class="developer-tool-section"><div><h4>Favorite People Backup</h4><p>Save a small private JSON file outside browser storage, then restore it after a reset or storage failure.</p></div><div class="button-row developer-actions"><button id="saveFavoritesButton" class="button" type="button">Save favorites file</button><button id="restoreFavoritesButton" class="button" type="button">Restore favorites</button><input id="restoreFavoritesInput" type="file" accept="application/json,.json" hidden></div></section><div class="button-row developer-actions"><button id="restoreRecoveryButton" class="button" type="button">Restore recovery copy</button><button id="saveRecoveryButton" class="button" type="button">Save recovery copy</button><button id="disableDeveloperButton" class="button" type="button">Hide developer mode</button></div><h4>Normalized Private State</h4><pre id="developerState" class="developer-json" tabindex="0" aria-label="Normalized application state"></pre></section>
@@ -199,7 +199,7 @@
   </dialog>
 
   <dialog id="importPreviewDialog" class="app-dialog import-dialog" aria-labelledby="importPreviewTitle" data-backdrop-close="false">
-    <div class="dialog-shell"><header class="dialog-header"><div><span class="eyebrow">Validated private CSV</span><h2 id="importPreviewTitle">Review Import</h2></div><button type="button" class="icon-button" data-close-dialog="importPreviewDialog" aria-label="Close"><span aria-hidden="true" data-symbol="close"></span></button></header><div class="dialog-body"><p><strong data-import-file></strong> passed CSV parsing, mapping, sanitization, relationship, and ancestry validation.</p><dl class="preview-grid"><div><dt>Family</dt><dd data-import-family></dd></div><div><dt>People</dt><dd data-import-people></dd></div><div><dt>Relationships</dt><dd data-import-relationships></dd></div><div><dt>Addresses</dt><dd data-import-addresses></dd></div><div><dt>Format</dt><dd data-import-version></dd></div><div><dt>Last updated</dt><dd data-import-updated></dd></div></dl><p class="inline-status warning" data-import-warning hidden></p><p class="inline-status" data-import-recovery-note><span aria-hidden="true">↶</span><span>The current local family will be saved as a recovery copy before replacement.</span></p></div><footer class="dialog-footer"><button type="button" class="button" data-close-dialog="importPreviewDialog">Cancel</button><button type="button" class="button primary" data-import-confirm>Continue</button></footer></div>
+    <div class="dialog-shell"><header class="dialog-header"><div><span class="eyebrow">Validated private package</span><h2 id="importPreviewTitle">Review Import</h2></div><button type="button" class="icon-button" data-close-dialog="importPreviewDialog" aria-label="Close"><span aria-hidden="true" data-symbol="close"></span></button></header><div class="dialog-body"><p><strong data-import-file></strong> passed ZIP integrity, exact-file, schema, count, identifier, cross-reference, date, duplicate, relationship, residence, and ancestry checks.</p><p class="inline-status success" data-import-checks></p><dl class="preview-grid"><div><dt>Family</dt><dd data-import-family></dd></div><div><dt>People</dt><dd data-import-people></dd></div><div><dt>Relationships</dt><dd data-import-relationships></dd></div><div><dt>Places</dt><dd data-import-places></dd></div><div><dt>Residences</dt><dd data-import-residences></dd></div><div><dt>Format</dt><dd data-import-version></dd></div><div><dt>Last updated</dt><dd data-import-updated></dd></div></dl><p class="inline-status warning" data-import-warning hidden></p><p class="inline-status" data-import-recovery-note><span aria-hidden="true">↶</span><span>The current local family will be saved as a recovery copy before replacement.</span></p></div><footer class="dialog-footer"><button type="button" class="button" data-close-dialog="importPreviewDialog">Cancel</button><button type="button" class="button primary" data-import-confirm>Continue</button></footer></div>
   </dialog>
 
   <dialog id="confirmDialog" class="app-dialog small-dialog" aria-labelledby="confirmTitle" data-backdrop-close="false"><div class="dialog-shell"><header class="dialog-header"><h2 id="confirmTitle" data-confirm-title>Confirm action</h2></header><div class="dialog-body"><p data-confirm-message></p></div><footer class="dialog-footer"><button type="button" class="button" data-confirm-cancel>Cancel</button><button type="button" class="button primary" data-confirm-action>Confirm</button></footer></div></dialog>
