@@ -15,21 +15,21 @@ Use synthetic families only.
 
 - [ ] A fresh profile shows only the introduction, privacy warning, and CSV picker.
 - [ ] No demo family, blank-family action, GEDCOM action, or bypass appears.
-- [ ] An exact McLineage v13 or current native McFamily CSV with at least one person shows a summary and opens the family.
+- [ ] An exact McLineage v14 or current native McFamily CSV with at least one person shows a summary and opens the family.
 - [ ] Unknown headers, missing required cells, zero-person first import, malformed CSV, oversized file, duplicate ids, unsafe headers, self-links, duplicate links, and ancestry cycles are rejected without replacing state.
-- [ ] McLineage v13 has exactly 34 ordered, hyphenated headers; `record-id` is first, both parent-role fields are adjacent, `source-row-number` immediately precedes `data-quality-notes`, and every underscore-named, missing, extra, or reordered source schema is rejected.
+- [ ] McLineage v14 has exactly 30 ordered, hyphenated headers; `record-id` is first, both parent-role fields are adjacent, `source-row-number` immediately precedes `data-quality-notes`, the four obsolete legacy display-name headers are absent, and every underscore-named, missing, extra, or reordered source schema is rejected.
 - [ ] Structured Birth, Current, and Preferred name parts plus Maiden Last import directly; `person-first-names`, `person-last-name`, and `person-name-sort` are absent.
 - [ ] Every populated `parent-affinal-person-id` resolves to a distinct person paired with the Lineal parent through `partner-relationships-json` and imports as an `affinal`-kind second parent; missing, self, duplicate, non-partner, and partial parent-role schemas are rejected.
 - [ ] Current partner rows import as their own P-referenced people; their source-row and lineage fields are blank, each JSON partner P reference resolves, and no duplicate people are synthesized.
 - [ ] Each current partner relationship has one unique R ID and unordered person pair; malformed JSON, missing/self references, invalid types/orders/end reasons, inconsistent date pairs, and duplicate relationships are rejected.
 - [ ] Relationship type plus end reason maps to married, partnered, widowed, divorced, separated, former, or unknown without a redundant source status field; an `UNKNOWN` end reason reads as former, so no partner of a person whose partnerships all ended is shown as current.
-- [ ] A McLineage file that does not exactly match v13 is rejected with missing, unexpected, or ordering details and never replaces current state.
+- [ ] A McLineage file that does not exactly match v14 is rejected with missing, unexpected, or ordering details and never replaces current state.
 - [ ] Every current non-root lineage path extends its direct parent's path by exactly one segment; blank unlineaged people are accepted, while malformed, duplicate, or parent-mismatched paths are rejected.
 - [ ] Current source date values accept blank, `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, or the same shapes with `?` in unknown digit positions; question-mark values require `partial`, `invalid` descriptors are rejected, and birth descriptors reject blank.
 - [ ] Current `person-*` identity/date columns import lineage and partner rows consistently: a known death value imports as deceased; a blank death value requires `NONE`, `UNKNOWN`, or `UNKNOWN PRESUMED`; those descriptors import as living, deceased, and presumed deceased respectively.
 - [ ] Profile life details use one ordinary one-line `Age` row: living ages are compact, ages below two use months, deceased ages read `#y at death · #y today`, and unavailable ages read `UNKNOWN`.
 - [ ] Desktop defaults to a thin-gutter 20/50/30 Directory/Tree/Profile split, both separators resize with pointer and keyboard input, the first resize persists both widths, a usable tree width remains, and live position percentages appear only in Developer Mode.
-- [ ] State v11 reloads from `mcfamily.state.v11`; older state and recovery keys are ignored and the v13 import gate appears instead.
+- [ ] State v11 reloads from `mcfamily.state.v11`; older state and recovery keys are ignored and the v14 import gate appears instead.
 - [ ] A state with any schema version other than v11 is rejected rather than unwrapped or migrated.
 - [ ] A native `mcfamily-csv-v2` round trip preserves all 16 name columns; v1 native exports and incomplete v2 headers are rejected as older schemas.
 - [ ] Missing required Birth First/Last values normalize to `UNKNOWN`; the importer does not derive structured names from removed flat columns.

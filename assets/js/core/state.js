@@ -186,7 +186,7 @@
     const next = u.clone(u.plainObject(input));
     const version = Number(next.schemaVersion);
     if (version !== config.schemaVersion) {
-      throw new Error("This state model is no longer supported. Import the current McLineage v13 or McFamily CSV.");
+      throw new Error("This state model is no longer supported. Import the current McLineage v14 or McFamily CSV.");
     }
     return next;
   }
