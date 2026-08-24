@@ -186,6 +186,9 @@
     $("#favoritesButton").disabled = !isInitialized;
     $("#favoritesButton").setAttribute("aria-expanded", String(isInitialized && favoritesPreviewOpen));
     $("#favoritesButton").title = "Show " + favoriteCountLabel;
+    const restoreFavoritesHeaderButton = $("#restoreFavoritesHeaderButton");
+    restoreFavoritesHeaderButton.hidden = !developerMode;
+    restoreFavoritesHeaderButton.disabled = !isInitialized || !developerMode;
     $("#globalSearch").disabled = !isInitialized;
     $("#globalSearch").placeholder = "Search family";
     renderLocalStatus();
@@ -2446,6 +2449,10 @@
       favoritesPreviewOpen = true;
       $("#globalSearch").focus();
       renderGlobalSearchResults();
+    });
+    $("#restoreFavoritesHeaderButton").addEventListener("click", function () {
+      favoritesPreviewOpen = false;
+      $("#restoreFavoritesInput").click();
     });
     $("#supportButton").addEventListener("click", function (event) { openSupport(state().ui.supportTab, event.currentTarget); });
     $("#notesButton").addEventListener("click", function (event) { openNotes(event.currentTarget); });
