@@ -26,8 +26,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 13,
   "meta": {
-    "appVersion": "0.0.1.65",
-    "buildId": "0.0.1.65",
+    "appVersion": "0.0.1.66",
+    "buildId": "0.0.1.66",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -65,13 +65,15 @@ The dataset 16 ZIP package preserves the current state model through five exact 
 
 A normal load is locked behind the hosted passphrase gate. `cloud.js` fetches and validates the ciphertext envelope, tests the entered passphrase against every configured grant locally, requires exactly one match, decrypts that grant's full or redacted record, and hands the decrypted bytes to `portability.js`. No account label or role is listed before sign-in. That parser still accepts only a dataset 16 package with exactly `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`, and requires at least one valid person. Before the first vault exists, an existing local Editor copy becomes Owner Setup; a fresh Owner browser can open one validated private recovery ZIP directly from the missing-vault gate. There is no blank-family or demo bypass.
 
+Dismissed hint ids, dismissed What’s New versions, and Directory visibility live separately in `mcfamily.device-preferences.v1`. The record contains no family values and is overlaid after local load, recovery, import, or hosted decryption. Lock preserves it while removing decrypted state and recovery; Reset Preferences and Erase Everything return it to defaults.
+
 McPeople contains one stable P-referenced row per person and no parent or partner columns. McRelations contains all authoritative Person-to-Person parent and partner links, with parent lineage role separated from parent type. McPlaces contains reusable physical addresses, while McResidences assigns people to places. McMetadata declares package/dataset/file-schema versions, exact record counts, access mode, family settings, compatibility details, and append-only audit events. Package validation completes before any current state is touched and rejects ZIP damage, wrong filenames, schema drift, count mismatches, invalid identifiers/dates, broken cross-file references, false redaction claims, duplicate links, multiple Lineal parents, Lineage inconsistencies, and ancestry cycles.
 
 ## Encrypted hosted access
 
 The Pages repository and public ciphertext-only `mcdata` repository are intentionally separate. The vault uses random AES-256-GCM full and redacted data keys. Each named grant derives a wrapping key from its unique passphrase with PBKDF2-SHA-256 and a unique salt, then wraps only the data key that role may open. The fixed Owner and every Editor grant wrap both data keys, each Private Viewer wraps the full-data key, and each Redacted Viewer wraps only the redacted-data key. Passphrases, readable CSV, and GitHub tokens never enter the vault. Version-1 vaults with the original fixed `editor`, `pii`, and `redacted` ids remain valid; new recipient grants use stable random role-prefixed ids and unique shown names retained for access management and audit identity.
 
-Every online load fetches `McFamily-access.json` anonymously with `no-store`, validates its format, and requires a current passphrase. A wrong, removed, or rotated grant cannot unwrap a data key. The decrypted package must pass the same strict parser as a recovery import, including physical redaction checks for Redacted Viewer. Lock removes the decrypted browser state. Revocation applies on the recipient's next reload; a static web application cannot retract information already seen or copied.
+Every online load fetches `McFamily-access.json` anonymously with `no-store`, validates its format, and requires a current passphrase. A wrong, removed, or rotated grant cannot unwrap a data key. The decrypted package must pass the same strict parser as a recovery import, including physical redaction checks for Redacted Viewer. Lock removes the decrypted browser state and recovery snapshot, reloads the application, and requires the passphrase again without publishing or modifying the hosted vault. Revocation applies on the recipient's next reload; a static web application cannot retract information already seen or copied.
 
 Owner and Editor publication requires a fine-grained GitHub token limited to the public encrypted-data repository with Contents read/write access. Tokens live only in session or local browser storage. A family publication requires a summary and binds its actor to the signed-in grant label, advances the `16.0.x` patch, appends an audit event, revalidates and encrypts full and redacted packages, and uses both vault revision and GitHub SHA to reject stale writes. Owner-only access publication creates, rotates, or removes grants without recording secret values. Successful publications remain visible in McMetadata and Git history; viewer sign-ins are not centrally logged and the in-package audit is not tamper-proof.
 

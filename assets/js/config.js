@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.65",
-      buildId: "0.0.1.65",
+      version: "0.0.1.66",
+      buildId: "0.0.1.66",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -40,6 +40,7 @@
     storage: {
       stateKey: "mcfamily.state.v13",
       recoveryKey: "mcfamily.recovery.v5",
+      devicePreferencesKey: "mcfamily.device-preferences.v1",
       cloudSettingsKey: "mcfamily.cloud.settings.v1",
       cloudTokenKey: "mcfamily.cloud.token.v1",
       cloudBaselineKey: "mcfamily.cloud.baseline.v1",
@@ -148,6 +149,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.66",
+        date: "2026-08-24T16:28:41.000Z",
+        title: "Remembered interface choices",
+        summary: "Dismissed hints, individual What’s New banners, and the Directory’s open or closed state now remain on the same device through hosted refreshes and Lock.",
+        features: ["Device-local persistence for dismissed hints and release banners", "Remembered Directory visibility on desktop and mobile"],
+        improvements: ["Lock keeps non-sensitive interface choices while clearing decrypted family data", "Reset Preferences and Erase Everything still return those choices to defaults"],
+        fixes: ["Hosted sign-in no longer replaces these personal interface choices with the publisher’s copy"],
+        knownIssues: ["Preferences are stored per browser profile and do not synchronize between devices"]
+      },
       {
         version: "0.0.1.65",
         date: "2026-08-24T15:59:19.000Z",
@@ -806,7 +817,7 @@
       { id: "backup", title: "Owner recovery file", section: "Data", keywords: "zip csv recovery backup restore owner private metadata audit", html: "<p>Owner and Editor access can download a private recovery ZIP containing McPeople, McPlaces, McRelations, McResidences, and McMetadata. It is not the normal sharing method and contains readable private information. Store it securely and use it only to recover or initialize the Owner workspace. Viewers receive no recovery import or download controls.</p>" },
       { id: "cloud", title: "Publishing the encrypted family", section: "Data", keywords: "cloud github audit encrypted vault publish latest patch editor username token conflict", html: "<p><strong>Access &amp; Audit</strong> lets Owner and named Editor access publish the current family to the ciphertext-only public <code>mcdata</code> repository. Every publication uses the signed-in username as its audit actor, requires a summary, advances the dataset patch, validates full and redacted records, encrypts both in this browser, and checks the GitHub SHA/revision before writing. The fine-grained GitHub token stays outside the vault.</p>" },
       { id: "access-packages", title: "Passphrases and access", section: "Data", keywords: "password passphrase access owner editor username pii private viewer redacted revoke rotate", html: "<p>Everyone uses the same public McFamily link and enters only their assigned passphrase; McFamily identifies the matching grant locally. <strong>Owner</strong> can edit, publish, and manage access. Each named <strong>Editor</strong> has a unique passphrase, can edit and publish, and is automatically named in publication history. Separately named <strong>Private Viewers</strong> see full profile details read-only, while named <strong>Redacted Viewers</strong> decrypt only a copy with places, contacts, and unstructured private notes physically removed. Neither viewer role can open family Notes. Owners can add, rename, rotate, or revoke every recipient independently, and McFamily rejects duplicate passphrases. Revocation blocks the next sign-in after reload but cannot erase information already seen or copied.</p>" },
-      { id: "privacy", title: "Privacy and local data", section: "Data", keywords: "privacy encryption aes gcm pbkdf2 passphrase github token redacted", html: "<p>The public data repository contains only AES-GCM ciphertext, salts, nonces, wrapped random keys, access labels, and non-secret version metadata. Passphrases and GitHub tokens are never written into the vault. Eight characters are required, but three unrelated words are recommended because short phrases are easier to guess from the public encrypted file. Send phrases privately and never reuse a personal password. Viewer modes remove routine ZIP, PDF, developer-data, and publishing controls; Redacted Viewer also lacks the private fields cryptographically. Viewer sign-ins are not centrally recorded without a backend.</p>" },
+      { id: "privacy", title: "Privacy and local data", section: "Data", keywords: "privacy encryption aes gcm pbkdf2 passphrase github token redacted lock", html: "<p>The public data repository contains only AES-GCM ciphertext, salts, nonces, wrapped random keys, access labels, and non-secret version metadata. Passphrases and GitHub tokens are never written into the vault. Eight characters are required, but three unrelated words are recommended because short phrases are easier to guess from the public encrypted file. Send phrases privately and never reuse a personal password. <strong>Lock McFamily</strong> removes the decrypted family and recovery snapshot from this browser, reloads, and requires a passphrase again without changing the hosted vault. Dismissed hints, dismissed What’s New banners, and Directory visibility remain as non-sensitive device preferences. Viewer modes remove routine ZIP, PDF, developer-data, and publishing controls; Redacted Viewer also lacks the private fields cryptographically. Viewer sign-ins are not centrally recorded without a backend.</p>" },
       { id: "install", title: "Install McFamily", section: "Installation", keywords: "install home screen pwa offline", html: "<p>Use the browser’s Install app, Add to Home Screen, or Add to Dock command. After the shell has loaded once, local features continue to work offline.</p>" },
       { id: "shortcuts", title: "Keyboard access", section: "Accessibility", keywords: "keyboard shortcuts search directory favorites key print notes update reload", html: "<p>Press <kbd>/</kbd> for search, <kbd>D</kbd> for Directory, <kbd>F</kbd> for Favorites, <kbd>K</kbd> for the tree Key, <kbd>P</kbd> to print, <kbd>N</kbd> for Notes, <kbd>X</kbd> to dismiss What’s New, <kbd>R</kbd> to reload when an update is ready, <kbd>T</kbd> for theme, and <kbd>?</kbd> for Help. Visible controls provide every shortcut action.</p>" }
     ]
