@@ -34,13 +34,16 @@
     { keys: "/", label: "Focus global search", group: "Global" },
     { keys: "Esc", label: "Close a dialog or menu", group: "Global" },
     { keys: "?", label: "Open Help Center", group: "Global" },
+    { keys: "A", label: "Add a person", group: "Family" },
     { keys: "D", label: "Toggle the directory", group: "Family" },
     { keys: "F", label: "Show favorite people", group: "Family" },
     { keys: "K", label: "Toggle the Family Tree key", group: "Family" },
     { keys: "P", label: "Print or save the family atlas as PDF", group: "Family" },
     { keys: "N", label: "Open Notes", group: "Actions" },
     { keys: "V", label: "Open What’s New", group: "Actions" },
-    { keys: "X", label: "Dismiss the What’s New banner", group: "Actions" },
+    { keys: "W", label: "Open View As in Developer Mode", group: "Actions" },
+    { keys: "|", label: "Toggle Developer Mode", group: "Actions" },
+    { keys: "X", label: "Close Settings, an update notice, or What’s New", group: "Actions" },
     { keys: "R", label: "Reload when a new version is available", group: "Actions" },
     { keys: "E", label: "Open Audit", group: "Actions" },
     { keys: "T", label: "Switch color theme", group: "Actions" },
@@ -177,8 +180,8 @@
     const onboardingIcon = $(".onboarding-icon");
     if (onboardingIcon) onboardingIcon.src = versionedAsset(iconAsset);
     const nextTheme = dark ? "light" : "dark";
-    $("#appIconButton").setAttribute("aria-label", "Switch to " + nextTheme + " theme. Press and hold to toggle Developer Mode");
-    $("#appIconButton").title = "Switch to " + nextTheme + " theme · Press and hold for Developer Mode";
+    $("#appIconButton").setAttribute("aria-label", "Switch to " + nextTheme + " theme. Press and hold or press vertical bar to toggle Developer Mode");
+    $("#appIconButton").title = "Switch to " + nextTheme + " theme · Press and hold or press | for Developer Mode";
     pwa.applyAppearanceAssets?.();
   }
 
@@ -209,6 +212,13 @@
     accessPill.disabled = !rolePreviewAvailable();
     accessPill.title = rolePreviewAvailable() ? "Quick change the role preview" : (runtimeAccess ? runtimeAccess.roleLabel + " access" : "Access role");
     accessPill.setAttribute("aria-label", runtimeAccess && runtimeAccess.preview ? "Previewing " + runtimeAccess.roleLabel + ". Quick change role preview" : rolePreviewAvailable() ? runtimeAccess.roleLabel + ". Quick change role preview" : (runtimeAccess ? runtimeAccess.roleLabel + " access" : "Access role"));
+    if (rolePreviewAvailable()) {
+      accessPill.setAttribute("aria-keyshortcuts", "W");
+      accessPill.dataset.shortcut = "W";
+    } else {
+      accessPill.removeAttribute("aria-keyshortcuts");
+      delete accessPill.dataset.shortcut;
+    }
     document.documentElement.dataset.developer = developerReferences ? "on" : "off";
     setInputValue($("#globalSearch"), state().ui.search);
     const familyNotesVisible = isInitialized && familyEditingEnabled();
@@ -222,6 +232,7 @@
     $("#printButton").hidden = isInitialized && !familyEditingEnabled();
     $("#addPersonButton").disabled = !isInitialized || !familyEditingEnabled();
     $("#addPersonButton").hidden = isInitialized && !familyEditingEnabled();
+    $("#addPersonButton").title = isInitialized && familyEditingEnabled() ? "Add person" : "Family editing is unavailable";
     $("#directoryButton").disabled = !isInitialized;
     const directoryIsOpen = isInitialized && !state().ui.directoryCollapsed && (!window.matchMedia("(max-width: 699px)").matches || state().ui.mobileView === "directory");
     $("#directoryButton").setAttribute("aria-pressed", String(directoryIsOpen));
@@ -2599,7 +2610,10 @@
 
   function renderShortcuts() {
     const groups = {};
-    SHORTCUTS.filter(function (shortcut) { return familyEditingEnabled() || !["N", "P", "E"].includes(shortcut.keys); }).forEach(function (shortcut) { (groups[shortcut.group] = groups[shortcut.group] || []).push(shortcut); });
+    SHORTCUTS.filter(function (shortcut) {
+      if (!["A", "N", "P", "E"].includes(shortcut.keys) || familyEditingEnabled()) return shortcut.keys !== "W" || rolePreviewAvailable();
+      return false;
+    }).forEach(function (shortcut) { (groups[shortcut.group] = groups[shortcut.group] || []).push(shortcut); });
     $("#shortcutContent").innerHTML = '<p class="section-intro">Listed shortcuts also work while Shift, Control, or Option is held. Command-key combinations remain available to the browser.</p>' + Object.keys(groups).map(function (group) { return '<section><h3>' + group + "</h3>" + groups[group].map(function (shortcut) { return '<div class="shortcut-row"><kbd>' + u.escapeHtml(shortcut.keys) + '</kbd><span>' + u.escapeHtml(shortcut.label) + "</span></div>"; }).join("") + "</section>"; }).join("");
   }
 
@@ -2947,7 +2961,9 @@
     if (u.isEditableTarget(event.target) || event.metaKey) return;
     if (event.code === "Slash") { event.preventDefault(); if (event.shiftKey) openSupport("help", event.target); else if (initialized()) { $("#globalSearch").focus(); $("#globalSearch").select(); } return; }
     if (event.repeat || !initialized()) return;
-    if (event.code === "KeyP" && familyEditingEnabled()) { event.preventDefault(); printAtlas(); }
+    if (event.key === "|" && config.features.developerTools) { event.preventDefault(); toggleDeveloperMode(); }
+    else if (event.code === "KeyA" && familyEditingEnabled()) { event.preventDefault(); pendingRelative = null; openPersonEditor("", event.target); }
+    else if (event.code === "KeyP" && familyEditingEnabled()) { event.preventDefault(); printAtlas(); }
     else if (event.code === "KeyD") { event.preventDefault(); $("#directoryButton").click(); }
     else if (event.code === "KeyF") { event.preventDefault(); $("#favoritesButton").click(); }
     else if (event.code === "KeyK") {
@@ -2956,7 +2972,15 @@
     }
     else if (event.code === "KeyN" && familyEditingEnabled()) { event.preventDefault(); openNotes(event.target); }
     else if (event.code === "KeyV") { event.preventDefault(); openSupport("releases", event.target); }
-    else if (event.code === "KeyX" && !$("#whatsNewBanner").hidden) { event.preventDefault(); $("[data-dismiss-release]").click(); }
+    else if (event.code === "KeyW" && rolePreviewAvailable()) { event.preventDefault(); openRolePreviewMenu($("#accessModePill")); }
+    else if (event.code === "KeyX") {
+      const support = $("#supportDialog");
+      const toast = $("#appToast");
+      const updateVisible = !toast.hidden && $("[data-toast-title]", toast).textContent === "New version available";
+      if (support.open) { event.preventDefault(); components.closeDialog(support, "shortcut"); }
+      else if (updateVisible) { event.preventDefault(); components.hideToast(); }
+      else if (!$("#whatsNewBanner").hidden) { event.preventDefault(); $("[data-dismiss-release]").click(); }
+    }
     else if (event.code === "KeyR") {
       const toast = $("#appToast");
       const action = $("[data-toast-action]", toast);
@@ -3112,10 +3136,10 @@
     applyIdentity();
     components.init();
     portability.init();
-    await App.cloud.init();
-    bindGeneralEvents();
     bindRuntimeEvents();
     pwa.init();
+    await App.cloud.init();
+    bindGeneralEvents();
     renderAll();
     requestAnimationFrame(function () { document.documentElement.classList.add("app-ready"); });
     showLoadReport();

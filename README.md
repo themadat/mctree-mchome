@@ -4,7 +4,7 @@ McFamily is a private family atlas that runs as a static GitHub Pages app. It vi
 
 There is no custom backend, account provider, cloud database, or runtime dependency. The separate public `mcdata` repository contains only an AES-GCM encrypted vault; readable family CSVs, passphrases, and GitHub tokens never belong in either public repository.
 
-Current version: `0.0.1.74` (`major.minor.patch.build`).
+Current version: `0.0.1.75` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -20,7 +20,7 @@ Current version: `0.0.1.74` (`major.minor.patch.build`).
 - Lets people be starred directly in search or from the selected-person panel, remembers those favorites separately on the device through hosted refreshes and Lock, and toggles the complete Favorites list directly below Search without changing the query. Developer Mode adds a Restore shortcut beside Favorites for a saved Favorites JSON file.
 - Centers a larger global search in the title bar, keeps its dropdown exactly as wide as the field, and shows each display name followed only by differing Birth and Current names.
 - Shows Preferred (Display), Legal (Current), Lineal (Birth), and Maiden names as four compact profile rows; the Family Tree can use any of the first three as its name source and can show Short or Full names.
-- Keeps local save/backup status in the top toolbar and provides D, F, K, X, and R shortcuts for Directory, Favorites, the tree Key, What's New dismissal, and update reload.
+- Keeps local save/backup status in the top toolbar and provides contextual shortcuts including A for Add, W for Developer Mode View As, `|` for Developer Mode, X for Settings or update dismissal, and R for update reload.
 - Supports partial/fuzzy matches that return the tree to Lineage, collapsible side panels, compact 20/50/30 default desktop splits with persistent resizing, and Summary tree cards that balance names with four or more parts across three fitted lines without widening the card.
 - Keeps portrait placeholders and internal person references out of the ordinary workspace; Developer Mode reveals references and a left-side generation bubble scale for visual troubleshooting.
 - Presents complete oldest-to-newest, two-digit Lineage IDs with the first three ancestral segments italicized and the selected person's final segment bold, followed by a compact direct-parent-linked Family Line with each name's lineage number and generation.
@@ -34,7 +34,7 @@ Current version: `0.0.1.74` (`major.minor.patch.build`).
 - Lets the person panel close and clear selection; choosing any Family Tree person reopens it without a separate Show person control.
 - Enables family-record Add, Connect, Edit, Delete, person and family Notes, family-title, recovery ZIP, PDF, publishing, and imported-source inspection only for Owner or Editor access; imported source additionally requires Developer Mode. Member and Viewer modes omit Add from the title bar and omit Add, Connect, Edit, and Delete from Selected Person, along with Audit, Notes, imported-source search, routine import, export, PDF, developer-data, and publishing controls.
 - Uses a one-page desktop person form whose Birth (Lineal), Current (Legal), Preferred (Display), and Maiden names stay on weighted rows beside compact details. Birth typing seeds Current and Preferred until either target field is edited. At least one First name is required; invalid dates, emails, and empty address rows are marked and block Save; a valid death date selects Deceased.
-- Lets Add Person search and select existing Parents, Partners, and Children before Save. Each selected Partner can also record status plus start and end dates, while relationship validation and ancestry-cycle checks remain atomic.
+- Lets Add Person search and select existing Parents, Partners, and Children before Save. Each relationship type occupies its own dense row, and each selected Partner can record status plus start and end dates while relationship validation and ancestry-cycle checks remain atomic.
 - Previews and assigns a complete two-digit Lineage ID whenever a Lineal parent is connected, retaining established child numbers and rebasing any Lineal descendants with the branch.
 - Lets Editors open every partner history from the selected-person profile and record marriage or unmarried-partnership type, start and end dates, death, divorce, separation, annulment or unknown endings, place, and notes.
 - Retains structured profiles for people, multiple addresses, phones, emails, life events, and typed parent or partner relationships.

@@ -14,6 +14,7 @@ Use synthetic families only.
 ## Hosted access, current schema, and portability
 
 - [ ] Every ordinary load shows only the hosted access gate until a current public ciphertext vault is fetched and one valid passphrase automatically identifies exactly one grant and decrypts its authorized package; no account or role selector appears.
+- [ ] A waiting service-worker update is shown on the locked gate before passphrase entry; Update McFamily refreshes the shell so sign-in is required only after the new build loads.
 - [ ] A missing vault shows a clear connection/setup status and one Owner Recovery ZIP action; a validated Editor recovery package enters Owner Setup, while invalid files leave the gate locked.
 - [ ] No demo family, blank-family action, GEDCOM action, loose-CSV action, stored-passphrase bypass, or local-state-only viewer bypass appears.
 - [ ] The vault rejects wrong format/version, malformed base64, unsupported KDF/cipher parameters, missing full/redacted payloads, duplicate/unknown grants, oversized content, and invalid revisions before decrypting anything.
@@ -67,7 +68,7 @@ Use synthetic families only.
 - [ ] Add Person fits a 1280 × 720 desktop viewport without body scrolling, including one physical address row: Birth, Current, and Preferred remain single-line and weighted `5/30/30/30/5`, Maiden aligns to the Last column, each name subheading sits inside its card border, Birth input mirrors each untouched Current/Preferred field, and editing one target stops only that target from mirroring.
 - [ ] Add/Edit Person omits Gender, Pronouns, birth/death place, manual qualifiers, and lineage background while preserving those values on an existing person. Birth and death descriptors derive as year/month/day/partial/UNKNOWN/NONE, a valid death value selects Deceased, valid `?` partials save and round-trip, and malformed or impossible dates show comprehensive red examples and cannot save.
 - [ ] Save remains disabled until at least one First name exists and every date, email, and added address row is valid. Save uses the supplied checkmark-seal symbol, Cancel uses the supplied X-mark-seal symbol, and Editor Notes has no redundant Details label.
-- [ ] Generic Add Person searches and selects any existing Parents, Partners, and Children. A selected Partner exposes status plus validated start/end dates, saves the matching type/end-reason source fields, and immediately renders the chosen history; duplicate, self, missing-reference, second-Lineal-parent, and ancestry-cycle failures leave both person and relationships unmodified.
+- [ ] Generic Add Person stacks Parents, Partners, and Children as separate dense searchable rows with compact results. A selected Partner exposes status plus validated start/end dates, saves the matching type/end-reason source fields, and immediately renders the chosen history; duplicate, self, missing-reference, second-Lineal-parent, and ancestry-cycle failures leave both person and relationships unmodified.
 - [ ] The selected-person header orders Delete, Edit, and X; Relationships owns Add and Connect. All four mutation controls use the supplied icon-over-label symbols.
 - [ ] Identity properties appear as Born, Died, Age, Living Status, and Marital Status; Gender and Pronouns remain hidden. Missing values read `UNKNOWN`, except a living person's Died value is `----`. Ages use the same visual weight as adjacent values and natural years/months wording.
 - The remaining mutation checks in this section apply while Owner or Editor access is open.
@@ -167,4 +168,5 @@ Use synthetic families only.
 - [ ] Reload while offline remains locked and explains that the current encrypted hosted record could not be reached; there is no stale decrypted-family bypass.
 - [ ] The worker does not cache or transmit the vault, decrypted family data, passphrases, or tokens.
 - [ ] A build change shows the new-version toast and Force refresh activates the waiting worker.
+- [ ] Outside editable controls, `A` opens Add Person for Owner/Editor, `W` opens View As only for an Owner in Developer Mode, `|` toggles Developer Mode, and `X` closes Settings, the active new-version toast, or What’s New without exposing gated actions to Member/Viewer.
 - [ ] Both manifests install with correct McFamily identity and light/dark icons.

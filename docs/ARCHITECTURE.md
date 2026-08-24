@@ -26,8 +26,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 13,
   "meta": {
-    "appVersion": "0.0.1.74",
-    "buildId": "0.0.1.74",
+    "appVersion": "0.0.1.75",
+    "buildId": "0.0.1.75",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -115,4 +115,4 @@ No real family CSV, ZIP, or export belongs in the repository. Only synthetic dat
 
 `sw.js` precaches the public HTML, scripts, manifests, and install assets. Same-origin application requests use network-first revalidation and cached fallback, except the hosted vault path, which is never cached. The service worker never reads browser family state and has no sync endpoint. Unlock intentionally requires an online vault check so removed grants do not gain an offline bypass.
 
-A waiting worker triggers the persistent new-version toast; its refresh action activates the new worker and reloads with a cache-busting URL.
+A waiting worker discovered while locked renders its refresh action directly on the passphrase gate, before credentials are entered. After unlock it uses the persistent new-version toast. Either refresh action activates the new worker and reloads with a cache-busting URL.

@@ -104,12 +104,15 @@
     toastEl.querySelector("[data-toast-title]").textContent = settings.title;
     toastEl.querySelector("[data-toast-message]").textContent = messageText;
     const action = toastEl.querySelector("[data-toast-action]");
+    const close = toastEl.querySelector("[data-toast-close]");
     action.hidden = !settings.actionLabel;
     action.className = settings.actionSymbol ? "icon-button toast-action-icon" : "button small";
     action.setAttribute("aria-label", settings.actionLabel || "Notification action");
     action.title = settings.actionLabel || "";
     action.removeAttribute("aria-keyshortcuts");
     action.removeAttribute("data-shortcut");
+    close.removeAttribute("aria-keyshortcuts");
+    close.removeAttribute("data-shortcut");
     if (settings.actionSymbol && App.icons) App.icons.set(action, settings.actionSymbol);
     else action.textContent = settings.actionLabel || "";
     action.onclick = settings.onAction || null;

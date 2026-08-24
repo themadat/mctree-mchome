@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.74",
-      buildId: "0.0.1.74",
+      version: "0.0.1.75",
+      buildId: "0.0.1.75",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -167,6 +167,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.75",
+        date: "2026-08-24T20:49:37.000Z",
+        title: "Faster keyboard and update flow",
+        summary: "Common actions are easier from the keyboard, and a waiting app update can be installed before entering the family passphrase.",
+        features: ["A opens Add Person, W opens View As in Owner Developer Mode, and | toggles Developer Mode", "A waiting service worker appears on the locked screen so it can refresh before sign-in"],
+        improvements: ["X closes Settings, What’s New, or the active new-version notification", "Parents, Partners, and Children use separate dense searchable rows in Add Person", "The compact Zoom percentage gives the percent sign balanced side spacing"],
+        fixes: ["Update discovery now begins before the passphrase gate waits for sign-in, avoiding an unnecessary second passphrase entry"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.74",
         date: "2026-08-24T19:38:00.000Z",
