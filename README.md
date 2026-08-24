@@ -4,7 +4,7 @@ McFamily is a private, local-first family atlas that runs as a static GitHub Pag
 
 There is no backend, account, cloud database, or runtime dependency. Family data stays in browser storage and moves only through an explicit McFamily ZIP import or export. The published repository must never contain a real family package or private family data.
 
-Current version: `0.0.1.57` (`major.minor.patch.build`).
+Current version: `0.0.1.58` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -12,7 +12,7 @@ Current version: `0.0.1.57` (`major.minor.patch.build`).
 - Shows a Lineage tree around a selected person and a Full Tree view of connected and isolated people.
 - Supports two-axis scrolling, pan, directly editable zoom and 0-10 depth numbers, fit, keyboard selection, touch, and accessible relationship descriptions.
 - Orders each Family Tree generation by numeric lineage ID; up to two prior partners appear chronologically at two-thirds size to the left of the Lineal person, while the current or latest death-ended spouse remains full-size on the right. One prior partner is vertically centered; two align to the full-size cards' top and bottom, with their parallel links attached one-quarter from the outer edge of each compact card. Bright gold partner lines distinguish current marriages (solid), previous marriages (dashed), never-married partnerships (dotted), and unknown relationships (question marks), with a floating key in the corner of the tree.
-- Draws recorded Non-Lineal parent links as dashed branches only while the two-line Non-Lineal Lines control is on, leaving faded muted-red edges for the Lineal bloodline and never changing relationship records. Its filled symbol remains fixed in both states. Selected Lineal and Non-Lineal cards share the same accent border.
+- Draws any number of recorded Non-Lineal parent links as dashed branches only while the two-line Non-Lineal Lines control is on. Lineal parent edges use faded muted red, with adoption dashed and explained in the Key, without changing relationship records. Its filled symbol remains fixed in both states. Selected Lineal and Non-Lineal cards share the same accent border.
 - Marks Lineal tree cards with a bold muted-red outline and a compact lineage symbol beside the lifespan while preserving the standard living or deceased fill.
 - Can hide `99`-lineage people from Full Tree with a persisted `?? Lineal` control whose outlined symbol remains fixed; enabling it centers the revealed people. The control is hidden in Lineage view, while those people remain available in directory and search. Printable atlases omit unresolved `99`/`??` lineage branches.
 - Records out-of-wedlock partnerships as never-married relationships with no start date, sequenced by relationship order.
@@ -26,7 +26,7 @@ Current version: `0.0.1.57` (`major.minor.patch.build`).
 - Keeps people, places, person-to-person relationships, person-to-place residences, and package metadata in separate exact-schema CSV files inside one ZIP artifact.
 - Imports known and question-mark partial source dates; person death descriptors explicitly distinguish living (`NONE`), deceased with an unknown date (`UNKNOWN`), and presumed deceased (`UNKNOWN PRESUMED`).
 - Shows partial source dates such as `December ??, 1979`, keeps a natural-language Age property on one line, and fills unknown visible identity properties with `UNKNOWN`. Living profiles use `----` for Died, and living people show only their birth year in directory and tree lifespans. Gender and Pronouns remain stored but are temporarily hidden from person details.
-- Uses compact open Parents, Siblings, Partners, and Children groups near the top of each profile, with generation labels, Lineal/Non-Lineal parent roles, birth order and year for siblings and children, marriage years for partners, and current-first partner history; Imported Source finishes each profile.
+- Uses compact open Parents, Siblings, Partners, and Children groups near the top of each profile, with combined parent role/type labels such as `Lineal :: Adopted` and `Non-Lineal :: Biological`, birth order and year for siblings and children, marriage years for partners, and current-first partner history; Imported Source finishes each profile.
 - Uses absolute lineage generations rooted at George McMillen (1745) as Gen 0; readings use concise forms such as `Gen 6, 5th Child of Max`.
 - Lets the person panel close and clear selection; choosing any Family Tree person reopens it without a separate Show person control.
 - Keeps family-record Add, Connect, Edit, and Delete controls visibly paused during the current build-out; profile actions use icon-over-label controls in their relevant sections.
@@ -66,7 +66,7 @@ assets/css/app.css             Themes, family workspace, responsive, and print s
 assets/js/config.js            Identity, version, enums, help, releases, and roadmap
 assets/js/icons.js             Shared inline SVG symbol catalog
 assets/js/app.js               Rendering, editing, search, tree interaction, and print atlas
-assets/js/core/state.js        Schema v12 normalization, fuzzy matching, and validation
+assets/js/core/state.js        Schema v13 normalization, fuzzy matching, and validation
 assets/js/core/family.js       Relationship indexes, derived family groups, and graph layout
 assets/js/core/storage.js      Local persistence and recovery snapshot
 assets/js/core/portability.js  Strict five-file ZIP validation, export, preview, and replacement import
@@ -80,9 +80,9 @@ context/                       Durable agent workflow and wish ledger
 
 ## Data limits and current-version storage
 
-Schema v12 supports up to 1,500 people, 6,000 relationships, 5,000 places, and 10,000 residences. Dates accept `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` with exact, about, before, or after qualifiers. Relationships are stored as explicit records; ancestry, descendants, siblings, family units, and lineage labels are derived when needed.
+Schema v13 supports up to 1,500 people, 6,000 relationships, 5,000 places, and 10,000 residences. Dates accept `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` with exact, about, before, or after qualifiers. Parent records independently store a Lineal/Non-Lineal role and parent type, allowing one Lineal and multiple Non-Lineal parents per child. Ancestry, descendants, siblings, family units, and lineage labels are derived when needed.
 
-McFamily uses a v12-only browser-storage namespace and does not load or migrate earlier application states. Import the current dataset 15 package; a first import must contain at least one valid person.
+McFamily uses a v13-only browser-storage namespace and does not load or migrate earlier application states. Import the current dataset 16 package; a first import must contain at least one valid person.
 
 ## ZIP and PDF workflow
 

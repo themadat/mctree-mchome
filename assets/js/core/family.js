@@ -206,9 +206,7 @@
   }
 
   function bloodlineParentRank(person, entry) {
-    if (entry && entry.relationship && entry.relationship.kind === "biological") return 0;
-    if (entry && entry.relationship && entry.relationship.kind !== "affinal") return 1;
-    return 2;
+    return entry && entry.relationship && entry.relationship.lineage === "lineal" ? 0 : 1;
   }
 
   function orderPartnerHistory(entries) {
@@ -588,6 +586,9 @@
     if (draft.type === "parent-child") {
       if (!peopleIds.has(draft.parentId) || !peopleIds.has(draft.childId)) return "Choose two existing people.";
       if (draft.parentId === draft.childId) return "A person cannot be their own parent.";
+      if (!config.parentLineages.some(function (item) { return item.id === draft.lineage; })) return "Choose a Lineal or Non-Lineal parent role.";
+      if (!config.parentKinds.some(function (item) { return item.id === draft.kind; })) return "Choose a supported parent type.";
+      if (draft.lineage === "lineal" && relationships.some(function (item) { return item.id !== ignoreId && item.type === "parent-child" && item.childId === draft.childId && item.lineage === "lineal"; })) return "A child can have only one Lineal parent.";
       const duplicate = relationships.some(function (item) { return item.id !== ignoreId && item.type === "parent-child" && item.parentId === draft.parentId && item.childId === draft.childId; });
       if (duplicate) return "That parent-child relationship already exists.";
       if (model.wouldCreateAncestryCycle(relationships, draft.parentId, draft.childId, ignoreId)) return "That link would create an ancestry cycle.";

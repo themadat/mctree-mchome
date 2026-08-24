@@ -15,12 +15,12 @@ Use synthetic families only.
 
 - [ ] A fresh profile shows only the introduction, privacy warning, and ZIP picker.
 - [ ] No demo family, blank-family action, GEDCOM action, or bypass appears.
-- [ ] A valid dataset 15 ZIP with at least one person shows people, relationship, place, residence, dataset, state, and validation-group summaries before opening the family.
+- [ ] A valid dataset 16 ZIP with at least one person shows people, relationship, place, residence, dataset, state, and validation-group summaries before opening the family.
 - [ ] The ZIP contains exactly the five root files `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`; missing, extra, duplicate, nested, encrypted, unsupported-compression, truncated, bad-checksum, multi-disk, and oversized packages are rejected without replacing state.
-- [ ] Every file uses its exact ordered, hyphenated schema 1.0.0 header; unknown, missing, duplicate, unsafe, underscore-named, or reordered headers and malformed/oversized CSVs are rejected.
+- [ ] McRelations uses its exact ordered, hyphenated schema 2.0.0 header and every other file uses schema 1.0.0; unknown, missing, duplicate, unsafe, underscore-named, or reordered headers and malformed/oversized CSVs are rejected.
 - [ ] Structured Birth, Current, and Preferred name parts plus Maiden Last import directly; `person-first-names`, `person-last-name`, and `person-name-sort` are absent.
 - [ ] McPeople contains no parent or partner columns. McRelations holds every Lineal/Non-Lineal parent and partner row with unique IDs, positive order, resolvable people, and consistent type-specific fields.
-- [ ] Every Non-Lineal parent is paired with the child's one Lineal parent by a partner relationship; missing, self, duplicate, non-partner, and multiple-Lineal-parent cases are rejected.
+- [ ] Every parent row independently records `parent-lineage` and `parent-type`; one child may have at most one Lineal parent and multiple distinct Non-Lineal parents without requiring a partner link to the Lineal parent. Missing, self, duplicate, invalid-classification, and multiple-Lineal-parent cases are rejected.
 - [ ] Each partner relationship has one unique ID and unordered person pair; missing/self references, invalid types/orders/end reasons, inconsistent date pairs, and duplicate relationships are rejected.
 - [ ] Relationship type plus end reason maps to married, partnered, widowed, divorced, separated, former, or unknown without a redundant source status field; an `UNKNOWN` end reason reads as former, so no partner of a person whose partnerships all ended is shown as current.
 - [ ] Every current non-root lineage path extends its direct parent's path by exactly one segment; blank unlineaged people are accepted, while malformed, duplicate, or parent-mismatched paths are rejected.
@@ -31,9 +31,9 @@ Use synthetic families only.
 - [ ] McMetadata declares the supported package/dataset versions, exact counts, family data, all five schema rows, and at least one valid audit event; duplicates, missing rows, count mismatches, bad timestamps/JSON, and unresolved home person are rejected.
 - [ ] Profile life details use one ordinary one-line `Age` row: living ages are compact, ages below two use months, deceased ages read `#y at death · #y today`, and unavailable ages read `UNKNOWN`.
 - [ ] Desktop defaults to a thin-gutter 20/50/30 Directory/Tree/Profile split, both separators resize with pointer and keyboard input, the first resize persists both widths, a usable tree width remains, and live position percentages appear only in Developer Mode.
-- [ ] State v12 reloads from `mcfamily.state.v12`; older state and recovery keys are ignored and the dataset 15 import gate appears instead.
+- [ ] State v13 reloads from `mcfamily.state.v13`; older state and recovery keys are ignored and the dataset 16 import gate appears instead.
 - [ ] Startup removes only older versioned `mcfamily.state.v#` and `mcfamily.recovery.v#` keys, preserving current state and unrelated local-storage entries so the package has quota to persist.
-- [ ] A state with any schema version other than v12 is rejected rather than unwrapped or migrated.
+- [ ] A state with any schema version other than v13 is rejected rather than unwrapped or migrated.
 - [ ] One ZIP export/import round trip preserves all five files, 16 name columns, people, places, residences, relationships, preferences, Notes, package metadata, and audit history.
 - [ ] Missing required Birth First/Last values normalize to `UNKNOWN`; the importer does not derive structured names from removed flat columns.
 - [ ] Partial source dates remain in source details, produce a partial-only preview warning, and do not become invented normalized dates in editable/native state.
@@ -48,7 +48,7 @@ Use synthetic families only.
 - [ ] Identity properties appear as Born, Died, Age, Living Status, and Marital Status; Gender and Pronouns remain hidden. Missing values read `UNKNOWN`, except a living person's Died value is `----`. Ages use the same visual weight as adjacent values and natural years/months wording.
 - The remaining mutation checks in this section apply when a developer temporarily enables `features.familyEditing` for regression testing.
 - [ ] Add and remove repeated contacts without losing adjacent entries.
-- [ ] Connect biological, adoptive, step, foster, guardian, and unknown parents.
+- [ ] Connect biological, adopted, step, foster, guardian, and unknown parent types independently as Lineal or Non-Lineal, rejecting a second Lineal parent while accepting multiple Non-Lineal parents.
 - [ ] Connect every partner status with dates, place, and notes.
 - [ ] Self-link, duplicate-link, missing-reference, and ancestry-cycle errors are clear and non-destructive.
 - [ ] Parents, children, partners, siblings, ancestors, descendants, and lineage labels update from relationships.
@@ -72,11 +72,11 @@ Use synthetic families only.
 - [ ] Family Tree rows use numeric lineage order rather than alphabetical names; Seth Lauer appears before Jared Lauer.
 - [ ] A multi-partner Lineal person is preceded by up to two two-thirds-scale past partners from earliest to latest and followed by the full-size current or latest death-ended Non-Lineal spouse. One left partner is vertically centered; two align with the full-size cards' top and bottom. Their straight horizontal links are parallel and attach 25% from the top or bottom of each compact card, clearing the name containers.
 - [ ] Christine Perrietta McMillen renders with Ray Shanaman on her left using a divorced line and Howard David Weiss as the only partner on her right using a married line.
-- [ ] Non-Lineal Lines uses a compact two-line label and the filled slash-drop symbol in both states; it is disabled by default and hides internally `affinal` parent edges, while enabling it draws accessible light dashed branches and leaves Lineal edges solid.
+- [ ] Non-Lineal Lines uses a compact two-line label and the filled slash-drop symbol in both states; it is disabled by default and hides `non-lineal` parent edges, while enabling it draws every accessible light dashed branch. Lineal biological edges remain solid, while Lineal adoption is dashed muted red.
 - [ ] Only the current or latest death-ended marriage draws a solid partner line; previous marriages are dashed, never-married partnerships are dotted, and unknown relationships use repeated question marks.
 - [ ] Both spouses in a marriage ended by death read Married when both are deceased; a surviving spouse reads Widowed while the deceased spouse reads Married. The latest death-ended spouse stays on the right with a solid line unless a later relationship exists.
-- [ ] Lineal parent edges use faded muted red, and selecting a Lineal person replaces its lineage outline with the normal selected-person accent border.
-- [ ] The floating Key sits at the upper right of the Family Tree canvas, collapses and reopens, stays inside the module at mobile widths, does not block canvas drags, and includes brown deceased-card and red Bloodline-outline samples after the four marriage states.
+- [ ] Lineal parent edges use faded muted red, Lineal adoption uses a dashed muted-red edge, and selecting a Lineal person replaces its lineage outline with the normal selected-person accent border.
+- [ ] The floating Key sits at the upper right of the Family Tree canvas, collapses and reopens, stays inside the module at mobile widths, does not block canvas drags, and includes brown deceased-card, red Bloodline-outline, Lineal parent, dashed Lineal adoption, and Non-Lineal parent samples after the four marriage states.
 - [ ] ?? Lineal appears only in Full Tree, is unpressed by default, keeps stored `99`-lineage people and anyone linked only to them out of the tree, keeps the focused person visible, and leaves directory and search counts unchanged; its outlined question-person symbol remains unchanged when enabled, and enabling it centers the revealed people at natural scale.
 - [ ] Stored lineage segment `99` displays as `??` in the directory, profile Lineage block, and imported-source details, while PDF output omits those people and their isolated branches.
 - [ ] A never-married partnership with no start date sorts by `relationship_order`, draws the dotted line, and reads Never married; P012 shows Heather Munz to the left of Tina Magri, and P244 lists Heather as her Non-Lineal parent.
@@ -105,8 +105,9 @@ Use synthetic families only.
 - [ ] Partners lists the current partner first in bold, followed by prior partners in reverse history order with de-emphasized styling.
 - [ ] Identity shows Born, Died, Age, Living Status, and Marital Status with `UNKNOWN` fallbacks, except living Died is `----`; Gender and Pronouns are absent. Age uses ordinary one-line styling, and the configured home person is labelled Root Ancestor. Lineage appears immediately afterward and above Relationships; Notes follows Relationships, and Imported Source is final. Albon shows both parents and all six siblings.
 - [ ] The profile X closes the module, clears directory/tree selection, disables the empty mobile Person tab, and a Family Tree selection reopens the profile without a Show person button. Full Tree also closes and deselects the profile; Lineage is disabled until a person is selected.
-- [ ] A child listed from a parent's profile is labelled `Child`, without a redundant parent-kind suffix.
-- [ ] Parents, Siblings, and Children headings show the correct `Gen #`; parents show `(Lineal)` or `(Non-Lineal)`.
+- [ ] A child listed from a parent's profile is labelled `Child`, without a redundant parent classification suffix.
+- [ ] Parents, Siblings, and Children headings show the correct `Gen #`; parents show combined context such as `(Lineal :: Adopted)` and `(Non-Lineal :: Biological)`.
+- [ ] The P569 adoption fixture lists P380 first as `Lineal :: Adopted`, then both P877 and P914 as `Non-Lineal :: Biological`; its tree always shows the dashed muted-red P380 branch and reveals both biological branches only with Non-Lineal Lines enabled.
 - [ ] Siblings and children show two-digit birth order and birth year as `(01 :: 1991)`, including `????` for an unknown year.
 - [ ] Partners show the relationship start year as their marriage year, or `????` when no year is recorded.
 - [ ] Screen and print profiles use the same Parents, Siblings, Partners, Children order and relationship context.
