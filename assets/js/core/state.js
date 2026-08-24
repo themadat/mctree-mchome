@@ -791,6 +791,7 @@
     next.ui.directoryFilters = [];
     next.ui.mobileView = "tree";
     next.ui.search = "";
+    next.ui.seenReleaseVersion = defaults.ui.seenReleaseVersion;
     next.ui.dismissedHints = [];
     next.ui.supportTab = "settings";
     next.modules.roadmap = defaults.modules.roadmap;

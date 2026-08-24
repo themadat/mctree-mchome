@@ -4,7 +4,7 @@ McFamily is a private family atlas that runs as a static GitHub Pages app. It vi
 
 There is no custom backend, account provider, cloud database, or runtime dependency. The separate public `mcdata` repository contains only an AES-GCM encrypted vault; readable family CSVs, passphrases, and GitHub tokens never belong in either public repository.
 
-Current version: `0.0.1.65` (`major.minor.patch.build`).
+Current version: `0.0.1.66` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -64,7 +64,7 @@ Everyone uses the same public application link. Passphrases wrap random AES-256 
 - Access usernames are non-secret vault metadata. Use a first name or nickname, not an email address or another sensitive identifier.
 - Do not commit real names, addresses, phone numbers, email addresses, heritage notes, or family notes.
 - Use synthetic people for tests and screenshots.
-- Browser storage is per browser profile and device. Lock clears the decrypted local family and requires the passphrase again.
+- Browser storage is per browser profile and device. Lock clears the decrypted local family and recovery snapshot, reloads, and requires the passphrase again without publishing anything. Dismissed hints, dismissed What’s New banners, and Directory visibility remain on that device.
 - Each publisher still needs a fine-grained GitHub token limited to `mcdata` with Contents read/write permission; the token stays outside the vault.
 - Viewer sign-ins cannot be centrally recorded without a backend or a viewer write credential. Published family and access changes remain in McMetadata and Git history.
 

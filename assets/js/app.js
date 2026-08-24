@@ -2104,7 +2104,7 @@
   async function resetPreferences() {
     const accepted = await components.confirm({ title: "Reset preferences?", message: "Appearance, family view settings, filters, and dismissed hints will return to defaults. People, relationships, contacts, and Notes will stay.", confirmLabel: "Reset preferences", danger: true });
     if (!accepted) return;
-    storage.replace(model.resetPreferences(state()), { recoveryReason: "Before resetting preferences", reason: "reset-preferences", touch: false });
+    storage.replace(model.resetPreferences(state()), { recoveryReason: "Before resetting preferences", reason: "reset-preferences", touch: false, preserveDevicePreferences: false });
     treeNeedsFit = true;
     renderAll();
     components.toast("Preferences were reset; family data was preserved.", { title: "Preferences reset", kind: "success" });

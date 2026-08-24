@@ -772,14 +772,14 @@
     const profile = accessProfile();
     if (profile && profile.canPublish) {
       const accepted = await components.confirm({
-        title: "Lock McFamily?", message: "Any changes that have not been published will be removed from this browser. The encrypted hosted record will not change.",
+        title: "Lock McFamily?", message: "Any changes that have not been published will be removed from this browser. The encrypted hosted record will not change. Dismissed hints, dismissed What’s New banners, and Directory visibility stay on this device.",
         confirmLabel: "Lock McFamily", cancelLabel: "Keep working", danger: true, trigger: $("#hostedLockButton")
       });
       if (!accepted) return;
     }
     activeSession = null;
     currentVault = null;
-    storage.clearAll();
+    storage.clearAll({ preserveDevicePreferences: true });
     location.reload();
   }
 

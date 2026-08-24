@@ -10,6 +10,24 @@
   let lastSavedJson = "";
   let loadReport = { source: "default", warnings: [], recovered: false, error: "" };
 
+  function cleanStringList(values, limit) {
+    return Array.from(new Set((Array.isArray(values) ? values : []).map(function (value) {
+      return u.cleanLine(value, limit);
+    }).filter(Boolean))).slice(0, 200);
+  }
+
+  function normalizeDevicePreferences(input) {
+    const source = u.plainObject(input);
+    if (Number(source.version) !== 1) return null;
+    return {
+      version: 1,
+      dismissedHintIds: cleanStringList(source.dismissedHintIds, 80),
+      dismissedReleaseVersions: cleanStringList(source.dismissedReleaseVersions, 32),
+      directoryCollapsed: typeof source.directoryCollapsed === "boolean" ? source.directoryCollapsed : true,
+      mobileDirectoryOpen: source.mobileDirectoryOpen === true
+    };
+  }
+
   function emit(name, detail) {
     window.dispatchEvent(new CustomEvent(name, { detail: detail || {} }));
   }
@@ -59,6 +77,51 @@
     }
   }
 
+  function readDevicePreferences() {
+    const raw = readLocal(config.storage.devicePreferencesKey);
+    if (!raw) return null;
+    try { return normalizeDevicePreferences(JSON.parse(raw)); }
+    catch (error) { return null; }
+  }
+
+  function devicePreferencesFromState(state) {
+    const previous = readDevicePreferences();
+    const dismissedReleaseVersions = previous ? previous.dismissedReleaseVersions.slice() : [];
+    const seenReleaseVersion = u.cleanLine(state.ui.seenReleaseVersion, 32);
+    if (seenReleaseVersion && !dismissedReleaseVersions.includes(seenReleaseVersion)) dismissedReleaseVersions.push(seenReleaseVersion);
+    return {
+      version: 1,
+      dismissedHintIds: cleanStringList(state.preferences.hints.dismissed, 80),
+      dismissedReleaseVersions: cleanStringList(dismissedReleaseVersions, 32),
+      directoryCollapsed: state.ui.directoryCollapsed === true,
+      mobileDirectoryOpen: state.ui.directoryCollapsed !== true && state.ui.mobileView === "directory"
+    };
+  }
+
+  function saveDevicePreferences(state) {
+    const preferences = devicePreferencesFromState(state);
+    writeLocal(config.storage.devicePreferencesKey, JSON.stringify(preferences));
+    return preferences;
+  }
+
+  function applyDevicePreferences(state, preferences) {
+    const saved = normalizeDevicePreferences(preferences);
+    if (!saved) return state;
+    state.preferences.hints.dismissed = saved.dismissedHintIds.slice();
+    state.ui.dismissedHints = saved.dismissedHintIds.slice();
+    const latestRelease = config.releases[0] && config.releases[0].version || "";
+    state.ui.seenReleaseVersion = latestRelease && saved.dismissedReleaseVersions.includes(latestRelease) ? latestRelease : "";
+    state.ui.directoryCollapsed = saved.directoryCollapsed;
+    if (saved.directoryCollapsed && state.ui.mobileView === "directory") state.ui.mobileView = "tree";
+    else if (!saved.directoryCollapsed && saved.mobileDirectoryOpen) state.ui.mobileView = "directory";
+    return state;
+  }
+
+  function restoreDevicePreferences(state) {
+    const saved = readDevicePreferences() || saveDevicePreferences(state);
+    return applyDevicePreferences(state, saved);
+  }
+
   function readRecovery() {
     const raw = readLocal(config.storage.recoveryKey);
     if (!raw) return null;
@@ -78,7 +141,7 @@
     if (raw) {
       try {
         const prepared = model.prepare(JSON.parse(raw));
-        currentState = prepared.state;
+        currentState = restoreDevicePreferences(prepared.state);
         loadReport = {
           source: "current",
           warnings: prepared.validation.warnings,
@@ -94,13 +157,13 @@
 
     const recovery = readRecovery();
     if (recovery) {
-      currentState = recovery.state;
+      currentState = restoreDevicePreferences(recovery.state);
       loadReport = { source: "recovery", warnings: [], recovered: true, error: parseError };
       saveNow();
       return currentState;
     }
 
-    currentState = model.createDefaultState();
+    currentState = restoreDevicePreferences(model.createDefaultState());
     loadReport = { source: "default", warnings: [], recovered: false, error: parseError };
     saveNow();
     return currentState;
@@ -133,6 +196,7 @@
     callback(state);
     if (settings.touch) model.touch(state);
     currentState = model.normalize(state);
+    saveDevicePreferences(currentState);
     if (settings.save) scheduleSave();
     emit("app:statechange", { reason: settings.reason, state: currentState });
     return currentState;
@@ -148,10 +212,15 @@
   }
 
   function replace(nextState, options) {
-    const settings = Object.assign({ recoveryReason: "Before data replacement", saveRecovery: true, reason: "replace", touch: true }, options || {});
+    const settings = Object.assign({ recoveryReason: "Before data replacement", saveRecovery: true, reason: "replace", touch: true, preserveDevicePreferences: true }, options || {});
     const prepared = model.prepare(nextState);
+    const savedDevicePreferences = settings.preserveDevicePreferences ? (readDevicePreferences() || (currentState && saveDevicePreferences(currentState))) : null;
     if (settings.saveRecovery && currentState) saveRecovery(settings.recoveryReason, currentState);
-    currentState = prepared.state;
+    currentState = settings.preserveDevicePreferences ? applyDevicePreferences(prepared.state, savedDevicePreferences) : prepared.state;
+    if (!settings.preserveDevicePreferences) {
+      removeLocal(config.storage.devicePreferencesKey);
+      saveDevicePreferences(currentState);
+    }
     if (settings.touch) model.touch(currentState);
     lastSavedJson = "";
     saveNow();
@@ -177,12 +246,16 @@
     };
   }
 
-  function clearAll() {
+  function clearAll(options) {
+    const settings = Object.assign({ preserveDevicePreferences: false }, options || {});
+    const savedDevicePreferences = settings.preserveDevicePreferences ? (readDevicePreferences() || (currentState && saveDevicePreferences(currentState))) : null;
     scheduleSave.cancel();
     removeHistoricalStateKeys();
     [config.storage.stateKey, config.storage.recoveryKey].filter(Boolean).forEach(removeLocal);
+    if (!settings.preserveDevicePreferences) removeLocal(config.storage.devicePreferencesKey);
     lastSavedJson = "";
     currentState = model.createDefaultState({ demo: false });
+    if (settings.preserveDevicePreferences) applyDevicePreferences(currentState, savedDevicePreferences);
     saveNow();
     emit("app:statechange", { reason: "erase-all", state: currentState });
     return currentState;
@@ -216,6 +289,7 @@
     saveRecovery: saveRecovery,
     restoreRecovery: restoreRecovery,
     recoveryInfo: recoveryInfo,
+    readDevicePreferences: readDevicePreferences,
     clearAll: clearAll,
     usage: usage,
     isPersistent: function () { return persistentStorageAvailable; }
