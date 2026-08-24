@@ -98,6 +98,21 @@
     $("#cloudPath").value = settings.path;
     $("#cloudToken").value = storedToken();
     $("#cloudRememberToken").checked = Boolean(localStorage.getItem(config.storage.cloudTokenKey));
+    renderConnectionStatus("warning", configured() ? "Saved · not checked" : "Not connected", settings);
+  }
+
+  function connectionTarget(settings) {
+    if (!settings.owner || !settings.repository) return "No private repository connection is ready.";
+    return settings.owner + "/" + settings.repository + " · " + settings.branch + " · " + settings.path;
+  }
+
+  function renderConnectionStatus(kind, label, settings) {
+    const summary = $(".cloud-connection-summary");
+    const values = settings || storedSettings();
+    summary.dataset.kind = kind;
+    $("#cloudConnectionState").textContent = label;
+    $("#cloudConnectionTarget").textContent = connectionTarget(values);
+    $("#cloudSettingsSummary").textContent = connectionTarget(values);
   }
 
   function repositoryUrl(settings) {
@@ -195,10 +210,11 @@
     pill.dataset.kind = kind;
     pill.textContent = title;
     $("#cloudStatusText").textContent = message;
+    $("#cloudHeaderStatus").textContent = title;
     const button = $("#cloudAuditButton");
     if (button) {
       button.dataset.cloudState = kind;
-      button.setAttribute("aria-label", "Open cloud records and audit log. " + title + ".");
+      button.setAttribute("aria-label", "Open Save, Share and Audit. " + title + ".");
     }
   }
 
@@ -212,7 +228,17 @@
   }
 
   function displayAction(value) {
-    return String(value || "Change").replace(/[-_]+/g, " ").replace(/\b\w/g, function (letter) { return letter.toUpperCase(); });
+    const actions = {
+      "published-cloud-package": "Published family records",
+      "imported-package": "Opened family records",
+      "exported-package": "Downloaded a private backup"
+    };
+    return actions[value] || String(value || "Change").replace(/[-_]+/g, " ").replace(/\b\w/g, function (letter) { return letter.toUpperCase(); });
+  }
+
+  function displayDetails(value) {
+    const text = String(value || "").split(/\s+Machine summary:\s*/i)[0].trim();
+    return text || "No summary was recorded.";
   }
 
   function auditDate(value) {
@@ -225,7 +251,7 @@
     const list = $("#cloudAuditList");
     list.replaceChildren();
     const audits = state && state.meta && state.meta.package ? state.meta.package.auditHistory || [] : [];
-    $("#cloudAuditCount").textContent = String(audits.length);
+    $("#cloudAuditCount").textContent = audits.length + " change" + (audits.length === 1 ? "" : "s");
     if (!audits.length) {
       const empty = document.createElement("li");
       empty.className = "cloud-audit-empty";
@@ -244,7 +270,7 @@
       const meta = document.createElement("small");
       meta.textContent = auditDate(audit.recordedAt) + (audit.recordedBy ? " · " + audit.recordedBy : "");
       const details = document.createElement("p");
-      details.textContent = audit.details || "No details recorded.";
+      details.textContent = displayDetails(audit.details);
       item.append(header, meta, details);
       list.appendChild(item);
     });
@@ -339,16 +365,19 @@
     const settings = options && options.settings || activeCredentials().settings;
     const token = options && options.token || activeCredentials().token;
     setStatus("warning", "Checking", "Validating the private GitHub connection and latest package…");
+    renderConnectionStatus("warning", "Checking connection…", settings);
     await verifyTarget(settings, token);
     const remote = await readLatest(settings, token, true);
     remoteCache = remote;
     if (!remote) {
       renderAudit(storage.getState());
+      renderConnectionStatus("success", "Connected", settings);
       setStatus("warning", "Ready to publish", "The private repository is connected, but no latest package exists at " + settings.path + ".");
       return null;
     }
     const version = portability.datasetVersionFor(remote.prepared.state);
     renderAudit(remote.prepared.state);
+    renderConnectionStatus("success", "Connected", settings);
     setStatus("success", "Dataset " + version, "Latest validated package: " + version + " · " + remote.prepared.state.workspace.people.length + " people · " + auditDate(remote.prepared.state.meta.updatedAt) + ".");
     return remote;
   }
@@ -360,11 +389,12 @@
     $("#cloudSettingsDetails").open = !configured();
     components.openDialog("#cloudAuditDialog", { trigger: $("#cloudAuditButton"), focus: configured() ? "#cloudDownloadButton" : "#cloudEditorName" });
     if (!configured() || busy) {
+      renderConnectionStatus("warning", "Not connected", storedSettings());
       setStatus("warning", "Setup needed", "Connect a private GitHub repository to publish and download validated packages.");
       return;
     }
     try { await refreshRemote(); }
-    catch (error) { setStatus("danger", "Connection error", error.message || "The private GitHub package could not be checked."); }
+    catch (error) { renderConnectionStatus("danger", "Connection needs attention", storedSettings()); setStatus("danger", "Connection error", error.message || "The private GitHub package could not be checked."); }
   }
 
   function saveSettings() {
@@ -372,9 +402,11 @@
       const credentials = formCredentials();
       saveCredentials(credentials.settings, credentials.token);
       $("#cloudRecordedBy").value = credentials.settings.editor;
+      renderConnectionStatus("warning", "Saved · not checked", credentials.settings);
       setStatus("warning", "Settings saved", "Connection settings were saved on this device. Test the connection or download the latest package.");
       components.toast("GitHub connection settings were saved.", { title: "Cloud settings", kind: "success" });
     } catch (error) {
+      renderConnectionStatus("danger", "Connection needs attention", storedSettings());
       setStatus("danger", "Settings error", error.message || "The GitHub settings are not valid.");
     }
   }
@@ -387,6 +419,7 @@
       await refreshRemote(credentials);
       components.toast("The private GitHub repository and branch are accessible.", { title: "Connection verified", kind: "success" });
     } catch (error) {
+      renderConnectionStatus("danger", "Connection needs attention", storedSettings());
       setStatus("danger", "Connection error", error.message || "The GitHub connection could not be verified.");
     } finally { setBusy(false); }
   }
@@ -400,6 +433,7 @@
     cancelUpload();
     populateSettings();
     $("#cloudSettingsDetails").open = true;
+    renderConnectionStatus("warning", "Not connected", storedSettings());
     setStatus("warning", "Setup needed", "The GitHub connection and token were removed from this device.");
   }
 
