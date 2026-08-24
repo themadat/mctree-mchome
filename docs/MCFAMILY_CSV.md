@@ -1,6 +1,6 @@
 # McFamily package and CSV contract
 
-McFamily imports and exports one private ZIP artifact. Dataset `15.0.0` and package format `mcfamily-package` version `1` require exactly these five UTF-8 CSV files at the ZIP root:
+McFamily imports and exports one private ZIP artifact. Dataset `16.0.0` and package format `mcfamily-package` version `1` require exactly these five UTF-8 CSV files at the ZIP root:
 
 ```text
 McPeople.csv
@@ -40,19 +40,19 @@ place-id,place-label,address-line-1,address-line-2,city,region,postal-code,count
 
 `place-id` is a unique `L` reference with at least four digits. At least one physical-address field must be present. People do not embed these address fields; `McResidences.csv` links them.
 
-Dataset 15 begins with one private physical place. Its actual address remains only in the ignored private package/configuration.
+Dataset 16 retains one private physical place. Its actual address remains only in the ignored private package.
 
 ## McRelations.csv
 
 One authoritative Person-to-Person relationship per row.
 
 ```text
-relationship-id,relationship-type,person-1-id,person-2-id,parent-kind,partner-type,relationship-order,date-start-value,date-start-descriptor,date-end-value,date-end-descriptor,end-reason,place-id,notes,source-last-modified-date,source-last-modified-by
+relationship-id,relationship-type,person-1-id,person-2-id,parent-lineage,parent-type,partner-type,relationship-order,date-start-value,date-start-descriptor,date-end-value,date-end-descriptor,end-reason,place-id,notes,source-last-modified-date,source-last-modified-by
 ```
 
-For `parent-child`, `person-1-id` is the parent, `person-2-id` is the child, and `parent-kind` is `lineal` or `non-lineal`; partner-only fields must be blank. A child may have at most one Lineal parent. Each Non-Lineal parent must be paired with that child's Lineal parent by a partner row.
+For `parent-child`, `person-1-id` is the parent and `person-2-id` is the child. `parent-lineage` is `lineal` or `non-lineal`, while `parent-type` is independently `biological`, `adoptive`, `step`, `foster`, `guardian`, or `unknown`; partner-only fields must be blank. A child may have at most one Lineal parent and any number of distinct Non-Lineal parents. A Non-Lineal parent does not need a partner row connecting them to the Lineal parent. The earlier `parent_consanguinity_person_id` and `parent_affinal_person_id` fields are now represented by explicit Lineal and Non-Lineal relationship rows. This applies the requested `parent_lineal_person_id` / `parent_non-lineal_person_id` terminology without reintroducing singular person columns that cannot represent multiple parents.
 
-For `partner`, both person IDs are unordered partners, `parent-kind` is blank, and `partner-type` is `marriage`, `partnership`, or `UNKNOWN`. `end-reason` is `death`, `divorce`, `separation`, `annulment`, `UNKNOWN`, or blank. A blank reason means no recorded ending. `relationship-order` is a positive chronological sequence used when dates do not establish order.
+For `partner`, both person IDs are unordered partners, both parent fields are blank, and `partner-type` is `marriage`, `partnership`, or `UNKNOWN`. `end-reason` is `death`, `divorce`, `separation`, `annulment`, `UNKNOWN`, or blank. A blank reason means no recorded ending. `relationship-order` is a positive chronological sequence used when dates do not establish order.
 
 Relationship IDs are unique. Both people and an optional `place-id` must resolve. Self-links, duplicates, inconsistent type-specific fields, invalid date pairs, and ancestry cycles are rejected.
 
@@ -66,7 +66,7 @@ residence-id,person-id,place-id,residence-label,is-current,date-start-value,date
 
 `residence-id` is a unique `RS` reference with at least four digits. `person-id` and `place-id` must resolve, `is-current` is exactly `TRUE` or `FALSE`, and duplicate person/place/start-date assignments are rejected.
 
-Dataset 15 begins with one current `Home` assignment connecting the requested person and place. Its actual identifiers remain private.
+Dataset 16 retains one current `Home` assignment connecting the requested person and place. Its actual identifiers remain private.
 
 ## McMetadata.csv
 
@@ -80,7 +80,7 @@ Required single-value rows declare:
 
 - package format, package version, dataset version, and people/relationship/place/residence counts;
 - family title, initialized timestamp, home person, created/updated timestamps, Notes, and settings JSON;
-- schema `1.0.0` exactly once for each of the five filenames.
+- schema `2.0.0` exactly once for `McRelations.csv` and schema `1.0.0` exactly once for each other filename.
 
 At least one `audit` row is required. Audit rows record a stable ID, file or package subject, action, timestamp, actor, and details. Imports and exports append audit events, and the full history remains in future exports. Declared counts must exactly match the other four files; the home person must resolve.
 
@@ -92,7 +92,7 @@ First launch requires an initialized family and at least one valid person. Later
 
 ## Private conversion helper
 
-`scripts/build-mcfamily-package.mjs` converts the ignored private McLineage v14 source into dataset 15, extracting parents and partner JSON into `McRelations.csv`, adding the initial place/residence, and writing the five files as one uncompressed ZIP. Its default input, output, and `data/McFamily-private-config.json` are ignored by Git. Run it only where the private source and config are already available:
+`scripts/build-mcfamily-package.mjs` converts the ignored private dataset 15 ZIP into dataset 16. It upgrades McRelations to schema 2.0, records the first adoption with multiple Non-Lineal biological parents, appends the required person and audit rows, and writes the five files as one uncompressed ZIP. Its default input and output are ignored by Git. Run it only where the private source package is already available:
 
 ```sh
 node scripts/build-mcfamily-package.mjs

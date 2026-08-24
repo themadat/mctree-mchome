@@ -5,6 +5,7 @@
   const config = App.config;
   const u = App.utils;
   const PARENT_KINDS = new Set(config.parentKinds.map(function (item) { return item.id; }));
+  const PARENT_LINEAGES = new Set(config.parentLineages.map(function (item) { return item.id; }));
   const PARTNER_STATUSES = new Set(config.partnerStatuses.map(function (item) { return item.id; }));
   const DATE_QUALIFIERS = new Set(["exact", "about", "before", "after"]);
   const NAME_PART_KEYS = ["prefix", "first", "middle", "last", "suffix"];
@@ -365,7 +366,8 @@
         type: "parent-child",
         parentId: parentId,
         childId: childId,
-        kind: mcLineageParentKind(source) || (PARENT_KINDS.has(source.kind) ? source.kind : "unknown"),
+        lineage: PARENT_LINEAGES.has(source.lineage) ? source.lineage : "non-lineal",
+        kind: PARENT_KINDS.has(source.kind) ? source.kind : "unknown",
         startDate: normalizeFlexibleDate(source.startDate),
         endDate: normalizeFlexibleDate(source.endDate),
         place: u.cleanLine(source.place, 240),
@@ -457,14 +459,6 @@
       updatedAt: u.ensureIso(source.updatedAt, now),
       order: Number.isFinite(Number(source.order)) ? Math.round(Number(source.order)) : index
     };
-  }
-
-  function mcLineageParentKind(relationship) {
-    const imported = u.plainObject(u.plainObject(relationship).source);
-    if (imported.format !== "mclineage-cleaned") return "";
-    const fields = u.plainObject(imported.fields);
-    if (u.cleanLine(fields["parent-affinal-person-id"], 100)) return "affinal";
-    return u.cleanLine(fields["parent-consanguinity-person-id"], 100) ? "biological" : "";
   }
 
   function normalize(input) {
@@ -642,6 +636,7 @@
       else ids.add(id);
     });
     const seen = new Set();
+    const linealParents = new Map();
     relationships.forEach(function (item) {
       const relationship = u.plainObject(item);
       const relationshipId = u.cleanLine(relationship.id, 100).replace(/[^a-z0-9_-]/gi, "-");
@@ -655,6 +650,12 @@
         a = u.cleanLine(relationship.parentId, 100);
         b = u.cleanLine(relationship.childId, 100);
         key = "parent|" + a + "|" + b;
+        if (!PARENT_LINEAGES.has(relationship.lineage)) errors.push("Every parent-child relationship must identify a Lineal or Non-Lineal role.");
+        if (!PARENT_KINDS.has(relationship.kind)) errors.push("Every parent-child relationship must identify a supported parent type.");
+        if (relationship.lineage === "lineal") {
+          if (linealParents.has(b)) errors.push("A child cannot have more than one Lineal parent.");
+          else linealParents.set(b, a);
+        }
       } else if (relationship.type === "partner") {
         a = u.cleanLine(relationship.person1Id || (relationship.personIds && relationship.personIds[0]), 100);
         b = u.cleanLine(relationship.person2Id || (relationship.personIds && relationship.personIds[1]), 100);

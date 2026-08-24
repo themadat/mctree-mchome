@@ -17,21 +17,21 @@ McFamily is an ordered-script static page with no module loader or runtime packa
 
 All modules attach to `window.LocalApp`. Application runtime has no family-data network path.
 
-## Schema v12
+## Schema v13
 
 The durable state is normalized into this shape:
 
 ```json
 {
-  "schemaVersion": 12,
+  "schemaVersion": 13,
   "meta": {
-    "appVersion": "0.0.1.57",
-    "buildId": "0.0.1.57",
+    "appVersion": "0.0.1.58",
+    "buildId": "0.0.1.58",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
     "tombstones": { "records": [], "documents": [], "people": [], "relationships": [], "places": [], "residences": [] },
-    "package": { "format": "mcfamily-package", "version": "1", "datasetVersion": "15.0.0", "auditHistory": [] }
+    "package": { "format": "mcfamily-package", "version": "1", "datasetVersion": "16.0.0", "auditHistory": [] }
   },
   "workspace": {
     "family": {
@@ -54,23 +54,23 @@ The durable state is normalized into this shape:
 
 Each person has a stable id, timestamps, structured name fields, status, optional gender and pronouns, birth and death events, repeated phones/emails, heritage text, general notes, and source metadata. Places are reusable physical-address records. Residences are explicit Person-to-Place records; normalization derives each person's visible addresses from those two arrays. Flexible dates use a `value` plus an exact/about/before/after qualifier.
 
-Relationships are independent records. Parent-child records contain `parentId`, `childId`, and biological/adoptive/step/foster/guardian/unknown type. Partner records contain two person ids, status, optional start/end dates and place, and notes. Validation rejects missing people, self-links, duplicate unordered partner pairs, duplicate typed parent-child pairs, and directed parent ancestry cycles.
+Relationships are independent records. Parent-child records contain `parentId`, `childId`, an independent Lineal/Non-Lineal `lineage` role, and a biological/adoptive/step/foster/guardian/unknown `kind`. A child may have at most one Lineal parent and multiple distinct Non-Lineal parents. Partner records contain two person ids, status, optional start/end dates and place, and notes. Validation rejects missing people, self-links, duplicate unordered partner pairs, duplicate parent-child pairs, multiple Lineal parents for one child, and directed parent ancestry cycles.
 
 Derived family concepts are never copied onto people. `family.js` builds them from relationships so edits cannot leave contradictory ancestor, sibling, descendant, or family-unit arrays behind.
 
-The dataset 15 ZIP package preserves the current state model through five exact CSV schemas. Historical application-state and transfer schemas are intentionally unsupported.
+The dataset 16 ZIP package preserves the current state model through five exact CSV schemas. McRelations uses schema 2.0; the other files use schema 1.0. Historical application-state and transfer schemas are intentionally unsupported.
 
 ## Initialization and persistence
 
-A fresh default has no `initializedAt` value and no people. `app.js` renders only the introduction and ZIP input in that state. `portability.js` accepts only a dataset 15 package with exactly `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`, and requires at least one valid person before the first local state is stored.
+A fresh default has no `initializedAt` value and no people. `app.js` renders only the introduction and ZIP input in that state. `portability.js` accepts only a dataset 16 package with exactly `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`, and requires at least one valid person before the first local state is stored.
 
-McPeople contains one stable P-referenced row per person and no parent or partner columns. McRelations contains all authoritative Person-to-Person parent and partner links. McPlaces contains reusable physical addresses, while McResidences assigns people to places. McMetadata declares package/dataset/file-schema versions, exact record counts, family settings, and append-only audit events. Package validation completes before any current state is touched and rejects ZIP damage, wrong filenames, schema drift, count mismatches, invalid identifiers/dates, broken cross-file references, duplicate links, invalid Non-Lineal parents, Lineage inconsistencies, and ancestry cycles.
+McPeople contains one stable P-referenced row per person and no parent or partner columns. McRelations contains all authoritative Person-to-Person parent and partner links, with parent lineage role separated from parent type. McPlaces contains reusable physical addresses, while McResidences assigns people to places. McMetadata declares package/dataset/file-schema versions, exact record counts, family settings, and append-only audit events. Package validation completes before any current state is touched and rejects ZIP damage, wrong filenames, schema drift, count mismatches, invalid identifiers/dates, broken cross-file references, duplicate links, multiple Lineal parents, Lineage inconsistencies, and ancestry cycles.
 
 Lineal people use complete root-to-person paths that extend each direct Lineal parent's path by one two-digit segment; Non-Lineal partner-only rows intentionally leave lineage blank. A known death value marks a person deceased. Without one, `person-date-death-descriptor` is authoritative: `NONE` means living, `UNKNOWN` means explicitly deceased with no known date, and `UNKNOWN PRESUMED` means source evidence presumes death. Partial source dates remain in source details because the editable date model accepts only normalized known values.
 
 After initialization, deleting the last person does not clear `initializedAt`; the workspace remains open and offers Add Person. Subsequent imports may contain an initialized empty family, but replacement always shows a summary, asks for confirmation, and writes the current state to recovery first.
 
-Startup checks only `mcfamily.state.v12` and the matching `mcfamily.recovery.v4` snapshot. State v12 passes through normalization, sanitization, and validation; every other state version is rejected. McFamily removes its own older versioned state/recovery keys before loading so obsolete copies cannot consume the local-storage quota; this deployment then opens the import gate until a dataset 15 package is loaded. A corrupt current copy falls back to the current recovery snapshot or to the uninitialized gate. Ordinary mutations update metadata and are saved locally with a short debounce.
+Startup checks only `mcfamily.state.v13` and the matching `mcfamily.recovery.v5` snapshot. State v13 passes through normalization, sanitization, and validation; every other state version is rejected. McFamily removes its own older versioned state/recovery keys before loading so obsolete copies cannot consume the local-storage quota; this deployment then opens the import gate until a dataset 16 package is loaded. A corrupt current copy falls back to the current recovery snapshot or to the uninitialized gate. Ordinary mutations update metadata and are saved locally with a short debounce.
 
 Person deletion also writes recovery before removing that person's relationship records. Recovery is a single last-known snapshot, not a history or merge log. Favorite person IDs ordinarily live in normalized UI state; Developer Mode can additionally download a small private `mcfamily-favorites` JSON envelope and restore that exact ID set without depending on browser storage.
 
@@ -84,7 +84,7 @@ The family workspace has three coordinated surfaces:
 
 The SVG contains semantic relationship labels in addition to visual lines. Pan and zoom use a view transform, touch uses pointer events, Fit calculates the graph bounds, and keyboard arrows move between rendered people. Reduced-motion settings suppress nonessential transitions.
 
-The layout is deterministic and dependency-free. Desktop opens with a thin-gutter 20/50/30 Directory/Tree/Profile balance; moving either separator persists explicit widths. Narrow cards stack each whitespace-separated name part on its own line, keep the Lineal mark beside the lifespan, and expand generation rows to the tallest card. People in the same generation are reordered around an imported Lineal person: up to two historical partners occupy the left at two-thirds scale, while at most one current or latest death-ended Non-Lineal spouse occupies the right at full size. One left partner is centered; two align to the full-size cards' top and bottom. Straight horizontal partner links remain parallel and evenly spaced. Gold distinguishes current marriages (solid), previous marriages (dashed), never-married partnerships (dotted), and unknown relationships (question marks); Lineal parent edges remain faded muted red. The optional co-parent overlay adds a lighter branch from a plausible recorded partner to the existing recorded parent-child path and never creates data. The layout favors readable generations and connected components rather than guaranteeing a traditional two-parent pedigree diagram in every pathological graph.
+The layout is deterministic and dependency-free. Desktop opens with a thin-gutter 20/50/30 Directory/Tree/Profile balance; moving either separator persists explicit widths. Narrow cards stack each whitespace-separated name part on its own line, keep the Lineal mark beside the lifespan, and expand generation rows to the tallest card. People in the same generation are reordered around an imported Lineal person: up to two historical partners occupy the left at two-thirds scale, while at most one current or latest death-ended Non-Lineal spouse occupies the right at full size. One left partner is centered; two align to the full-size cards' top and bottom. Straight horizontal partner links remain parallel and evenly spaced. Gold distinguishes current marriages (solid), previous marriages (dashed), never-married partnerships (dotted), and unknown relationships (question marks). Lineal parent edges are faded muted red, with Lineal adoption drawn dashed; the off-by-default Non-Lineal Lines control reveals any number of lighter dashed Non-Lineal parent branches. The optional co-parent overlay adds a lighter branch from a plausible recorded partner to the existing recorded parent-child path and never creates data. The layout favors readable generations and connected components rather than guaranteeing a traditional two-parent pedigree diagram in every pathological graph.
 
 ## Print atlas
 
