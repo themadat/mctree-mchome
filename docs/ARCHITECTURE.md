@@ -26,8 +26,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 13,
   "meta": {
-    "appVersion": "0.0.1.62",
-    "buildId": "0.0.1.62",
+    "appVersion": "0.0.1.63",
+    "buildId": "0.0.1.63",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -69,11 +69,11 @@ McPeople contains one stable P-referenced row per person and no parent or partne
 
 ## Encrypted hosted access
 
-The Pages repository and public ciphertext-only `app-data` repository are intentionally separate. The vault uses random AES-256-GCM full and redacted data keys. Each named grant derives a wrapping key from its passphrase with PBKDF2-SHA-256 and a unique salt, then wraps only the data key that role may open. Owner and Editor grants wrap both data keys, Private Viewer wraps the full-data key, and Redacted Viewer wraps only the redacted-data key. Passphrases, readable CSV, and GitHub tokens never enter the vault.
+The Pages repository and public ciphertext-only `app-data` repository are intentionally separate. The vault uses random AES-256-GCM full and redacted data keys. Each named grant derives a wrapping key from its passphrase with PBKDF2-SHA-256 and a unique salt, then wraps only the data key that role may open. The fixed Owner and any number of uniquely identified Editor grants wrap both data keys, Private Viewer wraps the full-data key, and Redacted Viewer wraps only the redacted-data key. Passphrases, readable CSV, and GitHub tokens never enter the vault. Version-1 vaults with the original fixed `editor` grant remain valid; new Editors use stable random `editor-…` ids and unique shown names.
 
 Every online load fetches `McFamily-access.json` anonymously with `no-store`, validates its format, and requires a current passphrase. A wrong, removed, or rotated grant cannot unwrap a data key. The decrypted package must pass the same strict parser as a recovery import, including physical redaction checks for Redacted Viewer. Lock removes the decrypted browser state. Revocation applies on the recipient's next reload; a static web application cannot retract information already seen or copied.
 
-Owner and Editor publication requires a fine-grained GitHub token limited to the public encrypted-data repository with Contents read/write access. Tokens live only in session or local browser storage. A family publication requires an actor and summary, advances the `16.0.x` patch, appends an audit event, revalidates and encrypts full and redacted packages, and uses both vault revision and GitHub SHA to reject stale writes. Owner-only access publication creates, rotates, or removes grants without recording secret values. Successful publications remain visible in McMetadata and Git history; viewer sign-ins are not centrally logged and the in-package audit is not tamper-proof.
+Owner and Editor publication requires a fine-grained GitHub token limited to the public encrypted-data repository with Contents read/write access. Tokens live only in session or local browser storage. A family publication requires a summary and binds its actor to the signed-in grant label, advances the `16.0.x` patch, appends an audit event, revalidates and encrypts full and redacted packages, and uses both vault revision and GitHub SHA to reject stale writes. Owner-only access publication creates, rotates, or removes grants without recording secret values. Successful publications remain visible in McMetadata and Git history; viewer sign-ins are not centrally logged and the in-package audit is not tamper-proof.
 
 Lineal people use complete root-to-person paths that extend each direct Lineal parent's path by one two-digit segment; Non-Lineal partner-only rows intentionally leave lineage blank. A known death value marks a person deceased. Without one, `person-date-death-descriptor` is authoritative: `NONE` means living, `UNKNOWN` means explicitly deceased with no known date, and `UNKNOWN PRESUMED` means source evidence presumes death. Partial source dates remain in source details because the editable date model accepts only normalized known values.
 
