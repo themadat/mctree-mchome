@@ -72,8 +72,8 @@ Use synthetic families only.
 - [ ] Identity properties appear as Born, Died, Age, Living Status, and Marital Status; Gender and Pronouns remain hidden. Missing values read `UNKNOWN`, except a living person's Died value is `----`. Ages use the same visual weight as adjacent values and natural years/months wording.
 - The remaining mutation checks in this section apply while Owner or Editor access is open.
 - [ ] Add and remove repeated contacts without losing adjacent entries.
-- [ ] Connect biological, adopted, step, foster, guardian, and unknown parent types independently as Lineal or Non-Lineal, rejecting a second Lineal parent while accepting multiple Non-Lineal parents.
-- [ ] Connect every partner status with dates, place, and notes.
+- [ ] Connect biological, adopted, step, foster, guardian, and unknown parent types independently as Lineal or Non-Lineal, rejecting a second Lineal parent while accepting multiple Non-Lineal parents. A Lineal selection previews and saves the child's full Lineage ID, assigns an unnumbered root parent when needed, retains established sibling segments, and rebases Lineal descendants without duplicates.
+- [ ] Every Owner/Editor partner-history row exposes Edit, including repeated histories with the same person. Marriage, unmarried partnership, and unknown type save independently from ongoing, death, divorce, separation, annulment, and unknown endings; start/end dates, place, and notes round-trip, while an end date without an end reason is rejected.
 - [ ] Self-link, duplicate-link, missing-reference, and ancestry-cycle errors are clear and non-destructive.
 - [ ] Parents, children, partners, siblings, ancestors, descendants, and lineage labels update from relationships.
 - [ ] Set Home changes the focus root.

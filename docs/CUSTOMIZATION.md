@@ -8,7 +8,7 @@ Versions use `major.minor.patch.build`. Every completed app update advances the 
 
 ## Family vocabulary
 
-Parent types, partner statuses, living statuses, date qualifiers, and the 1,500-person limit are centralized in `assets/js/config.js`. When adding an enum value, update normalizers, editor options, Help, print legend, and validation fixtures together. Never silently reinterpret an existing stored value.
+Parent types, partner relationship types, partner end reasons and derived statuses, living statuses, date qualifiers, and the 1,500-person limit are centralized in `assets/js/config.js`. When adding an enum value, update normalizers, editor options, Help, print legend, and validation fixtures together. Never silently reinterpret an existing stored value.
 
 ## State changes
 

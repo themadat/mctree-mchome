@@ -165,7 +165,7 @@
     const sourceDefinesEndReason = Object.prototype.hasOwnProperty.call(fields, "end-reason") || Object.prototype.hasOwnProperty.call(fields, "end_reason");
     const endDate = String(fields["date-end-value"] || fields.date_end_value || relationship && relationship.endDate && relationship.endDate.value || "").trim();
     if (sourceDefinesEndReason) return Boolean(partnerEndReason(relationship) || endDate);
-    return Boolean(endDate || relationship && ["divorced", "former", "separated", "widowed"].includes(relationship.status));
+    return Boolean(endDate || relationship && ["annulled", "divorced", "former", "separated", "widowed"].includes(relationship.status));
   }
 
   function isPastPartnerRelationship(relationship) {
@@ -175,6 +175,11 @@
   function partnerMaritalStatusId(person, entry) {
     const relationship = entry && entry.relationship || entry;
     const other = entry && entry.person;
+    const endReason = partnerEndReason(relationship);
+    if (endReason === "separation") return "separated";
+    if (endReason === "divorce") return "divorced";
+    if (endReason === "annulment") return "annulled";
+    if (endReason === "UNKNOWN") return "unknown";
     if (isNeverMarriedPartnership(relationship)) return "never-married";
     if (isUnknownPartnerRelationship(relationship)) return "unknown";
     if (isDeathEndedMarriage(relationship)) {
@@ -196,7 +201,7 @@
     if (isNeverMarriedPartnership(relationship)) return "never-married";
     if (isUnknownPartnerRelationship(relationship)) return "unknown";
     const sourceType = partnerSourceType(relationship);
-    const knownMarriage = sourceType === "marriage" || relationship && ["married", "widowed", "divorced", "separated"].includes(relationship.status);
+    const knownMarriage = sourceType === "marriage" || relationship && ["annulled", "married", "widowed", "divorced", "separated"].includes(relationship.status);
     if (current && (!partnerHasRecordedEnd(relationship) || isDeathEndedMarriage(relationship))) {
       const bothDeceased = first && second && first.livingStatus === "deceased" && second.livingStatus === "deceased";
       const deathSplit = first && second && ((first.livingStatus === "living" && second.livingStatus === "deceased") || (first.livingStatus === "deceased" && second.livingStatus === "living"));
@@ -597,6 +602,12 @@
     if (draft.type === "partner") {
       if (!peopleIds.has(draft.person1Id) || !peopleIds.has(draft.person2Id)) return "Choose two existing people.";
       if (draft.person1Id === draft.person2Id) return "A person cannot be their own partner.";
+      const fields = draft.source && draft.source.fields || {};
+      const savedType = String(fields["partner-type"] || "").trim();
+      const savedEndReason = String(fields["end-reason"] || "").trim();
+      if (savedType && !config.partnerTypes.some(function (item) { return item.id === savedType; })) return "Choose a supported partner relationship.";
+      if (savedEndReason && !config.partnerEndReasons.some(function (item) { return item.id === savedEndReason; })) return "Choose a supported partner ending.";
+      if (draft.endDate && draft.endDate.value && !savedEndReason) return "Choose why the partner relationship ended.";
       const start = JSON.stringify(draft.startDate || "");
       const end = JSON.stringify(draft.endDate || "");
       const duplicate = relationships.some(function (item) {
