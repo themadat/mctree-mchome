@@ -226,8 +226,7 @@ a { color: var(--accent-strong); }
 .top-toolbar .button-icon { display: grid; place-items: center; width: 24px; height: 24px; font-size: 1.4rem; }
 .top-toolbar .button-icon .sf-symbol { width: 22px; height: 22px; }
 .top-toolbar .button-label { font-size: .62rem; font-weight: 650; line-height: 1.05; text-transform: none; }
-#cloudAuditButton[data-cloud-state="danger"] { color: var(--danger); }
-#cloudAuditButton[data-cloud-state="success"] { color: var(--success); }
+#cloudAuditButton { color: var(--text); }
 :root[data-button-style="icons"] .top-toolbar .action-button { width: 46px; min-width: 46px; min-height: 46px; }
 :root[data-button-style="text"] .top-toolbar .action-button { width: auto; min-width: 54px; min-height: 42px; padding-inline: .6rem; }
 .whats-new-banner, .context-hint {
@@ -808,6 +807,8 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .tree-node.lineal > rect { stroke: var(--lineal-mark); stroke-width: 3; }
 .tree-node.lineal.selected > rect { stroke: var(--accent); stroke-width: 3; }
 .tree-lineal-mark { width: 7px; height: 10px; color: var(--lineal-mark); }
+.tree-contact-mark { color: var(--muted); }
+.tree-node.deceased .tree-contact-mark { color: var(--deceased-card-muted); }
 .tree-generation-scale { pointer-events: none; }
 .tree-generation-scale path { fill: none; stroke: var(--faint); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .tree-generation-scale text { fill: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 8px; dominant-baseline: middle; }
@@ -874,6 +875,9 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .contact-card header { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: .35rem; }
 .contact-card address { font-style: normal; }
 .contact-card p, .contact-card small { display: block; margin: .3rem 0 0; color: var(--muted); }
+.address-source-details { margin-top: .45rem; border-top: 1px solid var(--line); }
+.address-source-details summary { min-height: 34px; padding: .42rem 0 0; color: var(--accent-strong); font-size: .72rem; font-weight: 750; }
+.address-source-details .profile-list { margin-top: .2rem; }
 .relationship-list { display: grid; gap: .3rem; }
 .relationship-group { border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); }
 .relationship-group summary { display: flex; align-items: center; justify-content: space-between; gap: .45rem; min-height: 34px; padding: .32rem .45rem; color: var(--text); font-size: .72rem; font-weight: 800; cursor: pointer; }
@@ -922,7 +926,7 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .person-details-grid { grid-template-columns: 1.2fr 1.2fr .75fr; align-items: start; gap: .45rem; }
 .person-details-grid .field { gap: .15rem; }
 .person-details-grid input, .person-details-grid select { height: 36px; min-height: 36px; padding-block: .25rem; }
-.person-lineage-preview-field { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-column: 1 / -1; align-items: center; gap: .45rem; }
+.person-lineage-preview-field { display: grid; grid-template-columns: 1fr; grid-column: 1 / -1; align-items: start; gap: .15rem; }
 .person-lineage-preview-field output { display: flex; align-items: center; min-width: 0; height: 36px; min-height: 36px; padding: .25rem .5rem; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); }
 .person-lineage-preview-field output .lineage-id { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .person-lineage-preview-field > small { color: var(--muted); font-size: .58rem; line-height: 1.15; }

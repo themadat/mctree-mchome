@@ -511,7 +511,7 @@
           id: residence.id, placeId: place.id, residenceId: residence.id, label: residence.label || place.label,
           current: residence.current, line1: place.line1, line2: place.line2, city: place.city, region: place.region,
           postalCode: place.postalCode, country: place.country, startDate: residence.startDate, endDate: residence.endDate,
-          notes: [place.notes, residence.notes].filter(Boolean).join(" · "), source: residence.source, order: residence.order
+          notes: [place.notes, residence.notes].filter(Boolean).join(" · "), source: residence.source, placeSource: place.source, order: residence.order
         });
       });
     }
