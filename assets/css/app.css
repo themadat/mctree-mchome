@@ -919,9 +919,10 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .names-sync-note { margin: -.12rem 0 .22rem; font-size: .62rem; }
 .maiden-name-group { padding-block: .12rem .22rem; }
 .maiden-last-field { grid-column: 4; }
-.person-details-grid { grid-template-columns: 1.05fr 1.05fr .72fr 1.18fr; align-items: start; gap: .45rem; }
+.person-details-grid { grid-template-columns: 1.2fr 1.2fr .75fr; align-items: start; gap: .45rem; }
 .person-details-grid .field { gap: .15rem; }
 .person-details-grid input, .person-details-grid select { height: 36px; min-height: 36px; padding-block: .25rem; }
+.person-lineage-preview-field { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-column: 1 / -1; align-items: center; gap: .45rem; }
 .person-lineage-preview-field output { display: flex; align-items: center; min-width: 0; height: 36px; min-height: 36px; padding: .25rem .5rem; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); }
 .person-lineage-preview-field output .lineage-id { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .person-lineage-preview-field > small { color: var(--muted); font-size: .58rem; line-height: 1.15; }
@@ -1205,6 +1206,7 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
   .person-name-grid .field { font-size: .56rem; }
   .person-name-grid input { min-width: 0; min-height: 44px; height: 44px; padding-inline: .25rem; }
   .person-details-grid, .person-contact-sections, .cloud-fixed-target-grid { grid-template-columns: 1fr; }
+  .person-lineage-preview-field { grid-template-columns: 1fr; }
   .living-status-field { justify-self: stretch; width: 100%; }
   .name-editor-groups > .field { grid-template-columns: 1fr; align-items: stretch; }
   .name-editor-groups > .field input, .person-details-grid input, .person-details-grid select { min-height: 44px; }
