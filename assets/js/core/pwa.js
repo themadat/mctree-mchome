@@ -68,6 +68,7 @@
       lockedAction.onclick = function () { forceRefresh(worker); };
       lockedAction.setAttribute("aria-keyshortcuts", "R");
       lockedAction.dataset.shortcut = "R";
+      if (!document.querySelector("#accessPassphrase")?.value) lockedAction.focus({ preventScroll: true });
       return;
     }
     App.components.toast("A newer app version is ready. Force refresh to install it now.", {
@@ -120,6 +121,13 @@
   function init() {
     applyAppearanceAssets();
     registerServiceWorker();
+    document.addEventListener("keydown", function (event) {
+      const notice = document.querySelector("#accessUpdateNotice");
+      const action = document.querySelector("#accessUpdateButton");
+      if (event.code !== "KeyR" || event.metaKey || event.repeat || App.utils.isEditableTarget(event.target) || !document.body.classList.contains("access-locked") || !notice || notice.hidden || !action) return;
+      event.preventDefault();
+      action.click();
+    });
     window.addEventListener("appinstalled", function () {
       App.components.toast("The application was added to this device.", { title: "Installed", kind: "success" });
     });

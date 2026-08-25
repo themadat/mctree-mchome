@@ -14,7 +14,7 @@ Use synthetic families only.
 ## Hosted access, current schema, and portability
 
 - [ ] Every ordinary load shows only the hosted access gate until a current public ciphertext vault is fetched and one valid passphrase automatically identifies exactly one grant and decrypts its authorized package; no account or role selector appears.
-- [ ] A waiting service-worker update is shown on the locked gate before passphrase entry; Update McFamily refreshes the shell so sign-in is required only after the new build loads.
+- [ ] The locked landing screen shows the McFamily identity and sign-in controls without the old Private Family Atlas eyebrow, introductory instruction, update explanation, or eight-character recommendation. A waiting service-worker update is shown there before passphrase entry; Update McFamily and `R` refresh the shell so sign-in is required only after the new build loads.
 - [ ] A missing vault shows a clear connection/setup status and one Owner Recovery ZIP action; a validated Editor recovery package enters Owner Setup, while invalid files leave the gate locked.
 - [ ] No demo family, blank-family action, GEDCOM action, loose-CSV action, stored-passphrase bypass, or local-state-only viewer bypass appears.
 - [ ] The vault rejects wrong format/version, malformed base64, unsupported KDF/cipher parameters, missing full/redacted payloads, duplicate/unknown grants, oversized content, and invalid revisions before decrypting anything.
@@ -66,7 +66,7 @@ Use synthetic families only.
 
 - [ ] Add in the title bar and selected-person Add, Connect, Edit, Delete, and empty-profile Add Person controls are rendered only when `features.familyEditing` is true and active hosted access is Owner or Editor; all are absent in both read-only modes. Set as home is absent.
 - [ ] Add Person fits a 1280 × 720 desktop viewport without body scrolling, including one physical address row: Birth, Current, and Preferred remain single-line and weighted `5/30/30/30/5`, Maiden aligns to the Last column, each name subheading sits inside its card border, Birth input mirrors each untouched Current/Preferred field, and editing one target stops only that target from mirroring.
-- [ ] Add/Edit Person omits Gender, Pronouns, birth/death place, manual qualifiers, and lineage background while preserving those values on an existing person. Birth and death descriptors derive as year/month/day/partial/UNKNOWN/NONE, a valid death value selects Deceased, valid `?` partials save and round-trip, and malformed or impossible dates show comprehensive red examples and cannot save.
+- [ ] Add/Edit Person omits Gender, Pronouns, birth/death place, manual qualifiers, and lineage background while preserving those values on an existing person. Every editable person, address, Add Person partner, and standalone relationship date accepts the same blank, `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, and question-mark-partial syntax. Descriptors derive automatically, valid partials save and round-trip, and malformed or impossible dates show comprehensive red examples and cannot save.
 - [ ] Save remains disabled until at least one First name exists and every date, email, and added address row is valid. Save uses the supplied checkmark-seal symbol, Cancel uses the supplied X-mark-seal symbol, and Editor Notes has no redundant Details label.
 - [ ] Generic Add Person stacks Parents, Partners, and Children as separate dense searchable rows with compact results. A selected Partner exposes status plus validated start/end dates, saves the matching type/end-reason source fields, and immediately renders the chosen history; duplicate, self, missing-reference, second-Lineal-parent, and ancestry-cycle failures leave both person and relationships unmodified.
 - [ ] The selected-person header orders Delete, Edit, and X; Relationships owns Add and Connect. All four mutation controls use the supplied icon-over-label symbols.
@@ -74,7 +74,7 @@ Use synthetic families only.
 - The remaining mutation checks in this section apply while Owner or Editor access is open.
 - [ ] Add and remove repeated contacts without losing adjacent entries.
 - [ ] Connect biological, adopted, step, foster, guardian, and unknown parent types independently as Lineal or Non-Lineal, rejecting a second Lineal parent while accepting multiple Non-Lineal parents. A Lineal selection previews and saves the child's full Lineage ID, assigns an unnumbered root parent when needed, retains established sibling segments, and rebases Lineal descendants without duplicates.
-- [ ] Every Owner/Editor partner-history row exposes Edit, including repeated histories with the same person. Marriage, unmarried partnership, and unknown type save independently from ongoing, death, divorce, separation, annulment, and unknown endings; start/end dates, place, and notes round-trip, while an end date without an end reason is rejected.
+- [ ] Every Owner/Editor partner-history row exposes Edit, including repeated histories with the same person. Marriage, unmarried partnership, and unknown type save independently from ongoing, death, divorce, separation, annulment, and unknown endings; start/end dates and notes round-trip, Place is absent, existing hidden place data is preserved, and an end date without an end reason is rejected.
 - [ ] Self-link, duplicate-link, missing-reference, and ancestry-cycle errors are clear and non-destructive.
 - [ ] Parents, children, partners, siblings, ancestors, descendants, and lineage labels update from relationships.
 - [ ] Set Home changes the focus root.
@@ -85,9 +85,9 @@ Use synthetic families only.
 
 - [ ] Lineage mode shows the selected/home person's configured ancestor and descendant depth plus partners and siblings.
 - [ ] Full Tree contains every connected component and isolated person.
-- [ ] The toolbar centers Name Preferences, Tree View, Card View, Levels, and Zoom over their groups; orders Full Tree before Lineage and Details before Summary; keeps both internal Name Preferences toggle groups equal-height without overflow; de-emphasizes `(Display)`, `(Current)`, and `(Birth)`; removes the old Source Name, Length, and Zoom % labels; and places `%` beside the editable zoom value with stacked one-percent buttons at the far right.
+- [ ] The toolbar centers Name Preferences, Tree View, Card View, Levels, and Zoom over their groups; orders Full Tree before Lineage and Details before Summary; keeps both internal Name Preferences toggle groups equal-height without overflow; de-emphasizes `(Display)`, `(Current)`, and `(Birth)`; removes the old Source Name, Length, and Zoom % labels; and places `%` with balanced side spacing beside the editable zoom value and vertically centered stacked one-percent buttons at the far right.
 - [ ] Single-person, multi-partner, adopted, disconnected, pedigree-collapse, and 1,500-person synthetic families render without exceptions.
-- [ ] Pan, Ctrl/Command-wheel and pinch zoom, right-aligned grouped icon-over-label Out/In/Fit buttons, direct zoom percentage entry in a box no wider than its `100%` content plus stepper, node click, and grouped numeric ancestor/descendant steppers with labels above their inputs work; both depths default to 10.
+- [ ] Pan, Ctrl/Command-wheel and pinch zoom, right-aligned grouped icon-over-label Out/In/Fit buttons, direct zoom percentage entry in a compact, reduced-height white box no wider than its `100%` content plus stepper, node click, and grouped numeric ancestor/descendant steppers with labels above their inputs work; both depths default to 10.
 - [ ] Natural-size Family Tree layouts expose horizontal and vertical scrolling when needed; ordinary wheel input scrolls and Ctrl/Command-wheel zooms.
 - [ ] Arrow keys move between rendered nodes and Enter/Space selects.
 - [ ] Every node and relationship has an understandable accessible label.
@@ -144,9 +144,9 @@ Use synthetic families only.
 - [ ] Mobile Directory/Family Tree/Person tabs are touch-sized; choosing a person opens Person.
 - [ ] Dialogs fit the mobile viewport with one usable scrolling surface.
 - [ ] Labels, landmarks, focus order, visible focus, live regions, and focus restoration are correct.
-- [ ] Escape closes temporary UI; `/`, `?`, `D`, `F`, `K`, `N`, `V`, `X`, `R`, `T`, and supported navigation keys work outside fields. X acts only while What's New is visible, and R acts only while the new-version reload action is visible.
+- [ ] Escape closes temporary UI; `/`, `?`, `D`, `F`, `K`, `N`, `V`, `X`, `R`, `T`, and supported navigation keys work outside fields. X closes the topmost pop-up, What’s New, or update notice, and R acts only while the new-version reload action is visible.
 - [ ] Reduced-motion mode removes nonessential animation.
-- [ ] Light and dark themes retain readable contrast and status text.
+- [ ] New and reset preferences follow the system theme by default; explicit System, Light, and Dark choices persist and retain readable contrast and status text.
 
 ## Print / Save PDF
 
@@ -168,5 +168,5 @@ Use synthetic families only.
 - [ ] Reload while offline remains locked and explains that the current encrypted hosted record could not be reached; there is no stale decrypted-family bypass.
 - [ ] The worker does not cache or transmit the vault, decrypted family data, passphrases, or tokens.
 - [ ] A build change shows the new-version toast and Force refresh activates the waiting worker.
-- [ ] Outside editable controls, `A` opens Add Person for Owner/Editor, `W` opens View As only for an Owner in Developer Mode, `|` toggles Developer Mode, and `X` closes Settings, the active new-version toast, or What’s New without exposing gated actions to Member/Viewer.
+- [ ] Outside editable controls, `A` opens Add Person for Owner/Editor, `W` opens View As only for an Owner in Developer Mode, `|` toggles Developer Mode, `X` closes every pop-up dialog plus the active new-version toast or What’s New, and `R` activates an available update on the locked landing screen. Letter shortcuts do not fire while typing in editable controls, and X cancels confirmation/choice dialogs without accepting them.
 - [ ] Both manifests install with correct McFamily identity and light/dark icons.

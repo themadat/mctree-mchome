@@ -18,6 +18,13 @@
     if (!dialog) return null;
     const settings = Object.assign({ trigger: document.activeElement, focus: "[autofocus], [data-initial-focus], input, button, select, textarea" }, options || {});
     focusOrigins.set(dialog, settings.trigger instanceof HTMLElement ? settings.trigger : null);
+    if (dialog.id !== "accessGateDialog") {
+      const closeControl = dialog.querySelector("[data-close-dialog], [data-confirm-cancel], [data-choice-cancel]");
+      if (closeControl) {
+        closeControl.setAttribute("aria-keyshortcuts", "X");
+        closeControl.dataset.shortcut = "X";
+      }
+    }
     if (!dialog.open) dialog.showModal();
     document.documentElement.classList.add("dialog-open");
     requestAnimationFrame(function () {
@@ -244,6 +251,18 @@
       if (activePopover && !activePopover.popover.contains(event.target) && !activePopover.anchor.contains(event.target)) closePopover({ restoreFocus: false });
     });
     document.addEventListener("keydown", function (event) {
+      if (event.code === "KeyX" && !event.metaKey && !event.repeat && !u.isEditableTarget(event.target)) {
+        const dialogs = Array.from(document.querySelectorAll("dialog[open]")).filter(function (dialog) { return dialog.id !== "accessGateDialog"; });
+        const dialog = dialogs[dialogs.length - 1];
+        if (dialog) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          if (dialog.id === "confirmDialog") dialog.querySelector("[data-confirm-cancel]").click();
+          else if (dialog.id === "choiceDialog") dialog.querySelector("[data-choice-cancel]").click();
+          else closeDialog(dialog, "cancel");
+          return;
+        }
+      }
       if (event.key === "Escape" && !activePopover) {
         const dialogs = Array.from(document.querySelectorAll("dialog[open]"));
         const dialog = dialogs[dialogs.length - 1];

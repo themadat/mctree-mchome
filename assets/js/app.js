@@ -29,6 +29,7 @@
   const FAVORITES_BACKUP_FORMAT = "mcfamily-favorites";
   const FAVORITES_BACKUP_VERSION = 1;
   const NAME_PARTS = ["Prefix", "First", "Middle", "Last", "Suffix"];
+  const DATE_INPUT_HELP = "Use YYYY, YYYY-MM, or YYYY-MM-DD. Any digit may be ?. Examples: 1984 · 19?? · ???? · 1984-07 · 1984-?? · ????-?? · 1984-07-23 · 1984-07-?? · 1984-??-?? · ????-??-??. Known months must be 01–12 and known days must be valid for the month.";
 
   const SHORTCUTS = [
     { keys: "/", label: "Focus global search", group: "Global" },
@@ -43,7 +44,7 @@
     { keys: "V", label: "Open What’s New", group: "Actions" },
     { keys: "W", label: "Open View As in Developer Mode", group: "Actions" },
     { keys: "|", label: "Toggle Developer Mode", group: "Actions" },
-    { keys: "X", label: "Close Settings, an update notice, or What’s New", group: "Actions" },
+    { keys: "X", label: "Close the active pop-up, update notice, or What’s New", group: "Actions" },
     { keys: "R", label: "Reload when a new version is available", group: "Actions" },
     { keys: "E", label: "Open Audit", group: "Actions" },
     { keys: "T", label: "Switch color theme", group: "Actions" },
@@ -609,18 +610,20 @@
     return maritalStatusLabel(family.partnerMaritalStatusId(person, entry));
   }
 
-  function partnerStartYear(relationship) {
+  function relationshipDateValue(relationship, kind) {
     const fields = relationship && relationship.source && relationship.source.fields || {};
-    const sourceValue = String(fields["date-start-value"] || fields.date_start_value || "");
-    const value = sourceValue || String(relationship && relationship.startDate && relationship.startDate.value || "");
+    const sourceValue = String(fields["date-" + kind + "-value"] || fields["date_" + kind + "_value"] || "");
+    return sourceValue || String(relationship && relationship[kind + "Date"] && relationship[kind + "Date"].value || "");
+  }
+
+  function partnerStartYear(relationship) {
+    const value = relationshipDateValue(relationship, "start");
     const year = value.match(/^[\d?]{4}/);
     return year ? year[0] : "????";
   }
 
   function partnerEndYear(relationship) {
-    const fields = relationship && relationship.source && relationship.source.fields || {};
-    const sourceValue = String(fields["date-end-value"] || fields.date_end_value || "");
-    const value = sourceValue || String(relationship && relationship.endDate && relationship.endDate.value || "");
+    const value = relationshipDateValue(relationship, "end");
     const year = value.match(/^[\d?]{4}/);
     return year ? year[0] : "";
   }
@@ -1485,8 +1488,7 @@
   }
 
   function addressRow(address, index) {
-    const dateHelp = "Use YYYY, YYYY-MM, or YYYY-MM-DD. Any digit may be ?. Examples: 1984 · 19?? · ???? · 1984-07 · 1984-?? · ????-?? · 1984-07-23 · 1984-07-?? · 1984-??-?? · ????-??-??. Known months must be 01–12 and known days must be valid for the month.";
-    return '<fieldset class="repeatable-card" data-address-index="' + index + '"><legend>Address ' + (index + 1) + '</legend><div class="repeatable-card-actions"><button type="button" class="button small danger-text" data-remove-address="' + index + '">Remove</button></div><div class="address-editor-grid"><label class="field"><span>Label</span><input data-address-field="label" value="' + u.escapeHtml(address.label || "Home") + '"></label><label class="field"><span>Address line 1</span><input data-address-field="line1" value="' + u.escapeHtml(address.line1 || "") + '"></label><label class="field"><span>Address line 2</span><input data-address-field="line2" value="' + u.escapeHtml(address.line2 || "") + '"></label><label class="field"><span>City / locality</span><input data-address-field="city" value="' + u.escapeHtml(address.city || "") + '"></label><label class="field"><span>State / region</span><input data-address-field="region" value="' + u.escapeHtml(address.region || "") + '"></label><label class="field"><span>Postal code</span><input data-address-field="postalCode" value="' + u.escapeHtml(address.postalCode || "") + '"></label><label class="field"><span>Country</span><input data-address-field="country" value="' + u.escapeHtml(address.country || "") + '"></label><label class="check-field address-current-field"><input type="checkbox" data-address-field="current" ' + (address.current !== false ? "checked" : "") + '><span>Current address</span></label><label class="field address-start-field date-input-field"><span>Start date</span><input data-address-field="startDate" data-person-date placeholder="YYYY-MM-DD" inputmode="text" maxlength="10" autocomplete="off" spellcheck="false" aria-describedby="addressStartDateError' + index + '" value="' + u.escapeHtml(addressDateValue(address, "start")) + '"><small id="addressStartDateError' + index + '" class="date-validation-message" data-date-error hidden>' + dateHelp + '</small></label><label class="field address-end-field date-input-field"><span>End date</span><input data-address-field="endDate" data-person-date placeholder="YYYY-MM-DD" inputmode="text" maxlength="10" autocomplete="off" spellcheck="false" aria-describedby="addressEndDateError' + index + '" value="' + u.escapeHtml(addressDateValue(address, "end")) + '"><small id="addressEndDateError' + index + '" class="date-validation-message" data-date-error hidden>' + dateHelp + '</small></label><label class="field address-notes-field"><span>Address notes</span><textarea data-address-field="notes" rows="1">' + u.escapeHtml(address.notes || "") + '</textarea></label></div><small class="address-validation-message" data-address-error hidden>Add at least one physical address field, or remove this address.</small></fieldset>';
+    return '<fieldset class="repeatable-card" data-address-index="' + index + '"><legend>Address ' + (index + 1) + '</legend><div class="repeatable-card-actions"><button type="button" class="button small danger-text" data-remove-address="' + index + '">Remove</button></div><div class="address-editor-grid"><label class="field"><span>Label</span><input data-address-field="label" value="' + u.escapeHtml(address.label || "Home") + '"></label><label class="field"><span>Address line 1</span><input data-address-field="line1" value="' + u.escapeHtml(address.line1 || "") + '"></label><label class="field"><span>Address line 2</span><input data-address-field="line2" value="' + u.escapeHtml(address.line2 || "") + '"></label><label class="field"><span>City / locality</span><input data-address-field="city" value="' + u.escapeHtml(address.city || "") + '"></label><label class="field"><span>State / region</span><input data-address-field="region" value="' + u.escapeHtml(address.region || "") + '"></label><label class="field"><span>Postal code</span><input data-address-field="postalCode" value="' + u.escapeHtml(address.postalCode || "") + '"></label><label class="field"><span>Country</span><input data-address-field="country" value="' + u.escapeHtml(address.country || "") + '"></label><label class="check-field address-current-field"><input type="checkbox" data-address-field="current" ' + (address.current !== false ? "checked" : "") + '><span>Current address</span></label><label class="field address-start-field date-input-field"><span>Start date</span><input data-address-field="startDate" data-date-input placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" inputmode="text" maxlength="10" autocomplete="off" spellcheck="false" aria-describedby="addressStartDateError' + index + '" value="' + u.escapeHtml(addressDateValue(address, "start")) + '"><small id="addressStartDateError' + index + '" class="date-validation-message" data-date-error hidden>' + DATE_INPUT_HELP + '</small></label><label class="field address-end-field date-input-field"><span>End date</span><input data-address-field="endDate" data-date-input placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" inputmode="text" maxlength="10" autocomplete="off" spellcheck="false" aria-describedby="addressEndDateError' + index + '" value="' + u.escapeHtml(addressDateValue(address, "end")) + '"><small id="addressEndDateError' + index + '" class="date-validation-message" data-date-error hidden>' + DATE_INPUT_HELP + '</small></label><label class="field address-notes-field"><span>Address notes</span><textarea data-address-field="notes" rows="1">' + u.escapeHtml(address.notes || "") + '</textarea></label></div><small class="address-validation-message" data-address-error hidden>Add at least one physical address field, or remove this address.</small></fieldset>';
   }
 
   function contactRow(item, index, type) {
@@ -1538,18 +1540,19 @@
     if (details) details.hidden = !selected;
     if (!selected) {
       [status, start, end].filter(Boolean).forEach(function (input) { input.setAttribute("aria-invalid", "false"); });
+      $$('[data-date-error]', details).forEach(function (dateError) { dateError.hidden = true; });
       if (message) message.hidden = true;
       return true;
     }
-    const startValid = validStructuredDateInput(start && start.value);
-    const endValid = validStructuredDateInput(end && end.value);
+    const startValid = validateDateInputControl(start);
+    const endValid = validateDateInputControl(end);
     const endedStatus = ["separated", "divorced", "widowed", "annulled", "former"].includes(status && status.value);
     const statusValid = !String(end && end.value || "").trim() || endedStatus;
     if (start) start.setAttribute("aria-invalid", String(!startValid));
     if (end) end.setAttribute("aria-invalid", String(!endValid));
     if (status) status.setAttribute("aria-invalid", String(!statusValid));
     if (message) {
-      message.textContent = !startValid || !endValid ? "Use YYYY, YYYY-MM, or YYYY-MM-DD." : !statusValid ? "Choose an ended status when an end date is entered." : "";
+      message.textContent = !statusValid ? "Choose an ended status when an end date is entered." : "";
       message.hidden = startValid && endValid && statusValid;
     }
     return startValid && endValid && statusValid;
@@ -1595,7 +1598,7 @@
       container.innerHTML = people.length ? people.map(function (candidate, index) {
         const id = "new-person-" + kind + "-" + index;
         const label = model.displayName(candidate) + (developerReferencesEnabled() ? " · " + candidate.reference : "");
-        const partnerDetails = kind === "partners" ? '<div class="new-partner-details" data-new-partner-details="' + u.escapeHtml(candidate.id) + '" hidden><label class="field"><span>Status</span><select data-new-partner-status>' + partnerStatusOptions + '</select></label><label class="field"><span>Start date</span><input data-new-partner-start-date placeholder="YYYY-MM-DD" inputmode="numeric" maxlength="10"></label><label class="field"><span>End date</span><input data-new-partner-end-date placeholder="YYYY-MM-DD" inputmode="numeric" maxlength="10"></label><p class="new-partner-validation" data-new-partner-validation role="alert" hidden></p></div>' : "";
+        const partnerDetails = kind === "partners" ? '<div class="new-partner-details" data-new-partner-details="' + u.escapeHtml(candidate.id) + '" hidden><label class="field"><span>Status</span><select data-new-partner-status>' + partnerStatusOptions + '</select></label><label class="field date-input-field"><span>Start date</span><input data-new-partner-start-date data-date-input placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" inputmode="text" maxlength="10" autocomplete="off" spellcheck="false" aria-describedby="newPartnerStartDateError' + index + '"><small id="newPartnerStartDateError' + index + '" class="date-validation-message" data-date-error hidden>' + DATE_INPUT_HELP + '</small></label><label class="field date-input-field"><span>End date</span><input data-new-partner-end-date data-date-input placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" inputmode="text" maxlength="10" autocomplete="off" spellcheck="false" aria-describedby="newPartnerEndDateError' + index + '"><small id="newPartnerEndDateError' + index + '" class="date-validation-message" data-date-error hidden>' + DATE_INPUT_HELP + '</small></label><p class="new-partner-validation" data-new-partner-validation role="alert" hidden></p></div>' : "";
         return '<div class="relationship-picker-option" data-new-person-relationship-row="' + kind + '"><label class="relationship-picker-choice" for="' + id + '"><input id="' + id + '" type="checkbox" value="' + u.escapeHtml(candidate.id) + '" data-new-person-relationship="' + kind + '"><span>' + u.escapeHtml(label) + "</span></label>" + partnerDetails + "</div>";
       }).join("") : '<p class="relationship-picker-empty">No existing people available.</p>';
     });
@@ -1611,7 +1614,10 @@
 
   function updatePersonFormValidity() {
     const firstNamePresent = ["birthNameFirst", "currentNameFirst", "preferredNameFirst"].some(function (id) { return Boolean($("#" + id).value.trim()); });
-    const datesValid = $$('[data-person-date]', $("#personDialog")).map(validatePersonDateInput).every(Boolean);
+    const datesValid = $$('[data-date-input]', $("#personDialog")).filter(function (input) {
+      const partnerDetails = input.closest("[data-new-partner-details]");
+      return !partnerDetails || !partnerDetails.hidden;
+    }).map(validateDateInputControl).every(Boolean);
     const emailsValid = $$('input[type="email"]', $("#personDialog")).every(function (input) { return input.checkValidity(); });
     const addressesValid = $$('[data-address-index]', $("#addressEditor")).map(function (row) {
       const valid = addressEditorRowValid(row);
@@ -1745,16 +1751,13 @@
     return true;
   }
 
-  function validatePersonDateInput(input) {
+  function validateDateInputControl(input) {
+    if (!input) return true;
     const valid = validDateInput(input.value);
     input.setAttribute("aria-invalid", String(!valid));
     const message = input.closest("label") && $("[data-date-error]", input.closest("label"));
     if (message) message.hidden = valid;
     return valid;
-  }
-
-  function validStructuredDateInput(value) {
-    return validDateInput(value) && !String(value || "").includes("?");
   }
 
   function automaticDateDescriptor(value, kind, livingStatus) {
@@ -1797,7 +1800,7 @@
     };
     renderPersonRepeatables();
     renderNewPersonRelationshipPickers(person);
-    $$('[data-person-date]', $("#personDialog")).forEach(function (input) { input.setAttribute("aria-invalid", "false"); });
+    $$('[data-date-input]', $("#personDialog")).forEach(function (input) { input.setAttribute("aria-invalid", "false"); });
     $$('[data-date-error]', $("#personDialog")).forEach(function (message) { message.hidden = true; });
     $("#personFormError").hidden = true;
     updatePersonFormValidity();
@@ -1885,8 +1888,8 @@
       if (choice.kind === "partner") {
         const details = choice.details || { status: "unknown", startDate: "", endDate: "" };
         const sourceDetails = newPartnerStatusDetails(details.status);
-        relationship.startDate.value = details.startDate;
-        relationship.endDate.value = details.endDate;
+        relationship.startDate = normalizedPersonDate(details.startDate, automaticDateDescriptor(details.startDate, "optional", ""));
+        relationship.endDate = normalizedPersonDate(details.endDate, automaticDateDescriptor(details.endDate, "optional", ""));
         relationship.source.fields = {
           "partner-type": sourceDetails.type,
           "end-reason": sourceDetails.endReason,
@@ -1910,8 +1913,11 @@
     const firstNamePresent = ["birthNameFirst", "currentNameFirst", "preferredNameFirst"].some(function (idValue) { return $("#" + idValue).value.trim(); });
     if (!firstNamePresent) return showPersonError("Enter at least one First name in Birth, Current, or Preferred.");
     syncPersonRepeatables();
-    const dateInputs = $$('[data-person-date]', $("#personDialog"));
-    if (!dateInputs.map(validatePersonDateInput).every(Boolean)) return showPersonError("Correct every date marked in red. The examples below each date show every accepted format.");
+    const dateInputs = $$('[data-date-input]', $("#personDialog")).filter(function (input) {
+      const partnerDetails = input.closest("[data-new-partner-details]");
+      return !partnerDetails || !partnerDetails.hidden;
+    });
+    if (!dateInputs.map(validateDateInputControl).every(Boolean)) return showPersonError("Correct every date marked in red. The examples below each date show every accepted format.");
     if (!validateNewPartnerRows()) return showPersonError("Correct the selected partner status or dates marked in red.");
     if (!$$('input[type="email"]', $("#personDialog")).every(function (input) { return input.checkValidity(); })) return showPersonError("Correct the email address marked as invalid.");
     if (personDraft.addresses.some(function (address) { return ![address.line1, address.line2, address.city, address.region, address.postalCode, address.country].some(function (value) { return Boolean(String(value || "").trim()); }); })) return showPersonError("Every address needs at least one physical address field, or remove the empty address.");
@@ -2034,11 +2040,10 @@
     $("#parentKind").value = relationship && relationship.kind || "unknown";
     $("#partnerType").value = partnerTypeValue(relationship);
     $("#partnerEndReason").value = partnerEndReasonValue(relationship);
-    $("#relationshipStartDate").value = relationship && relationship.startDate.value || "";
-    $("#relationshipStartQualifier").value = relationship && relationship.startDate.qualifier || "exact";
-    $("#relationshipEndDate").value = relationship && relationship.endDate.value || "";
-    $("#relationshipEndQualifier").value = relationship && relationship.endDate.qualifier || "exact";
-    $("#relationshipPlace").value = relationship && relationship.place || "";
+    $("#relationshipStartDate").value = relationshipDateValue(relationship, "start");
+    $("#relationshipEndDate").value = relationshipDateValue(relationship, "end");
+    $$('[data-date-input]', $("#relationshipDialog")).forEach(function (input) { input.setAttribute("aria-invalid", "false"); });
+    $$('[data-date-error]', $("#relationshipDialog")).forEach(function (message) { message.hidden = true; });
     $("#relationshipNotes").value = relationship && relationship.notes || "";
     $("#relationshipFormError").hidden = true;
     updateRelationshipFormType();
@@ -2051,14 +2056,15 @@
     const id = $("#relationshipId").value;
     const existing = id ? state().workspace.relationships.find(function (item) { return item.id === id; }) : null;
     const type = $("#relationshipType").value;
-    const startDate = { value: $("#relationshipStartDate").value.trim(), qualifier: $("#relationshipStartQualifier").value };
-    const endDate = { value: $("#relationshipEndDate").value.trim(), qualifier: $("#relationshipEndQualifier").value };
-    if (!validStructuredDateInput(startDate.value) || !validStructuredDateInput(endDate.value)) {
-      $("#relationshipFormError").textContent = "Use YYYY, YYYY-MM, or YYYY-MM-DD for relationship dates.";
+    const startValue = $("#relationshipStartDate").value.trim();
+    const endValue = $("#relationshipEndDate").value.trim();
+    const dateInputs = [$("#relationshipStartDate"), $("#relationshipEndDate")];
+    if (!dateInputs.map(validateDateInputControl).every(Boolean)) {
+      $("#relationshipFormError").textContent = "Correct every date marked in red. The examples below each date show every accepted format.";
       $("#relationshipFormError").hidden = false;
       return;
     }
-    if (type === "partner" && endDate.value && !$("#partnerEndReason").value) {
+    if (type === "partner" && endValue && !$("#partnerEndReason").value) {
       $("#relationshipFormError").textContent = "Choose why the partner relationship ended, or clear the end date.";
       $("#relationshipFormError").hidden = false;
       return;
@@ -2067,9 +2073,15 @@
     const source = existing ? u.clone(existing.source) : { format: "mcrelations-v2", fields: {} };
     source.format = source.format || "mcrelations-v2";
     source.fields = Object.assign({}, u.plainObject(source.fields));
+    const startDescriptor = automaticDateDescriptor(startValue, "optional", "");
+    const endDescriptor = automaticDateDescriptor(endValue, "optional", "");
+    source.fields["date-start-value"] = startValue;
+    source.fields["date-start-descriptor"] = startDescriptor;
+    source.fields["date-end-value"] = endValue;
+    source.fields["date-end-descriptor"] = endDescriptor;
     const relationship = {
       id: existing ? existing.id : u.uid("relationship"), type: type,
-      startDate: startDate, endDate: endDate, place: $("#relationshipPlace").value, notes: $("#relationshipNotes").value,
+      startDate: normalizedPersonDate(startValue, startDescriptor), endDate: normalizedPersonDate(endValue, endDescriptor), place: existing ? existing.place : "", notes: $("#relationshipNotes").value,
       source: source,
       order: existing ? existing.order : state().workspace.relationships.length + 1, createdAt: existing ? existing.createdAt : now, updatedAt: now
     };
@@ -2974,11 +2986,9 @@
     else if (event.code === "KeyV") { event.preventDefault(); openSupport("releases", event.target); }
     else if (event.code === "KeyW" && rolePreviewAvailable()) { event.preventDefault(); openRolePreviewMenu($("#accessModePill")); }
     else if (event.code === "KeyX") {
-      const support = $("#supportDialog");
       const toast = $("#appToast");
       const updateVisible = !toast.hidden && $("[data-toast-title]", toast).textContent === "New version available";
-      if (support.open) { event.preventDefault(); components.closeDialog(support, "shortcut"); }
-      else if (updateVisible) { event.preventDefault(); components.hideToast(); }
+      if (updateVisible) { event.preventDefault(); components.hideToast(); }
       else if (!$("#whatsNewBanner").hidden) { event.preventDefault(); $("[data-dismiss-release]").click(); }
     }
     else if (event.code === "KeyR") {
@@ -3061,14 +3071,17 @@
     $("#relationshipForm").addEventListener("change", function (event) {
       if (["relationPerson1", "relationPerson2", "parentLineage", "parentKind"].includes(event.target.id)) updateRelationshipLineagePreview();
     });
+    $("#relationshipForm").addEventListener("input", function (event) {
+      if (event.target.matches("[data-date-input]") && validateDateInputControl(event.target)) $("#relationshipFormError").hidden = true;
+    });
     $("#personDialog").addEventListener("input", function (event) {
       if (event.target.matches("[data-new-person-relationship-search]")) filterNewPersonRelationshipPicker(event.target);
       const birthName = /^birthName(Prefix|First|Middle|Last|Suffix)$/.exec(event.target.id);
       if (birthName) syncBirthNamePart(birthName[1]);
       const derivedName = /^(current|preferred)Name(Prefix|First|Middle|Last|Suffix)$/.exec(event.target.id);
       if (derivedName) personNameOverrides.add(event.target.id);
-      if (event.target.matches("[data-person-date]")) {
-        const valid = validatePersonDateInput(event.target);
+      if (event.target.matches("[data-date-input]")) {
+        const valid = validateDateInputControl(event.target);
         if (event.target.id === "deathDate" && valid && event.target.value.trim()) $("#livingStatus").value = "deceased";
       }
       if (event.target.matches("[data-new-person-relationship]")) updateNewPersonRelationshipCounts();
