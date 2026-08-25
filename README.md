@@ -4,7 +4,7 @@ McFamily is a private family atlas that runs as a static GitHub Pages app. It vi
 
 There is no custom backend, account provider, cloud database, or runtime dependency. The separate public `mcdata` repository contains only an AES-GCM encrypted vault; readable family CSVs, passphrases, and GitHub tokens never belong in either public repository.
 
-Current version: `0.0.1.76` (`major.minor.patch.build`).
+Current version: `0.0.1.77` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -25,7 +25,7 @@ Current version: `0.0.1.76` (`major.minor.patch.build`).
 - Keeps portrait placeholders and internal person references out of the ordinary workspace; Developer Mode reveals references and a left-side generation bubble scale for visual troubleshooting.
 - Presents complete oldest-to-newest, two-digit Lineage IDs with the first three ancestral segments italicized and the selected person's final segment bold, followed by a compact direct-parent-linked Family Line with each name's lineage number and generation.
 - Keeps people, places, person-to-person relationships, person-to-place residences, and package metadata in separate exact-schema CSV files inside one ZIP artifact.
-- Opens Audit immediately left of Add. The Owner's permission is shown as Admin and records updates as Admin; separately named Editors publish under their own audit username. Audit generates a detailed unpublished-change list, enables Update only when family content changed, and lets the Owner add, rotate, or revoke each passphrase independently.
+- Opens Audit immediately left of Add. The Owner's permission is shown as Admin and records updates as Admin; separately named Editors publish under their own audit username. Audit generates a detailed unpublished-change list with one row per changed area, enables Update only when family content changed, and lets the Owner add, rotate, or revoke each passphrase independently.
 - Lets the signed-in Owner click the role pill in Developer Mode to preview Editor, Member, or Viewer behavior without changing the vault, package, or active credentials.
 - Imports known and question-mark partial source dates; person death descriptors explicitly distinguish living (`NONE`), deceased with an unknown date (`UNKNOWN`), and presumed deceased (`UNKNOWN PRESUMED`).
 - Shows partial source dates such as `December ??, 1979`, keeps a natural-language Age property on one line, and fills unknown visible identity properties with `UNKNOWN`. Living profiles use `----` for Died, and living people show only their birth year in directory and tree lifespans. Gender and Pronouns remain stored but are temporarily hidden from person details.
@@ -33,9 +33,9 @@ Current version: `0.0.1.76` (`major.minor.patch.build`).
 - Uses absolute lineage generations rooted at George McMillen (1745) as Gen 0; readings use concise forms such as `Gen 6, 5th Child of Max`.
 - Lets the person panel close and clear selection; choosing any Family Tree person reopens it without a separate Show person control.
 - Enables family-record Add, Connect, Edit, Delete, person and family Notes, family-title, recovery ZIP, PDF, publishing, and imported-source inspection only for Owner or Editor access; imported source additionally requires Developer Mode. Member and Viewer modes omit Add from the title bar and omit Add, Connect, Edit, and Delete from Selected Person, along with Audit, Notes, imported-source search, routine import, export, PDF, developer-data, and publishing controls.
-- Uses a one-page desktop person form whose Birth (Lineal), Current (Legal), Preferred (Display), and Maiden names stay on weighted rows beside compact details. Birth typing seeds Current and Preferred until either target field is edited. At least one First name is required; every editable date uses the same blank, `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, and question-mark-partial syntax with live validation; invalid dates, emails, and empty address rows are marked and block Save; a valid death date selects Deceased.
-- Lets Add Person search and select existing Parents, Partners, and Children before Save. Each relationship type occupies its own dense row, and each selected Partner can record status plus start and end dates while relationship validation and ancestry-cycle checks remain atomic.
-- Previews and assigns a complete two-digit Lineage ID whenever a Lineal parent is connected, retaining established child numbers and rebasing any Lineal descendants with the branch.
+- Uses a one-page desktop person form whose Birth (Lineal), Current (Legal), Preferred (Display), and Maiden names stay on weighted rows beside compact details. Birth typing seeds Current until it is edited, Current typing updates Preferred, and Birth Last updates Maiden Last. At least one First name is required; every editable date uses the same blank, `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, and question-mark-partial syntax with live validation; invalid dates, emails, and empty address rows are marked and block Save; a valid death date selects Deceased.
+- Lets Add Person search and select existing Parents, Partners, and Children before Save. Each relationship type occupies its own dense row, and each selected Partner can record status plus start and end dates while relationship validation and ancestry-cycle checks remain atomic. A selected parent with a Lineage ID is classified as Lineal automatically; other parents remain Non-Lineal.
+- Always shows the read-only Lineage ID in Person Details and previews the automatically calculated value before Save, retaining established child numbers and rebasing any Lineal descendants with the branch.
 - Lets Editors open every partner history from the selected-person profile and record marriage or unmarried-partnership type, start and end dates, death, divorce, separation, annulment or unknown endings, and notes.
 - Retains structured profiles for people, multiple addresses, phones, emails, life events, and typed parent or partner relationships.
 - Rejects a damaged or malformed ZIP, missing/extra/reordered columns, bad metadata counts, missing references, duplicate relationships, self-links, and ancestry cycles before replacement.

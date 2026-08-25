@@ -1582,6 +1582,7 @@
       if (count) count.textContent = selected.length ? selected.length + " selected" : "None";
     });
     validateNewPartnerRows();
+    updatePersonLineagePreview();
   }
 
   function renderNewPersonRelationshipPickers(person) {
@@ -1722,6 +1723,60 @@
       const targetId = targetNameInputId(group, part);
       if (!personNameOverrides.has(targetId)) $("#" + targetId).value = source.value;
     });
+    if (part === "Last") $("#maidenLastName").value = source.value;
+  }
+
+  function syncCurrentNamePart(part) {
+    const targetId = targetNameInputId("preferred", part);
+    $("#" + targetId).value = $("#currentName" + part).value;
+    personNameOverrides.add(targetId);
+  }
+
+  function selectedNewPersonParentIds() {
+    const ids = selectedNewPersonRelationshipIds("parents");
+    if (pendingRelative && pendingRelative.role === "child") ids.push(pendingRelative.sourceId);
+    return Array.from(new Set(ids));
+  }
+
+  function automaticLinealParentId() {
+    return selectedNewPersonParentIds().find(function (id) {
+      const parent = state().workspace.people.find(function (person) { return person.id === id; });
+      return Boolean(sourceField(parent, "lineage-id"));
+    }) || "";
+  }
+
+  function updatePersonLineagePreview() {
+    const output = $("#personLineagePreview");
+    if (!output) return "";
+    const existingId = $("#personId").value;
+    const existing = existingId && state().workspace.people.find(function (person) { return person.id === existingId; });
+    if (existing) {
+      const saved = storedLineageValue(existing);
+      output.classList.remove("danger-text");
+      output.innerHTML = saved ? lineageIdHtml(saved.split(".").map(displayLineageSegment)) : "None";
+      return saved;
+    }
+    const parentId = automaticLinealParentId();
+    if (!parentId) {
+      output.classList.remove("danger-text");
+      output.textContent = "None";
+      return "";
+    }
+    const previewState = u.clone(state());
+    const personId = nextNumericRecordId("P", previewState.workspace.people, 3);
+    previewState.workspace.people.push({ id: personId, source: { format: "mcpeople-v1", fields: {} }, updatedAt: u.isoNow() });
+    const relationship = { id: "new-person-lineage-preview", type: "parent-child", parentId: parentId, childId: personId, lineage: "lineal", kind: "unknown" };
+    previewState.workspace.relationships.push(relationship);
+    try {
+      const value = assignLineageForRelationship(previewState, relationship);
+      output.classList.remove("danger-text");
+      output.innerHTML = lineageIdHtml(value.split(".").map(displayLineageSegment));
+      return value;
+    } catch (error) {
+      output.classList.add("danger-text");
+      output.textContent = error.message;
+      return "";
+    }
   }
 
   function validateDateSegment(segment, minimum, maximum) {
@@ -1871,6 +1926,7 @@
     if (pendingRelative) {
       choices.push({ kind: pendingRelative.role === "parent" ? "child" : pendingRelative.role === "child" ? "parent" : "partner", id: pendingRelative.sourceId });
     }
+    const linealParentId = automaticLinealParentId();
     const seen = new Set();
     const now = u.isoNow();
     return choices.map(function (choice) {
@@ -1900,7 +1956,7 @@
         };
         Object.assign(relationship, { person1Id: person.id, person2Id: choice.id, status: details.status });
       }
-      else Object.assign(relationship, { parentId: parentId, childId: childId, lineage: "non-lineal", kind: "unknown" });
+      else Object.assign(relationship, { parentId: parentId, childId: childId, lineage: choice.kind === "parent" && choice.id === linealParentId ? "lineal" : "non-lineal", kind: "unknown" });
       return relationship;
     }).filter(Boolean);
   }
@@ -1930,6 +1986,10 @@
         const relationshipError = family.validateRelationshipDraft(relationship, validationState);
         if (relationshipError) return showPersonError("The selected relationships cannot be added: " + relationshipError);
         validationState.workspace.relationships.push(relationship);
+        if (relationship.lineage === "lineal") {
+          try { assignLineageForRelationship(validationState, relationship); }
+          catch (lineageError) { return showPersonError("The Lineage ID could not be calculated: " + lineageError.message); }
+        }
       }
     }
     storage.mutate(function (next) {
@@ -1940,6 +2000,7 @@
       next.ui.selectedPersonId = person.id;
       next.ui.treeFocusId = person.id;
       relationshipDrafts.forEach(function (relationship) { next.workspace.relationships.push(relationship); });
+      relationshipDrafts.filter(function (relationship) { return relationship.lineage === "lineal"; }).forEach(function (relationship) { assignLineageForRelationship(next, relationship); });
     }, { reason: existing ? "edit-person" : "add-person" });
     const message = existing ? "Updated " + model.displayName(person) + "." : "Added " + model.displayName(person) + ".";
     pendingRelative = null;
@@ -3079,7 +3140,10 @@
       const birthName = /^birthName(Prefix|First|Middle|Last|Suffix)$/.exec(event.target.id);
       if (birthName) syncBirthNamePart(birthName[1]);
       const derivedName = /^(current|preferred)Name(Prefix|First|Middle|Last|Suffix)$/.exec(event.target.id);
-      if (derivedName) personNameOverrides.add(event.target.id);
+      if (derivedName) {
+        personNameOverrides.add(event.target.id);
+        if (derivedName[1] === "current") syncCurrentNamePart(derivedName[2]);
+      }
       if (event.target.matches("[data-date-input]")) {
         const valid = validateDateInputControl(event.target);
         if (event.target.id === "deathDate" && valid && event.target.value.trim()) $("#livingStatus").value = "deceased";
