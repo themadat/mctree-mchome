@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.77",
-      buildId: "0.0.1.77",
+      version: "0.0.1.78",
+      buildId: "0.0.1.78",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -167,6 +167,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.78",
+        date: "2026-08-25T17:13:59.000Z",
+        title: "Clearer person details",
+        summary: "The automatically generated Lineage ID now has its own full-width row in Add and Edit Person Details.",
+        features: [],
+        improvements: ["Lineage ID and its Parents-based disclaimer no longer compete with Birth, Death, and Living status fields on the same row"],
+        fixes: [],
+        knownIssues: []
+      },
       {
         version: "0.0.1.77",
         date: "2026-08-25T16:16:06.000Z",
