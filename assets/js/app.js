@@ -922,6 +922,21 @@
     return '<section class="profile-section source-section"><details><summary>Imported Source · ' + entries.length + ' populated fields</summary><p class="source-format">' + u.escapeHtml(person.source.format || "Imported CSV") + '</p><dl class="profile-list source-list">' + entries.map(function (entry) { return '<div><dt>' + u.escapeHtml(sourceLabel(entry[0])) + '</dt><dd>' + u.escapeHtml(sourceDisplayValue(entry)) + "</dd></div>"; }).join("") + "</dl></details></section>";
   }
 
+  function addressSourceDetails(address) {
+    if (!developerReferencesEnabled()) return "";
+    const entries = sourceEntries(address && address.placeSource);
+    if (!entries.length) return "";
+    return '<details class="address-source-details"><summary>Imported Source · ' + entries.length + ' populated fields</summary><p class="source-format">' + u.escapeHtml(address.placeSource.format || "Imported place") + '</p><dl class="profile-list source-list">' + entries.map(function (entry) {
+      return '<div><dt>' + u.escapeHtml(sourceLabel(entry[0])) + '</dt><dd>' + u.escapeHtml(sourceDisplayValue(entry)) + "</dd></div>";
+    }).join("") + "</dl></details>";
+  }
+
+  function profileAddressCard(address) {
+    const start = addressDateLabel(address, "start");
+    const end = addressDateLabel(address, "end");
+    return '<article class="contact-card"><header><strong>' + u.escapeHtml(address.label) + '</strong><span class="status-pill" data-kind="' + (address.current ? "success" : "neutral") + '">' + (address.current ? "Current" : "Former") + '</span></header><address>' + u.escapeHtml(model.formatAddress(address)).replace(/\n/g, "<br>") + '</address>' + ((start || end) ? '<small>' + u.escapeHtml([start, end].filter(Boolean).join(" – ")) + "</small>" : "") + (address.notes ? "<p>" + u.escapeHtml(address.notes) + "</p>" : "") + addressSourceDetails(address) + "</article>";
+  }
+
   function printSource(person) {
     if (!developerReferencesEnabled()) return "";
     const entries = sourceEntries(person.source);
@@ -958,7 +973,7 @@
     const profileLabels = (developerReferencesEnabled() ? [person.reference] : []).concat(isHome ? ["Root Ancestor"] : []);
     const profileEyebrow = profileLabels.length ? '<span class="eyebrow">' + u.escapeHtml(profileLabels.join(" · ")) + "</span>" : "";
     const contactBlocks = [];
-    if (piiVisible() && person.addresses.length) contactBlocks.push('<section class="profile-section"><h3>Addresses</h3>' + person.addresses.slice().sort(function (a, b) { return a.order - b.order; }).map(function (address) { const start = addressDateLabel(address, "start"); const end = addressDateLabel(address, "end"); return '<article class="contact-card"><header><strong>' + u.escapeHtml(address.label) + '</strong><span class="status-pill" data-kind="' + (address.current ? "success" : "neutral") + '">' + (address.current ? "Current" : "Former") + '</span></header><address>' + u.escapeHtml(model.formatAddress(address)).replace(/\n/g, "<br>") + '</address>' + ((start || end) ? '<small>' + u.escapeHtml([start, end].filter(Boolean).join(" – ")) + "</small>" : "") + (address.notes ? "<p>" + u.escapeHtml(address.notes) + "</p>" : "") + "</article>"; }).join("") + "</section>");
+    if (piiVisible() && person.addresses.length) contactBlocks.push('<section class="profile-section"><h3>Addresses</h3>' + person.addresses.slice().sort(function (a, b) { return a.order - b.order; }).map(profileAddressCard).join("") + "</section>");
     if (piiVisible() && (person.phones.length || person.emails.length)) contactBlocks.push('<section class="profile-section"><h3>Contact</h3><dl class="profile-list">' + person.phones.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + person.emails.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + "</dl></section>");
     const actionButton = function (label, symbol, attribute, danger) {
       return '<button type="button" class="profile-action' + (danger ? " danger-text" : "") + '" ' + attribute + ' aria-label="' + u.escapeHtml(label + " person") + '"><span class="profile-action-icon" data-symbol="' + symbol + '" aria-hidden="true"></span><span>' + u.escapeHtml(label) + "</span></button>";
@@ -1123,7 +1138,13 @@
       const scale = node.scale || 1;
       const detailed = currentTreeLayout.nodeView === "detailed";
       const nameLines = family.treeNameLines(person, { basis: currentTreeLayout.nameBasis, length: currentTreeLayout.nameLength });
-      const shell = '<g class="tree-node' + (selected ? " selected" : "") + (home ? " home" : "") + (node.partnerPlacement === "left" ? " compact-partner" : "") + (isLinealPerson(person) ? " lineal" : "") + (person.livingStatus === "deceased" ? " deceased" : "") + '" data-view="' + u.escapeHtml(currentTreeLayout.nodeView) + '" tabindex="0" role="button" aria-label="' + u.escapeHtml(name + ", " + family.lifespan(person) + ". Select to focus.") + '" data-tree-person="' + u.escapeHtml(person.id) + '" transform="translate(' + node.x + " " + node.y + ") scale(" + scale + ')"><rect width="' + renderWidth + '" height="' + renderHeight + '" rx="10"></rect>';
+      const contactAvailability = [
+        person.addresses && person.addresses.length ? { symbol: "addressAvailable", label: "address" } : null,
+        person.phones && person.phones.length ? { symbol: "phoneAvailable", label: "phone" } : null,
+        person.emails && person.emails.length ? { symbol: "emailAvailable", label: "email" } : null
+      ].filter(Boolean);
+      const contactLabel = contactAvailability.length ? " Recorded " + contactAvailability.map(function (item) { return item.label; }).join(", ") + "." : "";
+      const shell = '<g class="tree-node' + (selected ? " selected" : "") + (home ? " home" : "") + (node.partnerPlacement === "left" ? " compact-partner" : "") + (isLinealPerson(person) ? " lineal" : "") + (person.livingStatus === "deceased" ? " deceased" : "") + '" data-view="' + u.escapeHtml(currentTreeLayout.nodeView) + '" tabindex="0" role="button" aria-label="' + u.escapeHtml(name + ", " + family.lifespan(person) + "." + contactLabel + " Select to focus.") + '" data-tree-person="' + u.escapeHtml(person.id) + '" transform="translate(' + node.x + " " + node.y + ") scale(" + scale + ')"><rect width="' + renderWidth + '" height="' + renderHeight + '" rx="10"></rect>';
       const nameHtml = nameLines.map(function (line, index) {
         const familyClass = currentTreeLayout.nameLength === "short" && index === nameLines.length - 1 ? " tree-family" : "";
         const densityClass = line.length > 20 ? " tree-name-tight" : line.length > 14 ? " tree-name-compact" : "";
@@ -1133,7 +1154,10 @@
       const lifeY = 21 + nameLines.length * 14;
       const reference = detailed && developerReferencesEnabled() ? '<text class="tree-reference" x="' + (renderWidth / 2) + '" y="' + (lifeY + 13) + '" text-anchor="middle">' + u.escapeHtml(person.reference) + "</text>" : "";
       const linealMark = isLinealPerson(person) ? icons.markup("lineal").replace('<svg class="sf-symbol"', '<svg class="sf-symbol tree-lineal-mark" x="' + (renderWidth - 14) + '" y="' + (lifeY - 9) + '" width="7" height="10"') : "";
-      return shell + nameHtml + '<text class="tree-life" x="' + (renderWidth / 2) + '" y="' + lifeY + '" text-anchor="middle">' + u.escapeHtml(family.lifespan(person) + (detailed && home ? " · home" : "")) + "</text>" + reference + linealMark + "</g>";
+      const contactMarks = contactAvailability.map(function (item, index) {
+        return icons.markup(item.symbol).replace('<svg class="sf-symbol"', '<svg class="sf-symbol tree-contact-mark" x="' + (6 + index * 11) + '" y="' + (renderHeight - 13) + '" width="9" height="9"');
+      }).join("");
+      return shell + nameHtml + '<text class="tree-life" x="' + (renderWidth / 2) + '" y="' + lifeY + '" text-anchor="middle">' + u.escapeHtml(family.lifespan(person) + (detailed && home ? " · home" : "")) + "</text>" + reference + contactMarks + linealMark + "</g>";
     }).join("");
     svg.innerHTML = '<g id="treeViewport">' + developerTreeScaleHtml() + '<g class="tree-edges">' + edges + '</g><g class="tree-nodes">' + nodes + "</g></g>";
     bindTreeInteractions(svg);
@@ -1651,7 +1675,8 @@
         id: previous.id || u.uid("address"), placeId: previous.placeId || "", residenceId: previous.residenceId || "",
         label: value("label"), current: row.querySelector('[data-address-field="current"]')?.checked !== false,
         line1: value("line1"), line2: value("line2"), city: value("city"), region: value("region"), postalCode: value("postalCode"), country: value("country"),
-        startDate: normalizedPersonDate(startValue, source.fields["date-start-descriptor"]), endDate: normalizedPersonDate(endValue, source.fields["date-end-descriptor"]), notes: value("notes"), source: source, order: index
+        startDate: normalizedPersonDate(startValue, source.fields["date-start-descriptor"]), endDate: normalizedPersonDate(endValue, source.fields["date-end-descriptor"]), notes: value("notes"), source: source,
+        placeSource: u.clone(previous.placeSource || { format: "mcplaces-v2", fields: {} }), order: index
       };
     });
     ["phone", "email"].forEach(function (type) {
@@ -1696,9 +1721,10 @@
       if (!placeId || !sourceState.workspace.places.some(function (place) { return place.id === placeId; })) placeId = nextNumericRecordId("L", sourceState.workspace.places, 4);
       let place = sourceState.workspace.places.find(function (item) { return item.id === placeId; });
       if (!place) {
-        place = { id: placeId, source: { format: "mcplaces-v1", fields: {} }, order: sourceState.workspace.places.length };
+        place = { id: placeId, source: { format: "mcplaces-v2", fields: {} }, order: sourceState.workspace.places.length };
         sourceState.workspace.places.push(place);
       }
+      if (address.placeSource && Object.keys(u.plainObject(address.placeSource.fields)).length) place.source = u.clone(address.placeSource);
       Object.assign(place, {
         label: address.label || "Home", line1: address.line1 || "", line2: address.line2 || "", city: address.city || "",
         region: address.region || "", postalCode: address.postalCode || "", country: address.country || "", notes: ""
