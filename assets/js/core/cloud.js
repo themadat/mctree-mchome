@@ -43,13 +43,8 @@
     return { owner: config.cloud.owner, repository: config.cloud.repository, branch: config.cloud.branch, path: config.cloud.path };
   }
 
-  function readJson(key) {
-    try { return JSON.parse(localStorage.getItem(key) || "null"); }
-    catch (error) { return null; }
-  }
-
   function storedSettings() {
-    return Object.assign(settingsDefaults(), u.plainObject(readJson(config.storage.cloudSettingsKey)));
+    return settingsDefaults();
   }
 
   function storedToken() {
@@ -449,6 +444,12 @@
     return fields.filter(function (field) { return valuesDiffer(before[field[0]], after[field[0]]); }).map(function (field) { return field[1]; });
   }
 
+  function addUpdatedAreaChanges(changes, subject, label, areas) {
+    (areas.length ? areas : ["details"]).forEach(function (area) {
+      changes.push("Updated " + subject + ": " + label + " — " + area);
+    });
+  }
+
   function recordChanges(beforeRecords, afterRecords, callbacks) {
     const before = new Map(beforeRecords.map(function (record) { return [record.id, record]; }));
     const after = new Map(afterRecords.map(function (record) { return [record.id, record]; }));
@@ -493,7 +494,7 @@
           ["addresses", "addresses"], ["phones", "phone numbers"], ["emails", "email addresses"], ["notes", "Notes"], ["heritageNote", "heritage details"],
           ["gender", "gender"], ["pronouns", "pronouns"], ["source", "source details"], ["order", "sort order"]
         ]);
-        changes.push("Updated person: " + personLabel(after) + " — " + (areas.join(", ") || "details"));
+        addUpdatedAreaChanges(changes, "person", personLabel(after), areas);
       }
     });
 
@@ -506,7 +507,7 @@
           ["lineage", "lineage"], ["kind", "parent type"], ["status", "status"], ["order", "order"], ["startDate", "start date"], ["endDate", "end date"],
           ["place", "place"], ["notes", "Notes"], ["source", "source details"]
         ]);
-        changes.push("Updated relationship: " + relationshipLabel(after, current) + " — " + (areas.join(", ") || "details"));
+        addUpdatedAreaChanges(changes, "relationship", relationshipLabel(after, current), areas);
       }
     });
 
@@ -518,7 +519,7 @@
           ["label", "label"], ["line1", "address"], ["line2", "address line 2"], ["city", "city"], ["region", "region"],
           ["postalCode", "postal code"], ["country", "country"], ["notes", "Notes"], ["source", "source details"]
         ]);
-        changes.push("Updated place: " + placeLabel(after) + " — " + (areas.join(", ") || "details"));
+        addUpdatedAreaChanges(changes, "place", placeLabel(after), areas);
       }
     });
 
@@ -530,7 +531,7 @@
           ["personId", "person"], ["placeId", "place"], ["label", "label"], ["current", "current status"], ["startDate", "start date"],
           ["endDate", "end date"], ["notes", "Notes"], ["source", "source details"]
         ]);
-        changes.push("Updated residence: " + residenceLabel(after, current) + " — " + (areas.join(", ") || "details"));
+        addUpdatedAreaChanges(changes, "residence", residenceLabel(after, current), areas);
       }
     });
     return changes;
@@ -635,6 +636,28 @@
     })[value] || String(value || "Updated family").replace(/[-_]+/g, " ");
   }
 
+  function auditDetailsContent(value) {
+    const text = String(value || "No additional description.");
+    const marker = "\n\nDetailed changes:\n";
+    const markerIndex = text.indexOf(marker);
+    const container = document.createElement("div");
+    container.className = "cloud-audit-details";
+    const summary = document.createElement("p");
+    summary.textContent = markerIndex >= 0 ? text.slice(0, markerIndex) : text;
+    container.appendChild(summary);
+    if (markerIndex < 0) return container;
+    const label = document.createElement("strong");
+    label.textContent = "Detailed Changes";
+    const list = document.createElement("ul");
+    text.slice(markerIndex + marker.length).split("\n").map(function (line) { return line.replace(/^\s*-\s*/, "").trim(); }).filter(Boolean).forEach(function (change) {
+      const item = document.createElement("li");
+      item.textContent = change;
+      list.appendChild(item);
+    });
+    container.append(label, list);
+    return container;
+  }
+
   function renderAudit() {
     const audits = storage.getState().meta.package.auditHistory.slice().reverse();
     const list = $("#cloudAuditList");
@@ -657,8 +680,7 @@
       header.append(action, subject);
       const meta = document.createElement("small");
       meta.textContent = new Date(audit.recordedAt).toLocaleString() + (audit.recordedBy ? " · " + audit.recordedBy : "");
-      const details = document.createElement("p");
-      details.textContent = audit.details || "No additional description.";
+      const details = auditDetailsContent(audit.details);
       item.append(header, meta, details);
       list.appendChild(item);
     });
@@ -936,12 +958,21 @@
     } finally { setBusy(false); }
   }
 
+  function setGithubConnectionDetailsExpanded(expanded, moveFocus) {
+    const summary = $("#githubConnectionSummary");
+    $("#hostedConnectionDetails").hidden = !expanded;
+    summary.setAttribute("aria-expanded", String(expanded));
+    summary.setAttribute("aria-label", (expanded ? "Hide" : "Show") + " GitHub connection details");
+    if (moveFocus) (expanded ? $("#cloudToken") : summary).focus();
+  }
+
   function saveSettings() {
     try {
       const credentials = formCredentials();
       saveCredentials(credentials.settings, credentials.token);
       populateSettings();
       setGithubConnectionStatus("success", "Credentials ready", "Connection settings are saved and ready to test.");
+      setGithubConnectionDetailsExpanded(false, true);
       components.toast("GitHub connection settings were saved on this device.", { title: "Connection saved", kind: "success" });
     } catch (error) {
       setGithubConnectionStatus("danger", "Configuration error", error.message || "The connection settings are incomplete.");
@@ -1050,13 +1081,8 @@
     });
     $("#cloudAuditButton").addEventListener("click", openDialog);
     $("#githubConnectionSummary").addEventListener("click", function () {
-      const details = $("#hostedConnectionDetails");
       const expanded = this.getAttribute("aria-expanded") === "true";
-      this.setAttribute("aria-expanded", String(!expanded));
-      this.setAttribute("aria-label", (expanded ? "Show" : "Hide") + " GitHub connection details");
-      details.hidden = expanded;
-      if (!expanded) $("#cloudOwner").focus();
-      else this.focus();
+      setGithubConnectionDetailsExpanded(!expanded, true);
     });
     $("#hostedLockButton").addEventListener("click", lockApplication);
     $("#hostedPublishButton").addEventListener("click", publishCurrentFamily);

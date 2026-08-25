@@ -919,9 +919,12 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .names-sync-note { margin: -.12rem 0 .22rem; font-size: .62rem; }
 .maiden-name-group { padding-block: .12rem .22rem; }
 .maiden-last-field { grid-column: 4; }
-.person-details-grid { grid-template-columns: 1.2fr 1.2fr .75fr; align-items: start; gap: .45rem; }
+.person-details-grid { grid-template-columns: 1.05fr 1.05fr .72fr 1.18fr; align-items: start; gap: .45rem; }
 .person-details-grid .field { gap: .15rem; }
 .person-details-grid input, .person-details-grid select { height: 36px; min-height: 36px; padding-block: .25rem; }
+.person-lineage-preview-field output { display: flex; align-items: center; min-width: 0; height: 36px; min-height: 36px; padding: .25rem .5rem; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); }
+.person-lineage-preview-field output .lineage-id { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.person-lineage-preview-field > small { color: var(--muted); font-size: .58rem; line-height: 1.15; }
 .living-status-field { justify-self: end; width: min(210px, 100%); }
 .date-validation-message { margin-top: .1rem; color: var(--danger); font-size: .61rem; font-weight: 700; line-height: 1.25; }
 .person-contact-sections { display: grid; grid-template-columns: 1fr; align-items: start; gap: .28rem; }
@@ -985,6 +988,11 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .cloud-status-button:hover, .cloud-status-button[aria-expanded="true"] { border-color: var(--accent); background: var(--accent-soft); }
 .cloud-status-details-panel { grid-column: 1 / -1; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
 .cloud-status-details-panel[hidden] { display: none; }
+.cloud-fixed-target-grid { display: grid; grid-template-columns: minmax(110px, .75fr) minmax(130px, .9fr) minmax(90px, .55fr) minmax(250px, 1.8fr); gap: .45rem; }
+.cloud-fixed-target-grid input[readonly] { color: var(--text); font-weight: 750; background: var(--surface-2); }
+.cloud-token-grid { display: grid; margin-top: .55rem; }
+.cloud-settings-actions .button-icon { display: grid; place-items: center; width: 1.15rem; height: 1.15rem; }
+.cloud-settings-actions .button-icon .sf-symbol { width: 1.1rem; height: 1.1rem; }
 .cloud-status-label { display: flex; align-items: center; gap: .38rem; min-width: 0; color: var(--muted); font-size: .62rem; font-weight: 800; letter-spacing: .035em; text-transform: uppercase; }
 .cloud-status-dot { width: 9px; height: 9px; flex: 0 0 auto; border-radius: 50%; background: var(--danger); box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 13%, transparent); }
 .cloud-status-card[data-kind="success"] .cloud-status-dot { background: var(--success); box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 13%, transparent); }
@@ -1044,6 +1052,11 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .cloud-audit-list li > div > span { min-width: 0; overflow-wrap: anywhere; color: var(--muted); font-size: .65rem; font-weight: 750; text-align: right; }
 .cloud-audit-list small { color: var(--muted); font-size: .65rem; }
 .cloud-audit-list p { margin: .12rem 0 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .73rem; }
+.cloud-audit-details { display: grid !important; justify-content: stretch !important; gap: .3rem !important; }
+.cloud-audit-details p { margin: .12rem 0 0; }
+.cloud-audit-details strong { font-size: .7rem; }
+.cloud-audit-details ul { display: grid; gap: .16rem; margin: 0; padding-left: 1.2rem; }
+.cloud-audit-details li { display: list-item; padding: 0; border: 0; border-radius: 0; background: transparent; font-size: .7rem; }
 .cloud-audit-list .cloud-audit-empty { color: var(--muted); text-align: center; }
 .cloud-settings { padding: 0; }
 .cloud-settings > summary { display: flex; flex-direction: column; align-items: flex-start; width: 100%; gap: .08rem; min-height: 48px; padding: .7rem .85rem; font-size: .82rem; font-weight: 800; cursor: pointer; }
@@ -1191,7 +1204,7 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
   .person-name-grid { grid-template-columns: minmax(42px, 5fr) repeat(3, minmax(0, 30fr)) minmax(42px, 5fr); gap: .2rem; }
   .person-name-grid .field { font-size: .56rem; }
   .person-name-grid input { min-width: 0; min-height: 44px; height: 44px; padding-inline: .25rem; }
-  .person-details-grid, .person-contact-sections { grid-template-columns: 1fr; }
+  .person-details-grid, .person-contact-sections, .cloud-fixed-target-grid { grid-template-columns: 1fr; }
   .living-status-field { justify-self: stretch; width: 100%; }
   .name-editor-groups > .field { grid-template-columns: 1fr; align-items: stretch; }
   .name-editor-groups > .field input, .person-details-grid input, .person-details-grid select { min-height: 44px; }
