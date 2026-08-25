@@ -4,7 +4,7 @@ McFamily is a private family atlas that runs as a static GitHub Pages app. It vi
 
 There is no custom backend, account provider, cloud database, or runtime dependency. The separate public `mcdata` repository contains only an AES-GCM encrypted vault; readable family CSVs, passphrases, and GitHub tokens never belong in either public repository.
 
-Current version: `0.0.1.75` (`major.minor.patch.build`).
+Current version: `0.0.1.76` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -20,7 +20,7 @@ Current version: `0.0.1.75` (`major.minor.patch.build`).
 - Lets people be starred directly in search or from the selected-person panel, remembers those favorites separately on the device through hosted refreshes and Lock, and toggles the complete Favorites list directly below Search without changing the query. Developer Mode adds a Restore shortcut beside Favorites for a saved Favorites JSON file.
 - Centers a larger global search in the title bar, keeps its dropdown exactly as wide as the field, and shows each display name followed only by differing Birth and Current names.
 - Shows Preferred (Display), Legal (Current), Lineal (Birth), and Maiden names as four compact profile rows; the Family Tree can use any of the first three as its name source and can show Short or Full names.
-- Keeps local save/backup status in the top toolbar and provides contextual shortcuts including A for Add, W for Developer Mode View As, `|` for Developer Mode, X for Settings or update dismissal, and R for update reload.
+- Keeps local save/backup status in the top toolbar and provides contextual shortcuts including A for Add, W for Developer Mode View As, `|` for Developer Mode, X for any open pop-up, and R for the available update action, including before sign-in.
 - Supports partial/fuzzy matches that return the tree to Lineage, collapsible side panels, compact 20/50/30 default desktop splits with persistent resizing, and Summary tree cards that balance names with four or more parts across three fitted lines without widening the card.
 - Keeps portrait placeholders and internal person references out of the ordinary workspace; Developer Mode reveals references and a left-side generation bubble scale for visual troubleshooting.
 - Presents complete oldest-to-newest, two-digit Lineage IDs with the first three ancestral segments italicized and the selected person's final segment bold, followed by a compact direct-parent-linked Family Line with each name's lineage number and generation.
@@ -33,10 +33,10 @@ Current version: `0.0.1.75` (`major.minor.patch.build`).
 - Uses absolute lineage generations rooted at George McMillen (1745) as Gen 0; readings use concise forms such as `Gen 6, 5th Child of Max`.
 - Lets the person panel close and clear selection; choosing any Family Tree person reopens it without a separate Show person control.
 - Enables family-record Add, Connect, Edit, Delete, person and family Notes, family-title, recovery ZIP, PDF, publishing, and imported-source inspection only for Owner or Editor access; imported source additionally requires Developer Mode. Member and Viewer modes omit Add from the title bar and omit Add, Connect, Edit, and Delete from Selected Person, along with Audit, Notes, imported-source search, routine import, export, PDF, developer-data, and publishing controls.
-- Uses a one-page desktop person form whose Birth (Lineal), Current (Legal), Preferred (Display), and Maiden names stay on weighted rows beside compact details. Birth typing seeds Current and Preferred until either target field is edited. At least one First name is required; invalid dates, emails, and empty address rows are marked and block Save; a valid death date selects Deceased.
+- Uses a one-page desktop person form whose Birth (Lineal), Current (Legal), Preferred (Display), and Maiden names stay on weighted rows beside compact details. Birth typing seeds Current and Preferred until either target field is edited. At least one First name is required; every editable date uses the same blank, `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, and question-mark-partial syntax with live validation; invalid dates, emails, and empty address rows are marked and block Save; a valid death date selects Deceased.
 - Lets Add Person search and select existing Parents, Partners, and Children before Save. Each relationship type occupies its own dense row, and each selected Partner can record status plus start and end dates while relationship validation and ancestry-cycle checks remain atomic.
 - Previews and assigns a complete two-digit Lineage ID whenever a Lineal parent is connected, retaining established child numbers and rebasing any Lineal descendants with the branch.
-- Lets Editors open every partner history from the selected-person profile and record marriage or unmarried-partnership type, start and end dates, death, divorce, separation, annulment or unknown endings, place, and notes.
+- Lets Editors open every partner history from the selected-person profile and record marriage or unmarried-partnership type, start and end dates, death, divorce, separation, annulment or unknown endings, and notes.
 - Retains structured profiles for people, multiple addresses, phones, emails, life events, and typed parent or partner relationships.
 - Rejects a damaged or malformed ZIP, missing/extra/reordered columns, bad metadata counts, missing references, duplicate relationships, self-links, and ancestry cycles before replacement.
 - Keeps a recovery snapshot before destructive replacement or deletion.
@@ -98,7 +98,7 @@ data/                          Local-only private working files; ignored by Git 
 
 ## Data limits and current-version storage
 
-Schema v13 supports up to 1,500 people, 6,000 relationships, 5,000 places, and 10,000 residences. Dates accept `YYYY`, `YYYY-MM`, or `YYYY-MM-DD` with exact, about, before, or after qualifiers. Parent records independently store a Lineal/Non-Lineal role and parent type, allowing one Lineal and multiple Non-Lineal parents per child. Ancestry, descendants, siblings, family units, and lineage labels are derived when needed.
+Schema v13 supports up to 1,500 people, 6,000 relationships, 5,000 places, and 10,000 residences. Editable dates are blank or use `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`; any unknown digit may be `?`, which automatically makes the date partial. Compatibility data may retain older normalized qualifiers. Parent records independently store a Lineal/Non-Lineal role and parent type, allowing one Lineal and multiple Non-Lineal parents per child. Ancestry, descendants, siblings, family units, and lineage labels are derived when needed.
 
 McFamily uses a v13-only browser-storage namespace and does not load or migrate earlier application states. Every decrypted hosted payload is still a strict dataset 16 package and must contain at least one valid person. The website accepts patch revisions in the current `16.0.x` data series while keeping all five file schemas exact.
 

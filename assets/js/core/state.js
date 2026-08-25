@@ -81,7 +81,7 @@
       },
       preferences: {
         appearance: {
-          mode: "light",
+          mode: "system",
           preset: theme.id,
           accent: theme.accent,
           accent2: theme.accent2,
@@ -554,7 +554,7 @@
       },
       preferences: {
         appearance: {
-          mode: ["system", "light", "dark"].includes(sourceAppearance.mode) ? sourceAppearance.mode : "light",
+          mode: ["system", "light", "dark"].includes(sourceAppearance.mode) ? sourceAppearance.mode : "system",
           preset: theme.id,
           accent: u.normalizeColor(sourceAppearance.accent, theme.accent),
           accent2: u.normalizeColor(sourceAppearance.accent2, theme.accent2),

@@ -764,7 +764,7 @@
       $("#accessUnlockButton").disabled = false;
       $("#accessRetryButton").hidden = true;
       $("#accessOwnerRecovery").hidden = true;
-      gateStatus("The latest encrypted family record is ready. Enter your assigned passphrase.", "success");
+      gateStatus("The latest encrypted family record is ready.", "success");
     } else {
       $("#accessPassphrase").disabled = true;
       $("#accessUnlockButton").disabled = true;
