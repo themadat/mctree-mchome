@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.78",
-      buildId: "0.0.1.78",
+      version: "0.0.1.79",
+      buildId: "0.0.1.79",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -30,8 +30,8 @@
     schemaVersion: 13,
     packageFormat: "mcfamily-package",
     packageVersion: "1",
-    datasetVersion: "16.0.0",
-    datasetSeries: "16.0",
+    datasetVersion: "17.0.0",
+    datasetSeries: "17.0",
     accessModes: {
       editor: { label: "Editor", shortLabel: "Editor", editable: true, pii: true },
       "pii-viewer": { label: "Member", shortLabel: "Member", editable: false, pii: true },
@@ -167,6 +167,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.79",
+        date: "2026-08-25T18:20:00.000Z",
+        title: "Bulk address update",
+        summary: "Admin can validate and publish the new dataset 17 address package in one guarded bulk-upload flow.",
+        features: ["Admin-only Bulk Upload review and publication from Audit", "Address, phone, and email availability symbols on Family Tree people", "Imported Source details for McDirectory addresses in Developer Mode"],
+        improvements: ["Audit uses the same neutral toolbar color as the other title-bar actions", "Lineage ID occupies its own labelled Add Person row with the automatic-parent disclaimer beneath it"],
+        fixes: ["The dataset 16 hosted vault remains available to Admin long enough to perform the one-time dataset 17 upgrade"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.78",
         date: "2026-08-25T17:13:59.000Z",
