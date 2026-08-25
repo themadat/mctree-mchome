@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.76",
-      buildId: "0.0.1.76",
+      version: "0.0.1.77",
+      buildId: "0.0.1.77",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -167,6 +167,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.77",
+        date: "2026-08-25T16:16:06.000Z",
+        title: "Automatic lineage and clearer audit",
+        summary: "Add Person now calculates parent lineage and the resulting Lineage ID automatically, while names, audit details, and GitHub settings follow simpler rules.",
+        features: ["Read-only Lineage ID preview in Person Details based on the selected parents", "Automatic Lineal/Non-Lineal classification when parents are attached to a new person"],
+        improvements: ["Legal name changes immediately update the Preferred display name", "Birth Last immediately updates Maiden Last", "Detailed audit entries render every changed area on its own line", "GitHub owner, repository, branch, and path share one fixed read-only row"],
+        fixes: ["Saving GitHub settings now closes the expanded connection panel", "Test, Forget, and Save use the supplied external-drive status symbols"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.76",
         date: "2026-08-25T14:28:03.000Z",
