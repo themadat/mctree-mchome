@@ -884,6 +884,10 @@
     return !storage.getState().workspace.family.initializedAt;
   }
 
+  function hostedVaultActive() {
+    return Boolean(App.cloud && App.cloud.hasHostedVault && App.cloud.hasHostedVault());
+  }
+
   function requireInitialPackage(prepared) {
     if (!prepared.state.workspace.family.initializedAt) throw new Error("McMetadata.csv does not mark this as an initialized family.");
     if (!prepared.state.workspace.people.length) throw new Error("McPeople.csv must contain at least one person.");
@@ -905,7 +909,7 @@
     const warning = document.querySelector("[data-import-warning]");
     warning.hidden = candidate.validation.warnings.length === 0;
     warning.textContent = candidate.validation.warnings.join(" ");
-    document.querySelector("[data-import-recovery-note]").hidden = candidate.initial;
+    document.querySelector("[data-import-recovery-note]").hidden = candidate.initial || hostedVaultActive();
     document.querySelector("[data-import-confirm]").textContent = candidate.initial ? "Open " + summary.accessLabel : "Replace local family";
   }
 
@@ -936,9 +940,10 @@
       return;
     }
     if (!pendingImport.initial) {
+      const hosted = hostedVaultActive();
       const accepted = await App.components.confirm({
         title: "Replace the local family?",
-        message: "This validated ZIP will replace all people, places, residences, relationships, contacts, Notes, metadata, and preferences on this browser. A recovery copy will be saved first.",
+        message: "This validated ZIP will replace all people, places, residences, relationships, contacts, Notes, metadata, and preferences in this browser. " + (hosted ? "The encrypted GitHub family remains unchanged until you choose Update." : "A local recovery copy will be saved first."),
         confirmLabel: "Replace local family", cancelLabel: "Keep current family", danger: true,
         trigger: document.querySelector("[data-import-confirm]")
       });
@@ -949,7 +954,8 @@
       id: auditId(), subject: pendingImport.fileName, action: "imported-package", recordedAt: u.isoNow(),
       recordedBy: "McFamily " + config.identity.version, details: "Validated and imported all five package files."
     });
-    storage.replace(pendingImport.state, { recoveryReason: "Before importing " + summary.familyTitle, saveRecovery: !pendingImport.initial, reason: "import" });
+    const hosted = hostedVaultActive();
+    storage.replace(pendingImport.state, { recoveryReason: "Before importing " + summary.familyTitle, saveRecovery: !pendingImport.initial && !hosted, clearRecovery: hosted, reason: "import" });
     pendingImport = null;
     App.components.closeDialog("#importPreviewDialog", "imported");
     App.components.toast("Opened " + summary.familyTitle + " with " + summary.people + " people after all package checks passed.", { title: "Package imported", kind: "success", duration: 5000 });

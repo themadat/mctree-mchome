@@ -90,6 +90,10 @@
     return config.features.familyEditing !== false && accessProfile().editable;
   }
 
+  function hostedVaultActive() {
+    return Boolean(App.cloud && App.cloud.hasHostedVault && App.cloud.hasHostedVault());
+  }
+
   function piiVisible() {
     return accessProfile().pii;
   }
@@ -2240,11 +2244,12 @@
     if (!relationship) return;
     const accepted = await components.confirm({ title: "Remove this relationship?", message: "The people will remain in the directory, but this link and its relationship notes will be removed from the tree and atlas.", confirmLabel: "Remove relationship", cancelLabel: "Keep relationship", danger: true, trigger: trigger });
     if (!accepted) return;
-    storage.saveRecovery("Before removing a relationship", state());
+    const hosted = hostedVaultActive();
+    if (!hosted) storage.saveRecovery("Before removing a relationship", state());
     storage.mutate(function (next) { next.workspace.relationships = next.workspace.relationships.filter(function (item) { return item.id !== id; }); }, { reason: "delete-relationship" });
     treeNeedsFit = true;
     renderAll();
-    components.toast("The relationship was removed. A recovery copy is available in Developer Mode.", { title: "Relationship removed", kind: "success" });
+    components.toast(hosted ? "The relationship was removed from this working copy. GitHub will stay unchanged until you choose Update." : "The relationship was removed. A recovery copy is available in Developer Mode.", { title: "Relationship removed", kind: "success" });
   }
 
   async function deletePerson(id, trigger) {
@@ -2252,9 +2257,10 @@
     const person = state().workspace.people.find(function (item) { return item.id === id; });
     if (!person) return;
     const linkCount = state().workspace.relationships.filter(function (relationship) { return relationship.type === "parent-child" ? relationship.parentId === id || relationship.childId === id : relationship.person1Id === id || relationship.person2Id === id; }).length;
-    const accepted = await components.confirm({ title: "Delete " + model.displayName(person) + "?", message: "This permanently removes the profile and " + linkCount + " relationship link" + (linkCount === 1 ? "" : "s") + " from the local family. A recovery copy will be saved first.", confirmLabel: "Delete person", cancelLabel: "Keep person", danger: true, trigger: trigger });
+    const hosted = hostedVaultActive();
+    const accepted = await components.confirm({ title: "Delete " + model.displayName(person) + "?", message: "This removes the profile and " + linkCount + " relationship link" + (linkCount === 1 ? "" : "s") + " from this working copy. " + (hosted ? "The last published family on GitHub remains available until you choose Update." : "A local recovery copy will be saved first."), confirmLabel: "Delete person", cancelLabel: "Keep person", danger: true, trigger: trigger });
     if (!accepted) return;
-    storage.saveRecovery("Before deleting " + model.displayName(person), state());
+    if (!hosted) storage.saveRecovery("Before deleting " + model.displayName(person), state());
     storage.mutate(function (next) {
       next.workspace.people = next.workspace.people.filter(function (item) { return item.id !== id; });
       next.workspace.relationships = next.workspace.relationships.filter(function (relationship) { return relationship.type === "parent-child" ? relationship.parentId !== id && relationship.childId !== id : relationship.person1Id !== id && relationship.person2Id !== id; });
@@ -2268,7 +2274,7 @@
     }, { reason: "delete-person" });
     treeNeedsFit = true;
     renderAll();
-    components.toast("The person and linked relationships were removed. A recovery copy is available in Developer Mode.", { title: "Person deleted", kind: "success", duration: 5000 });
+    components.toast(hosted ? "The person and linked relationships were removed from this working copy. Choose Update to publish the change." : "The person and linked relationships were removed. A recovery copy is available in Developer Mode.", { title: "Person deleted", kind: "success", duration: 5000 });
   }
 
   function setHomePerson(id) {
@@ -2736,17 +2742,20 @@
     if (!developerReferencesEnabled()) return;
     const usage = await storage.usage();
     const device = pwa.detectDevice();
-    const recovery = storage.recoveryInfo();
+    const hosted = hostedVaultActive();
+    const recovery = hosted ? null : storage.recoveryInfo();
     const diagnostics = [
       ["State model", "v" + state().schemaVersion], ["Application", "v" + config.identity.version + " · build " + config.identity.buildId],
       ["Access package", accessProfile().label],
       ["People", String(state().workspace.people.length)], ["Relationships", String(state().workspace.relationships.length)], ["Addresses", String(state().workspace.people.reduce(function (sum, person) { return sum + person.addresses.length; }, 0))],
       ["Device", device.label], ["Layout", (window.innerWidth < 700 ? "Mobile" : window.innerWidth < 960 ? "Tablet" : "Desktop") + " · " + window.innerWidth + "×" + window.innerHeight],
       ["State size", u.formatBytes(usage.stateBytes)], ["Browser storage", usage.quota ? u.formatBytes(usage.usage) + " of " + u.formatBytes(usage.quota) : (usage.persistentStorageAvailable ? "Available" : "Unavailable")],
-      ["Theme", document.documentElement.dataset.theme + " · " + state().preferences.appearance.preset], ["Recovery", recovery ? u.dateLabel(recovery.createdAt) + " · " + recovery.reason : "None"]
+      ["Theme", document.documentElement.dataset.theme + " · " + state().preferences.appearance.preset], ["Recovery", hosted ? "Hosted GitHub history" : (recovery ? u.dateLabel(recovery.createdAt) + " · " + recovery.reason : "None")]
     ];
     $("#developerDiagnostics").innerHTML = diagnostics.map(function (row) { return '<div><dt>' + u.escapeHtml(row[0]) + '</dt><dd>' + u.escapeHtml(row[1]) + "</dd></div>"; }).join("");
     $("#developerState").textContent = JSON.stringify(model.exportEnvelope(state()), null, 2);
+    $("#restoreRecoveryButton").hidden = hosted;
+    $("#saveRecoveryButton").hidden = hosted;
     $("#restoreRecoveryButton").disabled = !recovery;
     $("#saveFavoritesButton").disabled = !state().ui.favoritePersonIds.length;
   }
@@ -2759,14 +2768,14 @@
   async function resetPreferences() {
     const accepted = await components.confirm({ title: "Reset preferences?", message: "Appearance, family view settings, filters, and dismissed hints will return to defaults. People, relationships, contacts, and Notes will stay.", confirmLabel: "Reset preferences", danger: true });
     if (!accepted) return;
-    storage.replace(model.resetPreferences(state()), { recoveryReason: "Before resetting preferences", reason: "reset-preferences", touch: false, preserveDevicePreferences: false });
+    storage.replace(model.resetPreferences(state()), { saveRecovery: false, clearRecovery: hostedVaultActive(), reason: "reset-preferences", touch: false, preserveDevicePreferences: false });
     treeNeedsFit = true;
     renderAll();
     components.toast("Preferences were reset; family data was preserved.", { title: "Preferences reset", kind: "success" });
   }
 
   async function eraseAllData() {
-    const accepted = await components.confirm({ title: "Erase all local McFamily data?", message: "This permanently removes every person, place, residence, relationship, Note, preference, metadata event, and recovery copy from this browser and returns to the strict import screen. Export a private ZIP first.", confirmLabel: "Erase everything", cancelLabel: "Keep my family", danger: true });
+    const accepted = await components.confirm({ title: "Erase all local McFamily data?", message: "This permanently removes every person, place, residence, relationship, Note, preference, metadata event, and local recovery copy from this browser and returns to the strict import screen. The encrypted GitHub record will not change.", confirmLabel: "Erase everything", cancelLabel: "Keep my family", danger: true });
     if (!accepted) return;
     storage.clearAll();
     components.closeDialog("#supportDialog", "erased");
@@ -2777,6 +2786,7 @@
   }
 
   async function restoreRecovery() {
+    if (hostedVaultActive()) return;
     const info = storage.recoveryInfo();
     if (!info) return;
     const accepted = await components.confirm({ title: "Restore recovery copy?", message: "Restore the copy saved " + u.relativeTime(info.createdAt) + " (“" + info.reason + "”). Current local data will be replaced.", confirmLabel: "Restore recovery", danger: true });
@@ -2788,6 +2798,7 @@
   }
 
   function saveRecoveryCopy() {
+    if (hostedVaultActive()) return;
     if (storage.saveRecovery("Manual recovery copy", state())) {
       renderDeveloper();
       components.toast("A recoverable local copy was saved.", { title: "Recovery copy saved", kind: "success" });

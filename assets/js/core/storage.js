@@ -219,11 +219,16 @@
     return writeLocal(config.storage.recoveryKey, JSON.stringify(snapshot));
   }
 
+  function clearRecovery() {
+    removeLocal(config.storage.recoveryKey);
+  }
+
   function replace(nextState, options) {
-    const settings = Object.assign({ recoveryReason: "Before data replacement", saveRecovery: true, reason: "replace", touch: true, preserveDevicePreferences: true }, options || {});
+    const settings = Object.assign({ recoveryReason: "Before data replacement", saveRecovery: true, clearRecovery: false, reason: "replace", touch: true, preserveDevicePreferences: true }, options || {});
     const prepared = model.prepare(nextState);
     const savedDevicePreferences = settings.preserveDevicePreferences ? (readDevicePreferences() || (currentState && saveDevicePreferences(currentState))) : null;
-    if (settings.saveRecovery && currentState) saveRecovery(settings.recoveryReason, currentState);
+    if (settings.clearRecovery) clearRecovery();
+    else if (settings.saveRecovery && currentState) saveRecovery(settings.recoveryReason, currentState);
     currentState = settings.preserveDevicePreferences ? applyDevicePreferences(prepared.state, savedDevicePreferences) : prepared.state;
     if (!settings.preserveDevicePreferences) {
       removeLocal(config.storage.devicePreferencesKey);
@@ -295,6 +300,7 @@
     replace: replace,
     saveNow: saveNow,
     saveRecovery: saveRecovery,
+    clearRecovery: clearRecovery,
     restoreRecovery: restoreRecovery,
     recoveryInfo: recoveryInfo,
     readDevicePreferences: readDevicePreferences,
