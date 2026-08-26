@@ -26,8 +26,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 13,
   "meta": {
-    "appVersion": "0.0.1.87",
-    "buildId": "0.0.1.87",
+    "appVersion": "0.0.1.88",
+    "buildId": "0.0.1.88",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -53,13 +53,13 @@ The durable state is normalized into this shape:
 }
 ```
 
-Each person has a stable id, timestamps, structured name fields, status, optional gender and pronouns, birth and death events, repeated phones/emails, heritage text, general notes, and source metadata. Places are reusable physical-address records. Residences are explicit Person-to-Place records; normalization derives each person's visible addresses from those two arrays. Editable dates use blank, `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, or question-mark partial source values and derive descriptors automatically; normalized qualifiers remain for compatibility.
+Each person has a stable id, timestamps, structured name fields, status, optional gender and pronouns, birth and death events, repeated phones/emails, heritage text, general notes, and source metadata. Places are reusable physical-address records and may own one shared landline. Residences are explicit Person-to-Place records; normalization derives each person's visible addresses, including the shared landline, from those two arrays. Editable dates use blank, `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, or question-mark partial source values and derive descriptors automatically; normalized qualifiers remain for compatibility.
 
 Relationships are independent records. Parent-child records contain `parentId`, `childId`, an independent Lineal/Non-Lineal `lineage` role, and a biological/adoptive/step/foster/guardian/unknown `kind`. A child may have at most one Lineal parent and multiple distinct Non-Lineal parents. In Add Person, the first selected parent with a stored Lineage ID becomes Lineal automatically and selected parents without a path remain Non-Lineal. Saving that Lineal link assigns the child's source `lineage-id` from its parent's path and recursively rebases the Lineal descendant branch; Person Details previews the same allocator before Save. Partner records contain two person ids, a derived status, optional start/end dates, compatibility-only place data, and notes; authoritative `partner-type` and `end-reason` values remain in source fields for exact package round-tripping. The visible relationship editor omits Place while preserving any existing value. Validation rejects missing people, self-links, duplicate unordered partner pairs, duplicate parent-child pairs, multiple Lineal parents for one child, and directed parent ancestry cycles.
 
 Derived family concepts are never copied onto people. `family.js` builds them from relationships so edits cannot leave contradictory ancestor, sibling, descendant, or family-unit arrays behind.
 
-The dataset 17 ZIP package preserves the current state model through five exact CSV schemas. McPlaces and McRelations use schema 2.0; the other files use schema 1.0. McPlaces v2 adds source row, pcard, and source Notes fields for audited address provenance. McMetadata carries the Editor/Member/Viewer access mode and compatibility details without dedicated columns. Historical application-state and transfer schemas are intentionally unsupported. Data-only publications advance through `17.0.x` patch versions without changing those schemas or the website build.
+The dataset 17 ZIP package preserves the current state model through five exact CSV schemas. McPlaces and McRelations use schema 2.0; the other files use schema 1.0. McPlaces v2 adds source row, pcard, and source Notes fields for audited address provenance. McMetadata carries the Editor/Member/Viewer access mode and compatibility details without dedicated columns, including a `placeDetails` map for Place landlines. Historical application-state and transfer schemas are intentionally unsupported. Data-only publications advance through `17.0.x` patch versions without changing those schemas or the website build.
 
 ## Initialization and persistence
 
@@ -101,7 +101,7 @@ The layout is deterministic and dependency-free. Desktop opens with a thin-gutte
 
 The print action constructs hidden semantic HTML before calling `window.print()`. Print CSS suppresses application controls and exposes only the report. Developer Mode copies the same generated report into a modal preview and deliberately skips `window.print()`.
 
-Person Directory begins after the compact cover and before the six-column Family Maps. It includes people with at least one phone, email, or address, groups them by primary current address with first-recorded-address fallback, and retains phone/email-only people as singleton households. The earliest Lineal household member becomes the main person. Main people and same-address partners occupy separate compact, aligned Display Name, phone, and email rows beside the shared full address; remaining residents appear afterward as an unlabeled muted name list. Non-Lineal rows use normal-weight names, only Lineal names are bold, and every deceased household person retains the concise italic death marker. The footer follows Lineal first names to the main person's full Lineal name and styled Lineage ID. The later Family Maps keep the full map-eligible population, including people omitted from the contact directory. Family Notes remain a separate final section, and page-break rules prefer intact household and map entries.
+Directory of McMillen Clan begins after the compact cover and before the six-column Family Maps. It includes people with at least one phone, email, or address, then adds every current partner of an included person so a living/deceased pair remains together. Households combine shared current addresses and current-partner links; the preferred shared address breaks ties in favor of a living partner's address. The earliest Lineal household member becomes the main person. Main people and partners occupy separate compact, aligned Display Name, individual phone, and email rows, while a Place landline appears only with the shared full address; remaining residents appear afterward as an unlabeled muted name list. One semantic table header supplies Household, Phone, Email, and Address labels and repeats at the top of every printed directory page. Non-Lineal rows use normal-weight names, only Lineal names are bold, and every deceased household person retains the concise italic death marker. The footer follows Lineal first names to the main person's full Lineal name and styled Lineage ID. The later Family Maps keep the full map-eligible population, including people omitted from the contact directory. Family Notes remain a separate final section, and page-break rules prefer intact household and map entries.
 
 The browser owns PDF generation. McFamily does not create a binary PDF directly.
 

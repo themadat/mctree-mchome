@@ -349,12 +349,17 @@
       const kinshipMatches = !kinshipFilters.length || kinshipFilters.some(function (filter) { return kinship[filter]; });
       const contactMatches = !contactFilters.length || contactFilters.some(function (filter) {
         if (filter === "has-address") return Boolean(person.addresses && person.addresses.length);
-        if (filter === "has-phone") return Boolean(person.phones && person.phones.length);
+        if (filter === "has-phone") return personHasPhone(person);
         if (filter === "has-email") return Boolean(person.emails && person.emails.length);
         return false;
       });
       return statusMatches && kinshipMatches && contactMatches && model.fuzzySearchMatch(query, model.personSearchText(person, { includeNotes: familyEditingEnabled(), includeSource: developerReferencesEnabled() }));
     }).sort(function (a, b) { return directorySortName(a, sortMode).localeCompare(directorySortName(b, sortMode)) || a.id.localeCompare(b.id); });
+  }
+
+  function personHasPhone(person) {
+    return Boolean(person && ((person.phones || []).some(function (item) { return Boolean(u.cleanLine(item && item.value, 240)); })
+      || (person.addresses || []).some(function (address) { return Boolean(u.cleanLine(address && address.phone, 240)); })));
   }
 
   function directoryKinship(person, graph, homePersonId) {
@@ -952,7 +957,8 @@
   function profileAddressCard(address) {
     const start = addressDateLabel(address, "start");
     const end = addressDateLabel(address, "end");
-    return '<article class="contact-card"><header><strong>' + u.escapeHtml(address.label) + '</strong><span class="status-pill" data-kind="' + (address.current ? "success" : "neutral") + '">' + (address.current ? "Current" : "Former") + '</span></header><address>' + u.escapeHtml(model.formatAddress(address)).replace(/\n/g, "<br>") + '</address>' + ((start || end) ? '<small>' + u.escapeHtml([start, end].filter(Boolean).join(" – ")) + "</small>" : "") + (address.notes ? "<p>" + u.escapeHtml(address.notes) + "</p>" : "") + addressSourceDetails(address) + "</article>";
+    const phone = address.phone ? '<p class="address-phone"><strong>Landline</strong> ' + u.escapeHtml(address.phone) + "</p>" : "";
+    return '<article class="contact-card"><header><strong>' + u.escapeHtml(address.label) + '</strong><span class="status-pill" data-kind="' + (address.current ? "success" : "neutral") + '">' + (address.current ? "Current" : "Former") + '</span></header><address>' + u.escapeHtml(model.formatAddress(address)).replace(/\n/g, "<br>") + '</address>' + phone + ((start || end) ? '<small>' + u.escapeHtml([start, end].filter(Boolean).join(" – ")) + "</small>" : "") + (address.notes ? "<p>" + u.escapeHtml(address.notes) + "</p>" : "") + addressSourceDetails(address) + "</article>";
   }
 
   function printSource(person) {
@@ -1158,7 +1164,7 @@
       const nameLines = family.treeNameLines(person, { basis: currentTreeLayout.nameBasis, length: currentTreeLayout.nameLength });
       const contactAvailability = person.livingStatus === "living" ? [
         person.addresses && person.addresses.length ? { symbol: "addressAvailable", label: "address" } : null,
-        person.phones && person.phones.length ? { symbol: "phoneAvailable", label: "phone" } : null,
+        personHasPhone(person) ? { symbol: "phoneAvailable", label: "phone" } : null,
         person.emails && person.emails.length ? { symbol: "emailAvailable", label: "email" } : null
       ].filter(Boolean) : [];
       const contactLabel = contactAvailability.length ? " Recorded " + contactAvailability.map(function (item) { return item.label; }).join(", ") + "." : "";
@@ -1530,7 +1536,7 @@
   }
 
   function addressRow(address, index) {
-    return '<fieldset class="repeatable-card" data-address-index="' + index + '"><legend>Address ' + (index + 1) + '</legend><div class="repeatable-card-actions"><button type="button" class="button small danger-text" data-remove-address="' + index + '">Remove</button></div><div class="address-editor-grid"><label class="field"><span>Label</span><input data-address-field="label" value="' + u.escapeHtml(address.label || "Home") + '"></label><label class="field"><span>Address line 1</span><input data-address-field="line1" value="' + u.escapeHtml(address.line1 || "") + '"></label><label class="field"><span>Address line 2</span><input data-address-field="line2" value="' + u.escapeHtml(address.line2 || "") + '"></label><label class="field"><span>City / locality</span><input data-address-field="city" value="' + u.escapeHtml(address.city || "") + '"></label><label class="field"><span>State / region</span><input data-address-field="region" value="' + u.escapeHtml(address.region || "") + '"></label><label class="field"><span>Postal code</span><input data-address-field="postalCode" value="' + u.escapeHtml(address.postalCode || "") + '"></label><label class="field"><span>Country</span><input data-address-field="country" value="' + u.escapeHtml(address.country || "") + '"></label><label class="check-field address-current-field"><input type="checkbox" data-address-field="current" ' + (address.current !== false ? "checked" : "") + '><span>Current address</span></label><label class="field address-start-field date-input-field"><span>Start date</span><input data-address-field="startDate" data-date-input placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" inputmode="text" maxlength="10" autocomplete="off" spellcheck="false" aria-describedby="addressStartDateError' + index + '" value="' + u.escapeHtml(addressDateValue(address, "start")) + '"><small id="addressStartDateError' + index + '" class="date-validation-message" data-date-error hidden>' + DATE_INPUT_HELP + '</small></label><label class="field address-end-field date-input-field"><span>End date</span><input data-address-field="endDate" data-date-input placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" inputmode="text" maxlength="10" autocomplete="off" spellcheck="false" aria-describedby="addressEndDateError' + index + '" value="' + u.escapeHtml(addressDateValue(address, "end")) + '"><small id="addressEndDateError' + index + '" class="date-validation-message" data-date-error hidden>' + DATE_INPUT_HELP + '</small></label><label class="field address-notes-field"><span>Address notes</span><textarea data-address-field="notes" rows="1">' + u.escapeHtml(address.notes || "") + '</textarea></label></div><small class="address-validation-message" data-address-error hidden>Add at least one physical address field, or remove this address.</small></fieldset>';
+    return '<fieldset class="repeatable-card" data-address-index="' + index + '"><legend>Address ' + (index + 1) + '</legend><div class="repeatable-card-actions"><button type="button" class="button small danger-text" data-remove-address="' + index + '">Remove</button></div><div class="address-editor-grid"><label class="field"><span>Label</span><input data-address-field="label" value="' + u.escapeHtml(address.label || "Home") + '"></label><label class="field"><span>Address line 1</span><input data-address-field="line1" value="' + u.escapeHtml(address.line1 || "") + '"></label><label class="field"><span>Address line 2</span><input data-address-field="line2" value="' + u.escapeHtml(address.line2 || "") + '"></label><label class="field"><span>City / locality</span><input data-address-field="city" value="' + u.escapeHtml(address.city || "") + '"></label><label class="field"><span>State / region</span><input data-address-field="region" value="' + u.escapeHtml(address.region || "") + '"></label><label class="field"><span>Postal code</span><input data-address-field="postalCode" value="' + u.escapeHtml(address.postalCode || "") + '"></label><label class="field"><span>Country</span><input data-address-field="country" value="' + u.escapeHtml(address.country || "") + '"></label><label class="field address-phone-field"><span>Landline</span><input type="tel" data-address-field="phone" value="' + u.escapeHtml(address.phone || "") + '"></label><label class="check-field address-current-field"><input type="checkbox" data-address-field="current" ' + (address.current !== false ? "checked" : "") + '><span>Current address</span></label><label class="field address-start-field date-input-field"><span>Start date</span><input data-address-field="startDate" data-date-input placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" inputmode="text" maxlength="10" autocomplete="off" spellcheck="false" aria-describedby="addressStartDateError' + index + '" value="' + u.escapeHtml(addressDateValue(address, "start")) + '"><small id="addressStartDateError' + index + '" class="date-validation-message" data-date-error hidden>' + DATE_INPUT_HELP + '</small></label><label class="field address-end-field date-input-field"><span>End date</span><input data-address-field="endDate" data-date-input placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" inputmode="text" maxlength="10" autocomplete="off" spellcheck="false" aria-describedby="addressEndDateError' + index + '" value="' + u.escapeHtml(addressDateValue(address, "end")) + '"><small id="addressEndDateError' + index + '" class="date-validation-message" data-date-error hidden>' + DATE_INPUT_HELP + '</small></label><label class="field address-notes-field"><span>Address notes</span><textarea data-address-field="notes" rows="1">' + u.escapeHtml(address.notes || "") + '</textarea></label></div><small class="address-validation-message" data-address-error hidden>Add at least one physical address field, or remove this address.</small></fieldset>';
   }
 
   function contactRow(item, index, type) {
@@ -1692,7 +1698,7 @@
       return {
         id: previous.id || u.uid("address"), placeId: previous.placeId || "", residenceId: previous.residenceId || "",
         label: value("label"), current: row.querySelector('[data-address-field="current"]')?.checked !== false,
-        line1: value("line1"), line2: value("line2"), city: value("city"), region: value("region"), postalCode: value("postalCode"), country: value("country"),
+        line1: value("line1"), line2: value("line2"), city: value("city"), region: value("region"), postalCode: value("postalCode"), country: value("country"), phone: value("phone"),
         startDate: normalizedPersonDate(startValue, source.fields["date-start-descriptor"]), endDate: normalizedPersonDate(endValue, source.fields["date-end-descriptor"]), notes: value("notes"), source: source,
         placeSource: u.clone(previous.placeSource || { format: "mcplaces-v2", fields: {} }), order: index
       };
@@ -1745,7 +1751,7 @@
       if (address.placeSource && Object.keys(u.plainObject(address.placeSource.fields)).length) place.source = u.clone(address.placeSource);
       Object.assign(place, {
         label: address.label || "Home", line1: address.line1 || "", line2: address.line2 || "", city: address.city || "",
-        region: address.region || "", postalCode: address.postalCode || "", country: address.country || "", notes: ""
+        region: address.region || "", postalCode: address.postalCode || "", country: address.country || "", phone: address.phone || "", notes: ""
       });
       const residence = {
         id: residenceId, personId: person.id, placeId: placeId, label: address.label || "Home", current: address.current !== false,
@@ -2384,6 +2390,24 @@
     return Boolean(printHouseholdAddress(person) || (person.phones || []).some(hasValue) || (person.emails || []).some(hasValue));
   }
 
+  function printDirectoryPeople(people, printState) {
+    const available = new Map(people.map(function (person) { return [person.id, person]; }));
+    const included = new Set(people.filter(printDirectoryEligible).map(function (person) { return person.id; }));
+    let changed = true;
+    while (changed) {
+      changed = false;
+      Array.from(included).forEach(function (personId) {
+        family.relationGroups(personId, printState).partners.filter(function (entry) { return entry.current; }).forEach(function (entry) {
+          if (entry.person && available.has(entry.person.id) && !included.has(entry.person.id)) {
+            included.add(entry.person.id);
+            changed = true;
+          }
+        });
+      });
+    }
+    return people.filter(function (person) { return included.has(person.id); });
+  }
+
   function printHouseholdAddressKey(person, address) {
     if (!address) return "person:" + person.id;
     if (address.placeId) return "place:" + address.placeId;
@@ -2405,23 +2429,68 @@
     return model.sortName(a).localeCompare(model.sortName(b)) || a.id.localeCompare(b.id);
   }
 
-  function printHouseholds(people, graph) {
-    const grouped = new Map();
-    people.forEach(function (person) {
+  function printHouseholdPreferredAddress(members) {
+    const counts = new Map();
+    const candidates = members.map(function (person) {
       const address = printHouseholdAddress(person);
       const key = printHouseholdAddressKey(person, address);
-      if (!grouped.has(key)) grouped.set(key, { key: key, address: address, members: [] });
+      if (address) counts.set(key, (counts.get(key) || 0) + 1);
+      return { person: person, address: address, key: key };
+    }).filter(function (candidate) { return candidate.address; });
+    return candidates.sort(function (a, b) {
+      return (counts.get(b.key) || 0) - (counts.get(a.key) || 0)
+        || Number(b.person.livingStatus === "living") - Number(a.person.livingStatus === "living")
+        || model.sortName(a.person).localeCompare(model.sortName(b.person));
+    })[0]?.address || null;
+  }
+
+  function printHouseholds(people, graph, printState) {
+    const parent = new Map(people.map(function (person) { return [person.id, person.id]; }));
+    const find = function (id) {
+      let root = id;
+      while (parent.get(root) !== root) root = parent.get(root);
+      while (parent.get(id) !== id) { const next = parent.get(id); parent.set(id, root); id = next; }
+      return root;
+    };
+    const union = function (first, second) {
+      const firstRoot = find(first);
+      const secondRoot = find(second);
+      if (firstRoot !== secondRoot) parent.set(secondRoot, firstRoot);
+    };
+    const firstByAddress = new Map();
+    people.forEach(function (person) {
+      const address = printHouseholdAddress(person);
+      if (!address) return;
+      const key = printHouseholdAddressKey(person, address);
+      if (firstByAddress.has(key)) union(person.id, firstByAddress.get(key));
+      else firstByAddress.set(key, person.id);
+    });
+    const personIds = new Set(people.map(function (person) { return person.id; }));
+    people.forEach(function (person) {
+      family.relationGroups(person.id, printState).partners.filter(function (entry) { return entry.current; }).forEach(function (entry) {
+        if (entry.person && personIds.has(entry.person.id)) union(person.id, entry.person.id);
+      });
+    });
+    const grouped = new Map();
+    people.forEach(function (person) {
+      const key = find(person.id);
+      if (!grouped.has(key)) grouped.set(key, { key: key, members: [] });
       grouped.get(key).members.push(person);
     });
     return Array.from(grouped.values()).map(function (household) {
       const memberIds = new Set(household.members.map(function (person) { return person.id; }));
       household.members.sort(function (a, b) { return model.sortName(a).localeCompare(model.sortName(b)) || a.id.localeCompare(b.id); });
       household.main = household.members.slice().sort(function (a, b) { return comparePrintHouseholdMain(a, b, graph, memberIds); })[0];
-      household.partners = (graph.partners.get(household.main.id) || []).map(function (entry) { return entry.person; }).filter(function (partner) {
+      household.address = printHouseholdPreferredAddress(household.members);
+      household.partners = family.relationGroups(household.main.id, printState).partners.filter(function (entry) {
+        return entry.person && memberIds.has(entry.person.id);
+      }).sort(function (a, b) {
+        return Number(b.current) - Number(a.current) || model.sortName(a.person).localeCompare(model.sortName(b.person));
+      }).map(function (entry) { return entry.person; }).filter(function (partner) {
         return partner && memberIds.has(partner.id);
       }).filter(function (partner, index, partners) {
         return partners.findIndex(function (candidate) { return candidate.id === partner.id; }) === index;
-      }).sort(function (a, b) { return model.sortName(a).localeCompare(model.sortName(b)) || a.id.localeCompare(b.id); });
+      });
       const partnerIds = new Set(household.partners.map(function (partner) { return partner.id; }));
       household.sameAddress = household.members.filter(function (member) { return member.id !== household.main.id && !partnerIds.has(member.id); });
       return household;
@@ -2449,12 +2518,16 @@
   function printHouseholdHtml(household, graph) {
     const main = household.main;
     const householdPeople = [main].concat(household.partners);
-    const householdRows = householdPeople.map(function (person) {
-      return '<div class="print-household-person-row"><h2>' + printHouseholdPersonName(person) + '</h2><p>' + printContactValues(person.phones) + '</p><p>' + printContactValues(person.emails) + "</p></div>";
-    }).join("");
-    const sameAddress = household.sameAddress.length ? '<p class="print-household-residents">' + household.sameAddress.map(function (person) { return u.escapeHtml(model.displayName(person)); }).join(", ") + "</p>" : "";
+    const residentRowCount = household.sameAddress.length ? 1 : 0;
+    const addressRows = Math.max(1, householdPeople.length + residentRowCount);
     const address = household.address ? u.escapeHtml(model.formatAddress(household.address)).replace(/\n/g, "<br>") : '<span class="muted-copy">No address recorded</span>';
-    return '<article class="print-directory-household"><header><div class="print-household-table"><div class="print-household-labels"><span>Household</span><span>Phone</span><span>Email</span></div>' + householdRows + sameAddress + '</div><div class="print-household-address"><span>Address</span><address>' + address + '</address></div></header><footer>' + printLineageProgressionHtml(main, graph) + "</footer></article>";
+    const landline = household.address && household.address.phone ? '<p class="print-household-landline"><strong>Landline</strong> ' + u.escapeHtml(household.address.phone) + "</p>" : "";
+    const householdRows = householdPeople.map(function (person, index) {
+      const addressCell = index === 0 ? '<td class="print-household-address" rowspan="' + addressRows + '"><address>' + address + "</address>" + landline + "</td>" : "";
+      return '<tr class="print-household-person-row"><td><h2>' + printHouseholdPersonName(person) + '</h2></td><td><p>' + printContactValues(person.phones) + '</p></td><td><p>' + printContactValues(person.emails) + "</p></td>" + addressCell + "</tr>";
+    }).join("");
+    const sameAddress = household.sameAddress.length ? '<tr class="print-household-residents"><td colspan="3">' + household.sameAddress.map(function (person) { return u.escapeHtml(model.displayName(person)); }).join(", ") + "</td></tr>" : "";
+    return '<tbody class="print-directory-household"><tr class="print-directory-spacer" aria-hidden="true"><td colspan="4"></td></tr>' + householdRows + sameAddress + '<tr class="print-household-lineage"><td colspan="4">' + printLineageProgressionHtml(main, graph) + "</td></tr></tbody>";
   }
 
   function printGenerationSection(generation, people) {
@@ -2552,9 +2625,10 @@
       }).join("");
       return '<article class="print-component"><header><div><span>Root Ancestor</span><h3>' + u.escapeHtml(model.displayName(rootAncestor)) + '</h3></div><p>Gen ' + (printGenerations.get(rootAncestor.id) || 0) + " · " + componentPeople.length + " people</p></header>" + earlyGenerations + branchHtml + "</article>";
     }).join("");
-    const households = printHouseholds(people.filter(printDirectoryEligible), graph);
-    const directoryHtml = households.length ? households.map(function (household) { return printHouseholdHtml(household, graph); }).join("") : '<p class="print-directory-empty">No phone, email, or address information is recorded.</p>';
-    $("#printReport").innerHTML = '<section class="print-front-matter"><article class="print-cover"><span class="eyebrow">Private family atlas</span><h1>' + u.escapeHtml(current.workspace.family.title) + '</h1><p>Prepared by McFamily on ' + u.escapeHtml(printDate()) + '</p><dl><div><dt>People</dt><dd>' + people.length + '</dd></div><div><dt>Relationships</dt><dd>' + relationships.length + '</dd></div><div><dt>Family Units</dt><dd>' + familyUnits.length + '</dd></div><div><dt>Addresses</dt><dd>' + addressCount + '</dd></div><div><dt>Family Maps</dt><dd>' + componentsList.length + '</dd></div></dl><aside><strong>Private document</strong><span>This atlas may contain home addresses, contact details, and family notes. Store and share it carefully.</span></aside></article><article class="print-legend"><h2>How to Use This Atlas</h2><p>Family maps begin with their root ancestor. George McMillen (1745) is Generation 0; Generation 4 and later are grouped under their Generation 3 family line. Lineal members have a faded-red outline, with Newton, Albon, and Lucian highlighted for orientation. Deceased people have brown shading.</p><div><span><strong>Parent links</strong> Biological, adoptive, step, foster, guardian, or unspecified</span><span><strong>Partner links</strong> Married, partnered, separated, divorced, annulled, widowed, former, or unspecified</span></div></article></section><section class="print-directory"><h1>Person Directory</h1><div class="print-directory-entries">' + directoryHtml + '</div></section><section class="print-atlas"><h2>Family Maps</h2>' + componentHtml + "</section>" + (notes ? '<article class="print-family-notes"><h1>Family Notes</h1><p>' + u.escapeHtml(notes).replace(/\n/g, "<br>") + "</p></article>" : "");
+    const directoryPeople = printDirectoryPeople(people, printState);
+    const households = printHouseholds(directoryPeople, graph, printState);
+    const directoryHtml = households.length ? '<table class="print-directory-table"><colgroup><col class="print-directory-household-column"><col class="print-directory-phone-column"><col class="print-directory-email-column"><col class="print-directory-address-column"></colgroup><thead><tr><th scope="col">Household</th><th scope="col">Phone</th><th scope="col">Email</th><th scope="col">Address</th></tr></thead>' + households.map(function (household) { return printHouseholdHtml(household, graph); }).join("") + "</table>" : '<p class="print-directory-empty">No phone, email, or address information is recorded.</p>';
+    $("#printReport").innerHTML = '<section class="print-front-matter"><article class="print-cover"><span class="eyebrow">Private family atlas</span><h1>' + u.escapeHtml(current.workspace.family.title) + '</h1><p>Prepared by McFamily on ' + u.escapeHtml(printDate()) + '</p><dl><div><dt>People</dt><dd>' + people.length + '</dd></div><div><dt>Relationships</dt><dd>' + relationships.length + '</dd></div><div><dt>Family Units</dt><dd>' + familyUnits.length + '</dd></div><div><dt>Addresses</dt><dd>' + addressCount + '</dd></div><div><dt>Family Maps</dt><dd>' + componentsList.length + '</dd></div></dl><aside><strong>Private document</strong><span>This atlas may contain home addresses, contact details, and family notes. Store and share it carefully.</span></aside></article><article class="print-legend"><h2>How to Use This Atlas</h2><p>Family maps begin with their root ancestor. George McMillen (1745) is Generation 0; Generation 4 and later are grouped under their Generation 3 family line. Lineal members have a faded-red outline, with Newton, Albon, and Lucian highlighted for orientation. Deceased people have brown shading.</p><div><span><strong>Parent links</strong> Biological, adoptive, step, foster, guardian, or unspecified</span><span><strong>Partner links</strong> Married, partnered, separated, divorced, annulled, widowed, former, or unspecified</span></div></article></section><section class="print-directory"><h1>Directory of McMillen Clan</h1>' + directoryHtml + '</section><section class="print-atlas"><h2>Family Maps</h2>' + componentHtml + "</section>" + (notes ? '<article class="print-family-notes"><h1>Family Notes</h1><p>' + u.escapeHtml(notes).replace(/\n/g, "<br>") + "</p></article>" : "");
   }
 
   function openPrintPreview(trigger) {
