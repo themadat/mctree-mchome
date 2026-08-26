@@ -1127,10 +1127,11 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .print-preview-document .print-household-address { padding: .075in; border-left: 1px solid #ccc; }
 .print-preview-document .print-household-labels, .print-preview-document .print-household-person-row { display: grid; grid-template-columns: minmax(1.85in, 1.45fr) 1.05in 1.55in; gap: .08in; padding: .055in .075in; }
 .print-preview-document .print-household-labels { padding-bottom: .025in; color: #555; font: 700 6.2pt Helvetica, Arial, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
-.print-preview-document .print-household-person-row { padding-block: .045in; border-top: 1px solid #ddd; }
-.print-preview-document .print-household-person-row h2 { margin: 0; overflow-wrap: anywhere; font-size: 9pt; line-height: 1.18; }
-.print-preview-document .print-household-person-row p { display: grid; gap: .02in; margin: 0; overflow-wrap: anywhere; font-size: 7.1pt; line-height: 1.2; }
-.print-preview-document .print-household-death { display: inline; margin: 0; color: #555; font: 7pt Georgia, "Times New Roman", serif; letter-spacing: 0; text-transform: none; white-space: nowrap; }
+.print-preview-document .print-household-person-row { align-items: center; padding-block: .025in; border-top: 1px solid #ddd; }
+.print-preview-document .print-household-person-row h2 { margin: 0; overflow-wrap: anywhere; font-size: 8pt; font-weight: 400; line-height: 1.12; }
+.print-preview-document .print-household-person-row h2 strong { font-weight: 700; }
+.print-preview-document .print-household-person-row p { display: grid; gap: .015in; margin: 0; overflow-wrap: anywhere; font-size: 6.8pt; line-height: 1.15; }
+.print-preview-document .print-household-death { display: inline; margin: 0; color: #555; font: 6.4pt Georgia, "Times New Roman", serif; letter-spacing: 0; text-transform: none; white-space: nowrap; }
 .print-preview-document .print-household-address > span { display: block; margin-bottom: .025in; color: #555; font: 700 6.2pt Helvetica, Arial, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
 .print-preview-document .print-household-address address { margin: 0; overflow-wrap: anywhere; font-size: 7.1pt; font-style: normal; line-height: 1.2; }
 .print-preview-document .print-household-residents { margin: 0; padding: .045in .075in .055in; border-top: 1px solid #ddd; color: #777; font-size: 6.8pt; line-height: 1.22; }
@@ -1312,10 +1313,11 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
   .print-household-address { padding: .065in; border-left: 1px solid #ccc; }
   .print-household-labels, .print-household-person-row { display: grid; grid-template-columns: minmax(1.85in, 1.45fr) 1.05in 1.55in; gap: .07in; padding: .05in .065in; }
   .print-household-labels { padding-bottom: .02in; color: #555; font: 700 5.9pt Helvetica, Arial, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
-  .print-household-person-row { padding-block: .04in; border-top: 1px solid #ddd; }
-  .print-household-person-row h2 { margin: 0; overflow-wrap: anywhere; font-size: 8.5pt; line-height: 1.16; }
-  .print-household-person-row p { display: grid; gap: .015in; margin: 0; overflow-wrap: anywhere; font-size: 6.8pt; line-height: 1.18; }
-  .print-household-death { display: inline; margin: 0; color: #555; font: 6.7pt Georgia, "Times New Roman", serif; letter-spacing: 0; text-transform: none; white-space: nowrap; }
+  .print-household-person-row { align-items: center; padding-block: .022in; border-top: 1px solid #ddd; }
+  .print-household-person-row h2 { margin: 0; overflow-wrap: anywhere; font-size: 7.7pt; font-weight: 400; line-height: 1.1; }
+  .print-household-person-row h2 strong { font-weight: 700; }
+  .print-household-person-row p { display: grid; gap: .012in; margin: 0; overflow-wrap: anywhere; font-size: 6.5pt; line-height: 1.14; }
+  .print-household-death { display: inline; margin: 0; color: #555; font: 6.1pt Georgia, "Times New Roman", serif; letter-spacing: 0; text-transform: none; white-space: nowrap; }
   .print-household-address > span { display: block; margin-bottom: .02in; color: #555; font: 700 5.9pt Helvetica, Arial, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
   .print-household-address address { margin: 0; overflow-wrap: anywhere; font-size: 6.8pt; font-style: normal; line-height: 1.18; }
   .print-household-residents { margin: 0; padding: .04in .065in .05in; border-top: 1px solid #ddd; color: #777; font-size: 6.5pt; line-height: 1.2; }
