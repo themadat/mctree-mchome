@@ -4,7 +4,7 @@ McFamily is a private family atlas that runs as a static GitHub Pages app. It vi
 
 There is no custom backend, account provider, cloud database, or runtime dependency. The separate public `mcdata` repository contains only an AES-GCM encrypted vault; readable family CSVs, passphrases, and GitHub tokens never belong in either public repository.
 
-Current version: `0.0.1.80` (`major.minor.patch.build`).
+Current version: `0.0.1.81` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -39,7 +39,7 @@ Current version: `0.0.1.80` (`major.minor.patch.build`).
 - Lets Editors open every partner history from the selected-person profile and record marriage or unmarried-partnership type, start and end dates, death, divorce, separation, annulment or unknown endings, and notes.
 - Retains structured profiles for people, multiple addresses, phones, emails, life events, and typed parent or partner relationships.
 - Rejects a damaged or malformed ZIP, missing/extra/reordered columns, bad metadata counts, missing references, duplicate relationships, self-links, and ancestry cycles before replacement.
-- Keeps a recovery snapshot before destructive replacement or deletion.
+- Keeps one browser working copy during hosted use; the encrypted GitHub vault and commit history remain the saved recovery source until Update publishes a change.
 - Exports a complete editable McFamily ZIP and creates a print-only family atlas with brown deceased entries, stronger faded-red Lineal outlines, and Bloodline-symbol orientation highlights for Newton, Albon, and Lucian. Jon Couts remains in the directory but is omitted as a map root.
 - Preserves Notes, Settings, themes, accessibility, installation, and offline support from the application foundation.
 
@@ -70,7 +70,7 @@ Everyone uses the same public application link. Passphrases wrap random AES-256 
 - Access usernames are non-secret vault metadata. Use a first name or nickname, not an email address or another sensitive identifier.
 - Do not commit real names, addresses, phone numbers, email addresses, heritage notes, or family notes.
 - Use synthetic people for tests and screenshots.
-- Browser storage is per browser profile and device. Lock clears the decrypted local family and recovery snapshot, reloads, and requires the passphrase again without publishing anything. Favorites, dismissed hints, dismissed What’s New banners, and Directory visibility remain on that device.
+- Browser storage is per browser profile and device. A hosted session keeps one decrypted working copy and removes redundant full recovery snapshots. Lock clears that working copy, reloads, and requires the passphrase again without publishing anything. Favorites, dismissed hints, dismissed What’s New banners, and Directory visibility remain on that device.
 - Each publisher still needs a fine-grained GitHub token limited to `mcdata` with Contents read/write permission; the token stays outside the vault.
 - Member and Viewer sign-ins cannot be centrally recorded without a backend or a write credential. Published family and access changes remain in McMetadata and Git history.
 
@@ -84,7 +84,7 @@ assets/js/icons.js             Shared inline SVG symbol catalog
 assets/js/app.js               Rendering, editing, search, tree interaction, and print atlas
 assets/js/core/state.js        Schema v13 normalization, fuzzy matching, and validation
 assets/js/core/family.js       Relationship indexes, derived family groups, and graph layout
-assets/js/core/storage.js      Local persistence and recovery snapshot
+assets/js/core/storage.js      Local working-copy persistence and local-only recovery
 assets/js/core/portability.js  Strict five-file ZIP validation, export, preview, and replacement import
 assets/js/core/cloud.js        Passphrase cryptography, encrypted GitHub vault publication, revocation, and audit UI
 assets/js/core/components.js   Dialogs, popovers, toasts, and focus management
@@ -124,7 +124,7 @@ An Owner may keep a private recovery ZIP outside GitHub:
 3. Open **Audit** and download the recovery ZIP.
 4. Do not send this file to ordinary viewers; their passphrase opens the hosted encrypted family automatically.
 
-The ZIP contains `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`. Imports replace the current family only after ZIP integrity, all five exact schemas, metadata counts, IDs, links, lineage paths, and ancestry cycles pass validation. McFamily creates a recovery snapshot first; it does not merge concurrent copies.
+The ZIP contains `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`. Imports replace the current family only after ZIP integrity, all five exact schemas, metadata counts, IDs, links, lineage paths, and ancestry cycles pass validation. During hosted use the current encrypted GitHub version remains unchanged until Update; local-only setup can retain one browser recovery snapshot. Imports never merge concurrent copies.
 
 `Print / Save PDF` builds a report whose cover, statistics, legend, and six-column Family Maps flow together without forced opening-page breaks. George McMillen (1745) leads the maps as Generation 0, and Generation 4 and later are grouped beneath Generation 3 family lines. Every retained component is labelled by its root ancestor; Jon Couts is omitted as a map root and unresolved `99`/`??` lineage branches are omitted. Lineal cards use a clearly visible faded-red outline, stronger orientation highlights and Bloodline symbols are limited to Lineal Newton, Albon, and Lucian members, deceased entries use brown shading, and adaptive name type keeps map names within two lines. The compact three-column Person Directory shows only each full name, styled Lineage ID, and root-to-person first-name progression. Use the native print dialog's Save as PDF destination; Developer Mode opens the same report in an in-app preview instead.
 
