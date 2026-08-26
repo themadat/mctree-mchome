@@ -451,6 +451,7 @@
     });
 
     const placeIds = new Set();
+    const placeDetails = u.plainObject(metadata.family.settings.placeDetails);
     const places = parsed["McPlaces.csv"].rows.map(function (row, index) {
       const id = u.cleanLine(row["place-id"], 100).toUpperCase();
       if (!/^L\d{4,}$/.test(id) || placeIds.has(id)) throw new Error("McPlaces.csv contains an invalid or duplicate place-id: " + (id || "(blank)") + ".");
@@ -458,11 +459,16 @@
       placeIds.add(id);
       return {
         id: id, label: row["place-label"], line1: row["address-line-1"], line2: row["address-line-2"], city: row.city,
-        region: row.region, postalCode: row["postal-code"], country: row.country, notes: row.notes,
+        region: row.region, postalCode: row["postal-code"], country: row.country, phone: u.cleanLine(u.plainObject(placeDetails[id]).phone, 240), notes: row.notes,
         source: { format: metadata.upgradeSource ? "mcplaces-v1" : "mcplaces-v2", fields: sourceFields(row, [
           "source-last-modified-date", "source-last-modified-by", "source-row-number", "source-pcard", "source-notes"
         ]) }, order: index
       };
+    });
+    Object.keys(placeDetails).forEach(function (id) {
+      const details = u.plainObject(placeDetails[id]);
+      if (!placeIds.has(id)) throw new Error("McMetadata.csv placeDetails contains an unknown place-id: " + id + ".");
+      if (Object.keys(details).length !== 1 || typeof details.phone !== "string" || !u.cleanLine(details.phone, 240)) throw new Error("McMetadata.csv placeDetails must contain exactly one non-empty phone for each listed place.");
     });
 
     const relationshipIds = new Set();
@@ -551,7 +557,7 @@
       if (parsed["McPeople.csv"].rows.some(function (row) { return Boolean(u.cleanText(row.notes, 4000).trim() || u.cleanText(row["data-quality-notes"], 4000).trim()); })) throw new Error("A Viewer package cannot contain person notes.");
       if (parsed["McRelations.csv"].rows.some(function (row) { return Boolean(u.cleanText(row.notes, 4000).trim() || u.cleanLine(row["place-id"], 100)); })) throw new Error("A Viewer package cannot contain relationship notes or place references.");
       if (u.cleanText(metadata.family.notes, config.controls.maxDocumentHtmlLength).trim()) throw new Error("A Viewer package cannot contain family Notes.");
-      if (Object.keys(personDetails).length || Object.keys(relationshipDetails).length) throw new Error("A Viewer package cannot contain supplemental private profile or relationship details.");
+      if (Object.keys(personDetails).length || Object.keys(placeDetails).length || Object.keys(relationshipDetails).length) throw new Error("A Viewer package cannot contain supplemental private profile, place, or relationship details.");
     }
     if (!personIds.has(metadata.family.homePersonId)) throw new Error("McMetadata.csv home-person-id does not resolve to McPeople.csv.");
     if (!metadata.family.initializedAt || !Number.isFinite(Date.parse(metadata.family.initializedAt))) throw new Error("McMetadata.csv requires a valid initialized-at timestamp.");
@@ -714,7 +720,9 @@
     });
     const relationshipDetails = {};
     state.workspace.relationships.forEach(function (relationship) { if (relationship.place) relationshipDetails[relationship.id] = { place: relationship.place }; });
-    add("family", "McFamily", "settings-json", JSON.stringify({ preferences: state.preferences, ui: state.ui, modules: state.modules, personDetails: personDetails, relationshipDetails: relationshipDetails }));
+    const placeDetails = {};
+    state.workspace.places.forEach(function (place) { if (place.phone) placeDetails[place.id] = { phone: place.phone }; });
+    add("family", "McFamily", "settings-json", JSON.stringify({ preferences: state.preferences, ui: state.ui, modules: state.modules, personDetails: personDetails, placeDetails: placeDetails, relationshipDetails: relationshipDetails }));
     FILE_NAMES.forEach(function (name) { add("schema", name, "schema-version", FILE_SCHEMA_VERSIONS[name]); });
     state.meta.package.auditHistory.forEach(function (audit, index) {
       rows.push({

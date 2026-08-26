@@ -246,6 +246,7 @@
       region: u.cleanLine(source.region || source.state || source.province, 100),
       postalCode: u.cleanLine(source.postalCode || source.zip, 40),
       country: u.cleanLine(source.country, 100),
+      phone: u.cleanLine(source.phone, 240),
       startDate: normalizeFlexibleDate(source.startDate),
       endDate: normalizeFlexibleDate(source.endDate),
       notes: u.cleanText(source.notes, 1000).trim(),
@@ -277,6 +278,7 @@
       region: u.cleanLine(source.region, 100),
       postalCode: u.cleanLine(source.postalCode, 40),
       country: u.cleanLine(source.country, 100),
+      phone: u.cleanLine(source.phone, 240),
       notes: u.cleanText(source.notes, 1000).trim(),
       source: normalizeSource(source.source),
       order: Number.isFinite(Number(source.order)) ? Math.round(Number(source.order)) : index
@@ -511,7 +513,7 @@
         person.addresses.push({
           id: residence.id, placeId: place.id, residenceId: residence.id, label: residence.label || place.label,
           current: residence.current, line1: place.line1, line2: place.line2, city: place.city, region: place.region,
-          postalCode: place.postalCode, country: place.country, startDate: residence.startDate, endDate: residence.endDate,
+          postalCode: place.postalCode, country: place.country, phone: place.phone, startDate: residence.startDate, endDate: residence.endDate,
           notes: [place.notes, residence.notes].filter(Boolean).join(" · "), source: residence.source, placeSource: place.source, order: residence.order
         });
       });
@@ -894,7 +896,7 @@
       person.birth && person.birth.place, person.death && person.death.place,
       person.heritageNote, settings.includeNotes ? person.notes : "",
       sourceText,
-      (person.addresses || []).map(function (item) { return item.label + " " + formatAddress(item) + " " + item.notes; }).join(" "),
+      (person.addresses || []).map(function (item) { return item.label + " " + formatAddress(item) + " " + item.phone + " " + item.notes; }).join(" "),
       (person.phones || []).map(function (item) { return item.label + " " + item.value; }).join(" "),
       (person.emails || []).map(function (item) { return item.label + " " + item.value; }).join(" ")
     ].filter(Boolean).join(" ").toLowerCase();

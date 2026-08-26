@@ -520,7 +520,7 @@
       updated: function (before, after) {
         const areas = changedAreaLabels(before, after, [
           ["label", "label"], ["line1", "address"], ["line2", "address line 2"], ["city", "city"], ["region", "region"],
-          ["postalCode", "postal code"], ["country", "country"], ["notes", "Notes"], ["source", "source details"]
+          ["postalCode", "postal code"], ["country", "country"], ["phone", "landline"], ["notes", "Notes"], ["source", "source details"]
         ]);
         addUpdatedAreaChanges(changes, "place", placeLabel(after), areas);
       }
