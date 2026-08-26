@@ -153,6 +153,7 @@ Use synthetic families only.
 - [ ] New and reset preferences follow the system theme by default; explicit System, Light, and Dark choices persist and retain readable contrast and status text.
 - [ ] Settings exposes no theme presets, color pickers, or hex inputs, and normalization replaces older custom-color values with the fixed McFamily palette.
 - [ ] Settings contains no theme-preset, manual-motion, or Family Guidance controls. Its one Text size slider spans 85–160%, scales both application and reading surfaces, and normalizes the compatibility reading scale to the same value. Device reduced-motion remains automatic.
+- [ ] Admin Settings shows working GitHub links for `themadat/mctree-mchome` and `themadat/mcdata`; Editor, Member, Viewer, and each matching Admin role preview do not render that repository section.
 
 ## Print / Save PDF
 
