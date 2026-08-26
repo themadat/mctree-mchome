@@ -156,16 +156,20 @@ Use synthetic families only.
 
 ## Print / Save PDF
 
-- [ ] Report includes compact combined opening content, statistics, relationship legend, every family map, a compact Person Directory, and Family Notes, with no separate alphabetical person index.
-- [ ] Each Person Directory item contains only the full name, app-styled Lineage ID, and root-to-person first-name progression in the form `:: George -> James -> George -> Albon`.
+- [ ] Report includes compact opening content, Person Directory before Family Maps, every retained family map, and Family Notes, with no separate alphabetical person index.
+- [ ] Each Person Directory entry is one primary-address household; people with the same address are grouped, and every person without an address remains visible as a singleton household.
+- [ ] Households sort by the main person's Display Last Name and use Display Names for the main person, partners, and the `People at the Same Address:` list.
+- [ ] The earliest Lineal household member is the main person. The heading includes same-address partners, the main person's phone and email occupy their own columns, and the full address is the far-right column.
+- [ ] A Lineal partner is bold. A deceased partner is italic and followed by `[d. YYYY]` for a known death year or `[d.]` for an unknown date.
+- [ ] Each household footer follows first names from oldest to newest, then shows the main person's full Lineal name and app-styled Lineage ID, such as `George -> James -> George -> Albon McMillen [01.01.01.01]`.
 - [ ] The first map names George McMillen (1745) as the root ancestor at Generation 0, every retained component uses the Root Ancestor label, and Jon Couts remains in Person Directory but has no Family Map component.
 - [ ] Family-map rows use six compact columns and contain only names and years.
 - [ ] Generation 4 and later people, including Non-Lineal partners, are grouped beneath a `Generation 3 Line` header with no unassigned branch when lineage can be resolved.
-- [ ] Lineal map cards use a clearly visible faded-red outline; Lineal Newton, Albon, and Lucian members use the stronger orientation highlight plus a Bloodline symbol, while Theophilus and Lucian Lynn Kretzing do not. Every deceased map and Person Directory entry uses brown shading, and every map name fits within two lines.
+- [ ] Lineal map cards use a clearly visible faded-red outline; Lineal Newton, Albon, and Lucian members use the stronger orientation highlight plus a Bloodline symbol, while Theophilus and Lucian Lynn Kretzing do not. Every deceased map entry uses brown shading, and every map name fits within two lines.
 - [ ] Stored `99`/`??` lineage people and their isolated branches do not appear in Family Maps, Person Directory profiles, or PDF statistics.
 - [ ] Developer Mode opens the report in a modal without invoking the native print dialog; closing it restores focus. Ordinary mode retains native printing.
 - [ ] Application controls are suppressed and print colors remain legible.
-- [ ] Compact directory entries avoid internal breaks and flow in three columns so many people fit on each page.
+- [ ] Household directory entries avoid internal breaks and their names, contact fields, address, resident list, and lineage footer remain legible without horizontal overflow.
 - [ ] Representative browser Save as PDF output is visually inspected.
 
 ## Offline and installation

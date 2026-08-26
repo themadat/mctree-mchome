@@ -2351,20 +2351,105 @@
     return person && model.displayName(person).trim().toLowerCase() === "jon couts";
   }
 
-  function printLineageProgression(person, graph) {
-    const names = [];
+  function printLineageProgressionHtml(person, graph) {
+    const members = [];
     const used = new Set();
     let cursor = person;
-    while (cursor && !used.has(cursor.id) && names.length <= config.controls.maxPeople) {
+    while (cursor && !used.has(cursor.id) && members.length <= config.controls.maxPeople) {
       used.add(cursor.id);
-      names.push(firstName(model.displayName(cursor)));
+      members.push(cursor);
       const parents = graph.parents.get(cursor.id) || [];
       const linealParent = parents.find(function (entry) {
         return entry.relationship && entry.relationship.lineage === "lineal";
       });
       cursor = linealParent && linealParent.person;
     }
-    return names.reverse().join(" -> ");
+    members.reverse();
+    const names = members.map(function (member, index) {
+      return u.escapeHtml(index === members.length - 1 ? lineageName(member) : firstName(lineageName(member)));
+    });
+    const formattedLineage = lineageIdHtml(lineageId(person));
+    if (!names.length) names.push(u.escapeHtml(lineageName(person)));
+    names[names.length - 1] = '<span class="print-lineage-person">' + names[names.length - 1] + ' <span class="print-lineage-number">[' + formattedLineage + "]</span></span>";
+    return names.join(' <span class="print-lineage-arrow" aria-hidden="true">-&gt;</span> ');
+  }
+
+  function printHouseholdAddress(person) {
+    const addresses = person && person.addresses || [];
+    return addresses.find(function (address) { return address.current; }) || addresses[0] || null;
+  }
+
+  function printHouseholdAddressKey(person, address) {
+    if (!address) return "person:" + person.id;
+    if (address.placeId) return "place:" + address.placeId;
+    const formatted = model.formatAddress(address).toLocaleLowerCase().replace(/\s+/g, " ").trim();
+    return formatted ? "address:" + formatted : "person:" + person.id;
+  }
+
+  function comparePrintHouseholdMain(a, b, graph, memberIds) {
+    const aLineage = lineageSegments(a);
+    const bLineage = lineageSegments(b);
+    if (Boolean(aLineage.length) !== Boolean(bLineage.length)) return aLineage.length ? -1 : 1;
+    if (aLineage.length !== bLineage.length) return aLineage.length - bLineage.length;
+    const aPartner = (graph.partners.get(a.id) || []).some(function (entry) { return memberIds.has(entry.person.id); });
+    const bPartner = (graph.partners.get(b.id) || []).some(function (entry) { return memberIds.has(entry.person.id); });
+    if (aPartner !== bPartner) return aPartner ? -1 : 1;
+    const aParent = (graph.children.get(a.id) || []).some(function (entry) { return memberIds.has(entry.person.id); });
+    const bParent = (graph.children.get(b.id) || []).some(function (entry) { return memberIds.has(entry.person.id); });
+    if (aParent !== bParent) return aParent ? -1 : 1;
+    return model.sortName(a).localeCompare(model.sortName(b)) || a.id.localeCompare(b.id);
+  }
+
+  function printHouseholds(people, graph) {
+    const grouped = new Map();
+    people.forEach(function (person) {
+      const address = printHouseholdAddress(person);
+      const key = printHouseholdAddressKey(person, address);
+      if (!grouped.has(key)) grouped.set(key, { key: key, address: address, members: [] });
+      grouped.get(key).members.push(person);
+    });
+    return Array.from(grouped.values()).map(function (household) {
+      const memberIds = new Set(household.members.map(function (person) { return person.id; }));
+      household.members.sort(function (a, b) { return model.sortName(a).localeCompare(model.sortName(b)) || a.id.localeCompare(b.id); });
+      household.main = household.members.slice().sort(function (a, b) { return comparePrintHouseholdMain(a, b, graph, memberIds); })[0];
+      household.partners = (graph.partners.get(household.main.id) || []).map(function (entry) { return entry.person; }).filter(function (partner) {
+        return partner && memberIds.has(partner.id);
+      }).filter(function (partner, index, partners) {
+        return partners.findIndex(function (candidate) { return candidate.id === partner.id; }) === index;
+      }).sort(function (a, b) { return model.sortName(a).localeCompare(model.sortName(b)) || a.id.localeCompare(b.id); });
+      const partnerIds = new Set(household.partners.map(function (partner) { return partner.id; }));
+      household.sameAddress = household.members.filter(function (member) { return member.id !== household.main.id && !partnerIds.has(member.id); });
+      return household;
+    }).sort(function (a, b) {
+      return model.sortName(a.main).localeCompare(model.sortName(b.main)) || a.main.id.localeCompare(b.main.id);
+    });
+  }
+
+  function printHouseholdPersonName(person, partner) {
+    let name = u.escapeHtml(model.displayName(person));
+    if (isLinealPerson(person)) name = "<strong>" + name + "</strong>";
+    if (partner && person.livingStatus === "deceased") {
+      const deathYear = family.eventYearLabel(person, "death");
+      const knownYear = /^\d{4}$/.test(deathYear) ? deathYear : "";
+      name = "<em>" + name + '</em> <span class="print-household-death">[d.' + (knownYear ? " " + knownYear : "") + "]</span>";
+    }
+    return name;
+  }
+
+  function printContactValues(items) {
+    const values = (items || []).map(function (item) { return u.cleanLine(item && item.value, 240); }).filter(Boolean);
+    return values.length ? values.map(function (value) { return "<span>" + u.escapeHtml(value) + "</span>"; }).join("") : '<span class="muted-copy">—</span>';
+  }
+
+  function printHouseholdHtml(household, graph) {
+    const main = household.main;
+    const partnerNames = household.partners.map(function (partner) {
+      return '<span class="print-household-pair"><span class="print-household-join" aria-hidden="true">&amp;</span> ' + printHouseholdPersonName(partner, true) + "</span>";
+    }).join(" ");
+    const householdNames = printHouseholdPersonName(main, false) + (partnerNames ? " " + partnerNames : "");
+    const sameAddress = household.sameAddress.length ? household.sameAddress.map(function (person) { return u.escapeHtml(model.displayName(person)); }).join(", ") : '<span class="muted-copy">No additional people recorded</span>';
+    const address = household.address ? u.escapeHtml(model.formatAddress(household.address)).replace(/\n/g, "<br>") : '<span class="muted-copy">No address recorded</span>';
+    return '<article class="print-directory-household"><header><div class="print-household-names"><span>Household</span><h2>' + householdNames + '</h2></div><div class="print-household-contact"><span>Phone</span><p>' + printContactValues(main.phones) + '</p></div><div class="print-household-contact"><span>Email</span><p>' + printContactValues(main.emails) + '</p></div><div class="print-household-address"><span>Address</span><address>' + address + '</address></div></header><p class="print-household-residents"><strong>People at the Same Address:</strong> ' + sameAddress + '</p><footer>' + printLineageProgressionHtml(main, graph) + "</footer></article>";
   }
 
   function printGenerationSection(generation, people) {
@@ -2462,10 +2547,9 @@
       }).join("");
       return '<article class="print-component"><header><div><span>Root Ancestor</span><h3>' + u.escapeHtml(model.displayName(rootAncestor)) + '</h3></div><p>Gen ' + (printGenerations.get(rootAncestor.id) || 0) + " · " + componentPeople.length + " people</p></header>" + earlyGenerations + branchHtml + "</article>";
     }).join("");
-    const profiles = people.map(function (person) {
-      return '<article id="print-' + u.escapeHtml(person.id) + '" class="print-directory-person' + (person.livingStatus === "deceased" ? " print-deceased" : "") + '"><header><h2>' + u.escapeHtml(model.displayName(person)) + '</h2>' + lineageIdHtml(lineageId(person)) + '</header><p><span aria-hidden="true">::</span> ' + u.escapeHtml(printLineageProgression(person, graph)) + "</p></article>";
-    }).join("");
-    $("#printReport").innerHTML = '<section class="print-front-matter"><article class="print-cover"><span class="eyebrow">Private family atlas</span><h1>' + u.escapeHtml(current.workspace.family.title) + '</h1><p>Prepared by McFamily on ' + u.escapeHtml(printDate()) + '</p><dl><div><dt>People</dt><dd>' + people.length + '</dd></div><div><dt>Relationships</dt><dd>' + relationships.length + '</dd></div><div><dt>Family Units</dt><dd>' + familyUnits.length + '</dd></div><div><dt>Addresses</dt><dd>' + addressCount + '</dd></div><div><dt>Family Maps</dt><dd>' + componentsList.length + '</dd></div></dl><aside><strong>Private document</strong><span>This atlas may contain home addresses, contact details, and family notes. Store and share it carefully.</span></aside></article><article class="print-legend"><h2>How to Use This Atlas</h2><p>Family maps begin with their root ancestor. George McMillen (1745) is Generation 0; Generation 4 and later are grouped under their Generation 3 family line. Lineal members have a faded-red outline, with Newton, Albon, and Lucian highlighted for orientation. Deceased people have brown shading.</p><div><span><strong>Parent links</strong> Biological, adoptive, step, foster, guardian, or unspecified</span><span><strong>Partner links</strong> Married, partnered, separated, divorced, annulled, widowed, former, or unspecified</span></div></article></section><section class="print-atlas"><h2>Family Maps</h2>' + componentHtml + '</section><section class="print-directory"><h1>Person Directory</h1><div class="print-directory-entries">' + profiles + "</div></section>" + (notes ? '<article class="print-family-notes"><h1>Family Notes</h1><p>' + u.escapeHtml(notes).replace(/\n/g, "<br>") + "</p></article>" : "");
+    const households = printHouseholds(people, graph);
+    const directoryHtml = households.map(function (household) { return printHouseholdHtml(household, graph); }).join("");
+    $("#printReport").innerHTML = '<section class="print-front-matter"><article class="print-cover"><span class="eyebrow">Private family atlas</span><h1>' + u.escapeHtml(current.workspace.family.title) + '</h1><p>Prepared by McFamily on ' + u.escapeHtml(printDate()) + '</p><dl><div><dt>People</dt><dd>' + people.length + '</dd></div><div><dt>Relationships</dt><dd>' + relationships.length + '</dd></div><div><dt>Family Units</dt><dd>' + familyUnits.length + '</dd></div><div><dt>Addresses</dt><dd>' + addressCount + '</dd></div><div><dt>Family Maps</dt><dd>' + componentsList.length + '</dd></div></dl><aside><strong>Private document</strong><span>This atlas may contain home addresses, contact details, and family notes. Store and share it carefully.</span></aside></article><article class="print-legend"><h2>How to Use This Atlas</h2><p>Family maps begin with their root ancestor. George McMillen (1745) is Generation 0; Generation 4 and later are grouped under their Generation 3 family line. Lineal members have a faded-red outline, with Newton, Albon, and Lucian highlighted for orientation. Deceased people have brown shading.</p><div><span><strong>Parent links</strong> Biological, adoptive, step, foster, guardian, or unspecified</span><span><strong>Partner links</strong> Married, partnered, separated, divorced, annulled, widowed, former, or unspecified</span></div></article></section><section class="print-directory"><h1>Person Directory</h1><div class="print-directory-entries">' + directoryHtml + '</div></section><section class="print-atlas"><h2>Family Maps</h2>' + componentHtml + "</section>" + (notes ? '<article class="print-family-notes"><h1>Family Notes</h1><p>' + u.escapeHtml(notes).replace(/\n/g, "<br>") + "</p></article>" : "");
   }
 
   function openPrintPreview(trigger) {
