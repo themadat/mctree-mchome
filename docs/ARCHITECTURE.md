@@ -26,8 +26,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 13,
   "meta": {
-    "appVersion": "0.0.1.83",
-    "buildId": "0.0.1.83",
+    "appVersion": "0.0.1.84",
+    "buildId": "0.0.1.84",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -101,7 +101,7 @@ The layout is deterministic and dependency-free. Desktop opens with a thin-gutte
 
 The print action constructs hidden semantic HTML before calling `window.print()`. Print CSS suppresses application controls and exposes only the report. Developer Mode copies the same generated report into a modal preview and deliberately skips `window.print()`.
 
-The compact cover, counts, relationship legend, and six-column Family Maps flow together without forced opening-page breaks. The George McMillen (1745) component is first and identifies him as Generation 0; every component uses its Root Ancestor label. Generation 4 and later are partitioned beneath Generation 3 descendants, including Non-Lineal partners assigned through their Lineal partner. Unresolved `99`/`??` lineage branches are excluded from the printable atlas. Lineal map cards use faded-red outlines; Newton, Albon, and Lucian have stronger orientation highlights, and adaptive map-name type is constrained to two lines. A dense Person Directory follows without internal P references, individual Notes, or Imported Source fields; Family Notes remain a separate final section. Cross-references avoid scaling one enormous SVG tree to illegible size. Page-break rules prefer intact entries and repeat important section headings where supported.
+Person Directory begins after the compact cover and before the six-column Family Maps. It groups people by their primary current address, with first-recorded-address fallback and singleton entries for people without an address. The earliest Lineal household member becomes the main person; their phone, email, and full address share the heading with same-address partners. Remaining residents are listed below, and the footer follows Lineal first names to the main person's full Lineal name and styled Lineage ID. All directory names use Display Names, households sort by main-person Display Last Name, Lineal partners are bold, and deceased partners are italic with a concise death marker. The later Family Maps keep George McMillen (1745) first at Generation 0, partition Generation 4 and later beneath Generation 3 descendants, exclude unresolved `99`/`??` branches, and retain the established Lineal and orientation styling. Family Notes remain a separate final section. Page-break rules prefer intact household and map entries.
 
 The browser owns PDF generation. McFamily does not create a binary PDF directly.
 
