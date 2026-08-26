@@ -487,7 +487,7 @@
     const documents = consolidateDocuments((Array.isArray(sourceWorkspace.documents) ? sourceWorkspace.documents : []).map(function (document, index) { return normalizeDocument(document, index, documentIds, now); }), now);
     const recordIds = new Set();
     const records = (Array.isArray(sourceWorkspace.records) ? sourceWorkspace.records : []).map(function (record, index) { return normalizeRecord(record, index, recordIds, now); });
-    const theme = config.themes.find(function (item) { return item.id === sourceAppearance.preset; }) || defaultTheme();
+    const theme = defaultTheme();
     const textScale = u.clamp(sourceAppearance.textScale, 0.85, 1.6, 1);
     const homePersonId = personIds.has(sourceFamily.homePersonId) ? sourceFamily.homePersonId : (people[0] ? people[0].id : "");
     const selectedPersonId = sourceUi.selectedPersonId === "" ? "" : (personIds.has(sourceUi.selectedPersonId) ? sourceUi.selectedPersonId : homePersonId);
@@ -557,11 +557,11 @@
         appearance: {
           mode: ["system", "light", "dark"].includes(sourceAppearance.mode) ? sourceAppearance.mode : "system",
           preset: theme.id,
-          accent: u.normalizeColor(sourceAppearance.accent, theme.accent),
-          accent2: u.normalizeColor(sourceAppearance.accent2, theme.accent2),
-          success: u.normalizeColor(sourceAppearance.success, theme.success),
-          warning: u.normalizeColor(sourceAppearance.warning, theme.warning),
-          danger: u.normalizeColor(sourceAppearance.danger, theme.danger),
+          accent: theme.accent,
+          accent2: theme.accent2,
+          success: theme.success,
+          warning: theme.warning,
+          danger: theme.danger,
           textScale: textScale,
           readingScale: textScale,
           reducedMotion: ["system", "reduce", "full"].includes(sourceAppearance.reducedMotion) ? sourceAppearance.reducedMotion : "system"
