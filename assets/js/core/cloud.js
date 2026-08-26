@@ -828,7 +828,7 @@
       rolePreview = "";
       activeSession = { grant: opened.grant, keys: opened.keys, baselineState: u.clone(opened.prepared.state) };
       localStorage.setItem(config.storage.hostedSeenKey, "1");
-      storage.replace(opened.prepared.state, { saveRecovery: false, reason: "hosted-unlock", touch: false });
+      storage.replace(opened.prepared.state, { saveRecovery: false, clearRecovery: true, reason: "hosted-unlock", touch: false });
       $("#accessPassphrase").value = "";
       renderAccessState();
       finishUnlock();
@@ -925,7 +925,7 @@
       rolePreview = "";
       activeSession = { grant: currentVault.grants.find(function (grant) { return grant.id === "owner"; }), keys: keys, baselineState: u.clone(nextState) };
       localStorage.setItem(config.storage.hostedSeenKey, "1");
-      storage.replace(nextState, { saveRecovery: true, recoveryReason: "Before hosted access publication", reason: "hosted-access-publish", touch: false });
+      storage.replace(nextState, { saveRecovery: false, clearRecovery: true, reason: "hosted-access-publish", touch: false });
       renderAccessState();
       visiblePassphrases.forEach(function (value, id) {
         if (value) $("[data-grant-passphrase]", $('[data-grant-row="' + id + '"]')).value = value;
@@ -1018,7 +1018,7 @@
       currentVault = written.vault;
       activeSession.grant = currentVault.grants.find(function (grant) { return grant.id === "owner"; });
       activeSession.baselineState = u.clone(nextState);
-      storage.replace(nextState, { saveRecovery: true, recoveryReason: "Before bulk dataset " + nextVersion, reason: "hosted-bulk-publish", touch: false });
+      storage.replace(nextState, { saveRecovery: false, clearRecovery: true, reason: "hosted-bulk-publish", touch: false });
       closeBulkUploadReview();
       renderAccessState();
       components.toast("Dataset " + nextVersion + " is live. Every active passphrase now opens the updated encrypted family.", { title: "Bulk update published", kind: "success", duration: 8000 });
@@ -1059,7 +1059,7 @@
       currentVault = written.vault;
       activeSession.grant = currentVault.grants.find(function (grant) { return grant.id === activeSession.grant.id; });
       activeSession.baselineState = u.clone(nextState);
-      storage.replace(nextState, { saveRecovery: true, recoveryReason: "Before hosted dataset " + portability.datasetVersionFor(nextState), reason: "hosted-family-publish", touch: false });
+      storage.replace(nextState, { saveRecovery: false, clearRecovery: true, reason: "hosted-family-publish", touch: false });
       $("#hostedAuditSummary").value = "";
       renderAccessState();
       components.toast("Everyone can open dataset " + currentVault.datasetVersion + " with their existing active passphrase.", { title: "Family update published", kind: "success", duration: 7000 });
@@ -1269,6 +1269,7 @@
     setRolePreview: setRolePreview,
     canManageAccess: function () { const profile = accessProfile(); return Boolean(profile && profile.canManage); },
     canPublish: function () { const profile = accessProfile(); return Boolean(profile && profile.canPublish); },
+    hasHostedVault: function () { return Boolean(currentVault); },
     generatePassphrase: generatePassphrase,
     validateVault: validateVault,
     buildVault: buildVault,
