@@ -28,6 +28,23 @@
     return cleanText(value, max).replace(/\s+/g, " ").trim();
   }
 
+  function phoneDigits(value) {
+    let digits = cleanText(value, 64).replace(/\D/g, "");
+    if (digits.length >= 11 && digits.startsWith("1")) digits = digits.slice(1);
+    return digits.slice(0, 10);
+  }
+
+  function formatPhoneNumber(value, options) {
+    const source = cleanLine(value, 240);
+    const partial = Boolean(options && options.partial);
+    const digits = phoneDigits(source);
+    if (!digits) return "";
+    if (!partial && digits.length !== 10) return source;
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return digits.slice(0, 3) + "-" + digits.slice(3);
+    return digits.slice(0, 3) + "-" + digits.slice(3, 6) + "-" + digits.slice(6);
+  }
+
   function escapeHtml(value) {
     return String(value == null ? "" : value).replace(/[&<>"]/g, function (character) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[character];
@@ -231,6 +248,8 @@
     clamp,
     cleanText,
     cleanLine,
+    phoneDigits,
+    formatPhoneNumber,
     escapeHtml,
     safeUrl,
     safeExternalOpen,

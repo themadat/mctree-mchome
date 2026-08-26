@@ -868,7 +868,6 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .contact-card address { font-style: normal; }
 .contact-card p, .contact-card small { display: block; margin: .3rem 0 0; color: var(--muted); }
 .contact-card .address-phone { color: var(--text); }
-.contact-card .address-phone strong { margin-right: .2rem; color: var(--muted); font-size: .68rem; }
 .address-source-details { margin-top: .45rem; border-top: 1px solid var(--line); }
 .address-source-details summary { min-height: 34px; padding: .42rem 0 0; color: var(--accent-strong); font-size: .72rem; font-weight: 750; }
 .address-source-details .profile-list { margin-top: .2rem; }
@@ -894,7 +893,7 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .relationship-empty { padding: .25rem .35rem; color: var(--muted); font-size: .7rem; }
 .mobile-workspace-tabs { display: none; margin-bottom: .55rem; }
 
-.person-dialog { width: min(1180px, calc(100vw - 1rem)); height: auto; max-height: calc(100svh - .5rem); }
+.person-dialog { width: min(1320px, calc(100vw - 1rem)); height: auto; max-height: calc(100svh - .5rem); }
 .person-dialog .dialog-header { min-height: 52px; padding: .42rem .65rem; }
 .person-dialog .dialog-footer { padding: .42rem .65rem calc(.42rem + var(--safe-bottom)); }
 .person-form-body { display: grid; grid-template-columns: minmax(650px, 1.45fr) minmax(410px, 1fr); grid-template-areas: "names details" "names relationships" "names notes" "contacts contacts" "error error"; align-items: start; gap: .28rem; padding: .38rem .45rem; }
@@ -964,7 +963,7 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .address-editor-grid { display: grid; grid-template-columns: .55fr 1.25fr .85fr .8fr .55fr .58fr .65fr .9fr auto .78fr .78fr 1fr; align-items: start; gap: .28rem; padding-right: 78px; }
 .address-editor-grid .field { gap: .08rem; font-size: .58rem; }
 .address-editor-grid input, .address-editor-grid textarea { min-height: 30px; padding: .18rem .3rem; }
-.address-current-field { align-self: end; min-height: 30px; }
+.address-current-field { align-self: end; min-height: 30px; line-height: 1.05; }
 .address-start-field, .address-end-field { grid-column: span 1; }
 .address-notes-field { grid-column: span 1; }
 .repeatable-contact { display: grid; grid-template-columns: minmax(105px, .28fr) minmax(190px, 1fr) auto; align-items: end; gap: .35rem; padding: .35rem .45rem; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); }
@@ -1129,17 +1128,19 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .print-preview-document .print-directory-address-column { width: 34%; }
 .print-preview-document .print-directory-table thead { display: table-header-group; }
 .print-preview-document .print-directory-table th { padding: .045in .075in; border-bottom: 2px solid #333; color: #555; font: 700 6.2pt Helvetica, Arial, sans-serif; letter-spacing: .06em; text-align: left; text-transform: uppercase; }
-.print-preview-document .print-directory-household { break-inside: avoid; }
+.print-preview-document .print-directory-household { break-inside: avoid-page; page-break-inside: avoid; }
+.print-preview-document .print-directory-household > tr { break-inside: avoid-page; page-break-inside: avoid; }
 .print-preview-document .print-directory-spacer td { height: .1in; padding: 0; border: 0; }
-.print-preview-document .print-household-person-row td { padding: .035in .075in; border: 1px solid #ccc; vertical-align: middle; }
+.print-preview-document .print-household-person-row td { padding: .02in .075in; border: 1px solid #ccc; vertical-align: middle; }
+.print-preview-document .print-household-single .print-household-person-row { height: .3in; }
+.print-preview-document .print-household-multiple .print-household-person-row { height: .15in; }
 .print-preview-document .print-household-person-row h2 { margin: 0; overflow-wrap: anywhere; font-size: 8pt; font-weight: 400; line-height: 1.12; }
 .print-preview-document .print-household-person-row h2 strong { font-weight: 700; }
 .print-preview-document .print-household-person-row p { display: grid; gap: .015in; margin: 0; overflow-wrap: anywhere; font-size: 6.8pt; line-height: 1.15; }
 .print-preview-document .print-household-death { display: inline; margin: 0; color: #555; font: 6.4pt Georgia, "Times New Roman", serif; letter-spacing: 0; text-transform: none; white-space: nowrap; }
 .print-preview-document .print-household-address { vertical-align: top !important; }
 .print-preview-document .print-household-address address { margin: 0; overflow-wrap: anywhere; font-size: 7.1pt; font-style: normal; line-height: 1.2; }
-.print-preview-document .print-household-landline { display: block !important; margin: .05in 0 0 !important; color: #333; font-size: 6.8pt !important; }
-.print-preview-document .print-household-landline strong { color: #555; font-size: 6.1pt; text-transform: uppercase; }
+.print-preview-document .print-household-address-phone { display: block !important; margin: .05in 0 0 !important; color: #333; font-size: 6.8pt !important; }
 .print-preview-document .print-household-residents td { padding: .045in .075in .055in; border: 1px solid #ccc; color: #777; font-size: 6.8pt; line-height: 1.22; }
 .print-preview-document .print-household-lineage td { padding: .055in .075in; border: 1px solid #ccc; color: #555; font-size: 6.5pt; line-height: 1.22; overflow-wrap: anywhere; }
 .print-preview-document .print-directory-household .lineage-id { font: 6.2pt ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
@@ -1262,7 +1263,7 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 }
 
 @media print {
-  @page { size: auto; margin: .55in; }
+  @page { size: letter; margin: .5in; }
   :root { color-scheme: light; font-size: 10pt; }
   html, body { min-height: 0; overflow: visible; background: #fff !important; color: #111 !important; }
   body > *:not(#printReport) { display: none !important; }
@@ -1319,17 +1320,19 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
   .print-directory-address-column { width: 34%; }
   .print-directory-table thead { display: table-header-group; }
   .print-directory-table th { padding: .04in .065in; border-bottom: 2px solid #333; color: #555; font: 700 5.9pt Helvetica, Arial, sans-serif; letter-spacing: .06em; text-align: left; text-transform: uppercase; }
-  .print-directory-household { break-inside: avoid; }
+  .print-directory-household { break-inside: avoid-page !important; page-break-inside: avoid !important; }
+  .print-directory-household > tr { break-inside: avoid-page; page-break-inside: avoid; }
   .print-directory-spacer td { height: .085in; padding: 0; border: 0; }
-  .print-household-person-row td { padding: .032in .065in; border: 1px solid #ccc; vertical-align: middle; }
+  .print-household-person-row td { padding: .018in .065in; border: 1px solid #ccc; vertical-align: middle; }
+  .print-household-single .print-household-person-row { height: .27in; }
+  .print-household-multiple .print-household-person-row { height: .135in; }
   .print-household-person-row h2 { margin: 0; overflow-wrap: anywhere; font-size: 7.7pt; font-weight: 400; line-height: 1.1; }
   .print-household-person-row h2 strong { font-weight: 700; }
   .print-household-person-row p { display: grid; gap: .012in; margin: 0; overflow-wrap: anywhere; font-size: 6.5pt; line-height: 1.14; }
   .print-household-death { display: inline; margin: 0; color: #555; font: 6.1pt Georgia, "Times New Roman", serif; letter-spacing: 0; text-transform: none; white-space: nowrap; }
   .print-household-address { vertical-align: top !important; }
   .print-household-address address { margin: 0; overflow-wrap: anywhere; font-size: 6.8pt; font-style: normal; line-height: 1.18; }
-  .print-household-landline { display: block !important; margin: .045in 0 0 !important; color: #333; font-size: 6.5pt !important; }
-  .print-household-landline strong { color: #555; font-size: 5.8pt; text-transform: uppercase; }
+  .print-household-address-phone { display: block !important; margin: .04in 0 0 !important; color: #333; font-size: 6.5pt !important; }
   .print-household-residents td { padding: .04in .065in .05in; border: 1px solid #ccc; color: #777; font-size: 6.5pt; line-height: 1.2; }
   .print-household-lineage td { padding: .05in .065in; border: 1px solid #ccc; color: #555; font-size: 6.2pt; line-height: 1.2; overflow-wrap: anywhere; }
   .print-directory-household .lineage-id { font: 5.9pt ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }

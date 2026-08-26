@@ -4,7 +4,7 @@ McFamily is a private family atlas that runs as a static GitHub Pages app. It vi
 
 There is no custom backend, account provider, cloud database, or runtime dependency. The separate public `mcdata` repository contains only an AES-GCM encrypted vault; readable family CSVs, passphrases, and GitHub tokens never belong in either public repository.
 
-Current version: `0.0.1.88` (`major.minor.patch.build`).
+Current version: `0.0.1.91` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -126,7 +126,7 @@ An Owner may keep a private recovery ZIP outside GitHub:
 
 The ZIP contains `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`. Imports replace the current family only after ZIP integrity, all five exact schemas, metadata counts, IDs, links, lineage paths, and ancestry cycles pass validation. During hosted use the current encrypted GitHub version remains unchanged until Update; local-only setup can retain one browser recovery snapshot. Imports never merge concurrent copies.
 
-`Print / Save PDF` places Directory of McMillen Clan immediately after the cover, before the six-column Family Maps. The directory includes people who have at least one phone, email, or address and adds each included person's current partner so living/deceased couples remain together. Households combine shared current addresses and current-partner links, prefer a living partner's address when needed, and sort by the main person's Display Last Name. Main people and partners occupy separate compact, aligned name, individual phone, and email rows beside the shared full address; a Place landline appears with that address. Household, Phone, Email, and Address headers repeat only at the top of each printed directory page. Other residents follow the partner rows as a muted Display Name list without a label. Only Lineal names are bold; every deceased household person is italic with `[d. YYYY]` when the year is known or `[d.]` when it is not. People omitted from this contact directory remain in Family Maps. Use the native print dialog's Save as PDF destination; Developer Mode opens the same report in an in-app preview instead.
+`Print / Save PDF` places Directory of McMillen Clan immediately after the cover, before the six-column Family Maps. The directory includes people who have at least one phone, email, or address and adds each included person's current partner so living/deceased couples remain together. Households combine shared current addresses and current-partner links, prefer a living partner's address when needed, and sort by the main person's Display Last Name. Main people and partners occupy separate compact, aligned name, individual phone, and email rows beside the shared full address; a shared Place phone appears beneath that address without a redundant type label. One-person rows use the same total contact height as an address, while partner rows divide that height evenly. Household, Phone, Email, and Address headers repeat only at the top of each printed directory page. Other residents follow the partner rows as a muted Display Name list without a label. Only Lineal names are bold; every deceased household person is italic with `[d. YYYY]` when the year is known or `[d.]` when it is not. Letter output uses half-inch margins, and household cards avoid internal page breaks. People omitted from this contact directory remain in Family Maps. Use the native print dialog's Save as PDF destination; Developer Mode opens the same report in an in-app preview instead.
 
 ## Host on GitHub Pages
 
