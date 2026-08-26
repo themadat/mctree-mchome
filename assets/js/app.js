@@ -329,13 +329,20 @@
     const activeFilters = new Set(current.ui.directoryFilters);
     const statusFilters = config.directoryFilters.filter(function (filter) { return filter.group === "status" && activeFilters.has(filter.id); }).map(function (filter) { return filter.id; });
     const kinshipFilters = config.directoryFilters.filter(function (filter) { return filter.group === "kinship" && activeFilters.has(filter.id); }).map(function (filter) { return filter.id; });
+    const contactFilters = config.directoryFilters.filter(function (filter) { return filter.group === "contact" && activeFilters.has(filter.id); }).map(function (filter) { return filter.id; });
     const graph = family.indexes(current);
     const sortMode = current.ui.directorySort;
     return current.workspace.people.filter(function (person) {
       const kinship = directoryKinship(person, graph, current.workspace.family.homePersonId);
       const statusMatches = !statusFilters.length || statusFilters.includes(person.livingStatus);
       const kinshipMatches = !kinshipFilters.length || kinshipFilters.some(function (filter) { return kinship[filter]; });
-      return statusMatches && kinshipMatches && model.fuzzySearchMatch(query, model.personSearchText(person, { includeNotes: familyEditingEnabled(), includeSource: developerReferencesEnabled() }));
+      const contactMatches = !contactFilters.length || contactFilters.some(function (filter) {
+        if (filter === "has-address") return Boolean(person.addresses && person.addresses.length);
+        if (filter === "has-phone") return Boolean(person.phones && person.phones.length);
+        if (filter === "has-email") return Boolean(person.emails && person.emails.length);
+        return false;
+      });
+      return statusMatches && kinshipMatches && contactMatches && model.fuzzySearchMatch(query, model.personSearchText(person, { includeNotes: familyEditingEnabled(), includeSource: developerReferencesEnabled() }));
     }).sort(function (a, b) { return directorySortName(a, sortMode).localeCompare(directorySortName(b, sortMode)) || a.id.localeCompare(b.id); });
   }
 
@@ -1138,11 +1145,11 @@
       const scale = node.scale || 1;
       const detailed = currentTreeLayout.nodeView === "detailed";
       const nameLines = family.treeNameLines(person, { basis: currentTreeLayout.nameBasis, length: currentTreeLayout.nameLength });
-      const contactAvailability = [
+      const contactAvailability = person.livingStatus === "living" ? [
         person.addresses && person.addresses.length ? { symbol: "addressAvailable", label: "address" } : null,
         person.phones && person.phones.length ? { symbol: "phoneAvailable", label: "phone" } : null,
         person.emails && person.emails.length ? { symbol: "emailAvailable", label: "email" } : null
-      ].filter(Boolean);
+      ].filter(Boolean) : [];
       const contactLabel = contactAvailability.length ? " Recorded " + contactAvailability.map(function (item) { return item.label; }).join(", ") + "." : "";
       const shell = '<g class="tree-node' + (selected ? " selected" : "") + (home ? " home" : "") + (node.partnerPlacement === "left" ? " compact-partner" : "") + (isLinealPerson(person) ? " lineal" : "") + (person.livingStatus === "deceased" ? " deceased" : "") + '" data-view="' + u.escapeHtml(currentTreeLayout.nodeView) + '" tabindex="0" role="button" aria-label="' + u.escapeHtml(name + ", " + family.lifespan(person) + "." + contactLabel + " Select to focus.") + '" data-tree-person="' + u.escapeHtml(person.id) + '" transform="translate(' + node.x + " " + node.y + ") scale(" + scale + ')"><rect width="' + renderWidth + '" height="' + renderHeight + '" rx="10"></rect>';
       const nameHtml = nameLines.map(function (line, index) {
@@ -1155,7 +1162,7 @@
       const reference = detailed && developerReferencesEnabled() ? '<text class="tree-reference" x="' + (renderWidth / 2) + '" y="' + (lifeY + 13) + '" text-anchor="middle">' + u.escapeHtml(person.reference) + "</text>" : "";
       const linealMark = isLinealPerson(person) ? icons.markup("lineal").replace('<svg class="sf-symbol"', '<svg class="sf-symbol tree-lineal-mark" x="' + (renderWidth - 14) + '" y="' + (lifeY - 9) + '" width="7" height="10"') : "";
       const contactMarks = contactAvailability.map(function (item, index) {
-        return icons.markup(item.symbol).replace('<svg class="sf-symbol"', '<svg class="sf-symbol tree-contact-mark" x="' + (6 + index * 11) + '" y="' + (renderHeight - 13) + '" width="9" height="9"');
+        return icons.markup(item.symbol).replace('<svg class="sf-symbol"', '<svg class="sf-symbol tree-contact-mark" x="' + (6 + index * 22) + '" y="' + (renderHeight - 21) + '" width="18" height="18"');
       }).join("");
       return shell + nameHtml + '<text class="tree-life" x="' + (renderWidth / 2) + '" y="' + lifeY + '" text-anchor="middle">' + u.escapeHtml(family.lifespan(person) + (detailed && home ? " · home" : "")) + "</text>" + reference + contactMarks + linealMark + "</g>";
     }).join("");

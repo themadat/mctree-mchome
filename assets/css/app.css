@@ -807,8 +807,7 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .tree-node.lineal > rect { stroke: var(--lineal-mark); stroke-width: 3; }
 .tree-node.lineal.selected > rect { stroke: var(--accent); stroke-width: 3; }
 .tree-lineal-mark { width: 7px; height: 10px; color: var(--lineal-mark); }
-.tree-contact-mark { color: var(--muted); }
-.tree-node.deceased .tree-contact-mark { color: var(--deceased-card-muted); }
+.tree-contact-mark { width: 18px; height: 18px; color: var(--muted); }
 .tree-generation-scale { pointer-events: none; }
 .tree-generation-scale path { fill: none; stroke: var(--faint); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .tree-generation-scale text { fill: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 8px; dominant-baseline: middle; }
@@ -1190,6 +1189,7 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
   .family-workspace-grid[data-mobile-view="directory"] .directory-panel,
   .family-workspace-grid[data-mobile-view="tree"] .tree-panel,
   .family-workspace-grid[data-mobile-view="profile"] .profile-panel { display: flex; }
+  .directory-filter-options { top: auto; bottom: calc(100% + .28rem); max-height: min(330px, calc(100dvh - 7rem)); overflow-y: auto; overscroll-behavior: contain; }
   .tree-toolbar { max-height: 215px; overflow-y: auto; }
   .tree-view-controls { width: 100%; }
   .tree-control-section { flex: 1 1 calc(50% - .25rem); }
