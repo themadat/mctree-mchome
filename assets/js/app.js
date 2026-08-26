@@ -2773,6 +2773,14 @@
     setInputValue($("#appTextScale"), Math.round(appearance.textScale * 100));
     $("#appTextScaleValue").textContent = Math.round(appearance.textScale * 100) + "%";
     $$('[data-button-style]').forEach(function (button) { button.setAttribute("aria-pressed", String(button.dataset.buttonStyle === preferences.controls.buttonStyle)); });
+    [
+      { button: $("#settingsAppRepository"), url: config.identity.repository.url },
+      { button: $("#settingsDataRepository"), url: "https://github.com/" + config.cloud.owner + "/" + config.cloud.repository }
+    ].forEach(function (item) {
+      const url = u.safeUrl(item.url);
+      item.button.dataset.openUrl = url;
+      item.button.disabled = !url;
+    });
     renderLocalStatus();
   }
 

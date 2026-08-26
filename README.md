@@ -4,7 +4,7 @@ McFamily is a private family atlas that runs as a static GitHub Pages app. It vi
 
 There is no custom backend, account provider, cloud database, or runtime dependency. The separate public `mcdata` repository contains only an AES-GCM encrypted vault; readable family CSVs, passphrases, and GitHub tokens never belong in either public repository.
 
-Current version: `0.0.1.84` (`major.minor.patch.build`).
+Current version: `0.0.1.85` (`major.minor.patch.build`).
 
 ## What it does
 

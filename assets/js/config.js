@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.84",
-      buildId: "0.0.1.84",
+      version: "0.0.1.85",
+      buildId: "0.0.1.85",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -170,6 +170,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.85",
+        date: "2026-08-26T15:39:14.000Z",
+        title: "Admin repository shortcuts",
+        summary: "Admin Settings now provides direct links to the McFamily application and encrypted-data repositories.",
+        features: ["Admin-only GitHub repository links in Settings"],
+        improvements: ["The application and mcdata repositories can be opened without leaving the Settings workflow"],
+        fixes: [],
+        knownIssues: []
+      },
       {
         version: "0.0.1.84",
         date: "2026-08-26T15:14:38.000Z",
