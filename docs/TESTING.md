@@ -157,21 +157,24 @@ Use synthetic families only.
 
 ## Print / Save PDF
 
-- [ ] Report includes compact opening content, Person Directory before Family Maps, every retained family map, and Family Notes, with no separate alphabetical person index.
-- [ ] Person Directory omits only people with no phone, email, or address. Those people remain represented in Family Maps and map statistics; a phone/email-only person remains as a singleton directory household.
-- [ ] Each retained Person Directory entry is one primary-address household, sorted by the main person's Display Last Name and using Display Names throughout.
-- [ ] The earliest Lineal household member is the main person. Main people and same-address partners each occupy a separate aligned name, phone, and email row without an ampersand, beside the shared far-right address.
+- [ ] Report includes compact opening content, Directory of McMillen Clan before Family Maps, every retained family map, and Family Notes, with no separate alphabetical person index.
+- [ ] Directory of McMillen Clan omits people with no phone, email, or address unless they are the current partner of an included person. Those otherwise omitted people remain represented in Family Maps and map statistics; a phone/email-only person remains as a singleton directory household.
+- [ ] Each retained directory entry is one household formed by shared primary address and current-partner links, sorted by the main person's Display Last Name and using Display Names throughout.
+- [ ] A current partnership remains together when one person is deceased, only one person has contact data, or their selected current addresses differ; an address tie prefers the living partner's current address.
+- [ ] The earliest Lineal household member is the main person. Main people and partners each occupy a separate aligned name, individual phone, and email row without an ampersand, beside the shared far-right address.
+- [ ] Place landlines round-trip through McMetadata `placeDetails`, appear beneath the shared Address rather than in an individual's Phone column, are searchable and satisfy Has Phone, update every resident linked to that Place, and produce an explicit `landline` place change in the audit preview. Unknown Place keys, empty phones, and unexpected detail fields reject the package.
+- [ ] Household, Phone, Email, and Address are emitted once as a semantic table header and repeat only at the top of every printed directory page.
 - [ ] Other same-address residents follow the partner rows as an unlabeled, deemphasized Display Name list.
 - [ ] Non-Lineal household names use normal weight and only Lineal names are bold. Every deceased household person, including the main person, is italic and followed by `[d. YYYY]` for a known death year or `[d.]` for an unknown date. Main and partner rows remain close in height to the resident and lineage rows.
 - [ ] Each household footer follows first names from oldest to newest, then shows the main person's full Lineal name and app-styled Lineage ID, such as `George -> James -> George -> Albon McMillen [01.01.01.01]`.
-- [ ] The first map names George McMillen (1745) as the root ancestor at Generation 0, every retained component uses the Root Ancestor label, and Jon Couts has no Family Map component and appears in Person Directory only when contact-eligible.
+- [ ] The first map names George McMillen (1745) as the root ancestor at Generation 0, every retained component uses the Root Ancestor label, and Jon Couts has no Family Map component and appears in Directory of McMillen Clan only when contact-eligible.
 - [ ] Family-map rows use six compact columns and contain only names and years.
 - [ ] Generation 4 and later people, including Non-Lineal partners, are grouped beneath a `Generation 3 Line` header with no unassigned branch when lineage can be resolved.
 - [ ] Lineal map cards use a clearly visible faded-red outline; Lineal Newton, Albon, and Lucian members use the stronger orientation highlight plus a Bloodline symbol, while Theophilus and Lucian Lynn Kretzing do not. Every deceased map entry uses brown shading, and every map name fits within two lines.
-- [ ] Stored `99`/`??` lineage people and their isolated branches do not appear in Family Maps, Person Directory profiles, or PDF statistics.
+- [ ] Stored `99`/`??` lineage people and their isolated branches do not appear in Family Maps, directory profiles, or PDF statistics.
 - [ ] Developer Mode opens the report in a modal without invoking the native print dialog; closing it restores focus. Ordinary mode retains native printing.
 - [ ] Application controls are suppressed and print colors remain legible.
-- [ ] Household directory entries avoid internal breaks and their names, contact fields, address, resident list, and lineage footer remain legible without horizontal overflow.
+- [ ] Household directory entries avoid internal breaks and their names, contact fields, address and landline, resident list, and lineage footer remain legible without horizontal overflow.
 - [ ] Representative browser Save as PDF output is visually inspected.
 
 ## Offline and installation
