@@ -5,7 +5,7 @@ import zlib from "node:zlib";
 const INPUT = process.argv[2] || "data/McFamily-16-0-2-2026-08-25.zip";
 const REPORT = process.argv[3] || "data/outputs/mcdirectory-address-report-20260825/McDirectory-address-assignment-report.csv";
 const OUTPUT = process.argv[4] || "data/McFamily-17-0-0-2026-08-25.zip";
-const SOURCE_DATASET_VERSION = "16.0.2";
+const SOURCE_DATASET_VERSION_PATTERN = /^16\.0\.\d+$/;
 const DATASET_VERSION = "17.0.0";
 const RECORDED_BY = "Admin";
 const RECORDED_AT = new Date().toISOString();
@@ -225,7 +225,8 @@ const residences = parseCsv(sourceFiles.get("McResidences.csv"), RESIDENCE_HEADE
 const metadata = parseCsv(sourceFiles.get("McMetadata.csv"), METADATA_HEADERS, "McMetadata.csv");
 const reportRows = parseCsv(fs.readFileSync(REPORT, "utf8"), REPORT_HEADERS, "Address assignment report");
 const sourceDatasetRows = metadata.filter(row => row["metadata-type"] === "package" && row.key === "dataset-version");
-if (sourceDatasetRows.length !== 1 || sourceDatasetRows[0].value !== SOURCE_DATASET_VERSION) throw new Error("The source package must be dataset " + SOURCE_DATASET_VERSION + ".");
+if (sourceDatasetRows.length !== 1 || !SOURCE_DATASET_VERSION_PATTERN.test(sourceDatasetRows[0].value)) throw new Error("The source package must be a dataset 16.0.x package.");
+const sourceDatasetVersion = sourceDatasetRows[0].value;
 
 const personIds = new Set(people.map(row => row["record-id"]));
 if (personIds.size !== people.length) throw new Error("McPeople.csv contains duplicate record IDs.");
@@ -428,7 +429,7 @@ const verified = unzipArchive(fs.readFileSync(OUTPUT));
 FILE_NAMES.forEach(fileName => parseCsv(verified.get(fileName), V17_HEADERS[fileName], fileName + " output"));
 
 console.log(JSON.stringify({
-  output: OUTPUT, datasetVersion: DATASET_VERSION, sourceDataset: SOURCE_DATASET_VERSION, people: people.length, relationships: relationships.length,
+  output: OUTPUT, datasetVersion: DATASET_VERSION, sourceDataset: sourceDatasetVersion, people: people.length, relationships: relationships.length,
   places: places.length, residences: residences.length, placesCreated, placesUpdated, residencesCreated, residencesUpdated, residencesKept,
   phonesAdded, emailsAdded, acceptedReviewRows, blockedRowsOmitted, metadataRows: metadata.length
 }, null, 2));
