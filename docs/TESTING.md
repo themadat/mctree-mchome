@@ -176,6 +176,10 @@ Use synthetic families only.
 - [ ] Application controls are suppressed and print colors remain legible.
 - [ ] Letter output uses half-inch margins. Household directory entries avoid internal page breaks; single-person rows occupy the total height of an address plus phone, partner rows divide that height evenly, and names, contact fields, address phone, resident list, and lineage footer remain legible without horizontal overflow.
 - [ ] Representative browser Save as PDF output is visually inspected.
+- [ ] Admin and Editor render Labels and CSV immediately after PDF; Member and Viewer render none of those three actions, including under Owner role preview.
+- [ ] Labels uses only households with a current mailing address, joins a main person and current partner with `&`, emits exactly 30 cells per Letter sheet in Avery 5260 geometry, and keeps each cell to the household names plus exactly two address lines.
+- [ ] CSV contains exactly `Names, Address`, matches the label household ordering/content, quotes multiline addresses correctly, protects formula-leading values, and downloads without changing family state.
+- [ ] The more compact directory spacer, person, resident, and lineage rows remain legible and reduce printed page usage without splitting a household across pages.
 
 ## Offline and installation
 

@@ -4,7 +4,7 @@ McFamily is a private family atlas that runs as a static GitHub Pages app. It vi
 
 There is no custom backend, account provider, cloud database, or runtime dependency. The separate public `mcdata` repository contains only an AES-GCM encrypted vault; readable family CSVs, passphrases, and GitHub tokens never belong in either public repository.
 
-Current version: `0.0.1.91` (`major.minor.patch.build`).
+Current version: `0.0.1.92` (`major.minor.patch.build`).
 
 ## What it does
 
@@ -41,6 +41,7 @@ Current version: `0.0.1.91` (`major.minor.patch.build`).
 - Rejects a damaged or malformed ZIP, missing/extra/reordered columns, bad metadata counts, missing references, duplicate relationships, self-links, and ancestry cycles before replacement.
 - Keeps the decrypted family only in memory during hosted use; the encrypted GitHub vault and commit history remain the saved source until Update publishes a change. Only compact favorites and display preferences stay in browser storage.
 - Exports a complete editable McFamily ZIP and creates a print-only family atlas with brown deceased entries, stronger faded-red Lineal outlines, and Bloodline-symbol orientation highlights for Newton, Albon, and Lucian. Jon Couts remains in the directory but is omitted as a map root.
+- Gives Admin and Editors adjacent PDF, Labels, and CSV actions. Labels lays out current household display names and two-line mailing addresses on 30-up Avery 5260 sheets; CSV exports the same households as `Names, Address`.
 - Preserves Notes, Settings, System/Light/Dark color modes, accessibility, installation, and offline support. One Text size setting consistently scales both application controls and reading surfaces, while reduced-motion follows the device preference automatically.
 
 ## Run locally

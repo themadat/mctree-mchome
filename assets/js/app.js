@@ -232,8 +232,10 @@
     const searchLabel = familyNotesVisible ? "Search people, contacts, Notes, Help, releases, and Roadmap" : "Search people, contacts, Help, releases, and Roadmap";
     $("label[for='globalSearch']").textContent = searchLabel;
     $("#globalSearch").setAttribute("aria-label", searchLabel);
-    $("#printButton").disabled = !isInitialized || !familyEditingEnabled();
-    $("#printButton").hidden = isInitialized && !familyEditingEnabled();
+    ["#printButton", "#labelsButton", "#directoryCsvButton"].forEach(function (selector) {
+      $(selector).disabled = !isInitialized || !familyEditingEnabled();
+      $(selector).hidden = isInitialized && !familyEditingEnabled();
+    });
     $("#addPersonButton").disabled = !isInitialized || !familyEditingEnabled();
     $("#addPersonButton").hidden = isInitialized && !familyEditingEnabled();
     $("#addPersonButton").title = isInitialized && familyEditingEnabled() ? "Add person" : "Family editing is unavailable";
@@ -2507,7 +2509,7 @@
       household.main = household.members.slice().sort(function (a, b) { return comparePrintHouseholdMain(a, b, graph, memberIds); })[0];
       household.address = printHouseholdPreferredAddress(household.members);
       household.partners = family.relationGroups(household.main.id, printState).partners.filter(function (entry) {
-        return entry.person && memberIds.has(entry.person.id);
+        return entry.current && entry.person && memberIds.has(entry.person.id);
       }).sort(function (a, b) {
         return Number(b.current) - Number(a.current) || model.sortName(a.person).localeCompare(model.sortName(b.person));
       }).map(function (entry) { return entry.person; }).filter(function (partner) {
@@ -2532,6 +2534,140 @@
       name = "<em>" + name + '</em> <span class="print-household-death">[d.' + (knownYear ? " " + knownYear : "") + "]</span>";
     }
     return name;
+  }
+
+  function mailingAddressLines(address) {
+    if (!address) return [];
+    const street = [address.line1, address.line2].map(function (value) { return u.cleanLine(value, 240); }).filter(Boolean).join(", ");
+    const locality = [u.cleanLine(address.city, 160), u.cleanLine(address.region, 120)].filter(Boolean).join(", ");
+    const cityLine = [locality, u.cleanLine(address.postalCode, 40)].filter(Boolean).join(" ");
+    const country = u.cleanLine(address.country, 120);
+    const internationalCountry = /^(?:u\.?s\.?a?|united states(?: of america)?)$/i.test(country) ? "" : country;
+    const secondLine = [cityLine, internationalCountry].filter(Boolean).join(", ");
+    return [street, secondLine];
+  }
+
+  function joinHouseholdNames(people) {
+    const names = people.map(function (person) { return model.displayName(person); }).filter(Boolean);
+    if (names.length < 2) return names[0] || "Unnamed household";
+    if (names.length === 2) return names.join(" & ");
+    return names.slice(0, -1).join(", ") + " & " + names[names.length - 1];
+  }
+
+  function mailingHouseholdEntries() {
+    const current = state();
+    const people = current.workspace.people.slice().sort(function (a, b) { return model.sortName(a).localeCompare(model.sortName(b)); });
+    const printState = { workspace: { people: people, relationships: current.workspace.relationships } };
+    const graph = family.indexes(printState);
+    const directoryPeople = printDirectoryPeople(people, printState);
+    return printHouseholds(directoryPeople, graph, printState).filter(function (household) {
+      return Boolean(household.address);
+    }).map(function (household) {
+      const namedPeople = [household.main].concat(household.partners);
+      const lines = mailingAddressLines(household.address);
+      return { names: joinHouseholdNames(namedPeople), addressLines: lines, address: lines.filter(Boolean).join("\n") };
+    }).filter(function (entry) { return entry.address; });
+  }
+
+  function buildMailingLabelReport(entries) {
+    const pages = [];
+    for (let offset = 0; offset < entries.length; offset += 30) {
+      const labels = entries.slice(offset, offset + 30);
+      while (labels.length < 30) labels.push(null);
+      pages.push('<section class="print-label-sheet" aria-label="Avery 5260 mailing-label sheet">' + labels.map(function (entry) {
+        if (!entry) return '<article class="print-mailing-label print-mailing-label-blank" aria-hidden="true"></article>';
+        return '<article class="print-mailing-label"><strong>' + u.escapeHtml(entry.names) + '</strong><span>' + u.escapeHtml(entry.addressLines[0] || "") + '</span><span>' + u.escapeHtml(entry.addressLines[1] || "") + "</span></article>";
+      }).join("") + "</section>");
+    }
+    $("#printReport").innerHTML = pages.join("");
+  }
+
+  function setPrintPageMode(mode) {
+    let style = $("#dynamicPrintPageStyle");
+    if (!style) {
+      style = document.createElement("style");
+      style.id = "dynamicPrintPageStyle";
+      style.media = "print";
+      document.head.appendChild(style);
+    }
+    style.textContent = mode === "labels" ? "@page { size: letter; margin: 0; }" : "";
+    document.body.classList.toggle("printing-labels", mode === "labels");
+    document.body.classList.toggle("printing-atlas", mode === "atlas");
+  }
+
+  function clearPrintMode() {
+    document.body.classList.remove("printing-atlas", "printing-labels");
+    $("#dynamicPrintPageStyle")?.remove();
+    $("#printReport").setAttribute("aria-hidden", "true");
+  }
+
+  function invokeNativePrint(mode) {
+    $("#printReport").setAttribute("aria-hidden", "false");
+    setPrintPageMode(mode);
+    requestAnimationFrame(function () {
+      window.print();
+      clearPrintMode();
+    });
+  }
+
+  function mailingCsvValue(value) {
+    let text = String(value == null ? "" : value);
+    if (/^[\t ]*[=+\-@]/.test(text)) text = "'" + text;
+    return /[",\r\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+  }
+
+  function downloadTextFile(text, fileName, type) {
+    const blob = new Blob([text], { type: type });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(function () { URL.revokeObjectURL(url); }, 0);
+  }
+
+  function mailingExportUnavailable() {
+    if (!familyEditingEnabled()) {
+      components.message("Export unavailable", "Mailing labels and CSV export are available only to Admin and Editors.");
+      return true;
+    }
+    if (!initialized()) {
+      components.message("No family to export", "Open the family before creating mailing output.");
+      return true;
+    }
+    return false;
+  }
+
+  function printMailingLabels(eventOrTrigger) {
+    if (mailingExportUnavailable()) return;
+    const entries = mailingHouseholdEntries();
+    if (!entries.length) {
+      components.message("No mailing addresses", "Add a current household address before creating mailing labels.");
+      return;
+    }
+    const trigger = eventOrTrigger && eventOrTrigger.currentTarget instanceof HTMLElement ? eventOrTrigger.currentTarget : eventOrTrigger instanceof HTMLElement ? eventOrTrigger : document.activeElement;
+    buildMailingLabelReport(entries);
+    if (developerReferencesEnabled()) {
+      openPrintPreview(trigger, "Labels Preview");
+      return;
+    }
+    invokeNativePrint("labels");
+  }
+
+  function exportMailingCsv() {
+    if (mailingExportUnavailable()) return;
+    const entries = mailingHouseholdEntries();
+    if (!entries.length) {
+      components.message("No mailing addresses", "Add a current household address before exporting a mailing CSV.");
+      return;
+    }
+    const rows = entries.map(function (entry) { return mailingCsvValue(entry.names) + "," + mailingCsvValue(entry.address); });
+    const csv = "\ufeffNames,Address\r\n" + rows.join("\r\n") + "\r\n";
+    const slug = state().workspace.family.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "mcfamily";
+    downloadTextFile(csv, slug + "-mailing-addresses-" + new Date().toISOString().slice(0, 10) + ".csv", "text/csv;charset=utf-8");
+    components.toast(entries.length + " household " + (entries.length === 1 ? "address was" : "addresses were") + " exported.", { title: "Mailing CSV saved", kind: "success" });
   }
 
   function printContactValues(items) {
@@ -2656,7 +2792,8 @@
     $("#printReport").innerHTML = '<section class="print-front-matter"><article class="print-cover"><span class="eyebrow">Private family atlas</span><h1>' + u.escapeHtml(current.workspace.family.title) + '</h1><p>Prepared by McFamily on ' + u.escapeHtml(printDate()) + '</p><dl><div><dt>People</dt><dd>' + people.length + '</dd></div><div><dt>Relationships</dt><dd>' + relationships.length + '</dd></div><div><dt>Family Units</dt><dd>' + familyUnits.length + '</dd></div><div><dt>Addresses</dt><dd>' + addressCount + '</dd></div><div><dt>Family Maps</dt><dd>' + componentsList.length + '</dd></div></dl><aside><strong>Private document</strong><span>This atlas may contain home addresses, contact details, and family notes. Store and share it carefully.</span></aside></article><article class="print-legend"><h2>How to Use This Atlas</h2><p>Family maps begin with their root ancestor. George McMillen (1745) is Generation 0; Generation 4 and later are grouped under their Generation 3 family line. Lineal members have a faded-red outline, with Newton, Albon, and Lucian highlighted for orientation. Deceased people have brown shading.</p><div><span><strong>Parent links</strong> Biological, adoptive, step, foster, guardian, or unspecified</span><span><strong>Partner links</strong> Married, partnered, separated, divorced, annulled, widowed, former, or unspecified</span></div></article></section><section class="print-directory"><h1>Directory of McMillen Clan</h1>' + directoryHtml + '</section><section class="print-atlas"><h2>Family Maps</h2>' + componentHtml + "</section>" + (notes ? '<article class="print-family-notes"><h1>Family Notes</h1><p>' + u.escapeHtml(notes).replace(/\n/g, "<br>") + "</p></article>" : "");
   }
 
-  function openPrintPreview(trigger) {
+  function openPrintPreview(trigger, title) {
+    $("#printPreviewTitle").textContent = title || "PDF Preview";
     const preview = $("#printPreviewContent");
     preview.innerHTML = $("#printReport").innerHTML;
     $$("[id]", preview).forEach(function (element) { element.removeAttribute("id"); });
@@ -2675,16 +2812,10 @@
     const trigger = eventOrTrigger && eventOrTrigger.currentTarget instanceof HTMLElement ? eventOrTrigger.currentTarget : eventOrTrigger instanceof HTMLElement ? eventOrTrigger : document.activeElement;
     buildPrintReport();
     if (developerReferencesEnabled()) {
-      openPrintPreview(trigger);
+      openPrintPreview(trigger, "PDF Preview");
       return;
     }
-    $("#printReport").setAttribute("aria-hidden", "false");
-    document.body.classList.add("printing-atlas");
-    requestAnimationFrame(function () {
-      window.print();
-      document.body.classList.remove("printing-atlas");
-      $("#printReport").setAttribute("aria-hidden", "true");
-    });
+    invokeNativePrint("atlas");
   }
 
   function filteredRoadmap() {
@@ -3329,6 +3460,8 @@
     $("#notesButton").addEventListener("click", function (event) { openNotes(event.currentTarget); });
     $("#addPersonButton").addEventListener("click", function (event) { pendingRelative = null; openPersonEditor("", event.currentTarget); });
     $("#printButton").addEventListener("click", printAtlas);
+    $("#labelsButton").addEventListener("click", printMailingLabels);
+    $("#directoryCsvButton").addEventListener("click", exportMailingCsv);
     $("#printPreviewDialog").addEventListener("close", function () { $("#printPreviewContent").replaceChildren(); });
     $("#notesTextarea").addEventListener("input", function (event) { saveNotes(event.target.value); });
     $("#mainContent").addEventListener("click", handleMainClick);
@@ -3408,7 +3541,7 @@
     document.addEventListener("keydown", handleGlobalKeydown);
     document.addEventListener("keyup", function (event) { updateShortcutHints(event, false); });
     window.addEventListener("blur", function () { updateShortcutHints({ altKey: false, shiftKey: false, ctrlKey: false }, true); });
-    window.addEventListener("afterprint", function () { document.body.classList.remove("printing-atlas"); $("#printReport").setAttribute("aria-hidden", "true"); });
+    window.addEventListener("afterprint", clearPrintMode);
   }
 
   function renderAll() {

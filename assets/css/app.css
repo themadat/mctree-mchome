@@ -562,6 +562,8 @@ details > summary { width: fit-content; cursor: pointer; color: var(--accent-str
   .identity-copy { max-width: min(47vw, 240px); }
   .app-name { font-size: .92rem; }
   .version-pill, .environment-pill { min-height: 20px; padding: .12rem .34rem; font-size: .58rem; }
+  .top-toolbar { width: min(49vw, 320px); justify-content: flex-start; overflow-x: auto; scrollbar-width: none; }
+  .top-toolbar::-webkit-scrollbar { display: none; }
   .top-toolbar .action-button { width: 49px; min-width: 49px; min-height: 48px; padding: .22rem .18rem .2rem; }
   .top-toolbar .button-label { font-size: .58rem; }
   .header-search-action { width: 49px; min-width: 49px; min-height: 48px; padding: .22rem .12rem .2rem; }
@@ -1083,6 +1085,12 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .print-preview-scroll { padding: 1rem; background: #4b504e; }
 .print-preview-document { color: #111; font-family: Georgia, "Times New Roman", serif; font-size: 10pt; line-height: 1.35; }
 .print-preview-document > section, .print-preview-document > article { width: min(8.5in, 100%); margin: 0 auto 1rem; padding: .55in; background: #fff; box-shadow: 0 8px 28px rgba(0, 0, 0, .28); }
+.print-preview-document > .print-label-sheet { display: grid; grid-template-columns: repeat(3, 2.625in); grid-template-rows: repeat(10, 1in); column-gap: .125in; width: 8.5in; height: 11in; padding: .5in .1875in; }
+.print-mailing-label { box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; width: 2.625in; height: 1in; padding: .09in .14in; overflow: hidden; font-family: Helvetica, Arial, sans-serif; }
+.print-mailing-label strong, .print-mailing-label span { display: block; overflow-wrap: anywhere; line-height: 1.13; }
+.print-mailing-label strong { font-size: 10pt; }
+.print-mailing-label span { font-size: 9pt; }
+.print-preview-document .print-mailing-label { outline: 1px dashed #bbb; outline-offset: -1px; }
 .print-preview-document .print-cover { padding-bottom: .18in; border-bottom: 2px solid #333; text-align: center; }
 .print-preview-document .print-cover h1 { margin: .12in 0 .04in; font-size: 24pt; }
 .print-preview-document .print-cover > p { margin: 0; color: #444; }
@@ -1130,19 +1138,19 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .print-preview-document .print-directory-table th { padding: .045in .075in; border-bottom: 2px solid #333; color: #555; font: 700 6.2pt Helvetica, Arial, sans-serif; letter-spacing: .06em; text-align: left; text-transform: uppercase; }
 .print-preview-document .print-directory-household { break-inside: avoid-page; page-break-inside: avoid; }
 .print-preview-document .print-directory-household > tr { break-inside: avoid-page; page-break-inside: avoid; }
-.print-preview-document .print-directory-spacer td { height: .1in; padding: 0; border: 0; }
-.print-preview-document .print-household-person-row td { padding: .02in .075in; border: 1px solid #ccc; vertical-align: middle; }
-.print-preview-document .print-household-single .print-household-person-row { height: .3in; }
-.print-preview-document .print-household-multiple .print-household-person-row { height: .15in; }
+.print-preview-document .print-directory-spacer td { height: .04in; padding: 0; border: 0; }
+.print-preview-document .print-household-person-row td { padding: .01in .06in; border: 1px solid #ccc; vertical-align: middle; }
+.print-preview-document .print-household-single .print-household-person-row { height: .22in; }
+.print-preview-document .print-household-multiple .print-household-person-row { height: .11in; }
 .print-preview-document .print-household-person-row h2 { margin: 0; overflow-wrap: anywhere; font-size: 8pt; font-weight: 400; line-height: 1.12; }
 .print-preview-document .print-household-person-row h2 strong { font-weight: 700; }
 .print-preview-document .print-household-person-row p { display: grid; gap: .015in; margin: 0; overflow-wrap: anywhere; font-size: 6.8pt; line-height: 1.15; }
 .print-preview-document .print-household-death { display: inline; margin: 0; color: #555; font: 6.4pt Georgia, "Times New Roman", serif; letter-spacing: 0; text-transform: none; white-space: nowrap; }
 .print-preview-document .print-household-address { vertical-align: top !important; }
 .print-preview-document .print-household-address address { margin: 0; overflow-wrap: anywhere; font-size: 7.1pt; font-style: normal; line-height: 1.2; }
-.print-preview-document .print-household-address-phone { display: block !important; margin: .05in 0 0 !important; color: #333; font-size: 6.8pt !important; }
-.print-preview-document .print-household-residents td { padding: .045in .075in .055in; border: 1px solid #ccc; color: #777; font-size: 6.8pt; line-height: 1.22; }
-.print-preview-document .print-household-lineage td { padding: .055in .075in; border: 1px solid #ccc; color: #555; font-size: 6.5pt; line-height: 1.22; overflow-wrap: anywhere; }
+.print-preview-document .print-household-address-phone { display: block !important; margin: .025in 0 0 !important; color: #333; font-size: 6.8pt !important; }
+.print-preview-document .print-household-residents td { padding: .022in .06in .028in; border: 1px solid #ccc; color: #777; font-size: 6.8pt; line-height: 1.16; }
+.print-preview-document .print-household-lineage td { padding: .028in .06in; border: 1px solid #ccc; color: #555; font-size: 6.5pt; line-height: 1.16; overflow-wrap: anywhere; }
 .print-preview-document .print-directory-household .lineage-id { font: 6.2pt ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 .print-preview-document .print-lineage-person { color: #222; }
 .print-preview-document .print-lineage-number { white-space: nowrap; }
@@ -1269,6 +1277,10 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
   body > *:not(#printReport) { display: none !important; }
   #printReport { display: block !important; color: #111; font-family: Georgia, "Times New Roman", serif; line-height: 1.35; }
   #printReport a { color: #111; text-decoration: none; }
+  body.printing-labels #printReport { line-height: 1; }
+  body.printing-labels .print-label-sheet { box-sizing: border-box; display: grid; grid-template-columns: repeat(3, 2.625in); grid-template-rows: repeat(10, 1in); column-gap: .125in; width: 8.5in; height: 11in; padding: .5in .1875in; break-after: page; page-break-after: always; }
+  body.printing-labels .print-label-sheet:last-child { break-after: auto; page-break-after: auto; }
+  body.printing-labels .print-mailing-label { outline: 0; }
   .print-front-matter { break-inside: auto; }
   .print-cover { padding-bottom: .18in; border-bottom: 2px solid #333; text-align: center; }
   .print-cover h1 { margin: .12in 0 .04in; font-size: 24pt; }
@@ -1322,19 +1334,19 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
   .print-directory-table th { padding: .04in .065in; border-bottom: 2px solid #333; color: #555; font: 700 5.9pt Helvetica, Arial, sans-serif; letter-spacing: .06em; text-align: left; text-transform: uppercase; }
   .print-directory-household { break-inside: avoid-page !important; page-break-inside: avoid !important; }
   .print-directory-household > tr { break-inside: avoid-page; page-break-inside: avoid; }
-  .print-directory-spacer td { height: .085in; padding: 0; border: 0; }
-  .print-household-person-row td { padding: .018in .065in; border: 1px solid #ccc; vertical-align: middle; }
-  .print-household-single .print-household-person-row { height: .27in; }
-  .print-household-multiple .print-household-person-row { height: .135in; }
+  .print-directory-spacer td { height: .035in; padding: 0; border: 0; }
+  .print-household-person-row td { padding: .01in .055in; border: 1px solid #ccc; vertical-align: middle; }
+  .print-household-single .print-household-person-row { height: .22in; }
+  .print-household-multiple .print-household-person-row { height: .11in; }
   .print-household-person-row h2 { margin: 0; overflow-wrap: anywhere; font-size: 7.7pt; font-weight: 400; line-height: 1.1; }
   .print-household-person-row h2 strong { font-weight: 700; }
   .print-household-person-row p { display: grid; gap: .012in; margin: 0; overflow-wrap: anywhere; font-size: 6.5pt; line-height: 1.14; }
   .print-household-death { display: inline; margin: 0; color: #555; font: 6.1pt Georgia, "Times New Roman", serif; letter-spacing: 0; text-transform: none; white-space: nowrap; }
   .print-household-address { vertical-align: top !important; }
   .print-household-address address { margin: 0; overflow-wrap: anywhere; font-size: 6.8pt; font-style: normal; line-height: 1.18; }
-  .print-household-address-phone { display: block !important; margin: .04in 0 0 !important; color: #333; font-size: 6.5pt !important; }
-  .print-household-residents td { padding: .04in .065in .05in; border: 1px solid #ccc; color: #777; font-size: 6.5pt; line-height: 1.2; }
-  .print-household-lineage td { padding: .05in .065in; border: 1px solid #ccc; color: #555; font-size: 6.2pt; line-height: 1.2; overflow-wrap: anywhere; }
+  .print-household-address-phone { display: block !important; margin: .025in 0 0 !important; color: #333; font-size: 6.5pt !important; }
+  .print-household-residents td { padding: .022in .055in .028in; border: 1px solid #ccc; color: #777; font-size: 6.5pt; line-height: 1.15; }
+  .print-household-lineage td { padding: .028in .055in; border: 1px solid #ccc; color: #555; font-size: 6.2pt; line-height: 1.15; overflow-wrap: anywhere; }
   .print-directory-household .lineage-id { font: 5.9pt ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
   .print-lineage-person { color: #222; }
   .print-lineage-number { white-space: nowrap; }
