@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.91",
-      buildId: "0.0.1.91",
+      version: "0.0.1.92",
+      buildId: "0.0.1.92",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -170,6 +170,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.92",
+        date: "2026-08-26T22:02:00.000Z",
+        title: "Mailing labels and CSV",
+        summary: "Admin and Editors can now turn current household addresses into compact directory pages, Avery 5260 labels, or a simple mailing CSV.",
+        features: ["Labels builds 30-up Avery 5260 sheets from household display names and current addresses", "CSV downloads the same mailing list with Names and Address columns"],
+        improvements: ["Printable directory household rows use substantially less vertical space"],
+        fixes: [],
+        knownIssues: []
+      },
       {
         version: "0.0.1.91",
         date: "2026-08-26T21:43:16.000Z",

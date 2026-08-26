@@ -26,8 +26,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 13,
   "meta": {
-    "appVersion": "0.0.1.91",
-    "buildId": "0.0.1.91",
+    "appVersion": "0.0.1.92",
+    "buildId": "0.0.1.92",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -104,6 +104,8 @@ The print action constructs hidden semantic HTML before calling `window.print()`
 Directory of McMillen Clan begins after the compact cover and before the six-column Family Maps. It includes people with at least one phone, email, or address, then adds every current partner of an included person so a living/deceased pair remains together. Households combine shared current addresses and current-partner links; the preferred shared address breaks ties in favor of a living partner's address. The earliest Lineal household member becomes the main person. Main people and partners occupy separate compact, aligned Display Name, individual phone, and email rows, while a shared Place phone appears beneath the full address without a type label; remaining residents appear afterward as an unlabeled muted name list. Single-person rows use the same total contact height as an address, while partner rows split that height evenly. One semantic table header supplies Household, Phone, Email, and Address labels and repeats at the top of every printed directory page. Non-Lineal rows use normal-weight names, only Lineal names are bold, and every deceased household person retains the concise italic death marker. Letter output uses half-inch margins and prevents internal household-card page breaks. The footer follows Lineal first names to the main person's full Lineal name and styled Lineage ID. The later Family Maps keep the full map-eligible population, including people omitted from the contact directory. Family Notes remain a separate final section, and page-break rules prefer intact household and map entries.
 
 The browser owns PDF generation. McFamily does not create a binary PDF directly.
+
+Admin and Editor mailing exports derive from the same current-household grouping. Labels creates Letter pages with Avery 5260 geometry—three 2.625-inch columns by ten 1-inch rows, 0.125-inch column gaps, 0.1875-inch side margins, and 0.5-inch top/bottom margins—while CSV serializes the matching `Names` and multiline `Address` values with spreadsheet-formula protection. These outputs are assembled locally and never uploaded.
 
 ## Security and privacy boundaries
 
