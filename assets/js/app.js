@@ -957,7 +957,7 @@
   function profileAddressCard(address) {
     const start = addressDateLabel(address, "start");
     const end = addressDateLabel(address, "end");
-    const phone = address.phone ? '<p class="address-phone"><strong>Landline</strong> ' + u.escapeHtml(address.phone) + "</p>" : "";
+    const phone = address.phone ? '<p class="address-phone">' + u.escapeHtml(address.phone) + "</p>" : "";
     return '<article class="contact-card"><header><strong>' + u.escapeHtml(address.label) + '</strong><span class="status-pill" data-kind="' + (address.current ? "success" : "neutral") + '">' + (address.current ? "Current" : "Former") + '</span></header><address>' + u.escapeHtml(model.formatAddress(address)).replace(/\n/g, "<br>") + '</address>' + phone + ((start || end) ? '<small>' + u.escapeHtml([start, end].filter(Boolean).join(" – ")) + "</small>" : "") + (address.notes ? "<p>" + u.escapeHtml(address.notes) + "</p>" : "") + addressSourceDetails(address) + "</article>";
   }
 
@@ -1536,12 +1536,14 @@
   }
 
   function addressRow(address, index) {
-    return '<fieldset class="repeatable-card" data-address-index="' + index + '"><legend>Address ' + (index + 1) + '</legend><div class="repeatable-card-actions"><button type="button" class="button small danger-text" data-remove-address="' + index + '">Remove</button></div><div class="address-editor-grid"><label class="field"><span>Label</span><input data-address-field="label" value="' + u.escapeHtml(address.label || "Home") + '"></label><label class="field"><span>Address line 1</span><input data-address-field="line1" value="' + u.escapeHtml(address.line1 || "") + '"></label><label class="field"><span>Address line 2</span><input data-address-field="line2" value="' + u.escapeHtml(address.line2 || "") + '"></label><label class="field"><span>City / locality</span><input data-address-field="city" value="' + u.escapeHtml(address.city || "") + '"></label><label class="field"><span>State / region</span><input data-address-field="region" value="' + u.escapeHtml(address.region || "") + '"></label><label class="field"><span>Postal code</span><input data-address-field="postalCode" value="' + u.escapeHtml(address.postalCode || "") + '"></label><label class="field"><span>Country</span><input data-address-field="country" value="' + u.escapeHtml(address.country || "") + '"></label><label class="field address-phone-field"><span>Landline</span><input type="tel" data-address-field="phone" value="' + u.escapeHtml(address.phone || "") + '"></label><label class="check-field address-current-field"><input type="checkbox" data-address-field="current" ' + (address.current !== false ? "checked" : "") + '><span>Current address</span></label><label class="field address-start-field date-input-field"><span>Start date</span><input data-address-field="startDate" data-date-input placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" inputmode="text" maxlength="10" autocomplete="off" spellcheck="false" aria-describedby="addressStartDateError' + index + '" value="' + u.escapeHtml(addressDateValue(address, "start")) + '"><small id="addressStartDateError' + index + '" class="date-validation-message" data-date-error hidden>' + DATE_INPUT_HELP + '</small></label><label class="field address-end-field date-input-field"><span>End date</span><input data-address-field="endDate" data-date-input placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" inputmode="text" maxlength="10" autocomplete="off" spellcheck="false" aria-describedby="addressEndDateError' + index + '" value="' + u.escapeHtml(addressDateValue(address, "end")) + '"><small id="addressEndDateError' + index + '" class="date-validation-message" data-date-error hidden>' + DATE_INPUT_HELP + '</small></label><label class="field address-notes-field"><span>Address notes</span><textarea data-address-field="notes" rows="1">' + u.escapeHtml(address.notes || "") + '</textarea></label></div><small class="address-validation-message" data-address-error hidden>Add at least one physical address field, or remove this address.</small></fieldset>';
+    return '<fieldset class="repeatable-card" data-address-index="' + index + '"><legend>Address ' + (index + 1) + '</legend><div class="repeatable-card-actions"><button type="button" class="button small danger-text" data-remove-address="' + index + '">Remove</button></div><div class="address-editor-grid"><label class="field"><span>Label</span><input data-address-field="label" value="' + u.escapeHtml(address.label || "Home") + '"></label><label class="field"><span>Address line 1</span><input data-address-field="line1" value="' + u.escapeHtml(address.line1 || "") + '"></label><label class="field"><span>Address line 2</span><input data-address-field="line2" value="' + u.escapeHtml(address.line2 || "") + '"></label><label class="field"><span>City / locality</span><input data-address-field="city" value="' + u.escapeHtml(address.city || "") + '"></label><label class="field"><span>State / region</span><input data-address-field="region" value="' + u.escapeHtml(address.region || "") + '"></label><label class="field"><span>Postal code</span><input data-address-field="postalCode" value="' + u.escapeHtml(address.postalCode || "") + '"></label><label class="field"><span>Country</span><input data-address-field="country" value="' + u.escapeHtml(address.country || "") + '"></label><label class="field address-phone-field"><span>Phone</span><input type="tel" inputmode="numeric" autocomplete="tel" maxlength="12" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" data-phone-input data-address-field="phone" value="' + u.escapeHtml(u.formatPhoneNumber(address.phone || "")) + '"></label><label class="check-field address-current-field"><input type="checkbox" data-address-field="current" ' + (address.current !== false ? "checked" : "") + '><span>Current<br>address</span></label><label class="field address-start-field date-input-field"><span>Start date</span><input data-address-field="startDate" data-date-input placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" inputmode="text" maxlength="10" autocomplete="off" spellcheck="false" aria-describedby="addressStartDateError' + index + '" value="' + u.escapeHtml(addressDateValue(address, "start")) + '"><small id="addressStartDateError' + index + '" class="date-validation-message" data-date-error hidden>' + DATE_INPUT_HELP + '</small></label><label class="field address-end-field date-input-field"><span>End date</span><input data-address-field="endDate" data-date-input placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" inputmode="text" maxlength="10" autocomplete="off" spellcheck="false" aria-describedby="addressEndDateError' + index + '" value="' + u.escapeHtml(addressDateValue(address, "end")) + '"><small id="addressEndDateError' + index + '" class="date-validation-message" data-date-error hidden>' + DATE_INPUT_HELP + '</small></label><label class="field address-notes-field"><span>Address notes</span><textarea data-address-field="notes" rows="1">' + u.escapeHtml(address.notes || "") + '</textarea></label></div><small class="address-validation-message" data-address-error hidden>Add at least one physical address field, or remove this address.</small></fieldset>';
   }
 
   function contactRow(item, index, type) {
     const inputType = type === "email" ? "email" : "tel";
-    return '<div class="repeatable-contact" data-contact-index="' + index + '" data-contact-type="' + type + '"><label class="field"><span>Label</span><input data-contact-field="label" value="' + u.escapeHtml(item.label || (type === "phone" ? "Mobile" : "Personal")) + '"></label><label class="field grow-control"><span>' + (type === "phone" ? "Number" : "Address") + '</span><input type="' + inputType + '" data-contact-field="value" value="' + u.escapeHtml(item.value || "") + '"></label><button type="button" class="button small danger-text" data-remove-contact="' + type + ':' + index + '">Remove</button></div>';
+    const phoneAttributes = type === "phone" ? ' inputmode="numeric" autocomplete="tel" maxlength="12" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" data-phone-input' : "";
+    const value = type === "phone" ? u.formatPhoneNumber(item.value || "") : item.value || "";
+    return '<div class="repeatable-contact" data-contact-index="' + index + '" data-contact-type="' + type + '"><label class="field"><span>Label</span><input data-contact-field="label" value="' + u.escapeHtml(item.label || (type === "phone" ? "Mobile" : "Personal")) + '"></label><label class="field grow-control"><span>' + (type === "phone" ? "Number" : "Address") + '</span><input type="' + inputType + '"' + phoneAttributes + ' data-contact-field="value" value="' + u.escapeHtml(value) + '"></label><button type="button" class="button small danger-text" data-remove-contact="' + type + ':' + index + '">Remove</button></div>';
   }
 
   function renderPersonRepeatables() {
@@ -1661,6 +1663,26 @@
     });
   }
 
+  function formatPhoneInput(input) {
+    if (!input) return;
+    const before = input.value;
+    const selection = Number.isInteger(input.selectionStart) ? input.selectionStart : before.length;
+    const digitOffset = before.slice(0, selection).replace(/\D/g, "").length;
+    const formatted = u.formatPhoneNumber(before, { partial: true });
+    input.value = formatted;
+    if (typeof input.setSelectionRange !== "function") return;
+    let digitsSeen = 0;
+    let caret = formatted.length;
+    if (digitOffset === 0) caret = 0;
+    else {
+      for (let index = 0; index < formatted.length; index += 1) {
+        if (/\d/.test(formatted[index])) digitsSeen += 1;
+        if (digitsSeen >= Math.min(digitOffset, 10)) { caret = index + 1; break; }
+      }
+    }
+    input.setSelectionRange(caret, caret);
+  }
+
   function updatePersonFormValidity() {
     const firstNamePresent = ["birthNameFirst", "currentNameFirst", "preferredNameFirst"].some(function (id) { return Boolean($("#" + id).value.trim()); });
     const datesValid = $$('[data-date-input]', $("#personDialog")).filter(function (input) {
@@ -1668,6 +1690,7 @@
       return !partnerDetails || !partnerDetails.hidden;
     }).map(validateDateInputControl).every(Boolean);
     const emailsValid = $$('input[type="email"]', $("#personDialog")).every(function (input) { return input.checkValidity(); });
+    const phonesValid = $$('[data-phone-input]', $("#personDialog")).every(function (input) { return input.checkValidity(); });
     const addressesValid = $$('[data-address-index]', $("#addressEditor")).map(function (row) {
       const valid = addressEditorRowValid(row);
       row.classList.toggle("is-invalid", !valid);
@@ -1676,7 +1699,7 @@
       return valid;
     }).every(Boolean);
     const partnerRelationshipsValid = validateNewPartnerRows();
-    const valid = firstNamePresent && datesValid && emailsValid && addressesValid && partnerRelationshipsValid;
+    const valid = firstNamePresent && datesValid && emailsValid && phonesValid && addressesValid && partnerRelationshipsValid;
     $("#savePersonButton").disabled = !valid;
     return valid;
   }
@@ -1698,14 +1721,15 @@
       return {
         id: previous.id || u.uid("address"), placeId: previous.placeId || "", residenceId: previous.residenceId || "",
         label: value("label"), current: row.querySelector('[data-address-field="current"]')?.checked !== false,
-        line1: value("line1"), line2: value("line2"), city: value("city"), region: value("region"), postalCode: value("postalCode"), country: value("country"), phone: value("phone"),
+        line1: value("line1"), line2: value("line2"), city: value("city"), region: value("region"), postalCode: value("postalCode"), country: value("country"), phone: u.formatPhoneNumber(value("phone")),
         startDate: normalizedPersonDate(startValue, source.fields["date-start-descriptor"]), endDate: normalizedPersonDate(endValue, source.fields["date-end-descriptor"]), notes: value("notes"), source: source,
         placeSource: u.clone(previous.placeSource || { format: "mcplaces-v2", fields: {} }), order: index
       };
     });
     ["phone", "email"].forEach(function (type) {
       personDraft[type + "s"] = $$('.repeatable-contact[data-contact-type="' + type + '"]', $("#" + type + "Editor")).map(function (row, index) {
-        return { id: personDraft[type + "s"][index] && personDraft[type + "s"][index].id || u.uid(type), label: row.querySelector('[data-contact-field="label"]').value, value: row.querySelector('[data-contact-field="value"]').value, order: index };
+        const value = row.querySelector('[data-contact-field="value"]').value;
+        return { id: personDraft[type + "s"][index] && personDraft[type + "s"][index].id || u.uid(type), label: row.querySelector('[data-contact-field="label"]').value, value: type === "phone" ? u.formatPhoneNumber(value) : value, order: index };
       });
     });
   }
@@ -2521,13 +2545,14 @@
     const residentRowCount = household.sameAddress.length ? 1 : 0;
     const addressRows = Math.max(1, householdPeople.length + residentRowCount);
     const address = household.address ? u.escapeHtml(model.formatAddress(household.address)).replace(/\n/g, "<br>") : '<span class="muted-copy">No address recorded</span>';
-    const landline = household.address && household.address.phone ? '<p class="print-household-landline"><strong>Landline</strong> ' + u.escapeHtml(household.address.phone) + "</p>" : "";
+    const addressPhone = household.address && household.address.phone ? '<p class="print-household-address-phone">' + u.escapeHtml(household.address.phone) + "</p>" : "";
     const householdRows = householdPeople.map(function (person, index) {
-      const addressCell = index === 0 ? '<td class="print-household-address" rowspan="' + addressRows + '"><address>' + address + "</address>" + landline + "</td>" : "";
+      const addressCell = index === 0 ? '<td class="print-household-address" rowspan="' + addressRows + '"><address>' + address + "</address>" + addressPhone + "</td>" : "";
       return '<tr class="print-household-person-row"><td><h2>' + printHouseholdPersonName(person) + '</h2></td><td><p>' + printContactValues(person.phones) + '</p></td><td><p>' + printContactValues(person.emails) + "</p></td>" + addressCell + "</tr>";
     }).join("");
     const sameAddress = household.sameAddress.length ? '<tr class="print-household-residents"><td colspan="3">' + household.sameAddress.map(function (person) { return u.escapeHtml(model.displayName(person)); }).join(", ") + "</td></tr>" : "";
-    return '<tbody class="print-directory-household"><tr class="print-directory-spacer" aria-hidden="true"><td colspan="4"></td></tr>' + householdRows + sameAddress + '<tr class="print-household-lineage"><td colspan="4">' + printLineageProgressionHtml(main, graph) + "</td></tr></tbody>";
+    const sizeClass = householdPeople.length === 1 ? "print-household-single" : "print-household-multiple";
+    return '<tbody class="print-directory-household ' + sizeClass + '"><tr class="print-directory-spacer" aria-hidden="true"><td colspan="4"></td></tr>' + householdRows + sameAddress + '<tr class="print-household-lineage"><td colspan="4">' + printLineageProgressionHtml(main, graph) + "</td></tr></tbody>";
   }
 
   function printGenerationSection(generation, people) {
@@ -3337,6 +3362,7 @@
       if (event.target.matches("[data-date-input]") && validateDateInputControl(event.target)) $("#relationshipFormError").hidden = true;
     });
     $("#personDialog").addEventListener("input", function (event) {
+      if (event.target.matches("[data-phone-input]")) formatPhoneInput(event.target);
       if (event.target.matches("[data-new-person-relationship-search]")) filterNewPersonRelationshipPicker(event.target);
       const birthName = /^birthName(Prefix|First|Middle|Last|Suffix)$/.exec(event.target.id);
       if (birthName) syncBirthNamePart(birthName[1]);

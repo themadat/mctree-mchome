@@ -1,0 +1,23 @@
+import fs from "node:fs/promises";
+
+const vaultPath = "../../data/backups/hosted-vault/McFamily-access-current.json";
+const phrasesPath = "../../data/backups/hosted-vault/McFamily-passphrases.txt";
+const outputPath = "../../data/backups/McFamily-17-0-1-2026-08-26.zip";
+const vault = JSON.parse(await fs.readFile(vaultPath, "utf8"));
+const phraseLines = (await fs.readFile(phrasesPath, "utf8")).split(/\r?\n/);
+const ownerLine = phraseLines.find((line) => /\bOwner\s*:/i.test(line));
+if (!ownerLine) throw new Error("Owner passphrase is missing from the private passphrase file.");
+const passphrase = ownerLine.replace(/^.*\bOwner\s*:\s*/i, "").trim();
+const grant = vault.grants.find((item) => item.id === "owner");
+if (!grant) throw new Error("The current vault has no Owner grant.");
+const encoder = new TextEncoder();
+const decoder = new TextDecoder("utf-8", { fatal: true });
+const base64 = (value) => new Uint8Array(Buffer.from(String(value || ""), "base64"));
+const material = await crypto.subtle.importKey("raw", encoder.encode(passphrase.normalize("NFKC")), "PBKDF2", false, ["deriveKey"]);
+const passphraseKey = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: base64(grant.salt), iterations: grant.iterations, hash: "SHA-256" }, material, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+const wrappedBytes = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: base64(grant.wrapped.iv), additionalData: encoder.encode(vault.format + ":grant:" + grant.id), tagLength: 128 }, passphraseKey, base64(grant.wrapped.ciphertext)));
+const wrapped = JSON.parse(decoder.decode(wrappedBytes));
+const dataKey = await crypto.subtle.importKey("raw", base64(wrapped.fullKey), { name: "AES-GCM" }, false, ["decrypt"]);
+const packageBytes = new Uint8Array(await crypto.subtle.decrypt({ name: "AES-GCM", iv: base64(vault.data.full.iv), additionalData: encoder.encode(vault.format + ":data:full"), tagLength: 128 }, dataKey, base64(vault.data.full.ciphertext)));
+await fs.writeFile(outputPath, packageBytes);
+process.stdout.write(JSON.stringify({ output: outputPath, revision: vault.revision, datasetVersion: vault.datasetVersion, bytes: packageBytes.length }) + "\n");
