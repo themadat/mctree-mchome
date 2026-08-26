@@ -7,6 +7,7 @@
   const model = App.stateModel;
   let currentState;
   let persistentStorageAvailable = true;
+  let fullStateMemoryOnly = false;
   let lastSavedJson = "";
   let loadReport = { source: "default", warnings: [], recovered: false, error: "" };
 
@@ -50,9 +51,11 @@
     } catch (error) {
       persistentStorageAvailable = false;
       emit("app:storageerror", {
-        title: error && error.name === "QuotaExceededError" ? "Storage is full" : "Changes are not persistent",
+        title: error && error.name === "QuotaExceededError" ? (fullStateMemoryOnly ? "Browser preferences could not save" : "Storage is full") : "Changes are not persistent",
         message: error && error.name === "QuotaExceededError"
-          ? "The browser could not save this change. Export a backup, remove unneeded content, or free browser storage."
+          ? (fullStateMemoryOnly
+            ? "The family remains saved in GitHub, but favorites and display choices may reset on this device. Free browser storage and try again."
+            : "The browser could not save this change. Export a backup, remove unneeded content, or free browser storage.")
           : "Browser storage is unavailable. Changes made in this session may be lost.",
         error: error
       });
@@ -142,8 +145,27 @@
     }
   }
 
+  function localDevelopmentMode() {
+    return ["127.0.0.1", "localhost", "::1"].includes(location.hostname) && new URLSearchParams(location.search).get("local") === "1";
+  }
+
+  function returningHostedSession() {
+    return !localDevelopmentMode() && readLocal(config.storage.hostedSeenKey) === "1";
+  }
+
+  function useHostedMemory() {
+    fullStateMemoryOnly = true;
+    scheduleSave.cancel();
+    removeLocal(config.storage.stateKey);
+    removeLocal(config.storage.recoveryKey);
+    removeLocal(config.storage.cloudBaselineKey);
+    lastSavedJson = "";
+    emit("app:statesaved", { bytes: 0, updatedAt: currentState && currentState.meta.updatedAt || "", memoryOnly: true });
+  }
+
   function load() {
     removeHistoricalStateKeys();
+    if (returningHostedSession()) useHostedMemory();
     let parseError = "";
     const raw = readLocal(config.storage.stateKey);
     if (raw) {
@@ -188,6 +210,11 @@
     currentState = normalized;
     const json = JSON.stringify(normalized);
     if (json === lastSavedJson) return true;
+    if (fullStateMemoryOnly) {
+      lastSavedJson = json;
+      emit("app:statesaved", { bytes: new Blob([json]).size, updatedAt: normalized.meta.updatedAt, memoryOnly: true });
+      return true;
+    }
     const saved = writeLocal(config.storage.stateKey, json);
     if (saved) {
       lastSavedJson = json;
@@ -211,6 +238,7 @@
   }
 
   function saveRecovery(reason, state) {
+    if (fullStateMemoryOnly) return false;
     const snapshot = {
       createdAt: u.isoNow(),
       reason: u.cleanLine(reason || "Before data replacement", 160),
@@ -264,7 +292,7 @@
     const savedDevicePreferences = settings.preserveDevicePreferences ? (readDevicePreferences() || (currentState && saveDevicePreferences(currentState))) : null;
     scheduleSave.cancel();
     removeHistoricalStateKeys();
-    [config.storage.stateKey, config.storage.recoveryKey].filter(Boolean).forEach(removeLocal);
+    [config.storage.stateKey, config.storage.recoveryKey, config.storage.cloudBaselineKey].filter(Boolean).forEach(removeLocal);
     if (!settings.preserveDevicePreferences) removeLocal(config.storage.devicePreferencesKey);
     lastSavedJson = "";
     currentState = model.createDefaultState({ demo: false });
@@ -285,7 +313,8 @@
       stateBytes: localBytes,
       usage: estimate && Number.isFinite(estimate.usage) ? estimate.usage : null,
       quota: estimate && Number.isFinite(estimate.quota) ? estimate.quota : null,
-      persistentStorageAvailable: persistentStorageAvailable
+      persistentStorageAvailable: persistentStorageAvailable,
+      memoryOnly: fullStateMemoryOnly
     };
   }
 
@@ -306,6 +335,8 @@
     readDevicePreferences: readDevicePreferences,
     clearAll: clearAll,
     usage: usage,
+    useHostedMemory: useHostedMemory,
+    isMemoryOnly: function () { return fullStateMemoryOnly; },
     isPersistent: function () { return persistentStorageAvailable; }
   };
 })();
