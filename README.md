@@ -4,13 +4,13 @@ McFamily is a private family atlas that runs as a static GitHub Pages app. It vi
 
 There is no custom backend, account provider, cloud database, or runtime dependency. The separate public `mcdata` repository contains only an AES-GCM encrypted vault; readable family CSVs, passphrases, and GitHub tokens never belong in either public repository.
 
-Current version: `0.0.1.81` (`major.minor.patch.build`).
+Current version: `0.0.1.82` (`major.minor.patch.build`).
 
 ## What it does
 
 - Automatically fetches the encrypted hosted vault, identifies the matching access grant from one passphrase field, and opens only after its authorized package decrypts and validates.
 - Shows a Lineage tree around a selected person and a Full Tree view of connected and isolated people.
-- Supports two-axis scrolling, pan, directly editable zoom with stacked one-percent steppers, 0-10 depth numbers, fit, keyboard selection, touch, and accessible relationship descriptions.
+- Supports two-axis scrolling, pan, directly editable zoom with a spaced percent suffix and centered stacked one-percent steppers, 0-10 depth numbers, fit, keyboard selection, touch, and accessible relationship descriptions.
 - Orders each Family Tree generation by numeric lineage ID; up to two prior partners appear chronologically at two-thirds size to the left of the Lineal person, while the current or latest death-ended spouse remains full-size on the right. One prior partner is vertically centered; two align to the full-size cards' top and bottom, with their parallel links attached one-quarter from the outer edge of each compact card. Bright gold partner lines distinguish current marriages (solid), previous marriages (dashed), never-married partnerships (dotted), and unknown relationships (question marks), with a floating key in the corner of the tree.
 - Draws any number of recorded Non-Lineal parent links as dashed branches only while the two-line Non-Lineal Lines control is on. Lineal parent edges use faded muted red, with adoption dashed and explained in the Key, without changing relationship records. Its filled symbol remains fixed in both states. Selected Lineal and Non-Lineal cards share the same accent border.
 - Marks Lineal tree cards with a bold muted-red outline and a compact lineage symbol beside the lifespan while preserving the standard living or deceased fill. Small address, phone, and email symbols in that order identify recorded contact information without exposing it on the card.
@@ -25,7 +25,7 @@ Current version: `0.0.1.81` (`major.minor.patch.build`).
 - Keeps portrait placeholders and internal person references out of the ordinary workspace; Developer Mode reveals references and a left-side generation bubble scale for visual troubleshooting.
 - Presents complete oldest-to-newest, two-digit Lineage IDs with the first three ancestral segments italicized and the selected person's final segment bold, followed by a compact direct-parent-linked Family Line with each name's lineage number and generation.
 - Keeps people, places, person-to-person relationships, person-to-place residences, and package metadata in separate exact-schema CSV files inside one ZIP artifact.
-- Opens Audit immediately left of Add with the same neutral toolbar treatment as other actions. The Owner's permission is shown as Admin and records updates as Admin; separately named Editors publish under their own audit username. Audit generates a detailed unpublished-change list with one row per changed area, enables Update only when family content changed, lets Admin validate and publish a complete newer dataset through Bulk Upload, and lets the Owner add, rotate, or revoke each passphrase independently.
+- Opens Audit immediately left of Add with the same neutral toolbar treatment as other actions. The Owner's permission is shown as Admin and records updates as Admin; separately named Editors publish under their own audit username. Audit generates a detailed unpublished-change list with one row per changed area, enables Update only when family content changed, lets Admin validate and publish a complete newer dataset through Bulk Upload, and keeps the Owner's passphrase controls and private recovery actions collapsed until needed.
 - Lets the signed-in Owner click the role pill in Developer Mode to preview Editor, Member, or Viewer behavior without changing the vault, package, or active credentials.
 - Imports known and question-mark partial source dates; person death descriptors explicitly distinguish living (`NONE`), deceased with an unknown date (`UNKNOWN`), and presumed deceased (`UNKNOWN PRESUMED`).
 - Shows partial source dates such as `December ??, 1979`, keeps a natural-language Age property on one line, and fills unknown visible identity properties with `UNKNOWN`. Living profiles use `----` for Died, and living people show only their birth year in directory and tree lifespans. Gender and Pronouns remain stored but are temporarily hidden from person details.
@@ -41,7 +41,7 @@ Current version: `0.0.1.81` (`major.minor.patch.build`).
 - Rejects a damaged or malformed ZIP, missing/extra/reordered columns, bad metadata counts, missing references, duplicate relationships, self-links, and ancestry cycles before replacement.
 - Keeps one browser working copy during hosted use; the encrypted GitHub vault and commit history remain the saved recovery source until Update publishes a change.
 - Exports a complete editable McFamily ZIP and creates a print-only family atlas with brown deceased entries, stronger faded-red Lineal outlines, and Bloodline-symbol orientation highlights for Newton, Albon, and Lucian. Jon Couts remains in the directory but is omitted as a map root.
-- Preserves Notes, Settings, themes, accessibility, installation, and offline support from the application foundation.
+- Preserves Notes, Settings, customizable colors, accessibility, installation, and offline support. One Text size setting consistently scales both application controls and reading surfaces, while reduced-motion follows the device preference automatically.
 
 ## Run locally
 
