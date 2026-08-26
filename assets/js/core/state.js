@@ -488,6 +488,7 @@
     const recordIds = new Set();
     const records = (Array.isArray(sourceWorkspace.records) ? sourceWorkspace.records : []).map(function (record, index) { return normalizeRecord(record, index, recordIds, now); });
     const theme = config.themes.find(function (item) { return item.id === sourceAppearance.preset; }) || defaultTheme();
+    const textScale = u.clamp(sourceAppearance.textScale, 0.85, 1.6, 1);
     const homePersonId = personIds.has(sourceFamily.homePersonId) ? sourceFamily.homePersonId : (people[0] ? people[0].id : "");
     const selectedPersonId = sourceUi.selectedPersonId === "" ? "" : (personIds.has(sourceUi.selectedPersonId) ? sourceUi.selectedPersonId : homePersonId);
     const validDirectoryFilters = new Set(config.directoryFilters.map(function (filter) { return filter.id; }));
@@ -561,8 +562,8 @@
           success: u.normalizeColor(sourceAppearance.success, theme.success),
           warning: u.normalizeColor(sourceAppearance.warning, theme.warning),
           danger: u.normalizeColor(sourceAppearance.danger, theme.danger),
-          textScale: u.clamp(sourceAppearance.textScale, 0.85, 1.3, 1),
-          readingScale: u.clamp(sourceAppearance.readingScale, 0.85, 1.6, 1),
+          textScale: textScale,
+          readingScale: textScale,
           reducedMotion: ["system", "reduce", "full"].includes(sourceAppearance.reducedMotion) ? sourceAppearance.reducedMotion : "system"
         },
         controls: {

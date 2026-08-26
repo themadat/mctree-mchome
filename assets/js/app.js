@@ -171,7 +171,6 @@
     const reduce = appearance.reducedMotion === "reduce" || (appearance.reducedMotion === "system" && systemReduce);
     root.dataset.motion = reduce ? "reduce" : "full";
     root.style.setProperty("--text-scale", String(appearance.textScale));
-    root.style.setProperty("--reading-scale", String(appearance.readingScale));
     root.style.setProperty("--accent", appearance.accent);
     root.style.setProperty("--accent-strong", u.mixColor(appearance.accent, dark ? "#ffffff" : "#000000", dark ? 0.18 : 0.22));
     root.style.setProperty("--accent-soft", u.mixColor(appearance.accent, dark ? "#161c1b" : "#ffffff", dark ? 0.76 : 0.86));
@@ -2679,19 +2678,10 @@
     const preferences = state().preferences;
     const appearance = preferences.appearance;
     $$('[data-theme-mode]').forEach(function (button) { button.setAttribute("aria-pressed", String(button.dataset.themeMode === appearance.mode)); });
-    $("#themePresets").innerHTML = config.themes.map(function (theme) { const selected = appearance.preset === theme.id; return '<button type="button" class="theme-preset" data-theme-preset="' + theme.id + '" aria-pressed="' + selected + '"><span class="theme-swatches" aria-hidden="true"><i style="--swatch:' + theme.accent + '"></i><i style="--swatch:' + theme.accent2 + '"></i><i style="--swatch:' + theme.success + '"></i><i style="--swatch:' + theme.warning + '"></i></span><strong>' + u.escapeHtml(theme.label) + "</strong></button>"; }).join("");
     ["accent", "accent2", "success", "warning", "danger"].forEach(function (key) { setInputValue($("[data-color-setting='" + key + "']"), appearance[key]); setInputValue($("[data-color-text='" + key + "']"), appearance[key]); });
     setInputValue($("#appTextScale"), Math.round(appearance.textScale * 100));
     $("#appTextScaleValue").textContent = Math.round(appearance.textScale * 100) + "%";
-    setInputValue($("#readingTextScale"), Math.round(appearance.readingScale * 100));
-    $("#readingTextScaleValue").textContent = Math.round(appearance.readingScale * 100) + "%";
     $$('[data-button-style]').forEach(function (button) { button.setAttribute("aria-pressed", String(button.dataset.buttonStyle === preferences.controls.buttonStyle)); });
-    $("#motionPreference").value = appearance.reducedMotion;
-    $("#hintsToggle").setAttribute("aria-pressed", String(preferences.hints.enabled));
-    $("#hintsToggle").textContent = preferences.hints.enabled ? "On" : "Off";
-    setInputValue($("#familyTitle"), state().workspace.family.title);
-    $("#familyTitle").readOnly = !familyEditingEnabled();
-    $("#familyTitle").title = familyEditingEnabled() ? "" : "Family records are read-only in this access package";
     renderLocalStatus();
   }
 
@@ -2750,7 +2740,7 @@
       ["People", String(state().workspace.people.length)], ["Relationships", String(state().workspace.relationships.length)], ["Addresses", String(state().workspace.people.reduce(function (sum, person) { return sum + person.addresses.length; }, 0))],
       ["Device", device.label], ["Layout", (window.innerWidth < 700 ? "Mobile" : window.innerWidth < 960 ? "Tablet" : "Desktop") + " · " + window.innerWidth + "×" + window.innerHeight],
       ["State size", u.formatBytes(usage.stateBytes)], ["Browser storage", usage.quota ? u.formatBytes(usage.usage) + " of " + u.formatBytes(usage.quota) : (usage.persistentStorageAvailable ? "Available" : "Unavailable")],
-      ["Theme", document.documentElement.dataset.theme + " · " + state().preferences.appearance.preset], ["Recovery", hosted ? "Hosted GitHub history" : (recovery ? u.dateLabel(recovery.createdAt) + " · " + recovery.reason : "None")]
+      ["Theme", document.documentElement.dataset.theme], ["Recovery", hosted ? "Hosted GitHub history" : (recovery ? u.dateLabel(recovery.createdAt) + " · " + recovery.reason : "None")]
     ];
     $("#developerDiagnostics").innerHTML = diagnostics.map(function (row) { return '<div><dt>' + u.escapeHtml(row[0]) + '</dt><dd>' + u.escapeHtml(row[1]) + "</dd></div>"; }).join("");
     $("#developerState").textContent = JSON.stringify(model.exportEnvelope(state()), null, 2);
@@ -2766,7 +2756,7 @@
   }
 
   async function resetPreferences() {
-    const accepted = await components.confirm({ title: "Reset preferences?", message: "Appearance, family view settings, filters, and dismissed hints will return to defaults. People, relationships, contacts, and Notes will stay.", confirmLabel: "Reset preferences", danger: true });
+    const accepted = await components.confirm({ title: "Reset preferences?", message: "Appearance, family view settings, and filters will return to defaults. People, relationships, contacts, and Notes will stay.", confirmLabel: "Reset preferences", danger: true });
     if (!accepted) return;
     storage.replace(model.resetPreferences(state()), { saveRecovery: false, clearRecovery: hostedVaultActive(), reason: "reset-preferences", touch: false, preserveDevicePreferences: false });
     treeNeedsFit = true;
@@ -3009,8 +2999,6 @@
       if (tab) { switchSupportTab(tab.dataset.supportTab); return; }
       const mode = event.target.closest("[data-theme-mode]");
       if (mode) { storage.mutate(function (next) { next.preferences.appearance.mode = mode.dataset.themeMode; }, { reason: "appearance" }); applyAppearance(); renderSettings(); return; }
-      const presetButton = event.target.closest("[data-theme-preset]");
-      if (presetButton) { const theme = config.themes.find(function (item) { return item.id === presetButton.dataset.themePreset; }); if (theme) storage.mutate(function (next) { Object.assign(next.preferences.appearance, { preset: theme.id, accent: theme.accent, accent2: theme.accent2, success: theme.success, warning: theme.warning, danger: theme.danger }); }, { reason: "appearance" }); applyAppearance(); renderSettings(); return; }
       const style = event.target.closest("[data-button-style]");
       if (style) { storage.mutate(function (next) { next.preferences.controls.buttonStyle = style.dataset.buttonStyle; }, { reason: "button-style" }); applyAppearance(); renderSettings(); return; }
       const versionButton = event.target.closest("[data-version-view]");
@@ -3019,14 +3007,9 @@
     dialog.addEventListener("keydown", function (event) { const tab = event.target.closest("[role='tab']"); if (!tab || !["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return; event.preventDefault(); const tabs = $$('[data-support-tab]:not([hidden])'); const index = tabs.indexOf(tab); const destination = event.key === "Home" ? tabs[0] : event.key === "End" ? tabs[tabs.length - 1] : tabs[(index + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length]; destination.focus(); switchSupportTab(destination.dataset.supportTab); });
     dialog.addEventListener("change", function (event) {
       if (event.target.matches("[data-color-setting]")) { const key = event.target.dataset.colorSetting; storage.mutate(function (next) { next.preferences.appearance[key] = u.normalizeColor(event.target.value, next.preferences.appearance[key]); }, { reason: "appearance" }); applyAppearance(); renderSettings(); }
-      if (event.target.id === "familyTitle" && familyEditingEnabled()) { storage.mutate(function (next) { next.workspace.family.title = u.cleanLine(event.target.value, 120) || "McFamily"; }, { reason: "family-title" }); renderMain(); }
     });
     dialog.addEventListener("blur", function (event) { if (!event.target.matches("[data-color-text]")) return; const key = event.target.dataset.colorText; const previous = state().preferences.appearance[key]; const normalized = u.normalizeColor(event.target.value, ""); if (!normalized) { event.target.value = previous; components.toast("Use a six-digit hex value such as #315f73.", { title: "Color not changed", kind: "warning" }); return; } storage.mutate(function (next) { next.preferences.appearance[key] = normalized; }, { reason: "appearance" }); applyAppearance(); renderSettings(); }, true);
-    $("#appTextScale").addEventListener("input", function (event) { storage.mutate(function (next) { next.preferences.appearance.textScale = Number(event.target.value) / 100; }, { reason: "appearance" }); applyAppearance(); $("#appTextScaleValue").textContent = event.target.value + "%"; });
-    $("#readingTextScale").addEventListener("input", function (event) { storage.mutate(function (next) { next.preferences.appearance.readingScale = Number(event.target.value) / 100; }, { reason: "appearance" }); applyAppearance(); $("#readingTextScaleValue").textContent = event.target.value + "%"; });
-    $("#motionPreference").addEventListener("change", function (event) { storage.mutate(function (next) { next.preferences.appearance.reducedMotion = event.target.value; }, { reason: "appearance" }); applyAppearance(); });
-    $("#hintsToggle").addEventListener("click", function () { storage.mutate(function (next) { next.preferences.hints.enabled = !next.preferences.hints.enabled; }, { reason: "hints" }); renderHeader(); renderSettings(); });
-    $("#restoreHintsButton").addEventListener("click", function () { storage.mutate(function (next) { next.preferences.hints.dismissed = []; next.ui.dismissedHints = []; }, { reason: "hints" }); renderHeader(); renderSettings(); components.toast("All contextual hints are available again.", { title: "Hints restored", kind: "success" }); });
+    $("#appTextScale").addEventListener("input", function (event) { storage.mutate(function (next) { const scale = Number(event.target.value) / 100; next.preferences.appearance.textScale = scale; next.preferences.appearance.readingScale = scale; }, { reason: "appearance" }); applyAppearance(); $("#appTextScaleValue").textContent = event.target.value + "%"; });
     $("#exportButton").addEventListener("click", portability.exportPackage);
     $("#exportPiiViewerButton").addEventListener("click", function () { portability.exportAccessPackage("pii-viewer"); });
     $("#exportRedactedViewerButton").addEventListener("click", function () { portability.exportAccessPackage("redacted-viewer"); });

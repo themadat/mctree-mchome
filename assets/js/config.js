@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.81",
-      buildId: "0.0.1.81",
+      version: "0.0.1.82",
+      buildId: "0.0.1.82",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -170,6 +170,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.82",
+        date: "2026-08-26T14:23:26.000Z",
+        title: "Simpler owner and display controls",
+        summary: "Owner tools are easier to scan, and appearance settings now use one consistent text-size control.",
+        features: [],
+        improvements: ["Owner access controls and recovery tools are collapsed until needed", "Tree zoom percentage spacing and stepper alignment are clearer", "Publish Access Changes and Lock McFamily use dedicated symbols", "One Text size slider now scales both the application and reading surfaces"],
+        fixes: ["Removed unused theme-preset, manual-motion, and Family Guidance settings surfaces"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.81",
         date: "2026-08-26T13:41:19.000Z",
