@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.90",
-      buildId: "0.0.1.90",
+      version: "0.0.1.91",
+      buildId: "0.0.1.91",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -170,6 +170,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.91",
+        date: "2026-08-26T21:43:16.000Z",
+        title: "Isolated Pages publishing",
+        summary: "GitHub Pages now publishes from a clean staging directory that cannot traverse local scratch dependencies.",
+        features: [],
+        improvements: ["Pages assembles an explicit publishable directory before invoking the deployment action", "Local family data directories are explicitly excluded from the staged website"],
+        fixes: ["The deployment action no longer scans the repository root or follows the broken temporary node_modules link", "Temporary migration files are removed from Git tracking even when another computer retains ignored local copies"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.90",
         date: "2026-08-26T21:33:07.000Z",

@@ -44,18 +44,33 @@ jobs:
               ;;
           esac
 
-      - name: Mark deploy with .nojekyll
-        run: touch .nojekyll
+      - name: Prepare publishing directory
+        run: |
+          mkdir -p build/pages
+          rsync -a \
+            --exclude '/.git/' \
+            --exclude '/.github/' \
+            --exclude '/.claude/' \
+            --exclude '/build/' \
+            --exclude '/context/' \
+            --exclude '/data/' \
+            --exclude '/tmp/' \
+            --exclude '/assets/data/' \
+            --exclude '/assets/svgs/' \
+            --exclude '/assets/world-map.svg' \
+            --exclude '/assets/world-map_raw.svg' \
+            --exclude '/assets/optimize-world-svg.py' \
+            ./ build/pages/
+          touch build/pages/.nojekyll
 
       - name: Publish to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: ./
+          publish_dir: ./build/pages
           destination_dir: ${{ steps.dest.outputs.dir }}
           keep_files: true
-          exclude_assets: '.github,build,context,.claude,tmp,assets/svgs,assets/world-map.svg,assets/world-map_raw.svg,assets/optimize-world-svg.py'
           commit_message: "Deploy ${{ steps.dest.outputs.label }} from ${{ github.sha }}"
           user_name: "github-actions[bot]"
           user_email: "github-actions[bot]@users.noreply.github.com"
