@@ -26,8 +26,8 @@ The durable state is normalized into this shape:
 {
   "schemaVersion": 13,
   "meta": {
-    "appVersion": "0.0.1.86",
-    "buildId": "0.0.1.86",
+    "appVersion": "0.0.1.87",
+    "buildId": "0.0.1.87",
     "createdAt": "ISO timestamp",
     "updatedAt": "ISO timestamp",
     "lastMutationId": "stable id",
@@ -101,7 +101,7 @@ The layout is deterministic and dependency-free. Desktop opens with a thin-gutte
 
 The print action constructs hidden semantic HTML before calling `window.print()`. Print CSS suppresses application controls and exposes only the report. Developer Mode copies the same generated report into a modal preview and deliberately skips `window.print()`.
 
-Person Directory begins after the compact cover and before the six-column Family Maps. It includes people with at least one phone, email, or address, groups them by primary current address with first-recorded-address fallback, and retains phone/email-only people as singleton households. The earliest Lineal household member becomes the main person. Main people and same-address partners occupy separate aligned Display Name, phone, and email rows beside the shared full address; remaining residents appear afterward as an unlabeled muted name list. Only Lineal names are bold, while deceased partners retain the concise italic death marker. The footer follows Lineal first names to the main person's full Lineal name and styled Lineage ID. The later Family Maps keep the full map-eligible population, including people omitted from the contact directory. Family Notes remain a separate final section, and page-break rules prefer intact household and map entries.
+Person Directory begins after the compact cover and before the six-column Family Maps. It includes people with at least one phone, email, or address, groups them by primary current address with first-recorded-address fallback, and retains phone/email-only people as singleton households. The earliest Lineal household member becomes the main person. Main people and same-address partners occupy separate compact, aligned Display Name, phone, and email rows beside the shared full address; remaining residents appear afterward as an unlabeled muted name list. Non-Lineal rows use normal-weight names, only Lineal names are bold, and every deceased household person retains the concise italic death marker. The footer follows Lineal first names to the main person's full Lineal name and styled Lineage ID. The later Family Maps keep the full map-eligible population, including people omitted from the contact directory. Family Notes remain a separate final section, and page-break rules prefer intact household and map entries.
 
 The browser owns PDF generation. McFamily does not create a binary PDF directly.
 
