@@ -158,12 +158,13 @@ Use synthetic families only.
 ## Print / Save PDF
 
 - [ ] Report includes compact opening content, Person Directory before Family Maps, every retained family map, and Family Notes, with no separate alphabetical person index.
-- [ ] Each Person Directory entry is one primary-address household; people with the same address are grouped, and every person without an address remains visible as a singleton household.
-- [ ] Households sort by the main person's Display Last Name and use Display Names for the main person, partners, and the `People at the Same Address:` list.
-- [ ] The earliest Lineal household member is the main person. The heading includes same-address partners, the main person's phone and email occupy their own columns, and the full address is the far-right column.
-- [ ] A Lineal partner is bold. A deceased partner is italic and followed by `[d. YYYY]` for a known death year or `[d.]` for an unknown date.
+- [ ] Person Directory omits only people with no phone, email, or address. Those people remain represented in Family Maps and map statistics; a phone/email-only person remains as a singleton directory household.
+- [ ] Each retained Person Directory entry is one primary-address household, sorted by the main person's Display Last Name and using Display Names throughout.
+- [ ] The earliest Lineal household member is the main person. Main people and same-address partners each occupy a separate aligned name, phone, and email row without an ampersand, beside the shared far-right address.
+- [ ] Other same-address residents follow the partner rows as an unlabeled, deemphasized Display Name list.
+- [ ] Only Lineal household names are bold. A deceased partner is italic and followed by `[d. YYYY]` for a known death year or `[d.]` for an unknown date.
 - [ ] Each household footer follows first names from oldest to newest, then shows the main person's full Lineal name and app-styled Lineage ID, such as `George -> James -> George -> Albon McMillen [01.01.01.01]`.
-- [ ] The first map names George McMillen (1745) as the root ancestor at Generation 0, every retained component uses the Root Ancestor label, and Jon Couts remains in Person Directory but has no Family Map component.
+- [ ] The first map names George McMillen (1745) as the root ancestor at Generation 0, every retained component uses the Root Ancestor label, and Jon Couts has no Family Map component and appears in Person Directory only when contact-eligible.
 - [ ] Family-map rows use six compact columns and contain only names and years.
 - [ ] Generation 4 and later people, including Non-Lineal partners, are grouped beneath a `Generation 3 Line` header with no unassigned branch when lineage can be resolved.
 - [ ] Lineal map cards use a clearly visible faded-red outline; Lineal Newton, Albon, and Lucian members use the stronger orientation highlight plus a Bloodline symbol, while Theophilus and Lucian Lynn Kretzing do not. Every deceased map entry uses brown shading, and every map name fits within two lines.
