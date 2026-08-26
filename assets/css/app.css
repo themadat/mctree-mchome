@@ -1119,17 +1119,23 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .print-preview-document .print-generation .print-name-tiniest strong { font-size: 3.1pt; }
 .print-preview-document .print-generation small { color: #555; font: 7pt Helvetica, Arial, sans-serif; }
 .print-preview-document .print-generation-branch > header { padding: .04in .055in; border-left: 3px solid #7b4e16; background: #f3efe8; }
-.print-preview-document .print-directory { padding: 0; background: transparent; box-shadow: none; }
-.print-preview-document .print-directory > h1, .print-preview-document .print-person { margin: 0 auto 1rem; padding: .55in; background: #fff; box-shadow: 0 8px 28px rgba(0, 0, 0, .28); }
-.print-preview-document .print-directory > h1 { margin-bottom: 0; padding-bottom: .18in; }
-.print-preview-document .print-directory-entries { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .07in; margin: 0 auto 1rem; padding: .22in .55in .55in; background: #fff; box-shadow: 0 8px 28px rgba(0, 0, 0, .28); }
-.print-preview-document .print-directory-person { min-width: 0; padding: .055in .065in; border: 1px solid #bbb; break-inside: avoid; }
-.print-preview-document .print-directory-person.print-deceased { border-color: #b79f83; background: #eadcc9; color: #3f3025; }
-.print-preview-document .print-directory-person > header { display: flex; align-items: baseline; justify-content: space-between; gap: .05in; padding-bottom: .025in; border-bottom: 1px solid #ddd; }
-.print-preview-document .print-directory-person h2 { min-width: 0; margin: 0; overflow-wrap: anywhere; font-size: 7.5pt; line-height: 1.08; }
-.print-preview-document .print-directory-person .lineage-id { flex: 0 0 auto; font: 6.2pt ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-.print-preview-document .print-directory-person .muted-copy { margin: 0; font-size: 6pt; }
-.print-preview-document .print-directory-person p { margin: .028in 0 0; color: #555; font-size: 6.2pt; line-height: 1.18; overflow-wrap: anywhere; }
+.print-preview-document .print-directory > h1 { margin: 0 0 .16in; }
+.print-preview-document .print-directory-entries { display: grid; gap: .1in; }
+.print-preview-document .print-directory-household { min-width: 0; border: 1px solid #999; break-inside: avoid; }
+.print-preview-document .print-directory-household > header { display: grid; grid-template-columns: minmax(1.85in, 1.45fr) 1.05in 1.55in minmax(2in, 1.6fr); gap: .08in; align-items: stretch; padding: .075in; }
+.print-preview-document .print-directory-household > header > div { min-width: 0; }
+.print-preview-document .print-directory-household > header > div + div { padding-left: .07in; border-left: 1px solid #ccc; }
+.print-preview-document .print-directory-household > header > div > span { display: block; margin-bottom: .025in; color: #555; font: 700 6.2pt Helvetica, Arial, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
+.print-preview-document .print-household-names h2 { margin: 0; overflow-wrap: anywhere; font-size: 9pt; line-height: 1.18; }
+.print-preview-document .print-household-pair { display: inline-block; margin: 0; color: inherit; font: inherit; letter-spacing: 0; text-transform: none; white-space: nowrap; }
+.print-preview-document .print-household-join { display: inline; margin: 0 .02in; color: #777; font: inherit; letter-spacing: 0; text-transform: none; }
+.print-preview-document .print-household-death { display: inline; margin: 0; color: #555; font: 7pt Georgia, "Times New Roman", serif; letter-spacing: 0; text-transform: none; white-space: nowrap; }
+.print-preview-document .print-household-contact p, .print-preview-document .print-household-address address { display: grid; gap: .02in; margin: 0; overflow-wrap: anywhere; font-size: 7.1pt; font-style: normal; line-height: 1.2; }
+.print-preview-document .print-household-residents { margin: 0; padding: .055in .075in; border-top: 1px solid #ccc; color: #444; font-size: 6.8pt; line-height: 1.22; }
+.print-preview-document .print-directory-household > footer { padding: .055in .075in; border-top: 1px solid #ddd; color: #555; font-size: 6.5pt; line-height: 1.22; overflow-wrap: anywhere; }
+.print-preview-document .print-directory-household .lineage-id { font: 6.2pt ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.print-preview-document .print-lineage-person { color: #222; }
+.print-preview-document .print-lineage-number { white-space: nowrap; }
 .print-preview-document .print-person > header { display: flex; align-items: flex-start; gap: .15in; padding-bottom: .1in; border-bottom: 3px solid #222; }
 .print-preview-document .print-person > header h2 { margin: 0; font-size: 20pt; }
 .print-preview-document .print-person > header p { margin: .02in 0; color: #555; }
@@ -1266,7 +1272,7 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
   .print-legend p { margin: 0 0 .08in; }
   .print-legend > div { display: grid; grid-template-columns: 1fr 1fr; gap: .08in; }
   .print-legend > div > span { padding: .08in; border: 1px solid #aaa; }
-  .print-directory > h1, .print-family-notes > h1 { break-before: page; }
+  .print-directory > h1, .print-atlas > h2, .print-family-notes > h1 { break-before: page; }
   .print-component { margin: .12in 0; padding: .09in; border: 1px solid #888; break-inside: auto; }
   .print-component > header { display: flex; align-items: flex-end; justify-content: space-between; gap: .1in; padding-bottom: .04in; border-bottom: 2px solid #333; break-after: avoid; }
   .print-component > header > div { display: grid; }
@@ -1295,14 +1301,23 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
   .print-generation-branch > header { padding: .04in .055in; border-left: 3px solid #7b4e16; background: #f3efe8; break-after: avoid; }
   .print-generation-branch > header span { color: #555; font: 700 6.5pt Helvetica, Arial, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
   .print-generation-branch > header h4 { margin: 0; font-size: 9pt; }
-  .print-directory-entries { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .055in; }
-  .print-directory-person { min-width: 0; padding: .045in .055in; border: 1px solid #bbb; break-inside: avoid; }
-  .print-directory-person.print-deceased { border-color: #b79f83; background: #eadcc9; color: #3f3025; }
-  .print-directory-person > header { display: flex; align-items: baseline; justify-content: space-between; gap: .045in; padding-bottom: .02in; border-bottom: 1px solid #ddd; }
-  .print-directory-person h2 { min-width: 0; margin: 0; overflow-wrap: anywhere; font-size: 7.2pt; line-height: 1.08; }
-  .print-directory-person .lineage-id { flex: 0 0 auto; font: 5.9pt ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-  .print-directory-person .muted-copy { margin: 0; font-size: 5.9pt; }
-  .print-directory-person p { margin: .025in 0 0; color: #555; font-size: 5.9pt; line-height: 1.16; overflow-wrap: anywhere; }
+  .print-directory > h1 { margin: 0 0 .14in; }
+  .print-directory-entries { display: grid; gap: .085in; }
+  .print-directory-household { min-width: 0; border: 1px solid #999; break-inside: avoid; }
+  .print-directory-household > header { display: grid; grid-template-columns: minmax(1.85in, 1.45fr) 1.05in 1.55in minmax(2in, 1.6fr); gap: .07in; align-items: stretch; padding: .065in; }
+  .print-directory-household > header > div { min-width: 0; }
+  .print-directory-household > header > div + div { padding-left: .06in; border-left: 1px solid #ccc; }
+  .print-directory-household > header > div > span { display: block; margin-bottom: .02in; color: #555; font: 700 5.9pt Helvetica, Arial, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
+  .print-household-names h2 { margin: 0; overflow-wrap: anywhere; font-size: 8.5pt; line-height: 1.16; }
+  .print-household-pair { display: inline-block; margin: 0; color: inherit; font: inherit; letter-spacing: 0; text-transform: none; white-space: nowrap; }
+  .print-household-join { display: inline; margin: 0 .02in; color: #777; font: inherit; letter-spacing: 0; text-transform: none; }
+  .print-household-death { display: inline; margin: 0; color: #555; font: 6.7pt Georgia, "Times New Roman", serif; letter-spacing: 0; text-transform: none; white-space: nowrap; }
+  .print-household-contact p, .print-household-address address { display: grid; gap: .015in; margin: 0; overflow-wrap: anywhere; font-size: 6.8pt; font-style: normal; line-height: 1.18; }
+  .print-household-residents { margin: 0; padding: .05in .065in; border-top: 1px solid #ccc; color: #444; font-size: 6.5pt; line-height: 1.2; }
+  .print-directory-household > footer { padding: .05in .065in; border-top: 1px solid #ddd; color: #555; font-size: 6.2pt; line-height: 1.2; overflow-wrap: anywhere; }
+  .print-directory-household .lineage-id { font: 5.9pt ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .print-lineage-person { color: #222; }
+  .print-lineage-number { white-space: nowrap; }
   .print-person { break-before: page; }
   .print-directory .print-person:first-of-type { break-before: auto; }
   .print-person > header { display: flex; align-items: flex-start; gap: .15in; padding-bottom: .1in; border-bottom: 3px solid #222; }
