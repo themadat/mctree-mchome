@@ -113,4 +113,10 @@ node scripts/build-mcfamily-package.mjs
 node scripts/build-v17-address-package.mjs
 ```
 
+`scripts/migrate-v17-directory-landlines.mjs` corrects the original McDirectory phone ownership in a private dataset 17 package. It removes every report-matched home phone from `personDetails`, writes usable ten-digit values to the matching Place `placeDetails` entry as `###-###-####`, splits combined source addresses when distinct households have different numbers, preserves newer manual addresses, and omits incomplete or unsafe addressless values rather than guessing. Its default output advances the private package from dataset 17.0.1 to 17.0.2:
+
+```sh
+node scripts/migrate-v17-directory-landlines.mjs
+```
+
 The ZIP is the complete editable transfer artifact. Print / Save PDF remains the readable, non-importable distribution artifact.

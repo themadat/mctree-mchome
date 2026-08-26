@@ -246,7 +246,7 @@
       region: u.cleanLine(source.region || source.state || source.province, 100),
       postalCode: u.cleanLine(source.postalCode || source.zip, 40),
       country: u.cleanLine(source.country, 100),
-      phone: u.cleanLine(source.phone, 240),
+      phone: u.formatPhoneNumber(source.phone),
       startDate: normalizeFlexibleDate(source.startDate),
       endDate: normalizeFlexibleDate(source.endDate),
       notes: u.cleanText(source.notes, 1000).trim(),
@@ -259,7 +259,7 @@
     return {
       id: cleanId(source.id, prefix),
       label: u.cleanLine(source.label || (prefix === "phone" ? "Mobile" : "Personal"), 60),
-      value: u.cleanLine(source.value, 240),
+      value: prefix === "phone" ? u.formatPhoneNumber(source.value) : u.cleanLine(source.value, 240),
       order: Number.isFinite(Number(source.order)) ? Math.round(Number(source.order)) : index
     };
   }
@@ -278,7 +278,7 @@
       region: u.cleanLine(source.region, 100),
       postalCode: u.cleanLine(source.postalCode, 40),
       country: u.cleanLine(source.country, 100),
-      phone: u.cleanLine(source.phone, 240),
+      phone: u.formatPhoneNumber(source.phone),
       notes: u.cleanText(source.notes, 1000).trim(),
       source: normalizeSource(source.source),
       order: Number.isFinite(Number(source.order)) ? Math.round(Number(source.order)) : index
