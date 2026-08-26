@@ -827,7 +827,8 @@
       const opened = await decryptVaultRecordByPassphrase(currentVault, passphrase);
       rolePreview = "";
       activeSession = { grant: opened.grant, keys: opened.keys, baselineState: u.clone(opened.prepared.state) };
-      localStorage.setItem(config.storage.hostedSeenKey, "1");
+      storage.useHostedMemory();
+      try { localStorage.setItem(config.storage.hostedSeenKey, "1"); } catch (storageError) { /* Hosted state remains safely memory-only. */ }
       storage.replace(opened.prepared.state, { saveRecovery: false, clearRecovery: true, reason: "hosted-unlock", touch: false });
       $("#accessPassphrase").value = "";
       renderAccessState();
@@ -924,7 +925,8 @@
       currentVault = written.vault;
       rolePreview = "";
       activeSession = { grant: currentVault.grants.find(function (grant) { return grant.id === "owner"; }), keys: keys, baselineState: u.clone(nextState) };
-      localStorage.setItem(config.storage.hostedSeenKey, "1");
+      storage.useHostedMemory();
+      try { localStorage.setItem(config.storage.hostedSeenKey, "1"); } catch (storageError) { /* Hosted state remains safely memory-only. */ }
       storage.replace(nextState, { saveRecovery: false, clearRecovery: true, reason: "hosted-access-publish", touch: false });
       renderAccessState();
       visiblePassphrases.forEach(function (value, id) {
@@ -1018,6 +1020,7 @@
       currentVault = written.vault;
       activeSession.grant = currentVault.grants.find(function (grant) { return grant.id === "owner"; });
       activeSession.baselineState = u.clone(nextState);
+      storage.useHostedMemory();
       storage.replace(nextState, { saveRecovery: false, clearRecovery: true, reason: "hosted-bulk-publish", touch: false });
       closeBulkUploadReview();
       renderAccessState();
@@ -1059,6 +1062,7 @@
       currentVault = written.vault;
       activeSession.grant = currentVault.grants.find(function (grant) { return grant.id === activeSession.grant.id; });
       activeSession.baselineState = u.clone(nextState);
+      storage.useHostedMemory();
       storage.replace(nextState, { saveRecovery: false, clearRecovery: true, reason: "hosted-family-publish", touch: false });
       $("#hostedAuditSummary").value = "";
       renderAccessState();
@@ -1160,7 +1164,8 @@
       const vault = await fetchPublicVault();
       if (vault) {
         currentVault = vault;
-        localStorage.setItem(config.storage.hostedSeenKey, "1");
+        storage.useHostedMemory();
+        try { localStorage.setItem(config.storage.hostedSeenKey, "1"); } catch (storageError) { /* Device preferences may be unavailable; hosted data is unaffected. */ }
         showGate(vault);
         return;
       }

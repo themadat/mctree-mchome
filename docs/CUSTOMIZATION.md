@@ -37,7 +37,7 @@ New relationship visuals must retain an accessible text description and print-sa
 
 ## Themes
 
-Theme variables live near the top of `assets/css/app.css`. User colors are normalized in `state.js` and applied in `app.js`; `config.themes[0]` remains the default color source, but Settings no longer exposes theme presets. Check the tree, status, dialogs, and print output in light and dark appearance after changing defaults.
+Theme variables live near the top of `assets/css/app.css`. `config.themes[0]` is the fixed application color source; Settings exposes only System, Light, and Dark and discards older custom-color values during state normalization. Check the tree, status, dialogs, and print output in light and dark appearance after changing implementation defaults.
 
 ## Keyboard shortcuts
 

@@ -271,17 +271,25 @@
   function renderLocalStatus() {
     const button = $("#cloudAuditButton");
     const available = storage.isPersistent();
+    const memoryOnly = storage.isMemoryOnly();
     const accessAvailable = initialized() && Boolean(App.cloud && App.cloud.canPublish && App.cloud.canPublish());
-    button.dataset.storageState = available ? "saved" : "error";
+    button.dataset.storageState = memoryOnly || available ? "saved" : "error";
     button.hidden = !accessAvailable;
     button.disabled = !accessAvailable;
     const pill = $("#localStorageSettingsState");
     const summary = $("#localStorageSettingsSummary");
     if (pill) {
-      pill.textContent = available ? "Saved locally" : "Unavailable";
-      pill.dataset.kind = available ? "success" : "danger";
+      pill.textContent = memoryOnly ? "GitHub-backed" : (available ? "Saved locally" : "Unavailable");
+      pill.dataset.kind = memoryOnly ? (available ? "success" : "warning") : (available ? "success" : "danger");
     }
-    if (summary) summary.innerHTML = '<span aria-hidden="true">' + icons.markup(available ? "check" : "close") + '</span><span><strong>' + (available ? "Browser storage is working" : "Browser storage is unavailable") + '</strong><small>' + (available ? state().workspace.people.length + " people and " + state().workspace.relationships.length + " relationships save automatically on this browser." : "Changes may not survive a reload. Download a private backup before continuing.") + "</small></span>";
+    if (summary) {
+      const statusIcon = memoryOnly || available ? "check" : "close";
+      const title = memoryOnly ? "GitHub is the saved copy" : (available ? "Browser storage is working" : "Browser storage is unavailable");
+      const detail = memoryOnly
+        ? "The decrypted family stays only in this open session. Use Update before reloading; favorites and display choices " + (available ? "stay on this device." : "may reset because browser preferences are unavailable.")
+        : (available ? state().workspace.people.length + " people and " + state().workspace.relationships.length + " relationships save automatically on this browser." : "Changes may not survive a reload. Download a private backup before continuing.");
+      summary.innerHTML = '<span aria-hidden="true">' + icons.markup(statusIcon) + '</span><span><strong>' + title + '</strong><small>' + detail + "</small></span>";
+    }
   }
 
   function documentText(documentItem) {
@@ -2678,7 +2686,6 @@
     const preferences = state().preferences;
     const appearance = preferences.appearance;
     $$('[data-theme-mode]').forEach(function (button) { button.setAttribute("aria-pressed", String(button.dataset.themeMode === appearance.mode)); });
-    ["accent", "accent2", "success", "warning", "danger"].forEach(function (key) { setInputValue($("[data-color-setting='" + key + "']"), appearance[key]); setInputValue($("[data-color-text='" + key + "']"), appearance[key]); });
     setInputValue($("#appTextScale"), Math.round(appearance.textScale * 100));
     $("#appTextScaleValue").textContent = Math.round(appearance.textScale * 100) + "%";
     $$('[data-button-style]').forEach(function (button) { button.setAttribute("aria-pressed", String(button.dataset.buttonStyle === preferences.controls.buttonStyle)); });
@@ -2739,7 +2746,7 @@
       ["Access package", accessProfile().label],
       ["People", String(state().workspace.people.length)], ["Relationships", String(state().workspace.relationships.length)], ["Addresses", String(state().workspace.people.reduce(function (sum, person) { return sum + person.addresses.length; }, 0))],
       ["Device", device.label], ["Layout", (window.innerWidth < 700 ? "Mobile" : window.innerWidth < 960 ? "Tablet" : "Desktop") + " · " + window.innerWidth + "×" + window.innerHeight],
-      ["State size", u.formatBytes(usage.stateBytes)], ["Browser storage", usage.quota ? u.formatBytes(usage.usage) + " of " + u.formatBytes(usage.quota) : (usage.persistentStorageAvailable ? "Available" : "Unavailable")],
+      ["State size", u.formatBytes(usage.stateBytes)], ["Browser storage", usage.memoryOnly ? "Preferences only · family in session memory" : (usage.quota ? u.formatBytes(usage.usage) + " of " + u.formatBytes(usage.quota) : (usage.persistentStorageAvailable ? "Available" : "Unavailable"))],
       ["Theme", document.documentElement.dataset.theme], ["Recovery", hosted ? "Hosted GitHub history" : (recovery ? u.dateLabel(recovery.createdAt) + " · " + recovery.reason : "None")]
     ];
     $("#developerDiagnostics").innerHTML = diagnostics.map(function (row) { return '<div><dt>' + u.escapeHtml(row[0]) + '</dt><dd>' + u.escapeHtml(row[1]) + "</dd></div>"; }).join("");
@@ -3005,10 +3012,6 @@
       if (versionButton) { versionView = versionButton.dataset.versionView; renderReleases(); }
     });
     dialog.addEventListener("keydown", function (event) { const tab = event.target.closest("[role='tab']"); if (!tab || !["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return; event.preventDefault(); const tabs = $$('[data-support-tab]:not([hidden])'); const index = tabs.indexOf(tab); const destination = event.key === "Home" ? tabs[0] : event.key === "End" ? tabs[tabs.length - 1] : tabs[(index + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length]; destination.focus(); switchSupportTab(destination.dataset.supportTab); });
-    dialog.addEventListener("change", function (event) {
-      if (event.target.matches("[data-color-setting]")) { const key = event.target.dataset.colorSetting; storage.mutate(function (next) { next.preferences.appearance[key] = u.normalizeColor(event.target.value, next.preferences.appearance[key]); }, { reason: "appearance" }); applyAppearance(); renderSettings(); }
-    });
-    dialog.addEventListener("blur", function (event) { if (!event.target.matches("[data-color-text]")) return; const key = event.target.dataset.colorText; const previous = state().preferences.appearance[key]; const normalized = u.normalizeColor(event.target.value, ""); if (!normalized) { event.target.value = previous; components.toast("Use a six-digit hex value such as #315f73.", { title: "Color not changed", kind: "warning" }); return; } storage.mutate(function (next) { next.preferences.appearance[key] = normalized; }, { reason: "appearance" }); applyAppearance(); renderSettings(); }, true);
     $("#appTextScale").addEventListener("input", function (event) { storage.mutate(function (next) { const scale = Number(event.target.value) / 100; next.preferences.appearance.textScale = scale; next.preferences.appearance.readingScale = scale; }, { reason: "appearance" }); applyAppearance(); $("#appTextScaleValue").textContent = event.target.value + "%"; });
     $("#exportButton").addEventListener("click", portability.exportPackage);
     $("#exportPiiViewerButton").addEventListener("click", function () { portability.exportAccessPackage("pii-viewer"); });
