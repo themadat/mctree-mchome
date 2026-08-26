@@ -55,7 +55,7 @@ jobs:
           publish_dir: ./
           destination_dir: ${{ steps.dest.outputs.dir }}
           keep_files: true
-          exclude_assets: '.github,build,context,.claude,assets/svgs,assets/world-map.svg,assets/world-map_raw.svg,assets/optimize-world-svg.py'
+          exclude_assets: '.github,build,context,.claude,tmp,assets/svgs,assets/world-map.svg,assets/world-map_raw.svg,assets/optimize-world-svg.py'
           commit_message: "Deploy ${{ steps.dest.outputs.label }} from ${{ github.sha }}"
           user_name: "github-actions[bot]"
           user_email: "github-actions[bot]@users.noreply.github.com"
