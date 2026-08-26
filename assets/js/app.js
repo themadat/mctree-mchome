@@ -2430,10 +2430,10 @@
     });
   }
 
-  function printHouseholdPersonName(person, partner) {
+  function printHouseholdPersonName(person) {
     let name = u.escapeHtml(model.displayName(person));
     if (isLinealPerson(person)) name = "<strong>" + name + "</strong>";
-    if (partner && person.livingStatus === "deceased") {
+    if (person.livingStatus === "deceased") {
       const deathYear = family.eventYearLabel(person, "death");
       const knownYear = /^\d{4}$/.test(deathYear) ? deathYear : "";
       name = "<em>" + name + '</em> <span class="print-household-death">[d.' + (knownYear ? " " + knownYear : "") + "]</span>";
@@ -2449,8 +2449,8 @@
   function printHouseholdHtml(household, graph) {
     const main = household.main;
     const householdPeople = [main].concat(household.partners);
-    const householdRows = householdPeople.map(function (person, index) {
-      return '<div class="print-household-person-row"><h2>' + printHouseholdPersonName(person, index > 0) + '</h2><p>' + printContactValues(person.phones) + '</p><p>' + printContactValues(person.emails) + "</p></div>";
+    const householdRows = householdPeople.map(function (person) {
+      return '<div class="print-household-person-row"><h2>' + printHouseholdPersonName(person) + '</h2><p>' + printContactValues(person.phones) + '</p><p>' + printContactValues(person.emails) + "</p></div>";
     }).join("");
     const sameAddress = household.sameAddress.length ? '<p class="print-household-residents">' + household.sameAddress.map(function (person) { return u.escapeHtml(model.displayName(person)); }).join(", ") + "</p>" : "";
     const address = household.address ? u.escapeHtml(model.formatAddress(household.address)).replace(/\n/g, "<br>") : '<span class="muted-copy">No address recorded</span>';

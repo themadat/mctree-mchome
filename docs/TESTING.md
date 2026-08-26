@@ -162,7 +162,7 @@ Use synthetic families only.
 - [ ] Each retained Person Directory entry is one primary-address household, sorted by the main person's Display Last Name and using Display Names throughout.
 - [ ] The earliest Lineal household member is the main person. Main people and same-address partners each occupy a separate aligned name, phone, and email row without an ampersand, beside the shared far-right address.
 - [ ] Other same-address residents follow the partner rows as an unlabeled, deemphasized Display Name list.
-- [ ] Only Lineal household names are bold. A deceased partner is italic and followed by `[d. YYYY]` for a known death year or `[d.]` for an unknown date.
+- [ ] Non-Lineal household names use normal weight and only Lineal names are bold. Every deceased household person, including the main person, is italic and followed by `[d. YYYY]` for a known death year or `[d.]` for an unknown date. Main and partner rows remain close in height to the resident and lineage rows.
 - [ ] Each household footer follows first names from oldest to newest, then shows the main person's full Lineal name and app-styled Lineage ID, such as `George -> James -> George -> Albon McMillen [01.01.01.01]`.
 - [ ] The first map names George McMillen (1745) as the root ancestor at Generation 0, every retained component uses the Root Ancestor label, and Jon Couts has no Family Map component and appears in Person Directory only when contact-eligible.
 - [ ] Family-map rows use six compact columns and contain only names and years.

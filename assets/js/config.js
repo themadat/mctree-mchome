@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.86",
-      buildId: "0.0.1.86",
+      version: "0.0.1.87",
+      buildId: "0.0.1.87",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -170,6 +170,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.87",
+        date: "2026-08-26T16:25:46.000Z",
+        title: "Accurate compact household names",
+        summary: "The printable directory now distinguishes Lineal emphasis from heading weight and marks deceased household leads as clearly as partners.",
+        features: [],
+        improvements: ["Household name, phone, and email rows use less vertical space", "Name rows align their content vertically in both preview and printed output"],
+        fixes: ["Non-Lineal names render at normal weight while Lineal names remain bold", "Deceased main people now use italics and the same concise death marker as deceased partners"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.86",
         date: "2026-08-26T16:01:16.000Z",
