@@ -1035,10 +1035,7 @@
       const alignedPartner = left.partnerPlacement === "left" ? left : right.partnerPlacement === "right" ? right : null;
       let y = alignedPartner ? alignedPartner.y + alignedPartner.height / 2 : ((left.y + left.height / 2) + (right.y + right.height / 2)) / 2;
       if (alignedPartner && alignedPartner.partnerPlacement === "left" && alignedPartner.partnerCount > 1) {
-        const partnerY = alignedPartner.y + alignedPartner.height / 2;
-        const anchorY = right.y + right.height * (alignedPartner.partnerAlign === "top" ? 0.25 : 0.75);
-        const elbowX = right.x - Math.max(6, Math.min(14, (right.x - (left.x + left.width)) / 2));
-        return "M" + (left.x + left.width) + " " + partnerY + " H" + elbowX + " V" + anchorY + " H" + right.x;
+        y = alignedPartner.y + alignedPartner.height * (alignedPartner.partnerAlign === "top" ? 0.25 : 0.75);
       }
       return "M" + (left.x + left.width) + " " + y + " L" + right.x + " " + y;
     }
