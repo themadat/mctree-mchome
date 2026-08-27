@@ -1024,8 +1024,10 @@
     const left = edge.from.x <= edge.to.x ? edge.from : edge.to;
     const right = left === edge.from ? edge.to : edge.from;
     const length = Math.max(0, right.x - (left.x + left.width));
-    const marks = new Array(Math.max(3, Math.round(length / 9))).fill("?").join("");
-    return '<text class="tree-edge-marks" aria-hidden="true"><textPath href="#' + pathId + '" startOffset="0">' + marks + "</textPath></text>";
+    const inset = Math.min(1, length / 4);
+    const visibleLength = Math.max(0, length - inset * 2);
+    const marks = new Array(Math.max(3, Math.ceil(visibleLength / 7))).fill("?").join("");
+    return '<text class="tree-edge-marks" aria-hidden="true"><textPath href="#' + pathId + '" startOffset="' + inset + '" textLength="' + visibleLength + '" lengthAdjust="spacingAndGlyphs">' + marks + "</textPath></text>";
   }
 
   function edgePath(edge) {
