@@ -501,10 +501,6 @@
     const positions = new Map();
     const partnerPlacements = new Map();
     const currentPartnerRelationshipIds = new Set();
-    const rowSlotKey = function (person) {
-      const placement = partnerPlacements.get(person.id);
-      return placement && placement.side === "left" && placement.count > 1 ? "partner-stack:" + placement.anchorId : "person:" + person.id;
-    };
     sortedLevels.forEach(function (level, levelIndex) {
       let items = groups.get(level).sort(function (a, b) {
         const lineageOrder = compareLineage(a, b);
@@ -519,14 +515,7 @@
       if (levelIndex === 0) items = items.sort(function (a, b) { return compareLineage(a, b) || model.sortName(a).localeCompare(model.sortName(b)); });
       items = arrangePartners(items, visibleRelationships, partnerPlacements, currentPartnerRelationshipIds);
       groups.set(level, items);
-      let slotIndex = -1;
-      let previousSlot = "";
-      items.forEach(function (person) {
-        const slot = rowSlotKey(person);
-        if (slot !== previousSlot) slotIndex += 1;
-        positions.set(person.id, slotIndex);
-        previousSlot = slot;
-      });
+      items.forEach(function (person, index) { positions.set(person.id, index); });
     });
     const detailed = settings.nodeView === "detailed";
     const nodeWidth = detailed ? 116 : 100;
@@ -545,26 +534,14 @@
       rowHeights.set(level, (detailed ? 45 : 31) + Math.max(1, lineCount) * 14 + (hasLivingContact ? 21 : 0));
     });
     const rowTrackHeights = new Map();
-    sortedLevels.forEach(function (level) {
-      const nodeHeight = rowHeights.get(level);
-      const hasStackedPartners = groups.get(level).some(function (person) {
-        const placement = partnerPlacements.get(person.id);
-        return placement && placement.side === "left" && placement.count > 1;
-      });
-      rowTrackHeights.set(level, hasStackedPartners ? Math.max(nodeHeight, nodeHeight * 4 / 3 + 8) : nodeHeight);
-    });
+    sortedLevels.forEach(function (level) { rowTrackHeights.set(level, rowHeights.get(level)); });
     const rowWidths = new Map();
     sortedLevels.forEach(function (level) {
       const items = groups.get(level);
-      const seenSlots = new Set();
-      const slotWidths = items.map(function (person) {
-        const slot = rowSlotKey(person);
-        if (seenSlots.has(slot)) return 0;
-        seenSlots.add(slot);
+      const width = items.reduce(function (total, person) {
         const placement = partnerPlacements.get(person.id);
-        return nodeWidth * (placement && placement.scale || 1);
-      }).filter(Boolean);
-      const width = slotWidths.reduce(function (total, slotWidth) { return total + slotWidth; }, 0) + Math.max(0, slotWidths.length - 1) * horizontalGap;
+        return total + nodeWidth * (placement && placement.scale || 1);
+      }, 0) + Math.max(0, items.length - 1) * horizontalGap;
       rowWidths.set(level, width);
     });
     const developerScaleGutter = settings.showDeveloperScale ? 116 : 0;
@@ -580,16 +557,7 @@
       const rowWidth = rowWidths.get(level);
       const startX = developerScaleGutter + (baseContentWidth - rowWidth) / 2;
       generationMetrics.push({ generation: level, y: rowY, height: trackHeight, nodeWidth: nodeWidth, nodeHeight: nodeHeight });
-      const slotPositions = new Map();
-      let slotCursorX = startX;
-      items.forEach(function (person) {
-        const slot = rowSlotKey(person);
-        if (slotPositions.has(slot)) return;
-        const placement = partnerPlacements.get(person.id);
-        const scale = placement && placement.scale || 1;
-        slotPositions.set(slot, slotCursorX);
-        slotCursorX += nodeWidth * scale + horizontalGap;
-      });
+      let cursorX = startX;
       items.forEach(function (person) {
         const placement = partnerPlacements.get(person.id);
         const scale = placement && placement.scale || 1;
@@ -598,7 +566,7 @@
         nodes.push({
           id: person.id,
           person: person,
-          x: slotPositions.get(rowSlotKey(person)),
+          x: cursorX,
           y: rowY + (placement && placement.align === "bottom" ? trackHeight - height : placement && placement.align === "top" ? 0 : (trackHeight - height) / 2),
           width: width,
           height: height,
@@ -610,6 +578,7 @@
           partnerCount: placement && placement.count || 0,
           generation: level
         });
+        cursorX += width + horizontalGap;
       });
       rowY += trackHeight + verticalGap;
     });
