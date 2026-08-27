@@ -1035,7 +1035,10 @@
       const alignedPartner = left.partnerPlacement === "left" ? left : right.partnerPlacement === "right" ? right : null;
       let y = alignedPartner ? alignedPartner.y + alignedPartner.height / 2 : ((left.y + left.height / 2) + (right.y + right.height / 2)) / 2;
       if (alignedPartner && alignedPartner.partnerPlacement === "left" && alignedPartner.partnerCount > 1) {
-        y = alignedPartner.y + alignedPartner.height * (alignedPartner.partnerAlign === "top" ? 0.25 : 0.75);
+        const partnerY = alignedPartner.y + alignedPartner.height / 2;
+        const anchorY = right.y + right.height * (alignedPartner.partnerAlign === "top" ? 0.25 : 0.75);
+        const elbowX = right.x - Math.max(6, Math.min(14, (right.x - (left.x + left.width)) / 2));
+        return "M" + (left.x + left.width) + " " + partnerY + " H" + elbowX + " V" + anchorY + " H" + right.x;
       }
       return "M" + (left.x + left.width) + " " + y + " L" + right.x + " " + y;
     }
@@ -2549,10 +2552,24 @@
     return [street, secondLine];
   }
 
-  function joinHouseholdNames(people) {
+  function mailingDisplayNameParts(person) {
+    return ["preferred", "current", "birth"].map(function (kind) { return model.nameParts(person, kind); }).find(function (parts) {
+      return [parts.prefix, parts.first, parts.middle, parts.last, parts.suffix].some(Boolean);
+    }) || model.nameParts(person, "birth");
+  }
+
+  function joinHouseholdNames(people, compactSharedLastName) {
     const names = people.map(function (person) { return model.displayName(person); }).filter(Boolean);
     if (names.length < 2) return names[0] || "Unnamed household";
-    if (names.length === 2) return names.join(" & ");
+    if (names.length === 2) {
+      if (compactSharedLastName) {
+        const parts = people.slice(0, 2).map(mailingDisplayNameParts);
+        const sharedLastName = parts[0].last && parts[1].last && parts[0].last.localeCompare(parts[1].last, undefined, { sensitivity: "accent" }) === 0;
+        const firstWithoutLast = [parts[0].prefix, parts[0].first, parts[0].middle, parts[0].suffix].filter(Boolean).join(" ");
+        if (sharedLastName && firstWithoutLast) return firstWithoutLast + " & " + names[1];
+      }
+      return names.join(" & ");
+    }
     return names.slice(0, -1).join(", ") + " & " + names[names.length - 1];
   }
 
@@ -2567,7 +2584,7 @@
     }).map(function (household) {
       const namedPeople = [household.main].concat(household.partners);
       const lines = mailingAddressLines(household.address);
-      return { names: joinHouseholdNames(namedPeople), addressLines: lines, address: lines.filter(Boolean).join("\n") };
+      return { names: joinHouseholdNames(namedPeople), labelNames: joinHouseholdNames(namedPeople, true), addressLines: lines, address: lines.filter(Boolean).join("\n") };
     }).filter(function (entry) { return entry.address; });
   }
 
@@ -2578,7 +2595,7 @@
       while (labels.length < 30) labels.push(null);
       pages.push('<section class="print-label-sheet" aria-label="Avery 5260 mailing-label sheet">' + labels.map(function (entry) {
         if (!entry) return '<article class="print-mailing-label print-mailing-label-blank" aria-hidden="true"></article>';
-        return '<article class="print-mailing-label"><strong>' + u.escapeHtml(entry.names) + '</strong><span>' + u.escapeHtml(entry.addressLines[0] || "") + '</span><span>' + u.escapeHtml(entry.addressLines[1] || "") + "</span></article>";
+        return '<article class="print-mailing-label"><strong>' + u.escapeHtml(entry.labelNames || entry.names) + '</strong><span>' + u.escapeHtml(entry.addressLines[0] || "") + '</span><span>' + u.escapeHtml(entry.addressLines[1] || "") + "</span></article>";
       }).join("") + "</section>");
     }
     $("#printReport").innerHTML = pages.join("");
@@ -2594,7 +2611,7 @@
     }
     style.textContent = mode === "labels"
       ? "@page { size: letter; margin: 0; }"
-      : '@page { size: letter; margin: .35in .5in; @top-right { content: "' + printDate() + '"; color: #555; font: 6pt Helvetica, Arial, sans-serif; } @bottom-left { content: ""; } @bottom-right { content: counter(page) " of " counter(pages); color: #555; font: 6pt Helvetica, Arial, sans-serif; } }';
+      : '@page { size: letter; margin: .2in .5in; @top-right { content: "' + printDate() + '"; color: #555; font: 6pt Helvetica, Arial, sans-serif; } @bottom-left { content: ""; } @bottom-right { content: counter(page) " of " counter(pages); color: #555; font: 6pt Helvetica, Arial, sans-serif; } }';
     document.body.classList.toggle("printing-labels", mode === "labels");
     document.body.classList.toggle("printing-atlas", mode === "atlas");
   }
@@ -2715,7 +2732,7 @@
       return '<tr class="print-household-person-row"><td><h2 class="' + printHouseholdNameDensityClass(person).trim() + '">' + printHouseholdPersonName(person) + '</h2></td><td><p>' + printContactValues(person.phones) + '</p></td><td><p>' + printContactValues(person.emails) + "</p></td>" + addressCell + "</tr>";
     }).join("");
     const sameAddress = household.sameAddress.length ? '<tr class="print-household-residents"><td colspan="3">' + household.sameAddress.map(function (person) { return u.escapeHtml(model.displayName(person)); }).join(", ") + "</td></tr>" : "";
-    const sizeClass = householdPeople.length === 1 ? "print-household-single" : "print-household-multiple";
+    const sizeClass = householdPeople.length === 1 && !household.sameAddress.length ? "print-household-single" : "print-household-multiple";
     const columns = '<colgroup><col class="print-directory-household-column"><col class="print-directory-phone-column"><col class="print-directory-email-column"><col class="print-directory-address-column"></colgroup>';
     return '<tbody class="print-directory-household ' + sizeClass + '"><tr class="print-household-card-row"><td colspan="4"><table class="print-household-card">' + columns + "<tbody>" + householdRows + sameAddress + '<tr class="print-household-lineage"><td colspan="4">' + printLineageProgressionHtml(main, graph) + "</td></tr></tbody></table></td></tr></tbody>";
   }
@@ -2815,7 +2832,7 @@
     }).join("");
     const directoryPeople = printDirectoryPeople(people, printState);
     const households = printHouseholds(directoryPeople, graph, printState);
-    const directoryHtml = households.length ? '<table class="print-directory-table"><colgroup><col class="print-directory-household-column"><col class="print-directory-phone-column"><col class="print-directory-email-column"><col class="print-directory-address-column"></colgroup><thead><tr><th scope="col">Household</th><th scope="col">Phone</th><th scope="col">Email</th><th scope="col">Address</th></tr></thead>' + households.map(function (household) { return printHouseholdHtml(household, graph); }).join("") + "</table>" : '<p class="print-directory-empty">No phone, email, or address information is recorded.</p>';
+    const directoryHtml = households.length ? '<table class="print-directory-table"><colgroup><col class="print-directory-household-column"><col class="print-directory-phone-column"><col class="print-directory-email-column"><col class="print-directory-address-column"></colgroup><thead><tr><th scope="col">Household</th><th scope="col">Phone</th><th scope="col">Email</th><th scope="col"><span class="print-directory-address-heading"><span>Address</span><span>Landline</span></span></th></tr></thead>' + households.map(function (household) { return printHouseholdHtml(household, graph); }).join("") + "</table>" : '<p class="print-directory-empty">No phone, email, or address information is recorded.</p>';
     const reportDate = printDate();
     $("#printReport").innerHTML = '<section class="print-directory"><header class="print-report-header"><h1>Directory of McMillen Clan</h1><time datetime="' + reportDate + '">' + reportDate + "</time></header>" + directoryHtml + '</section><section class="print-atlas"><h2>Family Maps</h2>' + componentHtml + "</section>" + (notes ? '<article class="print-family-notes"><h1>Family Notes</h1><p>' + u.escapeHtml(notes).replace(/\n/g, "<br>") + "</p></article>" : "");
   }

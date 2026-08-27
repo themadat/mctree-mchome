@@ -1087,9 +1087,8 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .print-preview-document > section, .print-preview-document > article { width: min(8.5in, 100%); margin: 0 auto 1rem; padding: .55in; background: #fff; box-shadow: 0 8px 28px rgba(0, 0, 0, .28); }
 .print-preview-document > .print-label-sheet { box-sizing: border-box; display: grid; grid-template-columns: repeat(3, 2.625in); grid-template-rows: repeat(10, 1in); column-gap: .125in; width: 8.5in; height: 11in; padding: .5in .1875in; }
 .print-mailing-label { box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; width: 2.625in; height: 1in; padding: .09in .14in; overflow: hidden; font-family: Helvetica, Arial, sans-serif; }
-.print-mailing-label strong, .print-mailing-label span { display: block; overflow-wrap: anywhere; line-height: 1.13; }
-.print-mailing-label strong { font-size: 10pt; }
-.print-mailing-label span { font-size: 9pt; }
+.print-mailing-label strong, .print-mailing-label span { display: block; overflow-wrap: anywhere; font-size: 9pt; line-height: 1.13; }
+.print-mailing-label strong { font-weight: 700; }
 .print-preview-document .print-mailing-label { outline: 1px dashed #bbb; outline-offset: -1px; }
 .print-preview-document .print-report-header { display: flex; align-items: baseline; justify-content: space-between; gap: .2in; margin: 0 0 .12in; }
 .print-preview-document .print-report-header h1 { margin: 0; }
@@ -1126,6 +1125,7 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .print-preview-document .print-directory-address-column { width: 35%; }
 .print-preview-document .print-directory-table thead { display: table-header-group; }
 .print-preview-document .print-directory-table th { padding: .045in .075in; border-bottom: 2px solid #333; color: #555; font: 700 6.2pt Helvetica, Arial, sans-serif; letter-spacing: .06em; text-align: left; text-transform: uppercase; }
+.print-preview-document .print-directory-address-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .06in; }
 .print-preview-document .print-directory-household, .print-preview-document .print-household-card-row, .print-preview-document .print-household-card { break-inside: avoid-page; page-break-inside: avoid; }
 .print-preview-document .print-household-card-row > td { padding: .06in 0 0; border: 0; }
 .print-preview-document .print-household-card { width: 100%; border: 1.2px solid #111; border-collapse: collapse; table-layout: fixed; }
@@ -1320,6 +1320,7 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
   .print-directory-address-column { width: 35%; }
   .print-directory-table thead { display: table-header-group; }
   .print-directory-table th { padding: .04in .065in; border-bottom: 2px solid #333; color: #555; font: 700 5.9pt Helvetica, Arial, sans-serif; letter-spacing: .06em; text-align: left; text-transform: uppercase; }
+  .print-directory-address-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .055in; }
   .print-directory-household, .print-household-card-row, .print-household-card { break-inside: avoid-page !important; page-break-inside: avoid !important; }
   .print-household-card-row > td { padding: .055in 0 0; border: 0; }
   .print-household-card { width: 100%; border: 1.2px solid #111; border-collapse: collapse; table-layout: fixed; }
