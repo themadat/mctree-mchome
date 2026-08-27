@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.96",
-      buildId: "0.0.1.96",
+      version: "0.0.1.97",
+      buildId: "0.0.1.97",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -170,6 +170,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.97",
+        date: "2026-08-27T16:34:29.000Z",
+        title: "Name-only summary cards",
+        summary: "Summary tree cards now show only the selected name, while Details carries lifespan and identity symbols.",
+        features: [],
+        improvements: ["Summary cards use a shorter name-only height", "Details cards retain years plus Lineal and available-contact symbols"],
+        fixes: ["Years and symbols no longer appear in Summary mode"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.96",
         date: "2026-08-27T15:36:26.000Z",
@@ -1149,6 +1159,7 @@
     .replace("Focus view shows", "Lineage view shows")
     .replace("the grouped Ancestor and Descendant depth numbers", "the symbol-labelled Ancestors and Descendants depth numbers")
     .replace("condensed and detailed cards", "Summary and Details cards")
+    .replace("switch between Summary and Details cards.", "switch between Summary and Details cards. Summary shows only the chosen name; Details adds lifespan years plus Lineal and available-contact symbols.")
     .replace("Narrow cards place each name word on its own line", "Narrow cards keep short names stacked while names with four or more parts balance across three fitted lines")
     .replace("Gold partner links", "Bright gold partner links")
     .replace("its icon fills while the lines are shown", "its filled icon remains the same in both states")
