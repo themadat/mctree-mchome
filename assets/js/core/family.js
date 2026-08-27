@@ -531,7 +531,7 @@
           || person.emails && person.emails.length
         );
       });
-      rowHeights.set(level, (detailed ? 45 : 31) + Math.max(1, lineCount) * 14 + (hasLivingContact ? 21 : 0));
+      rowHeights.set(level, (detailed ? 45 : 12) + Math.max(1, lineCount) * 14 + (detailed && hasLivingContact ? 21 : 0));
     });
     const rowTrackHeights = new Map();
     sortedLevels.forEach(function (level) { rowTrackHeights.set(level, rowHeights.get(level)); });

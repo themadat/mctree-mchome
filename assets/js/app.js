@@ -1167,13 +1167,14 @@
       const scale = node.scale || 1;
       const detailed = currentTreeLayout.nodeView === "detailed";
       const nameLines = family.treeNameLines(person, { basis: currentTreeLayout.nameBasis, length: currentTreeLayout.nameLength });
-      const contactAvailability = piiVisible() && person.livingStatus === "living" ? [
+      const contactAvailability = detailed && piiVisible() && person.livingStatus === "living" ? [
         person.addresses && person.addresses.length ? { symbol: "addressAvailable", label: "address" } : null,
         personHasPhone(person) ? { symbol: "phoneAvailable", label: "phone" } : null,
         person.emails && person.emails.length ? { symbol: "emailAvailable", label: "email" } : null
       ].filter(Boolean) : [];
       const contactLabel = contactAvailability.length ? " Recorded " + contactAvailability.map(function (item) { return item.label; }).join(", ") + "." : "";
-      const shell = '<g class="tree-node' + (selected ? " selected" : "") + (home ? " home" : "") + (node.partnerPlacement === "left" ? " compact-partner" : "") + (isLinealPerson(person) ? " lineal" : "") + (person.livingStatus === "deceased" ? " deceased" : "") + '" data-view="' + u.escapeHtml(currentTreeLayout.nodeView) + '" tabindex="0" role="button" aria-label="' + u.escapeHtml(name + ", " + family.lifespan(person) + "." + contactLabel + " Select to focus.") + '" data-tree-person="' + u.escapeHtml(person.id) + '" transform="translate(' + node.x + " " + node.y + ") scale(" + scale + ')"><rect width="' + renderWidth + '" height="' + renderHeight + '" rx="10"></rect>';
+      const accessibleDetails = detailed ? ", " + family.lifespan(person) + "." + contactLabel : ".";
+      const shell = '<g class="tree-node' + (selected ? " selected" : "") + (home ? " home" : "") + (node.partnerPlacement === "left" ? " compact-partner" : "") + (isLinealPerson(person) ? " lineal" : "") + (person.livingStatus === "deceased" ? " deceased" : "") + '" data-view="' + u.escapeHtml(currentTreeLayout.nodeView) + '" tabindex="0" role="button" aria-label="' + u.escapeHtml(name + accessibleDetails + " Select to focus.") + '" data-tree-person="' + u.escapeHtml(person.id) + '" transform="translate(' + node.x + " " + node.y + ") scale(" + scale + ')"><rect width="' + renderWidth + '" height="' + renderHeight + '" rx="10"></rect>';
       const nameHtml = nameLines.map(function (line, index) {
         const familyClass = currentTreeLayout.nameLength === "short" && index === nameLines.length - 1 ? " tree-family" : "";
         const densityClass = line.length > 20 ? " tree-name-tight" : line.length > 14 ? " tree-name-compact" : "";
@@ -1182,11 +1183,12 @@
       }).join("");
       const lifeY = 21 + nameLines.length * 14;
       const reference = detailed && developerReferencesEnabled() ? '<text class="tree-reference" x="' + (renderWidth / 2) + '" y="' + (lifeY + 13) + '" text-anchor="middle">' + u.escapeHtml(person.reference) + "</text>" : "";
-      const linealMark = isLinealPerson(person) ? icons.markup("lineal").replace('<svg class="sf-symbol"', '<svg class="sf-symbol tree-lineal-mark" x="' + (renderWidth - 14) + '" y="' + (lifeY - 9) + '" width="7" height="10"') : "";
+      const life = detailed ? '<text class="tree-life" x="' + (renderWidth / 2) + '" y="' + lifeY + '" text-anchor="middle">' + u.escapeHtml(family.lifespan(person)) + "</text>" : "";
+      const linealMark = detailed && isLinealPerson(person) ? icons.markup("lineal").replace('<svg class="sf-symbol"', '<svg class="sf-symbol tree-lineal-mark" x="' + (renderWidth - 14) + '" y="' + (lifeY - 9) + '" width="7" height="10"') : "";
       const contactMarks = contactAvailability.map(function (item, index) {
         return icons.markup(item.symbol).replace('<svg class="sf-symbol"', '<svg class="sf-symbol tree-contact-mark" x="' + (6 + index * 22) + '" y="' + (renderHeight - 21) + '" width="18" height="18"');
       }).join("");
-      return shell + nameHtml + '<text class="tree-life" x="' + (renderWidth / 2) + '" y="' + lifeY + '" text-anchor="middle">' + u.escapeHtml(family.lifespan(person) + (detailed && home ? " · home" : "")) + "</text>" + reference + contactMarks + linealMark + "</g>";
+      return shell + nameHtml + life + reference + contactMarks + linealMark + "</g>";
     }).join("");
     svg.innerHTML = '<g id="treeViewport">' + developerTreeScaleHtml() + '<g class="tree-edges">' + edges + '</g><g class="tree-nodes">' + nodes + "</g></g>";
     bindTreeInteractions(svg);

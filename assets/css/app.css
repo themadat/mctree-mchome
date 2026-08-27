@@ -793,7 +793,6 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .tree-node[data-view="condensed"] .tree-name-line.tree-name-compact { font-size: 9px; }
 .tree-node[data-view="condensed"] .tree-name-line.tree-name-tight { font-size: 8px; }
 .tree-node[data-view="condensed"] .tree-family { fill: var(--accent-strong); }
-.tree-node[data-view="condensed"] .tree-life { font-size: 9.5px; }
 .tree-node.selected rect { stroke: var(--accent); stroke-width: 3; }
 .tree-node.home rect { fill: var(--accent-soft); }
 .tree-node.deceased rect { fill: var(--deceased-card); }
