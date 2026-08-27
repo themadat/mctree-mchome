@@ -1,7 +1,7 @@
 "use strict";
 
-const CACHE_NAME = "mcfamily-shell-0.0.1.97";
-const ASSET_VERSION = "0.0.1.97";
+const CACHE_NAME = "mcfamily-shell-0.0.1.98";
+const ASSET_VERSION = "0.0.1.98";
 const versioned = function (path) { return path + "?v=" + ASSET_VERSION; };
 const SHELL = [
   "./",
@@ -21,8 +21,8 @@ const SHELL = [
   versioned("./assets/js/core/pwa.js"),
   versioned("./assets/js/app.js"),
   versioned("./assets/icons/favicon.svg"),
-  versioned("./assets/icons/app-icon-light.png"),
-  versioned("./assets/icons/app-icon-dark.png"),
+  versioned("./assets/icons/icon-512.png"),
+  versioned("./assets/icons/icon-512-dark.png"),
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
   "./assets/icons/icon-512-maskable.png",

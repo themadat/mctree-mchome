@@ -175,8 +175,6 @@ a { color: var(--accent-strong); }
 .version-pill { background: var(--surface-2); color: var(--muted); }
 .version-pill[data-developer="true"] { border-color: color-mix(in srgb, var(--accent) 42%, var(--line)); background: color-mix(in srgb, var(--accent) 13%, var(--surface)); color: var(--accent-strong); }
 .environment-pill { letter-spacing: .06em; }
-.beta-pill { border-color: color-mix(in srgb, #9333ea 48%, var(--line)); background: color-mix(in srgb, #9333ea 13%, var(--surface)); color: #7e22ce; }
-:root[data-theme="dark"] .beta-pill { color: #d8b4fe; }
 .access-mode-pill[data-access-mode="editor"] { border-color: color-mix(in srgb, var(--success) 55%, var(--line)); background: color-mix(in srgb, var(--success) 12%, var(--surface)); color: var(--success); }
 .access-mode-pill[data-access-mode="pii-viewer"] { border-color: color-mix(in srgb, var(--warning) 58%, var(--line)); background: color-mix(in srgb, var(--warning) 12%, var(--surface)); color: color-mix(in srgb, var(--warning) 82%, var(--text)); }
 .access-mode-pill[data-access-mode="redacted-viewer"] { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); background: var(--accent-soft); color: var(--accent-strong); }
@@ -281,8 +279,7 @@ main { min-width: 0; padding: .75rem max(.9rem, var(--safe-right)) calc(5.25rem 
 .panel-header strong { overflow: hidden; font-size: .95rem; text-overflow: ellipsis; white-space: nowrap; }
 .panel-header-actions { display: flex; align-items: center; gap: .35rem; }
 .sticky-controls { position: sticky; top: 0; z-index: 4; background: var(--surface); }
-.records-controls { display: grid; grid-template-columns: minmax(96px, 1fr) minmax(96px, 1fr) minmax(104px, 1fr) auto auto; align-items: end; gap: .4rem; padding: .55rem .65rem; border-bottom: 1px solid var(--line); }
-.records-controls label, .roadmap-controls label { display: grid; min-width: 0; gap: .15rem; color: var(--muted); font-size: .68rem; font-weight: 700; }
+.roadmap-controls label { display: grid; min-width: 0; gap: .15rem; color: var(--muted); font-size: .68rem; font-weight: 700; }
 input, textarea, select { min-width: 0; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
 input, select { min-height: var(--control-height); padding: .45rem .58rem; }
 textarea { width: 100%; padding: .58rem; resize: vertical; }
@@ -573,8 +570,6 @@ details > summary { width: fit-content; cursor: pointer; color: var(--accent-str
   .banner-actions { align-self: flex-end; }
   main { padding: .55rem max(.55rem, var(--safe-right)) calc(5.5rem + var(--safe-bottom)) max(.55rem, var(--safe-left)); }
   .workspace-panel { min-height: calc(100svh - 13.2rem); border-radius: 12px; }
-  .records-controls { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto auto; }
-  .records-controls label:nth-child(3) { grid-column: 1 / 3; }
   .record-detail-form { grid-template-columns: 1fr; padding: .75rem; }
   .full { grid-column: 1; }
   .detail-actions, .document-footer { align-items: stretch; flex-direction: column; }
@@ -1010,10 +1005,6 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .cloud-session-actions { display: flex; justify-content: flex-end; }
 #hostedAccessPublishButton .button-icon, #hostedLockButton .button-icon { display: grid; place-items: center; width: 1.2rem; height: 1.2rem; }
 #hostedAccessPublishButton .button-icon .sf-symbol, #hostedLockButton .button-icon .sf-symbol { width: 1.1rem; height: 1.1rem; }
-.cloud-overview { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-.cloud-overview-copy { display: grid; min-width: 0; }
-.cloud-overview .section-intro { margin: .3rem 0 0; }
-.cloud-actions { display: flex; flex: 0 0 auto; flex-wrap: wrap; justify-content: flex-end; gap: .4rem; }
 .cloud-connection-summary { display: flex; align-items: center; gap: .5rem; margin-top: .65rem; padding: .5rem .6rem; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); }
 .cloud-connection-summary > span:last-child { display: grid; min-width: 0; line-height: 1.25; }
 .cloud-connection-summary strong { font-size: .75rem; }
@@ -1246,9 +1237,6 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
   .address-editor-grid { grid-template-columns: 1fr 1fr; padding-top: 2rem; padding-right: 0; }
   .address-editor-grid .field, .address-current-field, .address-start-field, .address-end-field, .address-notes-field { grid-column: span 1; }
   .address-editor-grid .date-input-field, .address-notes-field { grid-column: 1 / -1; }
-  .cloud-overview { align-items: stretch; flex-direction: column; }
-  .cloud-actions { justify-content: stretch; }
-  .cloud-actions .button { flex: 1 1 150px; }
   .cloud-change-list { grid-template-columns: 1fr; }
   .access-package-grid { grid-template-columns: 1fr; }
   .cloud-status-overview { gap: .35rem; }

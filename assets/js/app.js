@@ -190,13 +190,6 @@
     pwa.applyAppearanceAssets?.();
   }
 
-  function isBetaDeploy() {
-    const path = (location.pathname || "").toLowerCase();
-    if (/\/beta(\/|$)/.test(path)) return true;
-    const beta = new URLSearchParams(location.search || "").get("beta");
-    return beta === "1" || beta === "true";
-  }
-
   function renderHeader() {
     const isInitialized = initialized();
     document.body.dataset.onboarding = isInitialized ? "false" : "true";
@@ -207,7 +200,6 @@
     versionButton.textContent = "v" + config.identity.version + (developerMode ? " DEV" : "");
     versionButton.dataset.developer = developerMode ? "true" : "false";
     versionButton.setAttribute("aria-label", "Open release notes for version " + config.identity.version + (developerMode ? ". Developer Mode is enabled" : ""));
-    $("#betaPill").hidden = !isBetaDeploy();
     const accessPill = $("#accessModePill");
     const runtimeAccess = App.cloud && App.cloud.currentAccess ? App.cloud.currentAccess() : null;
     accessPill.hidden = !isInitialized;
@@ -3387,8 +3379,6 @@
     dialog.addEventListener("keydown", function (event) { const tab = event.target.closest("[role='tab']"); if (!tab || !["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return; event.preventDefault(); const tabs = $$('[data-support-tab]:not([hidden])'); const index = tabs.indexOf(tab); const destination = event.key === "Home" ? tabs[0] : event.key === "End" ? tabs[tabs.length - 1] : tabs[(index + (event.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length]; destination.focus(); switchSupportTab(destination.dataset.supportTab); });
     $("#appTextScale").addEventListener("input", function (event) { storage.mutate(function (next) { const scale = Number(event.target.value) / 100; next.preferences.appearance.textScale = scale; next.preferences.appearance.readingScale = scale; }, { reason: "appearance" }); applyAppearance(); $("#appTextScaleValue").textContent = event.target.value + "%"; });
     $("#exportButton").addEventListener("click", portability.exportPackage);
-    $("#exportPiiViewerButton").addEventListener("click", function () { portability.exportAccessPackage("pii-viewer"); });
-    $("#exportRedactedViewerButton").addEventListener("click", function () { portability.exportAccessPackage("redacted-viewer"); });
     $("#importButton").addEventListener("click", function () { $("#importFileInput").click(); });
     $("#resetPreferencesButton").addEventListener("click", resetPreferences);
     $("#eraseAllButton").addEventListener("click", eraseAllData);

@@ -241,12 +241,10 @@
 
   async function prepareDecryptedVaultRecord(vault, grant, keys) {
     const definition = definitionForGrant(grant);
-    const upgradeSource = portability.isUpgradeSourceDatasetVersion(vault.datasetVersion);
-    if (upgradeSource && grant.id !== "owner") throw new Error("The Admin must bulk upload dataset " + config.datasetVersion + " before other accounts can sign in again.");
     const dataKind = definition.stateMode === "redacted-viewer" ? "redacted" : "full";
     const rawKey = dataKind === "redacted" ? keys.redacted : keys.full;
     const bytes = await decryptBytes(vault.data[dataKind], await importDataKey(rawKey), config.cloud.vaultFormat + ":data:" + dataKind);
-    const prepared = await portability.prepareBytes(bytes, "Encrypted McFamily " + dataKind + " record", { allowUpgradeSource: upgradeSource });
+    const prepared = await portability.prepareBytes(bytes, "Encrypted McFamily " + dataKind + " record");
     const packageMode = portability.accessModeFor(prepared.state);
     if (dataKind === "full" && packageMode !== "editor") throw new Error("The full encrypted record is not an Editor dataset.");
     if (dataKind === "redacted" && packageMode !== "redacted-viewer") throw new Error("The redacted encrypted record is incorrectly labelled.");
@@ -256,14 +254,14 @@
   }
 
   async function decryptVaultRecord(vaultInput, grantId, passphrase) {
-    const vault = validateVault(vaultInput, { allowUpgradeSource: true });
+    const vault = validateVault(vaultInput);
     const grant = vault.grants.find(function (item) { return item.id === grantId; });
     if (!grant) throw new Error("That access grant is no longer active.");
     return prepareDecryptedVaultRecord(vault, grant, await unwrapGrant(grant, String(passphrase || "").trim()));
   }
 
   async function decryptVaultRecordByPassphrase(vaultInput, passphrase) {
-    const vault = validateVault(vaultInput, { allowUpgradeSource: true });
+    const vault = validateVault(vaultInput);
     const cleanPassphrase = String(passphrase || "").trim();
     const matches = [];
     for (const grant of vault.grants) {
@@ -286,7 +284,7 @@
     return { iv: source.iv, ciphertext: source.ciphertext };
   }
 
-  function validateVault(input, options) {
+  function validateVault(input) {
     const source = u.plainObject(input);
     if (source.format !== config.cloud.vaultFormat || Number(source.version) !== config.cloud.vaultVersion) throw new Error("The hosted file is not a supported McFamily encrypted vault.");
     const revision = Number(source.revision);
@@ -318,7 +316,7 @@
     if (modeCounts["pii-viewer"] > config.cloud.maxPiiViewers) throw new Error("The encrypted vault contains more Members than McFamily allows.");
     if (modeCounts["redacted-viewer"] > config.cloud.maxRedactedViewers) throw new Error("The encrypted vault contains more Viewers than McFamily allows.");
     const datasetVersion = u.cleanLine(source.datasetVersion, 40);
-    if (!portability.isSupportedDatasetVersion(datasetVersion) && !(options && options.allowUpgradeSource && portability.isUpgradeSourceDatasetVersion(datasetVersion))) throw new Error("The encrypted vault dataset version is not supported.");
+    if (!portability.isSupportedDatasetVersion(datasetVersion)) throw new Error("The encrypted vault dataset version is not supported.");
     const updatedAtValue = u.cleanLine(source.updatedAt, 80);
     if (!Number.isFinite(Date.parse(updatedAtValue))) throw new Error("The encrypted vault update time is invalid.");
     return {
@@ -337,7 +335,7 @@
     if (encoder.encode(text).length > config.cloud.maxVaultBytes) throw new Error("The encrypted family record is larger than McFamily allows.");
     let parsed;
     try { parsed = JSON.parse(text); } catch (error) { throw new Error("The hosted encrypted family record is not valid JSON."); }
-    return validateVault(parsed, { allowUpgradeSource: true });
+    return validateVault(parsed);
   }
 
   async function readVaultApi(settings, token, allowMissing) {
@@ -357,7 +355,7 @@
     }
     let parsed;
     try { parsed = JSON.parse(decoder.decode(bytes)); } catch (error) { throw new Error("GitHub contains a damaged encrypted vault JSON file."); }
-    return { sha: file.sha, vault: validateVault(parsed, { allowUpgradeSource: true }) };
+    return { sha: file.sha, vault: validateVault(parsed) };
   }
 
   async function writeVault(settings, token, vault, sha, message) {
@@ -551,22 +549,13 @@
     return actual && actual.canManage ? "Admin" : actual && actual.label || profile && profile.label || "Editor";
   }
 
-  function requiresBulkUpgrade() {
-    return Boolean(currentVault && portability.isUpgradeSourceDatasetVersion(currentVault.datasetVersion));
-  }
-
   function renderPublishChanges() {
     const list = $("#hostedChangeList");
     const button = $("#hostedPublishButton");
     if (!list || !button) return [];
     const changes = unpublishedChanges();
     list.replaceChildren();
-    if (requiresBulkUpgrade()) {
-      const item = document.createElement("li");
-      item.className = "no-change";
-      item.textContent = "Bulk upload dataset " + config.datasetVersion + " to continue";
-      list.appendChild(item);
-    } else if (!changes.length) {
+    if (!changes.length) {
       const item = document.createElement("li");
       item.className = "no-change";
       item.textContent = "No Updates";
@@ -578,7 +567,7 @@
         list.appendChild(item);
       });
     }
-    button.disabled = busy || requiresBulkUpgrade() || !changes.length;
+    button.disabled = busy || !changes.length;
     return changes;
   }
 
@@ -769,7 +758,7 @@
     const dialog = $("#cloudAuditDialog");
     if (!editor && dialog.open) dialog.close("access-unavailable");
     $("#hostedPublishSection").classList.toggle("access-hidden", !editor || !currentVault);
-    $("#hostedVersionChange").textContent = currentVault ? (requiresBulkUpgrade() ? currentVault.datasetVersion + " → " + config.datasetVersion : currentVault.datasetVersion + " → next patch") : "First publication";
+    $("#hostedVersionChange").textContent = currentVault ? currentVault.datasetVersion + " → next patch" : "First publication";
     renderPublishChanges();
     renderConnection();
     renderAudit();
@@ -781,7 +770,7 @@
     components.setLoading(value, message || "Working with the encrypted family record…");
     ["hostedPublishButton", "hostedBulkUploadButton", "cloudPublishButton", "cloudCancelUpload", "hostedAccessPublishButton", "cloudTestButton", "cloudSaveButton", "cloudForgetButton", "hostedLockButton"].forEach(function (id) {
       const button = $("#" + id);
-      if (button) button.disabled = value || (id === "hostedPublishButton" && (requiresBulkUpgrade() || !unpublishedChanges().length));
+      if (button) button.disabled = value || (id === "hostedPublishButton" && !unpublishedChanges().length);
     });
   }
 
@@ -893,10 +882,6 @@
   async function publishAccessChanges() {
     const profile = accessProfile();
     if (busy || !profile || !profile.canManage) return;
-    if (requiresBulkUpgrade()) {
-      components.message("Bulk upload required", "Upload the validated dataset " + config.datasetVersion + " package before changing access.", { trigger: $("#hostedAccessPublishButton") });
-      return;
-    }
     if (currentVault && unpublishedChanges().length) {
       components.message("Family update required", "Use Update to publish the listed family changes before changing access.", { trigger: $("#hostedAccessPublishButton") });
       $("#hostedAuditSummary").focus();
@@ -964,7 +949,7 @@
       const candidateVersion = portability.datasetVersionFor(prepared.state);
       if (portability.accessModeFor(prepared.state) !== "editor") throw new Error("Bulk upload requires a complete Editor package.");
       if (candidateVersion !== prepared.state.meta.package.datasetVersion) throw new Error("The package dataset version is not supported by this website.");
-      if (currentVault && !requiresBulkUpgrade() && compareDatasetVersions(candidateVersion, currentVault.datasetVersion) <= 0) throw new Error("Choose a package newer than hosted dataset " + currentVault.datasetVersion + ".");
+      if (currentVault && compareDatasetVersions(candidateVersion, currentVault.datasetVersion) <= 0) throw new Error("Choose a package newer than hosted dataset " + currentVault.datasetVersion + ".");
       const changes = familyChanges(activeSession.baselineState, prepared.state);
       pendingBulkUpload = { fileName: file.name, prepared: prepared, changes: changes };
       $("#cloudVersionChange").textContent = (currentVault ? currentVault.datasetVersion : "None") + " → " + candidateVersion;
@@ -1034,10 +1019,6 @@
   async function publishCurrentFamily() {
     const profile = accessProfile();
     if (busy || !profile || !profile.canPublish || !currentVault || !activeSession.keys.full || !activeSession.keys.redacted) return;
-    if (requiresBulkUpgrade()) {
-      components.message("Bulk upload required", "Admin must upload the validated dataset " + config.datasetVersion + " package before normal updates resume.", { trigger: $("#hostedPublishButton") });
-      return;
-    }
     const changes = unpublishedChanges();
     if (!changes.length) { renderPublishChanges(); return; }
     const actor = publicationActor(profile);

@@ -14,8 +14,6 @@
     "McResidences.csv": "1.0.0",
     "McMetadata.csv": "1.0.0"
   };
-  const LEGACY_UPGRADE_DATASET_SERIES = "16.0";
-  const LEGACY_UPGRADE_SCHEMA_VERSIONS = Object.assign({}, FILE_SCHEMA_VERSIONS, { "McPlaces.csv": "1.0.0" });
   const PARENT_LINEAGES = new Set(config.parentLineages.map(function (item) { return item.id; }));
   const PARENT_TYPES = new Set(config.parentKinds.map(function (item) { return item.id; }));
   const PEOPLE_HEADERS = [
@@ -31,7 +29,6 @@
     "place-id", "place-label", "address-line-1", "address-line-2", "city", "region", "postal-code", "country", "notes",
     "source-last-modified-date", "source-last-modified-by", "source-row-number", "source-pcard", "source-notes"
   ];
-  const LEGACY_PLACE_HEADERS = PLACE_HEADERS.slice(0, 11);
   const RELATION_HEADERS = [
     "relationship-id", "relationship-type", "person-1-id", "person-2-id", "parent-lineage", "parent-type", "partner-type", "relationship-order",
     "date-start-value", "date-start-descriptor", "date-end-value", "date-end-descriptor", "end-reason", "place-id", "notes",
@@ -56,10 +53,6 @@
     return new RegExp("^" + escapedSeries + "\\.\\d+$").test(u.cleanLine(value, 40));
   }
 
-  function isUpgradeSourceDatasetVersion(value) {
-    return new RegExp("^" + LEGACY_UPGRADE_DATASET_SERIES.replace(".", "\\.") + "\\.\\d+$").test(u.cleanLine(value, 40));
-  }
-
   function datasetVersionFor(state) {
     const value = u.cleanLine(state && state.meta && state.meta.package && state.meta.package.datasetVersion, 40);
     return isSupportedDatasetVersion(value) ? value : config.datasetVersion;
@@ -71,7 +64,7 @@
     return parts[0] + "." + parts[1] + "." + (parts[2] + 1);
   }
 
-  function parseCsv(text, fileName, options) {
+  function parseCsv(text, fileName) {
     const source = String(text || "").replace(/^\uFEFF/, "");
     const matrix = [];
     let row = [];
@@ -105,11 +98,7 @@
       seen.add(header);
     });
     const expected = HEADERS_BY_FILE[fileName];
-    const acceptedHeaders = [{ headers: expected, schemaVersion: FILE_SCHEMA_VERSIONS[fileName] }];
-    if (options && options.allowUpgradeSource && fileName === "McPlaces.csv") acceptedHeaders.push({ headers: LEGACY_PLACE_HEADERS, schemaVersion: LEGACY_UPGRADE_SCHEMA_VERSIONS[fileName] });
-    const accepted = acceptedHeaders.find(function (candidate) {
-      return headers.length === candidate.headers.length && headers.every(function (header, index) { return header === candidate.headers[index]; });
-    });
+    const accepted = headers.length === expected.length && headers.every(function (header, index) { return header === expected[index]; });
     const missing = expected.filter(function (header) { return !headers.includes(header); });
     const unexpected = headers.filter(function (header) { return !expected.includes(header); });
     const exactOrder = headers.length === expected.length && headers.every(function (header, index) { return header === expected[index]; });
@@ -126,7 +115,7 @@
       headers.forEach(function (header, index) { item[header] = originalCsvValue(values[index]); });
       return item;
     });
-    return { headers: headers, rows: rows, schemaVersion: accepted.schemaVersion };
+    return { headers: headers, rows: rows, schemaVersion: FILE_SCHEMA_VERSIONS[fileName] };
   }
 
   function csvValue(value) {
@@ -343,7 +332,7 @@
     return "unknown";
   }
 
-  function prepareMetadata(parsed, options, parsedFiles) {
+  function prepareMetadata(parsed, parsedFiles) {
     const ids = new Set();
     parsed.rows.forEach(function (row) {
       const id = u.cleanLine(row["metadata-id"], 100).toUpperCase();
@@ -360,16 +349,14 @@
     if (one("package", "package-format") !== config.packageFormat) throw new Error("This McFamily package format is not supported.");
     if (one("package", "package-version") !== config.packageVersion) throw new Error("This McFamily package version is not supported.");
     const datasetVersion = one("package", "dataset-version");
-    const upgradeSource = Boolean(options && options.allowUpgradeSource && isUpgradeSourceDatasetVersion(datasetVersion));
-    if (!isSupportedDatasetVersion(datasetVersion) && !upgradeSource) throw new Error("This website accepts only McFamily dataset " + config.datasetSeries + " patch versions.");
+    if (!isSupportedDatasetVersion(datasetVersion)) throw new Error("This website accepts only McFamily dataset " + config.datasetSeries + " patch versions.");
     const accessRows = parsed.rows.filter(function (row) { return row["metadata-type"] === "access" && row.key === "access-mode"; });
-    if (accessRows.length > 1 || (!upgradeSource && accessRows.length !== 1)) throw new Error("McMetadata.csv must declare access / access-mode exactly once.");
-    const accessMode = accessRows.length ? originalCsvValue(accessRows[0].value) : "editor";
+    if (accessRows.length !== 1) throw new Error("McMetadata.csv must declare access / access-mode exactly once.");
+    const accessMode = originalCsvValue(accessRows[0].value);
     if (!Object.prototype.hasOwnProperty.call(config.accessModes, accessMode)) throw new Error("McMetadata.csv contains an unsupported access-mode.");
     const schemaRows = parsed.rows.filter(function (row) { return row["metadata-type"] === "schema" && row.key === "schema-version"; });
     const schemaSubjects = new Set(schemaRows.map(function (row) { return row.subject; }));
-    const expectedSchemas = upgradeSource ? LEGACY_UPGRADE_SCHEMA_VERSIONS : FILE_SCHEMA_VERSIONS;
-    if (schemaRows.length !== FILE_NAMES.length || FILE_NAMES.some(function (name) { return !schemaSubjects.has(name); }) || schemaRows.some(function (row) { return row.value !== expectedSchemas[row.subject]; }) || FILE_NAMES.some(function (name) { return parsedFiles[name].schemaVersion !== expectedSchemas[name]; })) {
+    if (schemaRows.length !== FILE_NAMES.length || FILE_NAMES.some(function (name) { return !schemaSubjects.has(name); }) || schemaRows.some(function (row) { return row.value !== FILE_SCHEMA_VERSIONS[row.subject]; }) || FILE_NAMES.some(function (name) { return parsedFiles[name].schemaVersion !== FILE_SCHEMA_VERSIONS[name]; })) {
       throw new Error("McMetadata.csv must declare each file's supported schema version exactly once.");
     }
     const audits = parsed.rows.filter(function (row) { return row["metadata-type"] === "audit"; }).map(function (row) {
@@ -392,8 +379,7 @@
       },
       audits: audits,
       datasetVersion: datasetVersion,
-      accessMode: accessMode,
-      upgradeSource: upgradeSource
+      accessMode: accessMode
     };
   }
 
@@ -424,10 +410,10 @@
     });
   }
 
-  function preparePackage(files, fileName, options) {
+  function preparePackage(files, fileName) {
     const parsed = {};
-    FILE_NAMES.forEach(function (name) { parsed[name] = parseCsv(files.get(name), name, options); });
-    const metadata = prepareMetadata(parsed["McMetadata.csv"], options, parsed);
+    FILE_NAMES.forEach(function (name) { parsed[name] = parseCsv(files.get(name), name); });
+    const metadata = prepareMetadata(parsed["McMetadata.csv"], parsed);
     const counters = { partialDates: 0 };
     const personIds = new Set();
     const people = parsed["McPeople.csv"].rows.map(function (row, index) {
@@ -460,7 +446,7 @@
       return {
         id: id, label: row["place-label"], line1: row["address-line-1"], line2: row["address-line-2"], city: row.city,
         region: row.region, postalCode: row["postal-code"], country: row.country, phone: u.cleanLine(u.plainObject(placeDetails[id]).phone, 240), notes: row.notes,
-        source: { format: metadata.upgradeSource ? "mcplaces-v1" : "mcplaces-v2", fields: sourceFields(row, [
+        source: { format: "mcplaces-v2", fields: sourceFields(row, [
           "source-last-modified-date", "source-last-modified-by", "source-row-number", "source-pcard", "source-notes"
         ]) }, order: index
       };
@@ -865,15 +851,15 @@
     });
   }
 
-  async function prepareBytes(bytes, fileName, options) {
+  async function prepareBytes(bytes, fileName) {
     const source = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
     if (source.byteLength > config.controls.maxImportBytes) throw new Error("That ZIP is larger than the " + u.formatBytes(config.controls.maxImportBytes) + " import limit.");
     const buffer = source.buffer.slice(source.byteOffset, source.byteOffset + source.byteLength);
-    return preparePackage(await parseZip(buffer), fileName || "McFamily package", options);
+    return preparePackage(await parseZip(buffer), fileName || "McFamily package");
   }
 
-  async function prepareFile(file, options) {
-    return prepareBytes(await readFile(file), file && file.name, options);
+  async function prepareFile(file) {
+    return prepareBytes(await readFile(file), file && file.name);
   }
 
   function summaryFor(state, candidate) {
@@ -999,7 +985,6 @@
     prepareBytes: prepareBytes,
     prepareFile: prepareFile,
     isSupportedDatasetVersion: isSupportedDatasetVersion,
-    isUpgradeSourceDatasetVersion: isUpgradeSourceDatasetVersion,
     nextDatasetPatch: nextDatasetPatch,
     auditId: auditId,
     datasetVersionFor: datasetVersionFor,
