@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.92",
-      buildId: "0.0.1.92",
+      version: "0.0.1.93",
+      buildId: "0.0.1.93",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -170,6 +170,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.93",
+        date: "2026-08-27T14:14:41.000Z",
+        title: "Reliable compact printing",
+        summary: "The atlas now starts with the directory, keeps household and label pages intact, and removes private contact hints from Viewer tree cards.",
+        features: [],
+        improvements: ["Households use compact black-outlined cards with light internal separators and right-aligned shared phones", "Print headers use an ISO date and a clean temporary URL while the native dialog is open", "The atlas begins with the directory instead of a separate title page"],
+        fixes: ["Viewer tree cards no longer reveal address, phone, or email availability", "Household cards use an indivisible wrapper that browsers honor more reliably at page boundaries", "Label print rules remain active until print preview closes and leave one device pixel of pagination slack"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.92",
         date: "2026-08-26T22:02:00.000Z",
