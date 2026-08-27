@@ -2,7 +2,7 @@
 
 McFamily is a private family atlas: an interactive lineage tree, searchable directory, person/place editor, audit trail, and print-ready family directory. It is plain HTML, CSS, and JavaScript with no runtime dependencies or custom backend.
 
-Current pre-1.0 version: `0.0.1.98`. Application versions use `major.minor.patch.build`; the first repository 1.0 cut is therefore `1.0.0.1`.
+Current pre-1.0 version: `0.0.1.99`. Application versions use `major.minor.patch.build`; the first repository 1.0 cut is therefore `1.0.0.1`.
 
 ## Use McFamily
 
@@ -50,7 +50,6 @@ scripts/verify.mjs          Fast dependency-free repository verification
 context/LLM_HANDOFF.md      Current implementation invariants for agents
 context/WISHES.md           Explicit lifecycle backlog
 docs/                       Current architecture, data, and test contracts
-.github/workflows/deploy.yml Runtime-only GitHub Pages deployment
 ```
 
 Historical implementation detail belongs in Git, not the runtime release list or always-read documentation.
@@ -63,13 +62,13 @@ Run the fast baseline after every change:
 node scripts/verify.mjs
 ```
 
-It checks JavaScript syntax, manifests, version alignment, asset references, retired compatibility tokens, the Pages allowlist, and `git diff --check`. Use [docs/TESTING.md](docs/TESTING.md) to select browser tests for the area changed; run its full release gate only for a release cut.
+It checks JavaScript syntax, manifests, version alignment, asset references, retired compatibility tokens, the absence of a duplicate Pages publisher, and `git diff --check`. Use [docs/TESTING.md](docs/TESTING.md) to select browser tests for the area changed; run its full release gate only for a release cut.
 
 Architecture and privacy boundaries are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Do not commit synthetic or real data fixtures unless they are explicitly safe and necessary.
 
 ## Publishing
 
-Pushes to `main` publish only `index.html`, manifests, `sw.js`, and `assets/{css,js,icons}` to `gh-pages`. The deployment intentionally removes files no longer in that runtime allowlist.
+GitHub Pages is configured to publish the repository's `main` branch from its root. The generated **pages build and deployment** run is the authoritative production result; no second workflow copies the site to `gh-pages`.
 
 An application release must keep these surfaces identical:
 

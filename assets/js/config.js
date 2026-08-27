@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.98",
-      buildId: "0.0.1.98",
+      version: "0.0.1.99",
+      buildId: "0.0.1.99",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -168,13 +168,13 @@
 
     releases: [
       {
-        version: "0.0.1.98",
-        date: "2026-08-27T20:00:00.000Z",
-        title: "Pre-1.0 cleanup",
-        summary: "McFamily now carries only the current runtime contracts, data reader, and release guidance needed for the 1.0 line.",
+        version: "0.0.1.99",
+        date: "2026-08-27T21:00:00.000Z",
+        title: "Pages deployment recovery",
+        summary: "McFamily now has one authoritative GitHub Pages deployment path from the main branch.",
         features: [],
-        improvements: ["Reduced documentation and routine verification overhead", "GitHub Pages publishes only runtime assets through pinned workflow actions", "Browser state now omits unused legacy records and sync tombstones"],
-        fixes: ["Removed the retired dataset 16 upgrade path, beta deployment path, and hidden package controls"],
+        improvements: ["Removed the redundant gh-pages copy job so deployment status is unambiguous"],
+        fixes: ["Prepared a clean retry after GitHub Pages timed out while promoting 0.0.1.98"],
         knownIssues: []
       }
     ],
