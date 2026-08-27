@@ -26,6 +26,7 @@
   let treeTransform = { x: 24, y: 24, scale: 1 };
   let favoritesPreviewOpen = false;
   let personNameOverrides = new Set();
+  let activePrintLocation = "";
   const FAVORITES_BACKUP_FORMAT = "mcfamily-favorites";
   const FAVORITES_BACKUP_VERSION = 1;
   const NAME_PARTS = ["Prefix", "First", "Middle", "Last", "Suffix"];
@@ -1164,7 +1165,7 @@
       const scale = node.scale || 1;
       const detailed = currentTreeLayout.nodeView === "detailed";
       const nameLines = family.treeNameLines(person, { basis: currentTreeLayout.nameBasis, length: currentTreeLayout.nameLength });
-      const contactAvailability = person.livingStatus === "living" ? [
+      const contactAvailability = piiVisible() && person.livingStatus === "living" ? [
         person.addresses && person.addresses.length ? { symbol: "addressAvailable", label: "address" } : null,
         personHasPhone(person) ? { symbol: "phoneAvailable", label: "phone" } : null,
         person.emails && person.emails.length ? { symbol: "emailAvailable", label: "email" } : null
@@ -2325,7 +2326,8 @@
   }
 
   function printDate() {
-    return new Intl.DateTimeFormat(undefined, { year: "numeric", month: "long", day: "numeric" }).format(new Date());
+    const today = new Date();
+    return [today.getFullYear(), String(today.getMonth() + 1).padStart(2, "0"), String(today.getDate()).padStart(2, "0")].join("-");
   }
 
   function printRelationshipList(person, sourceState) {
@@ -2590,23 +2592,41 @@
       style.media = "print";
       document.head.appendChild(style);
     }
-    style.textContent = mode === "labels" ? "@page { size: letter; margin: 0; }" : "";
+    style.textContent = mode === "labels"
+      ? "@page { size: letter; margin: 0; }"
+      : '@page { size: letter; margin: .35in .5in; @top-right { content: "' + printDate() + '"; color: #555; font: 6pt Helvetica, Arial, sans-serif; } @bottom-left { content: ""; } @bottom-right { content: counter(page) " of " counter(pages); color: #555; font: 6pt Helvetica, Arial, sans-serif; } }';
     document.body.classList.toggle("printing-labels", mode === "labels");
     document.body.classList.toggle("printing-atlas", mode === "atlas");
+  }
+
+  function useCleanPrintLocation() {
+    if (activePrintLocation) return;
+    activePrintLocation = location.pathname + location.search + location.hash;
+    const cleanLocation = location.pathname || "/";
+    if (activePrintLocation !== cleanLocation) history.replaceState(history.state, "", cleanLocation);
   }
 
   function clearPrintMode() {
     document.body.classList.remove("printing-atlas", "printing-labels");
     $("#dynamicPrintPageStyle")?.remove();
     $("#printReport").setAttribute("aria-hidden", "true");
+    if (activePrintLocation) {
+      history.replaceState(history.state, "", activePrintLocation);
+      activePrintLocation = "";
+    }
   }
 
   function invokeNativePrint(mode) {
     $("#printReport").setAttribute("aria-hidden", "false");
     setPrintPageMode(mode);
+    useCleanPrintLocation();
     requestAnimationFrame(function () {
-      window.print();
-      clearPrintMode();
+      try {
+        window.print();
+      } catch (error) {
+        clearPrintMode();
+        throw error;
+      }
     });
   }
 
@@ -2675,6 +2695,14 @@
     return values.length ? values.map(function (value) { return "<span>" + u.escapeHtml(value) + "</span>"; }).join("") : '<span class="muted-copy">—</span>';
   }
 
+  function printHouseholdNameDensityClass(person) {
+    const length = model.displayName(person).length + (person.livingStatus === "deceased" ? 9 : 0);
+    if (length > 40) return " print-household-name-tiniest";
+    if (length > 32) return " print-household-name-smaller";
+    if (length > 24) return " print-household-name-small";
+    return "";
+  }
+
   function printHouseholdHtml(household, graph) {
     const main = household.main;
     const householdPeople = [main].concat(household.partners);
@@ -2683,12 +2711,13 @@
     const address = household.address ? u.escapeHtml(model.formatAddress(household.address)).replace(/\n/g, "<br>") : '<span class="muted-copy">No address recorded</span>';
     const addressPhone = household.address && household.address.phone ? '<p class="print-household-address-phone">' + u.escapeHtml(household.address.phone) + "</p>" : "";
     const householdRows = householdPeople.map(function (person, index) {
-      const addressCell = index === 0 ? '<td class="print-household-address" rowspan="' + addressRows + '"><address>' + address + "</address>" + addressPhone + "</td>" : "";
-      return '<tr class="print-household-person-row"><td><h2>' + printHouseholdPersonName(person) + '</h2></td><td><p>' + printContactValues(person.phones) + '</p></td><td><p>' + printContactValues(person.emails) + "</p></td>" + addressCell + "</tr>";
+      const addressCell = index === 0 ? '<td class="print-household-address" rowspan="' + addressRows + '"><div class="print-household-address-layout"><address>' + address + "</address>" + addressPhone + "</div></td>" : "";
+      return '<tr class="print-household-person-row"><td><h2 class="' + printHouseholdNameDensityClass(person).trim() + '">' + printHouseholdPersonName(person) + '</h2></td><td><p>' + printContactValues(person.phones) + '</p></td><td><p>' + printContactValues(person.emails) + "</p></td>" + addressCell + "</tr>";
     }).join("");
     const sameAddress = household.sameAddress.length ? '<tr class="print-household-residents"><td colspan="3">' + household.sameAddress.map(function (person) { return u.escapeHtml(model.displayName(person)); }).join(", ") + "</td></tr>" : "";
     const sizeClass = householdPeople.length === 1 ? "print-household-single" : "print-household-multiple";
-    return '<tbody class="print-directory-household ' + sizeClass + '"><tr class="print-directory-spacer" aria-hidden="true"><td colspan="4"></td></tr>' + householdRows + sameAddress + '<tr class="print-household-lineage"><td colspan="4">' + printLineageProgressionHtml(main, graph) + "</td></tr></tbody>";
+    const columns = '<colgroup><col class="print-directory-household-column"><col class="print-directory-phone-column"><col class="print-directory-email-column"><col class="print-directory-address-column"></colgroup>';
+    return '<tbody class="print-directory-household ' + sizeClass + '"><tr class="print-household-card-row"><td colspan="4"><table class="print-household-card">' + columns + "<tbody>" + householdRows + sameAddress + '<tr class="print-household-lineage"><td colspan="4">' + printLineageProgressionHtml(main, graph) + "</td></tr></tbody></table></td></tr></tbody>";
   }
 
   function printGenerationSection(generation, people) {
@@ -2755,8 +2784,6 @@
     }).sort(function (a, b) {
       return Number(Boolean(georgeMcMillenRoot && b.includes(georgeMcMillenRoot.id))) - Number(Boolean(georgeMcMillenRoot && a.includes(georgeMcMillenRoot.id)));
     });
-    const familyUnits = family.familyUnits(printState);
-    const addressCount = people.reduce(function (total, person) { return total + person.addresses.length; }, 0);
     const notes = documentText(current.workspace.documents[0]);
     const componentHtml = componentsList.map(function (ids) {
       const componentPeople = ids.map(function (id) { return graph.peopleById.get(id); }).filter(Boolean);
@@ -2784,12 +2811,13 @@
         const label = branch.anchor ? "Descendants of " + model.displayName(branch.anchor) : "Other Later Generations";
         return '<section class="print-generation-branch"><header><span>Generation 3 Line</span><h4>' + u.escapeHtml(label) + '</h4></header>' + Array.from(branch.generations.keys()).sort(function (a, b) { return a - b; }).map(function (level) { return printGenerationSection(level, branch.generations.get(level)); }).join("") + "</section>";
       }).join("");
-      return '<article class="print-component"><header><div><span>Root Ancestor</span><h3>' + u.escapeHtml(model.displayName(rootAncestor)) + '</h3></div><p>Gen ' + (printGenerations.get(rootAncestor.id) || 0) + " · " + componentPeople.length + " people</p></header>" + earlyGenerations + branchHtml + "</article>";
+      return '<article class="print-component"><header><div><span>Root Ancestor</span><h3>' + u.escapeHtml(model.displayName(rootAncestor)) + "</h3></div></header>" + earlyGenerations + branchHtml + "</article>";
     }).join("");
     const directoryPeople = printDirectoryPeople(people, printState);
     const households = printHouseholds(directoryPeople, graph, printState);
     const directoryHtml = households.length ? '<table class="print-directory-table"><colgroup><col class="print-directory-household-column"><col class="print-directory-phone-column"><col class="print-directory-email-column"><col class="print-directory-address-column"></colgroup><thead><tr><th scope="col">Household</th><th scope="col">Phone</th><th scope="col">Email</th><th scope="col">Address</th></tr></thead>' + households.map(function (household) { return printHouseholdHtml(household, graph); }).join("") + "</table>" : '<p class="print-directory-empty">No phone, email, or address information is recorded.</p>';
-    $("#printReport").innerHTML = '<section class="print-front-matter"><article class="print-cover"><span class="eyebrow">Private family atlas</span><h1>' + u.escapeHtml(current.workspace.family.title) + '</h1><p>Prepared by McFamily on ' + u.escapeHtml(printDate()) + '</p><dl><div><dt>People</dt><dd>' + people.length + '</dd></div><div><dt>Relationships</dt><dd>' + relationships.length + '</dd></div><div><dt>Family Units</dt><dd>' + familyUnits.length + '</dd></div><div><dt>Addresses</dt><dd>' + addressCount + '</dd></div><div><dt>Family Maps</dt><dd>' + componentsList.length + '</dd></div></dl><aside><strong>Private document</strong><span>This atlas may contain home addresses, contact details, and family notes. Store and share it carefully.</span></aside></article><article class="print-legend"><h2>How to Use This Atlas</h2><p>Family maps begin with their root ancestor. George McMillen (1745) is Generation 0; Generation 4 and later are grouped under their Generation 3 family line. Lineal members have a faded-red outline, with Newton, Albon, and Lucian highlighted for orientation. Deceased people have brown shading.</p><div><span><strong>Parent links</strong> Biological, adoptive, step, foster, guardian, or unspecified</span><span><strong>Partner links</strong> Married, partnered, separated, divorced, annulled, widowed, former, or unspecified</span></div></article></section><section class="print-directory"><h1>Directory of McMillen Clan</h1>' + directoryHtml + '</section><section class="print-atlas"><h2>Family Maps</h2>' + componentHtml + "</section>" + (notes ? '<article class="print-family-notes"><h1>Family Notes</h1><p>' + u.escapeHtml(notes).replace(/\n/g, "<br>") + "</p></article>" : "");
+    const reportDate = printDate();
+    $("#printReport").innerHTML = '<section class="print-directory"><header class="print-report-header"><h1>Directory of McMillen Clan</h1><time datetime="' + reportDate + '">' + reportDate + "</time></header>" + directoryHtml + '</section><section class="print-atlas"><h2>Family Maps</h2>' + componentHtml + "</section>" + (notes ? '<article class="print-family-notes"><h1>Family Notes</h1><p>' + u.escapeHtml(notes).replace(/\n/g, "<br>") + "</p></article>" : "");
   }
 
   function openPrintPreview(trigger, title) {
