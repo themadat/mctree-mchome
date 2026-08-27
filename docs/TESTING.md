@@ -44,9 +44,9 @@ Run Tier 1, then complete all of the following before `cut`:
 5. **Family scenarios:** single person, multiple/current/former partners, adoption with multiple Non-Lineal parents, disconnected component, pedigree collapse, missing dates, presumed deceased, international address, and a large synthetic family near supported limits.
 6. **Print:** inspect cover, maps, root/Generation 3 grouping, special Lineal styling, compact directory, living/deceased dates, household partners/phone/address, page breaks, and light/dark source modes.
 7. **Accessibility/responsive:** screen-reader spot check of tree relationships and dialogs, keyboard traversal/shortcuts, focus after close/delete, reduced motion, 200% text, mobile orientation, touch pan/zoom, and no clipped controls.
-8. **PWA/deploy:** manifest parse, icons/startup images, fresh install, online→offline reload, prior-worker→new-worker update, and production URL smoke test after Pages succeeds. Verify removed docs/scripts/raw icons are absent from `gh-pages`.
+8. **PWA/deploy:** manifest parse, icons/startup images, fresh install, online→offline reload, prior-worker→new-worker update, and production URL smoke test after the generated Pages deployment succeeds. Confirm the live HTML, config, and service worker all report the new version.
 9. **Security:** rotate development passphrases/tokens, confirm token repository scope is minimal, inspect public vault metadata only (never print ciphertext or secrets), and search the diff for private names/addresses/contact data.
-10. **Repository:** clean status except release files, no ignored artifact accidentally forced into Git, deployment main-only, and preview server stopped.
+10. **Repository:** clean status except release files, no ignored artifact accidentally forced into Git, Pages source remains `main`/root with no duplicate publishing workflow, and preview server stopped.
 
 ## 1.0 decision record
 

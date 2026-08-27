@@ -73,7 +73,7 @@ Print output is generated into a print-only DOM immediately before `window.print
 
 `sw.js` precaches only the static shell. Navigations use network-first with offline shell fallback; same-origin static assets use network-first with cache fallback. Vault/GitHub requests are cross-origin and are never intercepted.
 
-The Pages workflow builds a strict allowlist containing only root runtime files and `assets/css`, `assets/js`, and `assets/icons`. It publishes `main` to the production root with `keep_files: false`, so removed runtime files disappear from `gh-pages` on the next deployment. Third-party workflow steps use reviewed immutable commit pins rather than movable version tags.
+The repository's GitHub Pages setting publishes the root of `main` through GitHub's generated **pages build and deployment** workflow. That generated deployment is the sole authoritative production result; there is no checked-in publisher or duplicate `gh-pages` copy. Because every committed path is public and may be web-addressable, private family data and credentials must never enter this repository.
 
 ## Security boundary
 

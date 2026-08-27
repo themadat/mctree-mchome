@@ -98,12 +98,10 @@ for (const token of forbidden) {
   if (hit) fail("Retired token " + token + " remains in " + hit);
 }
 
-const deploy = read(".github/workflows/deploy.yml");
-if (!deploy.includes("keep_files: false") || /\bbeta\b/i.test(deploy)) fail("Pages deployment is not current-only");
-if (/uses:\s+[^\s]+@v\d+/i.test(deploy)) fail("Pages actions must use immutable commit pins");
+if (existsSync(resolve(root, ".github/workflows/deploy.yml"))) fail("The redundant gh-pages publisher must remain removed");
 for (const path of ["index.html", "manifest.webmanifest", "manifest-dark.webmanifest", "sw.js", "assets/css", "assets/js", "assets/icons"]) {
   if (!existsSync(resolve(root, path)) || statSync(resolve(root, path)).size === 0) fail("Required runtime path is missing: " + path);
 }
 
 execFileSync("git", ["diff", "--check"], { cwd: root, stdio: "pipe" });
-console.log(`McFamily ${config.identity.version}: ${runtimeJs.length} scripts, 2 manifests, asset references, current-only contracts, and diff checks passed.`);
+console.log(`McFamily ${config.identity.version}: ${runtimeJs.length} scripts, 2 manifests, asset references, current-only contracts, single-source deployment, and diff checks passed.`);
