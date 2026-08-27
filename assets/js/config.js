@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.93",
-      buildId: "0.0.1.93",
+      version: "0.0.1.94",
+      buildId: "0.0.1.94",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -170,6 +170,16 @@
     ],
 
     releases: [
+      {
+        version: "0.0.1.94",
+        date: "2026-08-27T14:52:45.000Z",
+        title: "Connected partner stacks and clearer mailings",
+        summary: "Stacked historical partners now connect cleanly, while household PDFs and labels use denser, clearer address formatting.",
+        features: [],
+        improvements: ["Two historical partners share one stacked tree position with uninterrupted links to their person", "Directory print headers distinguish Address and Landline", "Labels use one type size and omit the first person's repeated surname"],
+        fixes: ["A single household person uses the shorter row when other residents already provide vertical space", "Compact print margins replace the browser timestamp with McFamily's ISO date"],
+        knownIssues: []
+      },
       {
         version: "0.0.1.93",
         date: "2026-08-27T14:14:41.000Z",
