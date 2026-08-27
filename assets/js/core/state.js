@@ -67,7 +67,6 @@
         createdAt: now,
         updatedAt: now,
         lastMutationId: u.uid("mutation"),
-        tombstones: { records: [], documents: [], people: [], relationships: [], places: [], residences: [] },
         package: { format: "", version: "", datasetVersion: "", accessMode: "editor", auditHistory: [] }
       },
       workspace: {
@@ -76,7 +75,6 @@
         relationships: [],
         places: [],
         residences: [],
-        records: [],
         documents: [blankDocument(now)]
       },
       preferences: {
@@ -437,32 +435,6 @@
     }];
   }
 
-  function normalizeTombstones(value) {
-    const used = new Set();
-    return (Array.isArray(value) ? value : []).map(function (entry) {
-      const source = u.plainObject(entry);
-      const id = cleanId(source.id, "");
-      if (!id || used.has(id)) return null;
-      used.add(id);
-      return { id: id, deletedAt: u.ensureIso(source.deletedAt) };
-    }).filter(Boolean).slice(0, 10000);
-  }
-
-  function normalizeRecord(input, index, usedIds, now) {
-    const source = u.plainObject(input);
-    let id = cleanId(source.id, "record");
-    if (usedIds.has(id)) id = u.uid("record");
-    usedIds.add(id);
-    return {
-      id: id,
-      title: u.cleanLine(source.title || source.name || "Legacy record", 140),
-      summary: u.cleanText(source.summary || source.description, 4000).trim(),
-      createdAt: u.ensureIso(source.createdAt, now),
-      updatedAt: u.ensureIso(source.updatedAt, now),
-      order: Number.isFinite(Number(source.order)) ? Math.round(Number(source.order)) : index
-    };
-  }
-
   function normalize(input) {
     const source = u.plainObject(input);
     const base = createDefaultState();
@@ -487,16 +459,12 @@
     presumeUnknownPartnersDeceased(people, relationships);
     const documentIds = new Set();
     const documents = consolidateDocuments((Array.isArray(sourceWorkspace.documents) ? sourceWorkspace.documents : []).map(function (document, index) { return normalizeDocument(document, index, documentIds, now); }), now);
-    const recordIds = new Set();
-    const records = (Array.isArray(sourceWorkspace.records) ? sourceWorkspace.records : []).map(function (record, index) { return normalizeRecord(record, index, recordIds, now); });
     const theme = defaultTheme();
     const textScale = u.clamp(sourceAppearance.textScale, 0.85, 1.6, 1);
     const homePersonId = personIds.has(sourceFamily.homePersonId) ? sourceFamily.homePersonId : (people[0] ? people[0].id : "");
     const selectedPersonId = sourceUi.selectedPersonId === "" ? "" : (personIds.has(sourceUi.selectedPersonId) ? sourceUi.selectedPersonId : homePersonId);
     const validDirectoryFilters = new Set(config.directoryFilters.map(function (filter) { return filter.id; }));
-    const legacyDirectoryFilter = ["living", "deceased", "unknown"].includes(sourceUi.livingFilter) ? [sourceUi.livingFilter] : [];
-    const directoryFilters = Array.from(new Set((Array.isArray(sourceUi.directoryFilters) ? sourceUi.directoryFilters : legacyDirectoryFilter).map(function (filter) { return u.cleanLine(filter, 40); }).filter(function (filter) { return validDirectoryFilters.has(filter); })));
-    const sourceTombstones = u.plainObject(sourceMeta.tombstones);
+    const directoryFilters = Array.from(new Set((Array.isArray(sourceUi.directoryFilters) ? sourceUi.directoryFilters : []).map(function (filter) { return u.cleanLine(filter, 40); }).filter(function (filter) { return validDirectoryFilters.has(filter); })));
     const sourcePackage = u.plainObject(sourceMeta.package);
     const placeIds = new Set();
     const places = (Array.isArray(sourceWorkspace.places) ? sourceWorkspace.places : []).slice(0, config.controls.maxPlaces).map(function (place, index) { return normalizePlace(place, index, placeIds); });
@@ -526,14 +494,6 @@
         createdAt: u.ensureIso(sourceMeta.createdAt, now),
         updatedAt: u.ensureIso(sourceMeta.updatedAt, now),
         lastMutationId: u.cleanLine(sourceMeta.lastMutationId, 100) || u.uid("mutation"),
-        tombstones: {
-          records: normalizeTombstones(sourceTombstones.records),
-          documents: normalizeTombstones(sourceTombstones.documents),
-          people: normalizeTombstones(sourceTombstones.people),
-          relationships: normalizeTombstones(sourceTombstones.relationships),
-          places: normalizeTombstones(sourceTombstones.places),
-          residences: normalizeTombstones(sourceTombstones.residences)
-        },
         package: {
           format: u.cleanLine(sourcePackage.format, 80),
           version: u.cleanLine(sourcePackage.version, 40),
@@ -552,7 +512,6 @@
         relationships: relationships,
         places: places,
         residences: residences,
-        records: records,
         documents: documents
       },
       preferences: {
