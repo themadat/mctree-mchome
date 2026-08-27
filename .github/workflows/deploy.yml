@@ -1,20 +1,14 @@
 name: Deploy to GitHub Pages
 
-# Production:  main   -> https://themadat.github.io/app-template/
-# Beta:        beta   -> https://themadat.github.io/app-template/beta/
-#
-# Each branch publishes into its own subfolder of the gh-pages branch.
-# keep_files: true prevents one branch's deploy from wiping the other's folder.
+# Production: main -> https://themadat.github.io/mctree-mchome/
 
 on:
   push:
-    branches:
-      - main
-      - beta
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
-  group: pages-${{ github.ref_name }}
+  group: pages-production
   cancel-in-progress: false
 
 jobs:
@@ -24,53 +18,22 @@ jobs:
       contents: write
     steps:
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - name: Decide destination subfolder
-        id: dest
+      - name: Prepare runtime-only site
         run: |
-          case "${{ github.ref_name }}" in
-            main)
-              echo "dir=." >> "$GITHUB_OUTPUT"
-              echo "label=production" >> "$GITHUB_OUTPUT"
-              ;;
-            beta)
-              echo "dir=beta" >> "$GITHUB_OUTPUT"
-              echo "label=beta" >> "$GITHUB_OUTPUT"
-              ;;
-            *)
-              echo "Unsupported branch: ${{ github.ref_name }}" >&2
-              exit 1
-              ;;
-          esac
-
-      - name: Prepare publishing directory
-        run: |
-          mkdir -p build/pages
-          rsync -a \
-            --exclude '/.git/' \
-            --exclude '/.github/' \
-            --exclude '/.claude/' \
-            --exclude '/build/' \
-            --exclude '/context/' \
-            --exclude '/data/' \
-            --exclude '/tmp/' \
-            --exclude '/assets/data/' \
-            --exclude '/assets/svgs/' \
-            --exclude '/assets/world-map.svg' \
-            --exclude '/assets/world-map_raw.svg' \
-            --exclude '/assets/optimize-world-svg.py' \
-            ./ build/pages/
+          mkdir -p build/pages/assets
+          cp index.html manifest.webmanifest manifest-dark.webmanifest sw.js build/pages/
+          cp -R assets/css assets/js assets/icons build/pages/assets/
           touch build/pages/.nojekyll
 
-      - name: Publish to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Publish production site
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: ./build/pages
-          destination_dir: ${{ steps.dest.outputs.dir }}
-          keep_files: true
-          commit_message: "Deploy ${{ steps.dest.outputs.label }} from ${{ github.sha }}"
+          keep_files: false
+          commit_message: "Deploy production from ${{ github.sha }}"
           user_name: "github-actions[bot]"
           user_email: "github-actions[bot]@users.noreply.github.com"

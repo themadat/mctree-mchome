@@ -1,192 +1,62 @@
-# Verification checklist
+# Verification
 
-Use synthetic families only.
+Testing is risk-based. Do not rerun the entire historical acceptance suite for a narrow change.
 
-## Automated baseline
+## Tier 1 — every code change
 
-- [ ] Every JavaScript file and `sw.js` passes `node --check`.
-- [ ] Both manifests parse as JSON.
-- [ ] Every local HTML `src`/`href`, manifest icon, and service-worker shell path exists.
-- [ ] `git diff --check` is clean.
-- [ ] The visible version, build id, asset queries, newest release, cache name, and asset version all match.
-- [ ] No console errors appear during tested workflows.
+From the repository root:
 
-## Hosted access, current schema, and portability
+```sh
+node scripts/verify.mjs
+```
 
-- [ ] Every ordinary load shows only the hosted access gate until a current public ciphertext vault is fetched and one valid passphrase automatically identifies exactly one grant and decrypts its authorized package; no account or role selector appears.
-- [ ] The locked landing screen shows the McFamily identity and sign-in controls without the old Private Family Atlas eyebrow, introductory instruction, update explanation, or eight-character recommendation. A waiting service-worker update is shown there before passphrase entry; Update McFamily and `R` refresh the shell so sign-in is required only after the new build loads.
-- [ ] A missing vault shows a clear connection/setup status and one Owner Recovery ZIP action; a validated Editor recovery package enters Owner Setup, while invalid files leave the gate locked.
-- [ ] No demo family, blank-family action, GEDCOM action, loose-CSV action, stored-passphrase bypass, or local-state-only viewer bypass appears.
-- [ ] The vault rejects wrong format/version, malformed base64, unsupported KDF/cipher parameters, missing full/redacted payloads, duplicate/unknown grants, oversized content, and invalid revisions before decrypting anything.
-- [ ] Correct Owner, multiple named Editors, multiple Members, and multiple Viewers open only their assigned package from the same passphrase field; wrong, rotated, and removed passphrases fail without exposing the workspace or listing configured accounts on the locked screen.
-- [ ] Full and redacted packages use independent random data keys. Owner/Editor can unwrap both, Member can unwrap only full, and Viewer can unwrap only redacted.
-- [ ] Neither the serialized vault nor its public metadata contains a passphrase, GitHub token, readable CSV filename, person/contact/address value, or decrypted ZIP bytes.
-- [ ] A valid dataset 17 ZIP with at least one person shows access mode, people, relationship, place, residence, dataset, state, and validation-group summaries before opening the family.
-- [ ] The ZIP contains exactly the five root files `McPeople.csv`, `McPlaces.csv`, `McRelations.csv`, `McResidences.csv`, and `McMetadata.csv`; missing, extra, duplicate, nested, encrypted, unsupported-compression, truncated, bad-checksum, multi-disk, and oversized packages are rejected without replacing state.
-- [ ] McPlaces and McRelations use their exact ordered, hyphenated schema 2.0.0 headers and every other file uses schema 1.0.0; unknown, missing, duplicate, unsafe, underscore-named, or reordered headers and malformed/oversized CSVs are rejected.
-- [ ] Structured Birth, Current, and Preferred name parts plus Maiden Last import directly; `person-first-names`, `person-last-name`, and `person-name-sort` are absent.
-- [ ] McPeople contains no parent or partner columns. McRelations holds every Lineal/Non-Lineal parent and partner row with unique IDs, positive order, resolvable people, and consistent type-specific fields.
-- [ ] Every parent row independently records `parent-lineage` and `parent-type`; one child may have at most one Lineal parent and multiple distinct Non-Lineal parents without requiring a partner link to the Lineal parent. Missing, self, duplicate, invalid-classification, and multiple-Lineal-parent cases are rejected.
-- [ ] Each partner relationship has one unique ID and unordered person pair; missing/self references, invalid types/orders/end reasons, inconsistent date pairs, and duplicate relationships are rejected.
-- [ ] Relationship type plus end reason maps to married, partnered, widowed, divorced, separated, former, or unknown without a redundant source status field; an `UNKNOWN` end reason reads as former, so no partner of a person whose partnerships all ended is shown as current.
-- [ ] Every current non-root lineage path extends its direct parent's path by exactly one segment; blank unlineaged people are accepted, while malformed, duplicate, or parent-mismatched paths are rejected.
-- [ ] Current source date values accept blank, `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, or the same shapes with `?` in unknown digit positions; question-mark values require `partial`, `invalid` descriptors are rejected, and birth descriptors reject blank.
-- [ ] Current `person-*` identity/date columns import lineage and partner rows consistently: a known death value imports as deceased; a blank death value requires `NONE`, `UNKNOWN`, or `UNKNOWN PRESUMED`; those descriptors import as living, deceased, and presumed deceased respectively.
-- [ ] McPlaces requires unique L IDs and a physical address value, and schema 2 preserves source row, pcard, modification, and source Notes fields. McResidences requires unique RS IDs, exact TRUE/FALSE current flags, resolvable P/L references, and unique person/place/start links.
-- [ ] Every approved private residence resolves through its McResidences row to its McPlaces row and displays the complete address without embedding it in McPeople.
-- [ ] McMetadata declares the supported package/dataset versions, exact counts, family data, all five schema rows, and at least one valid audit event; duplicates, missing rows, count mismatches, bad timestamps/JSON, and unresolved home person are rejected.
-- [ ] New exports declare exactly one supported access mode; duplicate or unknown access rows are rejected.
-- [ ] Viewer export contains zero place/residence rows and no family Notes, person notes, relationship notes, or relationship place references; adding any of those back while retaining the redacted label makes import fail.
-- [ ] Member and Viewer omit the Audit button, `E` shortcut, and modal; omit Add in the title bar plus Add, Connect, Edit, Delete, and empty-profile Add Person in Selected Person; omit person and family Notes entirely—including profile section, header, `N` shortcut, search, Help topic, and populated dialog; and omit routine recovery ZIP import/export, PDF, Developer data, publishing, GitHub-token, and passphrase-management surfaces. Imported Source does not participate in their search. Search, favorites, and display preferences remain available.
-- [ ] Member can read contact/address data from the full package. Viewer receives zero places/residences and no contacts, family Notes, person/relationship notes, or supplemental private detail maps.
-- [ ] Owner and every named Editor enable Audit, family-record editing, family Notes, PDF, and audited family publication. Audit's title-bar icon remains the same neutral black/text color as adjacent actions regardless of status. The modal begins with same-line Signed in as/permission, encrypted family file, and GitHub connection summaries; the latter two are green or red according to status, and activating GitHub expands its connection details directly below the row. Owner, Repository, Branch, and Path stay read-only on one desktop row; Test, Forget, and Save use the external-drive symbols, and a successful Save collapses the panel. Owner permission reads Admin. Owner alone sees Bulk Upload and Owner Recovery and can create, rename, rotate, and revoke up to 20 grants in each Editor, Member, and Viewer role. Owner controls and recovery are collapsed by default, Publish Access Changes uses the cloud-key symbol, and Lock McFamily uses the shield-lock symbol.
-- [ ] In Owner Developer Mode, the role pill opens a keyboard-navigable Admin/Editor/Member/Viewer menu. Editor preview hides Owner-only access management and Owner Recovery; Member and Viewer previews apply their normal read-only, PII, Notes, PDF, Audit, source, and Developer gates. Preview never changes the vault, package access, credentials, or audit actor and resets when Developer Mode turns off or the page reloads.
-- [ ] Profile life details use one ordinary one-line `Age` row: living ages are compact, ages below two use months, deceased ages read `#y at death · #y today`, and unavailable ages read `UNKNOWN`.
-- [ ] Desktop defaults to a thin-gutter 20/50/30 Directory/Tree/Profile split, both separators resize with pointer and keyboard input, the first resize persists both widths, a usable tree width remains, and live position percentages appear only in Developer Mode.
-- [ ] State v13 reloads from `mcfamily.state.v13`; older state and recovery keys are ignored and the dataset 17 import gate appears instead.
-- [ ] Hosted startup removes current and older full `mcfamily.state.v#` and `mcfamily.recovery.v#` values plus obsolete `mcfamily.cloud.baseline.v1`, while preserving unrelated local-storage entries and compact device preferences; localhost `?local=1` keeps current full state.
-- [ ] A state with any schema version other than v13 is rejected rather than unwrapped or migrated.
-- [ ] One ZIP export/import round trip preserves all five files, 16 name columns, people, places, residences, relationships, preferences, Notes, package metadata, and audit history.
-- [ ] Dataset `17.0.0`, `17.0.1`, and later `17.0.x` packages with the same five exact schemas validate; a different major/minor series is rejected by ordinary and bulk import.
-- [ ] During the one-time cutover, the existing hosted `16.0.x` vault opens only with the Owner grant, identifies that Bulk Upload is required, and disables normal Update and access publication; Editor, Member, and Viewer grants cannot open it. This exception never accepts a manually selected v16 ZIP.
-- [ ] Admin Bulk Upload rejects a non-Editor, malformed, stale, unsupported, or non-newer package without touching state; a valid v17 package shows filename, target version, people/relationship/place/residence counts, and record-area changes before publication.
-- [ ] Bulk publication requires an audit summary, appends one `published-bulk-package` event recorded by Admin, keeps every active grant usable, generates independently redacted Viewer data, checks remote revision and SHA, and replaces the in-memory working state only after the encrypted GitHub write succeeds without creating a full browser copy.
-- [ ] Hosted publication rejects malformed current data, schema/count/reference/date/cycle failures, a stale vault revision, changed GitHub file SHA, non-public target, missing token permissions, or wrong configured path without altering local or remote data.
-- [ ] Opening an unchanged hosted family shows `No Updates` and disables the symbol-labelled Update button. Family title/root, Notes, person, relationship, place, and residence changes appear automatically in Detailed Changes with one item per changed area; Favorites and other personal device preferences do not enable Update.
-- [ ] A valid family publication requires Summary of What Changed, records Owner publication as `Admin` or an Editor publication under that signed-in username, appends the generated details to the audit description, renders every stored detail as its own audit-history list row, advances exactly one dataset patch, appends one `published-hosted-family` event, validates and encrypts both packages, writes one ciphertext vault, and keeps existing grants usable.
-- [ ] Access validation rejects duplicate grant ids, duplicate shown names, duplicate new passphrases, a new passphrase matching any retained grant, more than 20 grants per recipient role, malformed dynamic role ids, missing Owner, and passphrases shorter than eight characters; ambiguous older vaults with duplicate passphrases cannot sign in, while original fixed `editor`, `pii`, and `redacted` grants remain readable.
-- [ ] First access publication creates all enabled grants and one hosted-access audit event. Later Owner publication preserves blank passphrase rows, rotates nonblank rows, removes disabled viewers and revoked Editors, never records secret values, and keeps Owner mandatory.
-- [ ] An existing Admin cannot publish access changes while the generated family-change list is nonempty; Update must audit and publish those family changes first.
-- [ ] Hosted unlock, Update, access publication, and Bulk Upload keep the decrypted family only in session memory and leave no full state/recovery value in browser storage; hosted Developer Mode hides manual recovery-snapshot controls, while local-only setup retains full persistence and recovery.
-- [ ] Lock clears decrypted browser state and any local recovery, reloads, and requires a fresh online passphrase check without publishing or changing the hosted vault. It preserves only device-local dismissed hint ids, dismissed What’s New versions, Directory visibility, and valid favorite P references; no names, contacts, Notes, or other family content enters that preference record.
-- [ ] Dismissing a contextual hint or a specific What’s New banner, opening or closing Directory, and starring people survive hosted replacement, Lock, and reload on the same browser profile. A newer release still shows its own banner. Reset Preferences clears dismissals and Directory visibility but retains favorites; Erase Everything clears all saved choices.
-- [ ] Missing required Birth First/Last values normalize to `UNKNOWN`; the importer does not derive structured names from removed flat columns.
-- [ ] Partial source dates remain in source details, produce a partial-only preview warning, and do not become invented normalized dates in editable/native state.
-- [ ] Hosted ZIP replacement and person/relationship deletion leave the encrypted GitHub version unchanged until Update and do not create a full browser recovery copy; local-only replacement and deletion still create one recoverable snapshot.
-- [ ] Private export and PDF warnings are visible.
-- [ ] Reload restores the current family, selection, tree mode, node detail mode, collapsed panes, filters, theme, and Notes.
+If `node` is not on PATH, use the bundled Node executable reported by the Codex workspace dependency tool. The script checks all runtime JavaScript syntax, both manifests and their icons, config/HTML/service-worker version alignment, asset references, current-only compatibility markers, the runtime-only Pages workflow, and `git diff --check`.
 
-## Editing and derived relationships
+Review `git status --short` and the diff. Confirm no private packages, decrypted data, tokens, passphrases, screenshots with PII, generated test output, or unrelated files are staged.
 
-- [ ] Add in the title bar and selected-person Add, Connect, Edit, Delete, and empty-profile Add Person controls are rendered only when `features.familyEditing` is true and active hosted access is Owner or Editor; all are absent in both read-only modes. Set as home is absent.
-- [ ] Add Person fits a 1280 × 720 desktop viewport without body scrolling, including one physical address row: Birth, Current, and Preferred remain single-line and weighted `5/30/30/30/5`, Maiden aligns to the Last column, each name subheading sits inside its card border, Birth mirrors each untouched Current field, Current input immediately mirrors its Preferred field, and Birth Last immediately mirrors Maiden Last.
-- [ ] Add/Edit Person omits Gender, Pronouns, birth/death place, manual qualifiers, and lineage background while preserving those values on an existing person. Birth date, Death date, and Living status share the first Details row; Lineage ID occupies a separate full-width block with its header above the display and the italic Parents-based auto-generation message immediately below. Every editable person, address, Add Person partner, and standalone relationship date accepts the same blank, `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, and question-mark-partial syntax. Descriptors derive automatically, valid partials save and round-trip, and malformed or impossible dates show comprehensive red examples and cannot save. The wider desktop address row keeps Current address on two lines; address and person phone fields insert dashes as digits are typed, require ten digits, and save `###-###-####`.
-- [ ] Save remains disabled until at least one First name exists and every date, email, and added address row is valid. Save uses the supplied checkmark-seal symbol, Cancel uses the supplied X-mark-seal symbol, and Editor Notes has no redundant Details label.
-- [ ] Generic Add Person stacks Parents, Partners, and Children as separate dense searchable rows with compact results. Details always shows a read-only Lineage ID plus its Parents-based auto-generation disclaimer. Selecting a parent with a stored lineage makes that parent Lineal, leaves unnumbered selected parents Non-Lineal, previews and saves the child ID, and never requires later lineage refinement. A selected Partner exposes status plus validated start/end dates, saves the matching type/end-reason source fields, and immediately renders the chosen history; duplicate, self, missing-reference, second-Lineal-parent, and ancestry-cycle failures leave both person and relationships unmodified.
-- [ ] The selected-person header orders Delete, Edit, and X; Relationships owns Add and Connect. All four mutation controls use the supplied icon-over-label symbols.
-- [ ] Identity properties appear as Born, Died, Age, Living Status, and Marital Status; Gender and Pronouns remain hidden. Missing values read `UNKNOWN`, except a living person's Died value is `----`. Ages use the same visual weight as adjacent values and natural years/months wording.
-- The remaining mutation checks in this section apply while Owner or Editor access is open.
-- [ ] Add and remove repeated contacts without losing adjacent entries.
-- [ ] Connect biological, adopted, step, foster, guardian, and unknown parent types independently as Lineal or Non-Lineal, rejecting a second Lineal parent while accepting multiple Non-Lineal parents. A Lineal selection previews and saves the child's full Lineage ID, assigns an unnumbered root parent when needed, retains established sibling segments, and rebases Lineal descendants without duplicates.
-- [ ] Every Owner/Editor partner-history row exposes Edit, including repeated histories with the same person. Marriage, unmarried partnership, and unknown type save independently from ongoing, death, divorce, separation, annulment, and unknown endings; start/end dates and notes round-trip, Place is absent, existing hidden place data is preserved, and an end date without an end reason is rejected.
-- [ ] Self-link, duplicate-link, missing-reference, and ancestry-cycle errors are clear and non-destructive.
-- [ ] Parents, children, partners, siblings, ancestors, descendants, and lineage labels update from relationships.
-- [ ] Set Home changes the focus root.
-- [ ] Deleting a person confirms, snapshots, removes attached links, and can recover.
-- [ ] Deleting the final person leaves an initialized empty workspace with Add Person.
+## Tier 2 — targeted browser checks
 
-## Tree and directory
+Serve the repository over HTTP with `?local=1` for local package tests. Use synthetic data unless a private local verification is explicitly required. Test the changed surface at desktop (about 1440×900) and mobile (about 390×844), plus keyboard-only operation.
 
-- [ ] Lineage mode shows the selected/home person's configured ancestor and descendant depth plus partners and siblings.
-- [ ] Full Tree contains every connected component and isolated person.
-- [ ] The toolbar centers Name Preferences, Tree View, Card View, Levels, and Zoom over their groups; orders Full Tree before Lineage and Details before Summary; keeps both internal Name Preferences toggle groups equal-height without overflow; de-emphasizes `(Display)`, `(Current)`, and `(Birth)`; removes the old Source Name, Length, and Zoom % labels; and places `%` with balanced side spacing beside the editable zoom value and vertically centered stacked one-percent buttons at the far right.
-- [ ] Single-person, multi-partner, adopted, disconnected, pedigree-collapse, and 1,500-person synthetic families render without exceptions.
-- [ ] Pan, Ctrl/Command-wheel and pinch zoom, right-aligned grouped icon-over-label Out/In/Fit buttons, direct zoom percentage entry in a compact, reduced-height white box no wider than its `100%` content plus stepper, node click, and grouped numeric ancestor/descendant steppers with labels above their inputs work; both depths default to 10.
-- [ ] Natural-size Family Tree layouts expose horizontal and vertical scrolling when needed; ordinary wheel input scrolls and Ctrl/Command-wheel zooms.
-- [ ] Arrow keys move between rendered nodes and Enter/Space selects.
-- [ ] Every node and relationship has an understandable accessible label.
-- [ ] Summary cards are the default and show only the chosen name, with no lifespan or symbols; Lineal (Birth) and Short name settings are the defaults. Legal and Full switches persist independently, both Summary and Details stay narrow, full names with four or more parts balance across three fitted lines without widening cards, and generation rows grow as needed. Details adds lifespan years; its Lineal cards retain the standard living or deceased fill and use a bold muted-red outline plus a compact lineage symbol on the lifespan row. For Admin, Editor, and Member, recorded address, phone, and email data adds only the corresponding compact symbols at the lower left of Details cards, in that order; Viewer renders none of these symbols or their accessible contact label.
-- [ ] Selected profiles show the compact four-row Names section before Lineage with 126px property labels; `Preferred (Display)` remains on one line. The profile title and relationship links follow the active tree name source at full length, while every Family Line name always uses the full Lineal Birth name.
-- [ ] Partner pairs are adjacent when possible; bright, heavier gold distinguishes the current marriage's solid line, a previous marriage's dashed line, never married's dotted line, and unknown status's repeated question marks from muted-red Lineal parent edges in both the tree and Key.
-- [ ] Family Tree rows use numeric lineage order rather than alphabetical names; Seth Lauer appears before Jared Lauer.
-- [ ] A multi-partner Lineal person is preceded by up to two two-thirds-scale past partners from earliest to latest and followed by the full-size current or latest death-ended Non-Lineal spouse. One left partner is vertically centered; two retain separate side-by-side horizontal positions and align with the full-size cards' top and bottom. Their straight links run in parallel from each compact card's right edge to separate upper and lower points on the Lineal person's left edge without crossing either compact card.
-- [ ] Christine Perrietta McMillen renders with Ray Shanaman on her left using a divorced line and Howard David Weiss as the only partner on her right using a married line.
-- [ ] Non-Lineal Lines uses a compact two-line label and the filled slash-drop symbol in both states; it is disabled by default and hides `non-lineal` parent edges, while enabling it draws every accessible light dashed branch. Lineal biological edges remain solid, while Lineal adoption is dashed muted red.
-- [ ] Only the current or latest death-ended marriage draws a solid partner line; previous marriages are dashed, never-married partnerships are dotted, and unknown relationships use repeated question marks fitted from card edge to card edge without a blank tail.
-- [ ] Both spouses in a marriage ended by death read Married when both are deceased; a surviving spouse reads Widowed while the deceased spouse reads Married. The latest death-ended spouse stays on the right with a solid line unless a later relationship exists.
-- [ ] Lineal parent edges use faded muted red, Lineal adoption uses a dashed muted-red edge, and selecting a Lineal person replaces its lineage outline with the normal selected-person accent border.
-- [ ] The floating Key sits at the upper right of the Family Tree canvas, collapses and reopens, stays inside the module at mobile widths, does not block canvas drags, and includes brown deceased-card, red Bloodline-outline, Lineal parent, dashed Lineal adoption, and Non-Lineal parent samples after the four marriage states.
-- [ ] ?? Lineal appears only in Full Tree, is unpressed by default, keeps stored `99`-lineage people and anyone linked only to them out of the tree, keeps the focused person visible, and leaves directory and search counts unchanged; its outlined question-person symbol remains unchanged when enabled, and enabling it centers the revealed people at natural scale.
-- [ ] Stored lineage segment `99` displays as `??` in the directory, profile Lineage block, and imported-source details, while PDF output omits those people and their isolated branches.
-- [ ] A never-married partnership with no start date sorts by `relationship_order`, draws the dotted line, and reads Never married; P012 shows Heather Munz to the left of Tina Magri, and P244 lists Heather as her Non-Lineal parent.
-- [ ] Partial source dates appear in profiles and print as `December ??, 1979`, `August ??, 1943`, `June 2, 19??`, and `1981`; ages from a partial value begin with `~`, an unknown year shows `UNKNOWN`, living ages read like `45 years old` or `15 months old`, and deceased ages read like `80 years old at death · Would be 176 today` with the requested italic/bold emphasis.
-- [ ] Marital Status reads Married, Widowed, Divorced, Separated, Never married, or Unknown from the most recent partnership, Unknown when no partnership is recorded, and each Partners row reads `(year :: Status)`. With no recorded ending, two deceased spouses remain Married; if one current spouse is living and the other deceased, the living spouse reads Widowed and their tree line remains solid.
-- [ ] Ancestors and Descendants accept 0 through 10 and clamp anything larger.
-- [ ] Selecting a person from global search or a filtered directory returns the Family Tree to Lineage mode.
-- [ ] Desktop dividers resize modules with pointer drag and Left/Right/Home/End keys, persist locally, and disappear below 960px; their percentages are hidden unless Developer Mode is on and that exact divider is actively dragged. Developer Mode also adds a non-interactive left-side scale bracket for each visible generation labelled with its full-size bubble width and height.
-- [ ] Directory and selected-person panes collapse independently and can be reopened without losing selection or tree focus; the header Directory control toggles the directory both open and closed, including mobile routing back to the tree.
-- [ ] Directory search and its result-count pill share one bordered title-bar control, the full `Search Directory…` placeholder is visible at the default 20% width, and the pill shows only the total until a filter or search narrows it; Filter By and Sort By are visible labels on identically sized controls.
-- [ ] Filter By is a checkbox menu that supports multiple living/deceased/unknown and Lineal/Non-Lineal selections; status choices combine within their facet, kinship choices combine within their facet, and the two facets intersect.
-- [ ] Directory first/last-name sorting and A–Z quick jumps work on the filtered result set.
-- [ ] Directory rows show `[birth – death]` with `????` for unknown years followed by the lineage ID, except living people show `[birth]` without a death separator or placeholder; tree cards follow the same rule.
-- [ ] Internal stable `P` references are absent throughout ordinary app and print views and appear only in Developer Mode.
-- [ ] Partial and in-order fuzzy search finds name, address, phone, email, birth/death place, heritage, permitted general notes, Notes, Help, releases, and Roadmap. Member and Viewer search excludes Notes; Imported Source participates only for Owner/Editor in Developer Mode and never matches solely through `Source Last Modified By`.
-- [ ] Directory appears left of Search and Favorites appears right; both show an icon above their visible name. Developer Mode alone adds a List Star Restore control immediately after Favorites, while local save/backup status sits immediately left of Add without causing desktop or mobile overflow.
-- [ ] The larger global search is centered in the desktop title bar and its results panel exactly matches the field width. Every person result leads with the display name, adds only differing Birth and Current names in one parenthetical, and omits duplicate variants. Starring one persists across reloads, pins it above unstarred matches, and exposes an obvious gold accessible pressed state without activating the person.
-- [ ] Developer Mode saves the current starred P references to a private `mcfamily-favorites` JSON file and restores that exact set from either Developer Settings or the header Restore control after browser storage is cleared; malformed, oversized, wrong-version, and missing-person entries report safely.
-- [ ] Favorites toggles every starred person open and closed directly below Search without clearing the current query; its active treatment, `aria-expanded`, and Show/Hide accessible label follow that state. Typing returns immediately to ordinary family search, and unstarred or deleted people disappear immediately.
-- [ ] Lineage preserves the normalized root-to-person source order, two-digit-pads every segment, italicizes the first three segments, and bolds the final segment; overlapping emphasis is bold italic.
-- [ ] George McMillen (1745) is labelled G0, James G1, George (1818) G2, and Albon/Newton/Lucian G3 in Family Line brackets.
-- [ ] Adam's imported lineage is `01.01.01.03.05.05.05.01` with the first three segments italic and the final `01` bold, and its Family Line begins `Adam [01 | G7]`, then `Melanie [05 | G6]`; the corresponding readings begin `Gen 7, 1st Child of Melanie`, then `Gen 6, 5th Child of Max`.
-- [ ] A Family Line heading introduces paired name/reading rows with equal row heights and vertically centered cells; the family totals span both columns on one line, there is no visible Reading heading, missing Lineage ID reads `None`, missing parent lineage reads `No parent lineage.`, and the root reads `Gen 0, Root ancestor`.
-- [ ] Every resolved first-name parent link selects that person and focuses the tree; unknown positions read `Gen #, Child of FirstName` without an ordinal.
-- [ ] Parents, Siblings, Partners, and Children are compact open groups in that order; the bloodline parent is first, siblings and children are in birth order, and Melanie's Parents group contains both Max and Martha through display-only co-parent inference.
-- [ ] Partners lists the current partner first in bold, followed by prior partners in reverse history order with de-emphasized styling.
-- [ ] Identity shows Born, Died, Age, Living Status, and Marital Status with `UNKNOWN` fallbacks, except living Died is `----`; Gender and Pronouns are absent. Age uses ordinary one-line styling, and the configured home person is labelled Root Ancestor. Lineage appears immediately afterward and above Relationships; person Notes follow Relationships only for Owner/Editor. Imported Source is absent ordinarily and appears last only for Owner/Editor in Developer Mode; each imported address exposes its source row, pcard, modification, and source Notes in a nested disclosure. Albon shows both parents and all six siblings.
-- [ ] The profile X closes the module, clears directory/tree selection, disables the empty mobile Person tab, and a Family Tree selection reopens the profile without a Show person button. Full Tree also closes and deselects the profile; Lineage is disabled until a person is selected.
-- [ ] A child listed from a parent's profile is labelled `Child`, without a redundant parent classification suffix.
-- [ ] Parents, Siblings, and Children headings show the correct `Gen #`; parents show combined context such as `(Lineal :: Adopted)` and `(Non-Lineal :: Biological)`.
-- [ ] The P569 adoption fixture lists P380 first as `Lineal :: Adopted`, then both P877 and P914 as `Non-Lineal :: Biological`; its tree always shows the dashed muted-red P380 branch and reveals both biological branches only with Non-Lineal Lines enabled.
-- [ ] Siblings and children show two-digit birth order and birth year as `(01 :: 1991)`, including `????` for an unknown year.
-- [ ] Partners show the relationship start year as their marriage year, or `????` when no year is recorded.
-- [ ] Screen and print profiles use the same Parents, Siblings, Partners, Children order and relationship context.
+| Area changed | Minimum browser checks |
+| --- | --- |
+| State/storage | Current schema reload; wrong schema rejection; local recovery; hosted memory mode; favorites survive Lock; no full hosted state in localStorage |
+| Package/data | Valid current ZIP round trip; missing/extra/reordered header rejection; bad counts/references/ids/cycles rejection; no mutation before confirmation |
+| Hosted access | Unknown/wrong/revoked passphrase; each role projection; connection status; stale revision rejection; audit actor/detail; Lock clears decrypted state |
+| Editing | Add/edit/delete person; name propagation; auto lineage id; parent/partner validation; place/residence/contact edits; one audit line per field change |
+| Tree | Summary vs Details; name basis/length; focus/full tree; partner order/lines; adoption/non-Lineal toggle; zoom/pan/scroll; selection and panel resize |
+| Directory/search | Fuzzy three-name search; favorites picker; living/contact filters; first/last sort; alphabet jump; role-redacted search fields |
+| Profile/Notes | Complete known/unknown values; clickable relatives; role visibility; Developer-only Imported Source; Notes last and editor-only |
+| CSS/responsive | No horizontal page overflow; dialogs/sheets fit viewport; visible focus; 200% text; reduced motion; light/dark/system |
+| PWA/offline | Install metadata; first online load; second offline reload; update prompt; Reload activates new worker; vault is not served from cache |
+| Print | Preview all pages; half-inch margins; repeated directory header; cards never split; no controls/P ids/source/Notes; all allowed people and contacts present |
 
-## Responsive and accessibility
+Always watch console/page errors. Check accessible names, focus restoration, Escape/close behavior, touch targets, and unsafe text such as `<script>`, quotes, commas, newlines, and spreadsheet-formula prefixes when the changed area accepts input.
 
-- [ ] At 1280px, 768px, and 390px, page and body widths do not exceed the viewport.
-- [ ] Desktop shows coordinated directory, tree, and detail panes.
-- [ ] Mobile Directory/Family Tree/Person tabs are touch-sized; choosing a person opens Person.
-- [ ] Dialogs fit the mobile viewport with one usable scrolling surface.
-- [ ] Labels, landmarks, focus order, visible focus, live regions, and focus restoration are correct.
-- [ ] Escape closes temporary UI; `/`, `?`, `D`, `F`, `K`, `N`, `V`, `X`, `R`, `T`, and supported navigation keys work outside fields. X closes the topmost pop-up, What’s New, or update notice, and R acts only while the new-version reload action is visible.
-- [ ] Reduced-motion mode removes nonessential animation.
-- [ ] New and reset preferences follow the system theme by default; explicit System, Light, and Dark choices persist and retain readable contrast and status text.
-- [ ] Settings exposes no theme presets, color pickers, or hex inputs, and normalization replaces older custom-color values with the fixed McFamily palette.
-- [ ] Settings contains no theme-preset, manual-motion, or Family Guidance controls. Its one Text size slider spans 85–160%, scales both application and reading surfaces, and normalizes the compatibility reading scale to the same value. Device reduced-motion remains automatic.
-- [ ] Admin Settings shows working GitHub links for `themadat/mctree-mchome` and `themadat/mcdata`; Editor, Member, Viewer, and each matching Admin role preview do not render that repository section.
+## Tier 3 — release gate
 
-## Print / Save PDF
+Run Tier 1, then complete all of the following before `cut`:
 
-- [ ] Report begins directly with Directory of McMillen Clan before Family Maps, includes every retained family map and Family Notes, and has no title page or separate alphabetical person index.
-- [ ] Directory of McMillen Clan omits people with no phone, email, or address unless they are the current partner of an included person. Those otherwise omitted people remain represented in Family Maps and map statistics; a phone/email-only person remains as a singleton directory household.
-- [ ] Each retained directory entry is one household formed by shared primary address and current-partner links, sorted by the main person's Display Last Name and using Display Names throughout.
-- [ ] A current partnership remains together when one person is deceased, only one person has contact data, or their selected current addresses differ; an address tie prefers the living partner's current address.
-- [ ] The earliest Lineal household member is the main person. Main people and partners each occupy a separate aligned name, individual phone, and email row without an ampersand, beside the shared far-right address.
-- [ ] Shared Place phones round-trip through McMetadata `placeDetails`, appear as a bare `###-###-####` number beneath the far-right Landline heading rather than in an individual's Phone column, are searchable and satisfy Has Phone, update every resident linked to that Place, and produce an explicit `landline` place change in the audit preview. Unknown Place keys, empty phones, and unexpected detail fields reject the package.
-- [ ] Household, Phone, Email, Address, and Landline are emitted once as a semantic table header and repeat only at the top of every printed directory page.
-- [ ] Other same-address residents follow the partner rows as an unlabeled, deemphasized Display Name list.
-- [ ] Non-Lineal household names use normal weight and only Lineal names are bold. Every deceased household person, including the main person, is italic and followed by `[d. YYYY]` for a known death year or `[d.]` for an unknown date. Main and partner rows match the compact resident and lineage height; a one-person household gets a slightly taller row only when no other same-address residents are listed.
-- [ ] Each household footer follows first names from oldest to newest, then shows the main person's full Lineal name and app-styled Lineage ID, such as `George -> James -> George -> Albon McMillen [01.01.01.01]`.
-- [ ] The first map names George McMillen (1745) as the root ancestor at Generation 0, every retained component uses the Root Ancestor label, and Jon Couts has no Family Map component and appears in Directory of McMillen Clan only when contact-eligible.
-- [ ] Family-map rows use six compact columns and contain only names and years.
-- [ ] Generation 4 and later people, including Non-Lineal partners, are grouped beneath a `Generation 3 Line` header with no unassigned branch when lineage can be resolved.
-- [ ] Lineal map cards use a clearly visible faded-red outline; Lineal Newton, Albon, and Lucian members use the stronger orientation highlight plus a Bloodline symbol, while Theophilus and Lucian Lynn Kretzing do not. Every deceased map entry uses brown shading, and every map name fits within two lines.
-- [ ] Stored `99`/`??` lineage people and their isolated branches do not appear in Family Maps, directory profiles, or PDF statistics.
-- [ ] Developer Mode opens the report in a modal without invoking the native print dialog; closing it restores focus. Ordinary mode retains native printing.
-- [ ] Application controls are suppressed and print colors remain legible.
-- [ ] Letter output uses half-inch side margins and compact header/footer margins. Its custom header date is local ISO `YYYY-MM-DD` with no generation time, its page count remains in the footer, and the temporarily printed URL contains only the route pathname without a force-refresh query before the original URL is restored after `afterprint`.
-- [ ] Each household is one black-outlined nested table card with light-gray internal separators and a small gap before the next. The outer card row is page-indivisible, names stay on one line with adaptive sizing, and contact fields, shared address phone, resident list, and lineage footer remain legible without horizontal overflow.
-- [ ] Representative browser Save as PDF output is visually inspected.
-- [ ] Admin and Editor render Labels and CSV immediately after PDF; Member and Viewer render none of those three actions, including under Owner role preview.
-- [ ] Labels uses only households with a current mailing address, joins a main person and current partner with `&`, omits the first person's repeated last name when both last names match, uses the address type size for all three lines with bold applied only to names, emits exactly 30 cells per Letter sheet in Avery 5260 geometry, and uses its one-device-pixel lower-edge allowance without producing a second blank page per sheet.
-- [ ] CSV contains exactly `Names, Address`, retains both people's full display names, matches the label household ordering and addresses, quotes multiline addresses correctly, protects formula-leading values, and downloads without changing family state.
-- [ ] Native atlas and label modes remain applied while print preview is open and clear only after `afterprint`, so asynchronous print dialogs cannot revert pagination rules before layout.
+1. **Version surfaces:** config version/build and sole release entry, every HTML query/label, service-worker cache/asset version, README, handoff, and release date agree. A major/minor/patch cut resets build to `1`.
+2. **Clean-device access matrix:** Admin, each named Editor, Member, Viewer, wrong password, revoked password, and shared/duplicate-password rejection. Confirm Notes/source/edit/export/PDF visibility exactly matches the role contract.
+3. **Private recovery:** offline-store a current Editor ZIP securely, import it on a clean local browser, validate counts and home person, export again, and reopen the result. Never add it to Git.
+4. **Publication:** test connection with the intended fine-grained token; publish a harmless synthetic change in a safe test vault or verify production only when authorized; confirm revision, dataset patch, audit actor/details, stale-tab conflict, and Git history rollback instructions.
+5. **Family scenarios:** single person, multiple/current/former partners, adoption with multiple Non-Lineal parents, disconnected component, pedigree collapse, missing dates, presumed deceased, international address, and a large synthetic family near supported limits.
+6. **Print:** inspect cover, maps, root/Generation 3 grouping, special Lineal styling, compact directory, living/deceased dates, household partners/phone/address, page breaks, and light/dark source modes.
+7. **Accessibility/responsive:** screen-reader spot check of tree relationships and dialogs, keyboard traversal/shortcuts, focus after close/delete, reduced motion, 200% text, mobile orientation, touch pan/zoom, and no clipped controls.
+8. **PWA/deploy:** manifest parse, icons/startup images, fresh install, online→offline reload, prior-worker→new-worker update, and production URL smoke test after Pages succeeds. Verify removed docs/scripts/raw icons are absent from `gh-pages`.
+9. **Security:** rotate development passphrases/tokens, confirm token repository scope is minimal, inspect public vault metadata only (never print ciphertext or secrets), and search the diff for private names/addresses/contact data.
+10. **Repository:** clean status except release files, no ignored artifact accidentally forced into Git, deployment main-only, and preview server stopped.
 
-## Offline and installation
+## 1.0 decision record
 
-- [ ] A fresh online load installs the current service worker and caches all shell assets.
-- [ ] Reload while offline remains locked and explains that the current encrypted hosted record could not be reached; there is no stale decrypted-family bypass.
-- [ ] The worker does not cache or transmit the vault, decrypted family data, passphrases, or tokens.
-- [ ] A build change shows the new-version toast and Force refresh activates the waiting worker.
-- [ ] Outside editable controls, `A` opens Add Person for Owner/Editor, `W` opens View As only for an Owner in Developer Mode, `|` toggles Developer Mode, `X` closes every pop-up dialog plus the active new-version toast or What’s New, and `R` activates an available update on the locked landing screen. Letter shortcuts do not fire while typing in editable controls, and X cancels confirmation/choice dialogs without accepting them.
-- [ ] Both manifests install with correct McFamily identity and light/dark icons.
+Before the first 1.0 cut, explicitly accept these static-app limits:
+
+- passphrases are bearer secrets, not identities or MFA accounts;
+- read-only visits cannot be audited by GitHub;
+- concurrent edits are serialized only at publication through remote revision checks;
+- rollback is a manual Git-history operation;
+- browser print/PDF varies slightly by engine;
+- very large family trees prioritize navigability over a single-page overview.
+
+If any of those must change, it is a product/architecture project, not release cleanup.
