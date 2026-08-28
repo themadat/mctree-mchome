@@ -602,7 +602,7 @@
 
   function partnerContext(entry, person) {
     const years = [partnerStartYear(entry.relationship), partnerEndYear(entry.relationship)].filter(Boolean).join("–");
-    return "(" + years + " :: " + relationshipMaritalStatus(person, entry) + ")";
+    return "(" + relationshipMaritalStatus(person, entry) + " :: " + years + ")";
   }
 
   function maritalStatusDetail(person, partners) {
@@ -627,9 +627,10 @@
       const partnerStatus = entry.current === true ? ", current partner" : entry.current === false ? ", previous partner" : "";
       const name = profileName(entry.person);
       const accessibleLabel = ' aria-label="' + u.escapeHtml(name + (context ? ", " + context.replace(/[()]/g, "") : "") + partnerStatus) + '"';
-      const personButton = '<button type="button" class="relationship-name' + partnerClass + '" data-select-person="' + u.escapeHtml(entry.person.id) + '"' + accessibleLabel + '><span>' + u.escapeHtml(name) + '</span>' + (context ? '<small class="relationship-context">' + u.escapeHtml(context) + "</small>" : "") + "</button>";
+      const personButton = '<button type="button" class="relationship-name' + partnerClass + '" data-select-person="' + u.escapeHtml(entry.person.id) + '"' + accessibleLabel + '><span>' + u.escapeHtml(name) + '</span>' + (!editable && context ? '<small class="relationship-context">' + u.escapeHtml(context) + "</small>" : "") + "</button>";
       const editButton = editable && familyEditingEnabled() && entry.relationship && entry.relationship.id ? '<button type="button" class="relationship-edit-button" data-edit-relationship="' + u.escapeHtml(entry.relationship.id) + '" aria-label="Edit partner relationship with ' + u.escapeHtml(name) + '" title="Edit partner relationship"><span data-symbol="editPerson" aria-hidden="true"></span></button>' : "";
-      return '<div class="relationship-name-row">' + personButton + editButton + "</div>";
+      const contextText = editable && context ? '<small class="relationship-context">' + u.escapeHtml(context) + "</small>" : "";
+      return '<div class="relationship-name-row' + (editable ? " editable-relationship" : "") + '">' + personButton + editButton + contextText + "</div>";
     }).join("") : '<span class="relationship-empty">' + u.escapeHtml(emptyText) + "</span>";
   }
 

@@ -609,9 +609,9 @@
 
   function renderConnection() {
     if (currentVault) {
-      setStatus("success", "Dataset " + currentVault.datasetVersion, "Latest encrypted family record: dataset " + currentVault.datasetVersion + " · published " + new Date(currentVault.updatedAt).toLocaleString() + ".");
+      setStatus("success", "Dataset " + currentVault.datasetVersion, "Published " + new Date(currentVault.updatedAt).toLocaleDateString());
     } else {
-      setStatus("warning", "Owner setup", "Connect the public encrypted-data repository and publish the first passphrase vault.");
+      setStatus("warning", "Owner setup", "Not published yet");
     }
   }
 
@@ -623,7 +623,8 @@
       : { kind: "danger", title: "Not configured", detail: "Add a fine-grained GitHub token." });
     $("#githubConnectionSummary").dataset.kind = status.kind === "success" ? "success" : "danger";
     $("#githubConnectionState").textContent = status.title;
-    $("#githubConnectionTarget").textContent = target.owner + "/" + target.repository + " · " + status.detail;
+    $("#githubConnectionTarget").textContent = target.owner + "/" + target.repository;
+    $("#githubConnectionSummary").title = status.detail;
   }
 
   function setGithubConnectionStatus(kind, title, detail) {
