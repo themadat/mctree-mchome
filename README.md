@@ -1,8 +1,8 @@
 # McFamily
 
-McFamily is a private family atlas: an interactive lineage tree, searchable directory, person/place editor, audit trail, and print-ready family directory. It is plain HTML, CSS, and JavaScript with no runtime dependencies or custom backend.
+McFamily is a private family atlas: an interactive lineage tree, searchable people list, person/place editor, saved-change history, and print-ready family directory. It is plain HTML, CSS, and JavaScript with no runtime dependencies or custom backend.
 
-Current pre-1.0 version: `0.0.1.99`. Application versions use `major.minor.patch.build`; the first repository 1.0 cut is therefore `1.0.0.1`.
+Current pre-1.0 version: `0.0.1.100`. Application versions use `major.minor.patch.build`; the first repository 1.0 cut is therefore `1.0.0.1`.
 
 ## Use McFamily
 
@@ -10,10 +10,10 @@ The production app is [themadat.github.io/mctree-mchome](https://themadat.github
 
 Access roles are:
 
-- **Admin:** full data, editing, publishing, bulk upload, access management, Notes, and audit history.
-- **Editor:** named full-data editing and publishing account; Notes are visible.
-- **Member:** PII read-only, without Notes or export controls.
-- **Viewer:** redacted read-only data without addresses, contacts, or Notes.
+- **Admin:** full data, editing, publishing, bulk upload, access management, and saved-change history.
+- **Editor:** named full-data editing and publishing access.
+- **Member:** PII read-only without export controls.
+- **Viewer:** redacted read-only data without addresses or contacts.
 
 Passphrases are not online accounts. Anyone who knows one can use that grant until Admin rotates or removes it. GitHub records publications, not read-only visits.
 
