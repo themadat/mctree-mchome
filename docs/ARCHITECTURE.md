@@ -71,6 +71,8 @@ The tree is vanilla SVG with relationship-derived layout, pan/zoom, focus/full m
 
 Print output is generated into a print-only DOM immediately before `window.print()`. Directory contains household contact cards, Groups contains the generation maps, and Tree tiles the current live SVG layout across landscape pages at the selected zoom. CSS uses half-inch page margins, repeated directory headings, `break-inside: avoid` cards, and print-safe colors.
 
+The Save dialog keeps session identity, hosted dataset/date, and GitHub connection state in its persistent header. The main publication section is a compact ordered workflow—publisher, next patch, Bulk Upload, Update—followed by the audit summary and one full-width row per calculated change.
+
 ## PWA and deployment
 
 `sw.js` precaches only the static shell. Navigations use network-first with offline shell fallback; same-origin static assets use network-first with cache fallback. Vault/GitHub requests are cross-origin and are never intercepted.

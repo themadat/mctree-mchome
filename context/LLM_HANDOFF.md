@@ -1,6 +1,6 @@
 # McFamily implementation contract
 
-McFamily `0.0.1.103` is a dependency-free static family atlas. It uses latest-only application schema v14 and strict dataset `17.0.x` packages. The hosted app anonymously downloads public ciphertext, matches a passphrase locally, and decrypts only the corresponding view. There is no backend, account provider, cloud database, package manager, or runtime build.
+McFamily `0.0.1.104` is a dependency-free static family atlas. It uses latest-only application schema v14 and strict dataset `17.0.x` packages. The hosted app anonymously downloads public ciphertext, matches a passphrase locally, and decrypts only the corresponding view. There is no backend, account provider, cloud database, package manager, or runtime build.
 
 Read only the task-relevant detail after this file:
 
@@ -41,12 +41,12 @@ Read only the task-relevant detail after this file:
 
 ## Behavior contracts
 
-- The header keeps search centered independently of the action group. Its leading actions are Favorites, List, then Save; responsive layouts give search a full row before controls can overlap.
+- The header keeps search centered independently of the action group. Favorites is anchored inside the search field after the `/` hint; the toolbar orders Save, Add, List, then Directory before the remaining output/settings actions. Responsive layouts give search a full row before controls can overlap.
 - List search is fuzzy across all name variants and allowed family fields. Favorites are device preferences, not search scope state. Contact filters and indicators apply to living people.
 - Tree cards support Summary (name only) and Details (name, years, contact and Lineal symbols). Name basis is Lineal/Birth, Legal/Current, or Preferred/Display; length is Short or Full. Full tree and focus mode preserve documented partner and lineage placement.
 - Selecting a person opens the profile; closing it deselects. Search selections return to focus mode. List/profile panels are collapsible and horizontally resizable.
 - Editors can add/edit people, places, contacts, and relationships. Lineage id is always visible but auto-generated from parents. Preferred follows changed legal name; maiden last initially follows birth last. Each saved field-level change produces an audit line.
-- Save is the single hosted save center: connection status, unpublished changes, Update, strict Admin bulk upload, access publication, and Lock. GitHub revision/SHA checks prevent overwriting a newer vault.
+- Save is the single hosted save center: its top bar carries signed-in identity, dataset/date, and GitHub status; its publishing row orders identity, next patch, Bulk Upload, and Update above the editable summary and full-width change list. GitHub revision/SHA checks prevent overwriting a newer vault.
 - Directory prints only the compact Directory of McMillen Clan contact cards. Groups owns the Root Ancestor/Generation 3 generation maps. Tree paginates the live Full Tree or focused lineage at its current card, name, level, line-visibility, and zoom settings. All three use dated titles; contact cards stay together within half-inch margins, and P ids/imported source/notes remain omitted.
 
 ## Version and lifecycle
