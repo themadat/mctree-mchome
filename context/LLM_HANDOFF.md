@@ -1,6 +1,6 @@
 # McFamily implementation contract
 
-McFamily `0.0.1.101` is a dependency-free static family atlas. It uses latest-only application schema v14 and strict dataset `17.0.x` packages. The hosted app anonymously downloads public ciphertext, matches a passphrase locally, and decrypts only the corresponding view. There is no backend, account provider, cloud database, package manager, or runtime build.
+McFamily `0.0.1.102` is a dependency-free static family atlas. It uses latest-only application schema v14 and strict dataset `17.0.x` packages. The hosted app anonymously downloads public ciphertext, matches a passphrase locally, and decrypts only the corresponding view. There is no backend, account provider, cloud database, package manager, or runtime build.
 
 Read only the task-relevant detail after this file:
 
@@ -41,6 +41,7 @@ Read only the task-relevant detail after this file:
 
 ## Behavior contracts
 
+- The header keeps search centered independently of the action group. Its leading actions are Favorites, List, then Save; responsive layouts give search a full row before controls can overlap.
 - List search is fuzzy across all name variants and allowed family fields. Favorites are device preferences, not search scope state. Contact filters and indicators apply to living people.
 - Tree cards support Summary (name only) and Details (name, years, contact and Lineal symbols). Name basis is Lineal/Birth, Legal/Current, or Preferred/Display; length is Short or Full. Full tree and focus mode preserve documented partner and lineage placement.
 - Selecting a person opens the profile; closing it deselects. Search selections return to focus mode. List/profile panels are collapsible and horizontally resizable.
