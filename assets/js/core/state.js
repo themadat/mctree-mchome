@@ -444,6 +444,9 @@
     const sourceControls = u.plainObject(sourcePreferences.controls);
     const sourceInstallation = u.plainObject(sourcePreferences.installation);
     const sourceUi = u.plainObject(source.ui);
+    const savedGenerationDepth = Math.round(u.clamp(sourceUi.generationDepth, 1, config.controls.maxTreeDepth, 10));
+    const savedDescendantDepth = Math.round(u.clamp(sourceUi.descendantDepth, 0, config.controls.maxTreeDepth, sourceUi.generationDepth == null ? 10 : sourceUi.generationDepth));
+    const replaceLegacyThreeDepth = sourceMeta.buildId !== config.identity.buildId && savedDescendantDepth === 3;
     const sourceModules = u.plainObject(source.modules);
     const sourceRoadmap = u.plainObject(sourceModules.roadmap);
     const personIds = new Set();
@@ -538,9 +541,9 @@
         treeNodeView: sourceUi.treeNodeView === "detailed" ? "detailed" : "condensed",
         treeNameBasis: ["preferred", "legal", "lineal"].includes(sourceUi.treeNameBasis) ? sourceUi.treeNameBasis : "lineal",
         treeNameLength: sourceUi.treeNameLength === "full" ? "full" : "short",
-        generationDepth: Math.round(u.clamp(sourceUi.generationDepth, 1, config.controls.maxTreeDepth, 10)),
+        generationDepth: replaceLegacyThreeDepth ? 10 : savedGenerationDepth,
         ancestorDepth: Math.round(u.clamp(sourceUi.ancestorDepth, 0, config.controls.maxTreeDepth, sourceUi.generationDepth == null ? 10 : sourceUi.generationDepth)),
-        descendantDepth: Math.round(u.clamp(sourceUi.descendantDepth, 0, config.controls.maxTreeDepth, sourceUi.generationDepth == null ? 10 : sourceUi.generationDepth)),
+        descendantDepth: replaceLegacyThreeDepth ? 10 : savedDescendantDepth,
         directoryCollapsed: sourceUi.directoryCollapsed === true,
         profileCollapsed: sourceUi.profileCollapsed === true,
         showInferredParentLines: sourceUi.showInferredParentLines === true,
