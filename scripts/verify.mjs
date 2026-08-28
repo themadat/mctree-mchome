@@ -69,6 +69,8 @@ if (roundTrip.state.workspace.people.length !== 1 || roundTrip.state.meta.packag
 
 const index = read("index.html");
 const sw = read("sw.js");
+const cloud = read("assets/js/core/cloud.js");
+if (!cloud.includes("if (!definition.canManage) prepared.state.preferences.controls.developerMode = false;")) fail("Non-Admin hosted access no longer defaults Developer Mode off");
 const indexVersion = (index.match(/id="versionButton"[^>]*>v([^<]+)/) || [])[1];
 const swVersion = (sw.match(/ASSET_VERSION = "([^"]+)"/) || [])[1];
 if (indexVersion !== config.identity.version || swVersion !== config.identity.version) fail("HTML, config, and service-worker versions differ");

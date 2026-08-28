@@ -250,6 +250,7 @@
     if (dataKind === "redacted" && packageMode !== "redacted-viewer") throw new Error("The redacted encrypted record is incorrectly labelled.");
     if (prepared.state.meta.package.datasetVersion !== vault.datasetVersion) throw new Error("The encrypted vault and family package versions do not match.");
     prepared.state.meta.package.accessMode = definition.stateMode;
+    if (!definition.canManage) prepared.state.preferences.controls.developerMode = false;
     return { vault: vault, grant: grant, keys: keys, prepared: prepared };
   }
 

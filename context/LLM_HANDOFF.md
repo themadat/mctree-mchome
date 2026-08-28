@@ -1,6 +1,6 @@
 # McFamily implementation contract
 
-McFamily `0.0.1.100` is a dependency-free static family atlas. It uses latest-only application schema v14 and strict dataset `17.0.x` packages. The hosted app anonymously downloads public ciphertext, matches a passphrase locally, and decrypts only the corresponding view. There is no backend, account provider, cloud database, package manager, or runtime build.
+McFamily `0.0.1.101` is a dependency-free static family atlas. It uses latest-only application schema v14 and strict dataset `17.0.x` packages. The hosted app anonymously downloads public ciphertext, matches a passphrase locally, and decrypts only the corresponding view. There is no backend, account provider, cloud database, package manager, or runtime build.
 
 Read only the task-relevant detail after this file:
 
@@ -18,6 +18,7 @@ Read only the task-relevant detail after this file:
 - A child has at most one Lineal parent and may have multiple Non-Lineal parents. Lineage ids derive from the Lineal parent path. Adoption can therefore be Lineal/Adopted while biological parents are Non-Lineal/Biological.
 - Owner/Editor receive full editing data; Member receives full PII read-only; Viewer receives a separately encrypted redacted package without contacts, places, residences, or unstructured source notes.
 - Imported Source appears/searches only for Owner/Editor in Developer Mode. Read-only roles do not get routine export, import, Directory print, recovery, developer, or publishing controls.
+- Non-Admin grants always start with Developer Mode off, even if the encrypted full-data package was published while it was enabled. Editors may enable it deliberately during their current session.
 - Hosted decrypted state is memory-only. Device storage may retain only non-PII preferences such as favorites and List visibility. `?local=1` on localhost may persist the full current state for development.
 - The passphrase gate appears on every hosted reload. The service worker must never cache the encrypted vault or GitHub API responses.
 - Preserve semantic controls, labels, focus restoration, keyboard/touch use, escaped text, safe URLs, reduced motion, and print privacy.

@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.100",
-      buildId: "0.0.1.100",
+      version: "0.0.1.101",
+      buildId: "0.0.1.101",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -166,13 +166,13 @@
 
     releases: [
       {
-        version: "0.0.1.100",
-        date: "2026-08-28T12:00:00.000Z",
-        title: "Simplified workspace controls",
-        summary: "McFamily now uses a tighter role-aware header with List, Directory, and Save actions.",
-        features: ["Renamed the interactive people pane to List, the print action to Directory, and the hosted save center to Save"],
-        improvements: ["Tightened title-bar spacing for enlarged text", "Added dated McFamily Directory PDF filenames", "Removed the standalone family Notes, dismissible hint, What’s New banner, and local erase control"],
-        fixes: ["Restricted Favorites restoration to Admin access"],
+        version: "0.0.1.101",
+        date: "2026-08-28T13:00:00.000Z",
+        title: "Compact role-safe header",
+        summary: "The header keeps its actions clear at enlarged text sizes, and non-Admin sessions always start outside Developer Mode.",
+        features: [],
+        improvements: ["Reduced header action widths, padding, and label spacing while preserving complete accessible names"],
+        fixes: ["Forced Developer Mode off whenever an Editor, Member, or Viewer opens the encrypted family record"],
         knownIssues: []
       }
     ],
