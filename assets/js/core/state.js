@@ -96,7 +96,6 @@
           shortcutHintModifier: config.controls.shortcutHintModifier,
           developerMode: false
         },
-        hints: { enabled: config.features.hints, dismissed: [] },
         installation: { iconVariant: "auto" }
       },
       ui: {
@@ -123,9 +122,7 @@
         search: "",
         favoritePersonIds: [],
         favoritesOnly: false,
-        seenReleaseVersion: "",
-        supportTab: "settings",
-        dismissedHints: []
+        supportTab: "settings"
       },
       modules: {
         family: { enabled: true },
@@ -445,7 +442,6 @@
     const sourcePreferences = u.plainObject(source.preferences);
     const sourceAppearance = u.plainObject(sourcePreferences.appearance);
     const sourceControls = u.plainObject(sourcePreferences.controls);
-    const sourceHints = u.plainObject(sourcePreferences.hints);
     const sourceInstallation = u.plainObject(sourcePreferences.installation);
     const sourceUi = u.plainObject(source.ui);
     const sourceModules = u.plainObject(source.modules);
@@ -533,10 +529,6 @@
           shortcutHintModifier: ["Alt", "Shift", "Control"].includes(sourceControls.shortcutHintModifier) ? sourceControls.shortcutHintModifier : config.controls.shortcutHintModifier,
           developerMode: sourceControls.developerMode === true
         },
-        hints: {
-          enabled: config.features.hints && sourceHints.enabled !== false,
-          dismissed: Array.from(new Set((Array.isArray(sourceHints.dismissed) ? sourceHints.dismissed : []).map(function (id) { return u.cleanLine(id, 80); }).filter(Boolean))).slice(0, 200)
-        },
         installation: { iconVariant: ["auto", "light", "dark"].includes(sourceInstallation.iconVariant) ? sourceInstallation.iconVariant : "auto" }
       },
       ui: {
@@ -563,9 +555,7 @@
         search: u.cleanLine(sourceUi.search, 200),
         favoritePersonIds: Array.from(new Set((Array.isArray(sourceUi.favoritePersonIds) ? sourceUi.favoritePersonIds : []).map(function (id) { return u.cleanLine(id, 100); }).filter(function (id) { return personIds.has(id); }))).slice(0, config.controls.maxPeople),
         favoritesOnly: sourceUi.favoritesOnly === true,
-        seenReleaseVersion: u.cleanLine(sourceUi.seenReleaseVersion, 32),
-        supportTab: ["settings", "help", "releases", "shortcuts", "roadmap", "developer"].includes(sourceUi.supportTab) ? sourceUi.supportTab : "settings",
-        dismissedHints: Array.from(new Set((Array.isArray(sourceUi.dismissedHints) ? sourceUi.dismissedHints : []).map(function (id) { return u.cleanLine(id, 80); }).filter(Boolean))).slice(0, 200)
+        supportTab: ["settings", "help", "releases", "shortcuts", "roadmap", "developer"].includes(sourceUi.supportTab) ? sourceUi.supportTab : "settings"
       },
       modules: {
         family: { enabled: true },
@@ -753,8 +743,6 @@
     next.ui.directoryFilters = [];
     next.ui.mobileView = "tree";
     next.ui.search = "";
-    next.ui.seenReleaseVersion = defaults.ui.seenReleaseVersion;
-    next.ui.dismissedHints = [];
     next.ui.supportTab = "settings";
     next.modules.roadmap = defaults.modules.roadmap;
     return normalize(touch(next));

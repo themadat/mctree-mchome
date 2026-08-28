@@ -18,9 +18,9 @@
   };
   const LEGACY_GRANT_MODES = { owner: "owner", editor: "editor", pii: "pii-viewer", redacted: "redacted-viewer" };
   const GRANT_GROUPS = {
-    editor: { prefix: "editor", title: "Editor", nameLabel: "Editor username", placeholder: "For example: Mama", description: "Can edit and publish. Audit entries use this username automatically.", maxKey: "maxEditors", listId: "hostedEditorGrantList", emptyId: "hostedEditorEmpty" },
-    "pii-viewer": { prefix: "pii", title: "Member", nameLabel: "Member name", placeholder: "For example: Family Friend", description: "Can see addresses and contacts, but cannot edit, export, open Notes, or use Audit.", maxKey: "maxPiiViewers", listId: "hostedPiiGrantList", emptyId: "hostedPiiEmpty" },
-    "redacted-viewer": { prefix: "redacted", title: "Viewer", nameLabel: "Viewer name", placeholder: "For example: Family Guest", description: "Cannot see addresses, contacts, private notes, editing, exports, PDF, Notes, or Audit.", maxKey: "maxRedactedViewers", listId: "hostedRedactedGrantList", emptyId: "hostedRedactedEmpty" }
+    editor: { prefix: "editor", title: "Editor", nameLabel: "Editor username", placeholder: "For example: Mama", description: "Can edit and publish. Saved changes use this username automatically.", maxKey: "maxEditors", listId: "hostedEditorGrantList", emptyId: "hostedEditorEmpty" },
+    "pii-viewer": { prefix: "pii", title: "Member", nameLabel: "Member name", placeholder: "For example: Family Friend", description: "Can see addresses and contacts, but cannot edit, export, or use Save.", maxKey: "maxPiiViewers", listId: "hostedPiiGrantList", emptyId: "hostedPiiEmpty" },
+    "redacted-viewer": { prefix: "redacted", title: "Viewer", nameLabel: "Viewer name", placeholder: "For example: Family Guest", description: "Cannot see addresses, contacts, private notes, editing, exports, Directory printing, or Save.", maxKey: "maxRedactedViewers", listId: "hostedRedactedGrantList", emptyId: "hostedRedactedEmpty" }
   };
   const PASSPHRASE_WORDS = [
     "amber", "apple", "atlas", "basil", "beacon", "birch", "bluebird", "brook", "cedar", "clover", "copper", "cove",
@@ -978,7 +978,7 @@
     if (busy || !profile || !profile.canManage || !pendingBulkUpload || !currentVault || !activeSession.keys.full || !activeSession.keys.redacted) return;
     const summary = u.cleanText($("#cloudAuditSummary").value, 4000).trim();
     if (!summary) {
-      components.message("Audit summary required", "Enter a short description of the bulk update before publishing.", { trigger: $("#cloudPublishButton") });
+      components.message("Change summary required", "Enter a short description of the bulk update before publishing.", { trigger: $("#cloudPublishButton") });
       $("#cloudAuditSummary").focus();
       return;
     }
@@ -1024,7 +1024,7 @@
     const actor = publicationActor(profile);
     const summary = u.cleanText($("#hostedAuditSummary").value, 4000).trim();
     if (!summary) {
-      components.message("Audit summary required", "Enter a short description of what changed before publishing.", { trigger: $("#hostedPublishButton") });
+      components.message("Change summary required", "Enter a short description of what changed before publishing.", { trigger: $("#hostedPublishButton") });
       $("#hostedAuditSummary").focus();
       return;
     }
@@ -1106,7 +1106,7 @@
     const profile = accessProfile();
     if (profile && profile.canPublish) {
       const accepted = await components.confirm({
-        title: "Lock McFamily?", message: "Any changes that have not been published will be removed from this browser. The encrypted hosted record will not change. Dismissed hints, dismissed What’s New banners, and Directory visibility stay on this device.",
+        title: "Lock McFamily?", message: "Any changes that have not been published will be removed from this browser. The encrypted hosted record will not change. List visibility and favorites stay on this device.",
         confirmLabel: "Lock McFamily", cancelLabel: "Keep working", danger: true, trigger: $("#hostedLockButton")
       });
       if (!accepted) return;

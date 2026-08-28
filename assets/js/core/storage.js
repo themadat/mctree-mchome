@@ -22,8 +22,6 @@
     if (Number(source.version) !== 1) return null;
     return {
       version: 1,
-      dismissedHintIds: cleanStringList(source.dismissedHintIds, 80),
-      dismissedReleaseVersions: cleanStringList(source.dismissedReleaseVersions, 32),
       directoryCollapsed: typeof source.directoryCollapsed === "boolean" ? source.directoryCollapsed : true,
       mobileDirectoryOpen: source.mobileDirectoryOpen === true,
       favoritePersonIds: Array.isArray(source.favoritePersonIds) ? cleanStringList(source.favoritePersonIds, 100, config.controls.maxPeople) : null
@@ -89,14 +87,8 @@
   }
 
   function devicePreferencesFromState(state) {
-    const previous = readDevicePreferences();
-    const dismissedReleaseVersions = previous ? previous.dismissedReleaseVersions.slice() : [];
-    const seenReleaseVersion = u.cleanLine(state.ui.seenReleaseVersion, 32);
-    if (seenReleaseVersion && !dismissedReleaseVersions.includes(seenReleaseVersion)) dismissedReleaseVersions.push(seenReleaseVersion);
     return {
       version: 1,
-      dismissedHintIds: cleanStringList(state.preferences.hints.dismissed, 80),
-      dismissedReleaseVersions: cleanStringList(dismissedReleaseVersions, 32),
       directoryCollapsed: state.ui.directoryCollapsed === true,
       mobileDirectoryOpen: state.ui.directoryCollapsed !== true && state.ui.mobileView === "directory",
       favoritePersonIds: cleanStringList(state.ui.favoritePersonIds, 100, config.controls.maxPeople)
@@ -112,10 +104,6 @@
   function applyDevicePreferences(state, preferences) {
     const saved = normalizeDevicePreferences(preferences);
     if (!saved) return state;
-    state.preferences.hints.dismissed = saved.dismissedHintIds.slice();
-    state.ui.dismissedHints = saved.dismissedHintIds.slice();
-    const latestRelease = config.releases[0] && config.releases[0].version || "";
-    state.ui.seenReleaseVersion = latestRelease && saved.dismissedReleaseVersions.includes(latestRelease) ? latestRelease : "";
     state.ui.directoryCollapsed = saved.directoryCollapsed;
     if (saved.directoryCollapsed && state.ui.mobileView === "directory") state.ui.mobileView = "tree";
     else if (!saved.directoryCollapsed && saved.mobileDirectoryOpen) state.ui.mobileView = "directory";

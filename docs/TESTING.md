@@ -25,7 +25,7 @@ Serve the repository over HTTP with `?local=1` for local package tests. Use synt
 | Hosted access | Unknown/wrong/revoked passphrase; each role projection; connection status; stale revision rejection; audit actor/detail; Lock clears decrypted state |
 | Editing | Add/edit/delete person; name propagation; auto lineage id; parent/partner validation; place/residence/contact edits; one audit line per field change |
 | Tree | Summary vs Details; name basis/length; focus/full tree; partner order/lines; adoption/non-Lineal toggle; zoom/pan/scroll; selection and panel resize |
-| Directory/search | Fuzzy three-name search; favorites picker; living/contact filters; first/last sort; alphabet jump; role-redacted search fields |
+| List/search | Fuzzy three-name search; favorites picker; living/contact filters; first/last sort; alphabet jump; role-redacted search fields |
 | Profile/Notes | Complete known/unknown values; clickable relatives; role visibility; Developer-only Imported Source; Notes last and editor-only |
 | CSS/responsive | No horizontal page overflow; dialogs/sheets fit viewport; visible focus; 200% text; reduced motion; light/dark/system |
 | PWA/offline | Install metadata; first online load; second offline reload; update prompt; Reload activates new worker; vault is not served from cache |
@@ -38,7 +38,7 @@ Always watch console/page errors. Check accessible names, focus restoration, Esc
 Run Tier 1, then complete all of the following before `cut`:
 
 1. **Version surfaces:** config version/build and sole release entry, every HTML query/label, service-worker cache/asset version, README, handoff, and release date agree. A major/minor/patch cut resets build to `1`.
-2. **Clean-device access matrix:** Admin, each named Editor, Member, Viewer, wrong password, revoked password, and shared/duplicate-password rejection. Confirm Notes/source/edit/export/PDF visibility exactly matches the role contract.
+2. **Clean-device access matrix:** Admin, each named Editor, Member, Viewer, wrong password, revoked password, and shared/duplicate-password rejection. Confirm source/edit/export/Directory visibility exactly matches the role contract, including Admin-only Favorites restore.
 3. **Private recovery:** offline-store a current Editor ZIP securely, import it on a clean local browser, validate counts and home person, export again, and reopen the result. Never add it to Git.
 4. **Publication:** test connection with the intended fine-grained token; publish a harmless synthetic change in a safe test vault or verify production only when authorized; confirm revision, dataset patch, audit actor/details, stale-tab conflict, and Git history rollback instructions.
 5. **Family scenarios:** single person, multiple/current/former partners, adoption with multiple Non-Lineal parents, disconnected component, pedigree collapse, missing dates, presumed deceased, international address, and a large synthetic family near supported limits.

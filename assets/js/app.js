@@ -27,6 +27,7 @@
   let favoritesPreviewOpen = false;
   let personNameOverrides = new Set();
   let activePrintLocation = "";
+  let activePrintTitle = "";
   const FAVORITES_BACKUP_FORMAT = "mcfamily-favorites";
   const FAVORITES_BACKUP_VERSION = 1;
   const NAME_PARTS = ["Prefix", "First", "Middle", "Last", "Suffix"];
@@ -37,17 +38,16 @@
     { keys: "Esc", label: "Close a dialog or menu", group: "Global" },
     { keys: "?", label: "Open Help Center", group: "Global" },
     { keys: "A", label: "Add a person", group: "Family" },
-    { keys: "D", label: "Toggle the directory", group: "Family" },
+    { keys: "D", label: "Toggle the list", group: "Family" },
     { keys: "F", label: "Show favorite people", group: "Family" },
     { keys: "K", label: "Toggle the Family Tree key", group: "Family" },
-    { keys: "P", label: "Print or save the family atlas as PDF", group: "Family" },
-    { keys: "N", label: "Open Notes", group: "Actions" },
+    { keys: "P", label: "Open the printable Directory", group: "Family" },
     { keys: "V", label: "Open What’s New", group: "Actions" },
     { keys: "W", label: "Open View As in Developer Mode", group: "Actions" },
     { keys: "|", label: "Toggle Developer Mode", group: "Actions" },
-    { keys: "X", label: "Close the active pop-up, update notice, or What’s New", group: "Actions" },
+    { keys: "X", label: "Close the active pop-up or update notice", group: "Actions" },
     { keys: "R", label: "Reload when a new version is available", group: "Actions" },
-    { keys: "E", label: "Open Audit", group: "Actions" },
+    { keys: "E", label: "Open Save", group: "Actions" },
     { keys: "T", label: "Switch color theme", group: "Actions" },
     { keys: "Arrow keys", label: "Move through tree relatives, tabs, menus, and choices", group: "Navigation" }
   ];
@@ -106,6 +106,10 @@
 
   function developerReferencesEnabled() {
     return developerModeAuthorized() && familyEditingEnabled();
+  }
+
+  function adminFavoritesRestoreEnabled() {
+    return Boolean(initialized() && App.cloud && App.cloud.canManageAccess && App.cloud.canManageAccess());
   }
 
   function rolePreviewAvailable() {
@@ -218,11 +222,8 @@
     }
     document.documentElement.dataset.developer = developerReferences ? "on" : "off";
     setInputValue($("#globalSearch"), state().ui.search);
-    const familyNotesVisible = isInitialized && familyEditingEnabled();
-    $("#notesButton").disabled = !familyNotesVisible;
-    $("#notesButton").hidden = isInitialized && !familyNotesVisible;
     $("#supportButton").disabled = !isInitialized;
-    const searchLabel = familyNotesVisible ? "Search people, contacts, Notes, Help, releases, and Roadmap" : "Search people, contacts, Help, releases, and Roadmap";
+    const searchLabel = "Search people, contacts, Help, releases, and Roadmap";
     $("label[for='globalSearch']").textContent = searchLabel;
     $("#globalSearch").setAttribute("aria-label", searchLabel);
     ["#printButton", "#labelsButton", "#directoryCsvButton"].forEach(function (selector) {
@@ -235,8 +236,8 @@
     $("#directoryButton").disabled = !isInitialized;
     const directoryIsOpen = isInitialized && !state().ui.directoryCollapsed && (!window.matchMedia("(max-width: 699px)").matches || state().ui.mobileView === "directory");
     $("#directoryButton").setAttribute("aria-pressed", String(directoryIsOpen));
-    $("#directoryButton").setAttribute("aria-label", directoryIsOpen ? "Close directory" : "Open directory");
-    $("#directoryButton").title = directoryIsOpen ? "Close directory" : "Open directory";
+    $("#directoryButton").setAttribute("aria-label", directoryIsOpen ? "Close list" : "Open list");
+    $("#directoryButton").title = directoryIsOpen ? "Close list" : "Open list";
     const favoriteCount = state().ui.favoritePersonIds.length;
     const favoriteCountLabel = favoriteCount + " favorite " + (favoriteCount === 1 ? "person" : "people");
     $("#favoritesButton").disabled = !isInitialized;
@@ -244,23 +245,12 @@
     $("#favoritesButton").title = (favoritesPreviewOpen ? "Hide " : "Show ") + favoriteCountLabel;
     $("#favoritesButton").setAttribute("aria-label", (favoritesPreviewOpen ? "Hide " : "Show ") + favoriteCountLabel);
     const restoreFavoritesHeaderButton = $("#restoreFavoritesHeaderButton");
-    restoreFavoritesHeaderButton.hidden = !developerReferences;
-    restoreFavoritesHeaderButton.disabled = !isInitialized || !developerReferences;
+    const adminFavoritesRestore = developerReferences && adminFavoritesRestoreEnabled();
+    restoreFavoritesHeaderButton.hidden = !adminFavoritesRestore;
+    restoreFavoritesHeaderButton.disabled = !adminFavoritesRestore;
     $("#globalSearch").disabled = !isInitialized;
     $("#globalSearch").placeholder = "Search family";
     renderLocalStatus();
-    const latest = config.releases[0];
-    const unread = isInitialized && latest && state().ui.seenReleaseVersion !== latest.version;
-    $("#releaseUnreadDot").hidden = !unread;
-    const banner = $("#whatsNewBanner");
-    banner.hidden = !unread;
-    if (unread) {
-      $("[data-whats-new-version]").textContent = "v" + latest.version;
-      $("[data-whats-new-title]").textContent = latest.title;
-      $("[data-whats-new-summary]").textContent = latest.summary;
-    }
-    const hint = $("#contextHint");
-    hint.hidden = !isInitialized || !config.features.hints || !state().preferences.hints.enabled || state().preferences.hints.dismissed.includes("workspace-basics");
   }
 
   function renderLocalStatus() {
@@ -287,45 +277,9 @@
     }
   }
 
-  function documentText(documentItem) {
-    return u.richTextToPlainText(documentItem && documentItem.html || "", config.controls.maxDocumentHtmlLength);
-  }
-
-  function documentHtml(value) {
-    return u.escapeHtml(u.cleanText(value, config.controls.maxDocumentHtmlLength)).replace(/\n/g, "<br>");
-  }
-
-  function renderNotesEditor() {
-    const documentItem = state().workspace.documents[0];
-    const visible = familyEditingEnabled();
-    setInputValue($("#notesTextarea"), visible ? documentText(documentItem) : "");
-    $("#notesTextarea").readOnly = !visible;
-    $("#notesTextarea").placeholder = visible ? "Jot down anything…" : "Family Notes are unavailable for this access.";
-    $("#notesDialogTitle").lastElementChild.textContent = "Notes";
-  }
-
-  function saveNotes(value) {
-    if (!familyEditingEnabled()) return;
-    const normalized = u.cleanText(value, config.controls.maxDocumentHtmlLength);
-    storage.mutate(function (next) {
-      const documentItem = next.workspace.documents[0];
-      documentItem.html = documentHtml(normalized);
-      documentItem.updatedAt = u.isoNow();
-    }, { reason: "edit-document" });
-    const localPill = $("#localStorageSettingsState");
-    if (localPill) localPill.textContent = "Saving locally…";
-    renderGlobalSearchResults();
-  }
-
-  function openNotes(trigger) {
-    if (!initialized() || !familyEditingEnabled()) return;
-    renderNotesEditor();
-    components.openDialog("#notesDialog", { trigger: trigger, focus: "#notesTextarea" });
-  }
-
   function renderOnboarding() {
     const icon = document.documentElement.dataset.theme === "dark" ? config.identity.assets.appIconDark : config.identity.assets.appIconLight;
-    $("#mainContent").innerHTML = '<section class="onboarding-screen" aria-labelledby="onboardingTitle"><div class="onboarding-card"><img src="' + u.escapeHtml(versionedAsset(icon)) + '" alt="" class="onboarding-icon"><span class="eyebrow">Owner recovery</span><h1 id="onboardingTitle">Open the initial family record</h1><p>This screen is only for the Owner before the first encrypted vault is published. Open the latest validated recovery ZIP, then use Audit to create the passphrase sign-in used by everyone else.</p><div class="privacy-callout"><strong>Recipients do not need a ZIP.</strong><span>After Owner setup, they use the normal McFamily link and their assigned passphrase.</span></div><button id="firstImportButton" type="button" class="button primary large-button">Open Owner Recovery ZIP</button><input id="onboardingImportInput" type="file" accept="application/zip,.zip" data-import-file-input hidden><small>McFamily validates all five internal CSV files before opening this private recovery copy.</small></div></section>';
+    $("#mainContent").innerHTML = '<section class="onboarding-screen" aria-labelledby="onboardingTitle"><div class="onboarding-card"><img src="' + u.escapeHtml(versionedAsset(icon)) + '" alt="" class="onboarding-icon"><span class="eyebrow">Owner recovery</span><h1 id="onboardingTitle">Open the initial family record</h1><p>This screen is only for the Owner before the first encrypted vault is published. Open the latest validated recovery ZIP, then use Save to create the passphrase sign-in used by everyone else.</p><div class="privacy-callout"><strong>Recipients do not need a ZIP.</strong><span>After Owner setup, they use the normal McFamily link and their assigned passphrase.</span></div><button id="firstImportButton" type="button" class="button primary large-button">Open Owner Recovery ZIP</button><input id="onboardingImportInput" type="file" accept="application/zip,.zip" data-import-file-input hidden><small>McFamily validates all five internal CSV files before opening this private recovery copy.</small></div></section>';
     icons.mount($("#mainContent"));
   }
 
@@ -436,7 +390,7 @@
       lastLetter = letter;
       const address = person.addresses.find(function (item) { return item.current; }) || person.addresses[0];
       return heading + '<button type="button" class="directory-person' + (state().ui.selectedPersonId === person.id ? " selected" : "") + '" data-select-person="' + u.escapeHtml(person.id) + '" aria-pressed="' + String(state().ui.selectedPersonId === person.id) + '"><span><strong>' + u.escapeHtml(model.displayName(person)) + '</strong><small>' + u.escapeHtml(directoryPersonMeta(person)) + '</small>' + (address ? '<small>' + u.escapeHtml([address.city, address.region, address.country].filter(Boolean).join(", ")) + "</small>" : "") + "</span></button>";
-    }).join("") : '<div class="empty-state compact-empty"><h3>No people match</h3><p>Try another search or filter combination.</p><button type="button" class="button" data-clear-directory>Clear directory filters</button></div>';
+    }).join("") : '<div class="empty-state compact-empty"><h3>No people match</h3><p>Try another search or filter combination.</p><button type="button" class="button" data-clear-directory>Clear list filters</button></div>';
   }
 
   function partialDateLabel(value) {
@@ -984,7 +938,7 @@
     const person = state().workspace.people.find(function (item) { return item.id === state().ui.selectedPersonId; });
     if (!person) {
       const addButton = editing ? '<button type="button" class="button primary" data-add-person>Add person</button>' : "";
-      container.innerHTML = '<div class="empty-state"><h2>No person selected</h2><p>Select someone in the directory or tree.</p>' + addButton + "</div>";
+      container.innerHTML = '<div class="empty-state"><h2>No person selected</h2><p>Select someone in the list or tree.</p>' + addButton + "</div>";
       return;
     }
     const isHome = state().workspace.family.homePersonId === person.id;
@@ -1406,8 +1360,8 @@
     const overviewDisabled = state().ui.treeMode === "overview" ? "disabled" : "";
     const lineageDisabled = state().ui.selectedPersonId ? "" : " disabled";
     const personTabDisabled = state().ui.selectedPersonId ? "" : " disabled";
-    const directoryHeader = '<header class="directory-module-bar"><label class="directory-search-field"><span class="visually-hidden">Search family directory</span><input id="directorySearch" type="search" aria-label="Search family directory" placeholder="Search Directory…" value="' + u.escapeHtml(state().ui.directorySearch) + '"><span id="directoryCount" class="count-pill" role="status" aria-live="polite"></span></label><button type="button" class="icon-button" data-toggle-pane="directory" aria-controls="directoryPanel" aria-expanded="true" aria-label="Close directory" title="Close directory"><span data-symbol="close" aria-hidden="true"></span></button></header>';
-    const directoryControls = '<div class="directory-controls"><div class="directory-filter-row"><div class="field directory-filter-control"><span id="directoryFilterLabel">Filter By</span><details class="directory-filter-menu"><summary aria-labelledby="directoryFilterLabel directoryFilterSummary"><span id="directoryFilterSummary">' + u.escapeHtml(directoryFilterSummary()) + '</span></summary><div class="directory-filter-options" role="group" aria-label="Filter directory by">' + directoryFilterOptionsHtml() + '</div></details></div><label class="field"><span>Sort By</span><select id="directorySort"><option value="first">First name</option><option value="last">Last name</option></select></label></div></div>';
+    const directoryHeader = '<header class="directory-module-bar"><label class="directory-search-field"><span class="visually-hidden">Search family list</span><input id="directorySearch" type="search" aria-label="Search family list" placeholder="Search List…" value="' + u.escapeHtml(state().ui.directorySearch) + '"><span id="directoryCount" class="count-pill" role="status" aria-live="polite"></span></label><button type="button" class="icon-button" data-toggle-pane="directory" aria-controls="directoryPanel" aria-expanded="true" aria-label="Close list" title="Close list"><span data-symbol="close" aria-hidden="true"></span></button></header>';
+    const directoryControls = '<div class="directory-controls"><div class="directory-filter-row"><div class="field directory-filter-control"><span id="directoryFilterLabel">Filter By</span><details class="directory-filter-menu"><summary aria-labelledby="directoryFilterLabel directoryFilterSummary"><span id="directoryFilterSummary">' + u.escapeHtml(directoryFilterSummary()) + '</span></summary><div class="directory-filter-options" role="group" aria-label="Filter list by">' + directoryFilterOptionsHtml() + '</div></details></div><label class="field"><span>Sort By</span><select id="directorySort"><option value="first">First name</option><option value="last">Last name</option></select></label></div></div>';
     const treeNameOption = function (basis, symbol, label, detail) {
       return '<button type="button" class="tree-name-option" data-tree-name-basis="' + basis + '" aria-pressed="' + String(state().ui.treeNameBasis === basis) + '"><span class="tree-name-option-icon" data-symbol="' + symbol + '" aria-hidden="true"></span><span>' + label + (detail ? '<small class="tree-name-detail">(' + detail + ")</small>" : "") + "</span></button>";
     };
@@ -1416,6 +1370,9 @@
     };
     const treeNameControls = '<div class="tree-control-section tree-name-preferences"><span class="tree-control-heading">Name Preferences</span><div class="tree-name-controls" role="group" aria-label="Tree name preferences"><div class="tree-name-setting tree-name-source"><div class="segmented" aria-label="Tree name source">' + treeNameOption("preferred", "preferredName", "Preferred", "Display") + treeNameOption("legal", "legalName", "Legal", "Current") + treeNameOption("lineal", "linealName", "Lineal", "Birth") + '</div></div><div class="tree-name-setting tree-name-length"><div class="segmented" aria-label="Tree name length">' + treeLengthOption("short", "shortName", "Short") + treeLengthOption("full", "fullName", "Full") + "</div></div></div></div>";
     $("#mainContent").innerHTML = '<section class="family-workspace" aria-label="Family workspace"><nav class="mobile-workspace-tabs segmented" aria-label="Workspace views"><button type="button" data-mobile-view="directory" aria-pressed="' + String(state().ui.mobileView === "directory") + '">Directory</button><button type="button" data-mobile-view="tree" aria-pressed="' + String(state().ui.mobileView === "tree") + '">Family Tree</button><button type="button" data-mobile-view="profile" aria-pressed="' + String(state().ui.mobileView === "profile") + '"' + personTabDisabled + '>Person</button></nav><div class="family-workspace-grid" data-mobile-view="' + u.escapeHtml(state().ui.mobileView) + '" data-directory-collapsed="' + String(directoryCollapsed) + '" data-profile-collapsed="' + String(profileCollapsed) + '"><aside id="directoryPanel" class="directory-panel workspace-card' + (directoryCollapsed ? " is-collapsed" : "") + '" aria-label="Family directory">' + directoryHeader + directoryControls + '<div class="directory-body"><div id="directoryList" class="directory-list"></div><nav id="directoryAlphaRail" class="directory-alpha-rail" aria-label="Jump to directory letter"></nav></div></aside><section class="tree-panel workspace-card" aria-label="Family Tree"><header class="tree-toolbar"><div class="tree-view-controls"><div class="segmented" aria-label="Tree mode"><button type="button" data-tree-mode="focus" aria-pressed="' + String(state().ui.treeMode === "focus") + '"' + lineageDisabled + '>Focus</button><button type="button" data-tree-mode="overview" aria-pressed="' + String(state().ui.treeMode === "overview") + '">Overview</button></div><div class="segmented" aria-label="Person card detail"><button type="button" data-tree-node-view="condensed" aria-pressed="' + String(state().ui.treeNodeView === "condensed") + '">Condensed</button><button type="button" data-tree-node-view="detailed" aria-pressed="' + String(state().ui.treeNodeView === "detailed") + '">Detailed</button></div><label class="depth-control"><span>Ancestors</span><input id="ancestorDepth" type="number" min="0" max="' + config.controls.maxTreeDepth + '" step="1" value="' + state().ui.ancestorDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><label class="depth-control"><span>Descendants</span><input id="descendantDepth" type="number" min="0" max="' + config.controls.maxTreeDepth + '" step="1" value="' + state().ui.descendantDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><div class="zoom-controls" role="group" aria-label="Tree zoom controls"><button type="button" class="zoom-action" data-zoom="out" aria-label="Zoom out" title="Zoom out"><span class="zoom-action-icon" data-symbol="zoomOut" aria-hidden="true"></span><span>Out</span></button><label class="zoom-value-control"><span class="visually-hidden">Zoom percentage</span><span class="zoom-value-box"><input id="zoomValue" type="text" pattern="[0-9]{1,3}" maxlength="3" value="100" inputmode="numeric" autocomplete="off"><span class="zoom-percent" aria-hidden="true">%</span><span class="zoom-stepper"><button type="button" data-zoom-step="1" aria-label="Increase zoom by one percent" title="Increase zoom"><span data-symbol="up" aria-hidden="true"></span></button><button type="button" data-zoom-step="-1" aria-label="Decrease zoom by one percent" title="Decrease zoom"><span data-symbol="down" aria-hidden="true"></span></button></span></span></label><button type="button" class="zoom-action" data-zoom="in" aria-label="Zoom in" title="Zoom in"><span class="zoom-action-icon" data-symbol="zoomIn" aria-hidden="true"></span><span>In</span></button><button type="button" class="zoom-action" data-fit-tree aria-label="Fit tree" title="Fit tree"><span class="zoom-action-icon" data-symbol="fit" aria-hidden="true"></span><span>Fit</span></button><span id="zoomStatus" class="visually-hidden" aria-live="polite">100% zoom</span></div></div></header><div class="tree-canvas"><svg id="familyTreeSvg" role="group" aria-label="Interactive Family Tree. Scroll horizontally or vertically, drag to pan, use the zoom controls, and select a person to focus." tabindex="0"></svg></div>' + treeKeyHtml() + '</section><aside id="profilePanel" class="profile-panel workspace-card' + (profileCollapsed ? " is-collapsed" : "") + '" aria-label="Selected person profile"><div id="profilePanelContent" class="profile-panel-content"></div></aside></div></section>';
+    $("[data-mobile-view='directory']", $("#mainContent")).textContent = "List";
+    $("#directoryPanel").setAttribute("aria-label", "Family list");
+    $("#directoryAlphaRail").setAttribute("aria-label", "Jump to list letter");
     const zoomValueLabel = $(".zoom-value-control", $("#mainContent"));
     const zoomValueBox = $(".zoom-value-box", zoomValueLabel);
     const zoomValueControl = document.createElement("div");
@@ -1494,7 +1451,7 @@
     const unplacedLineageControl = state().ui.treeMode === "overview" ? '<button type="button" class="tree-line-toggle action-button" data-toggle-unplaced-lineage aria-pressed="' + String(!state().ui.hideUnplacedLineage) + '" title="Toggle unresolved Lineal people"><span class="tree-toggle-symbol" data-symbol="unknownLineal" aria-hidden="true"></span><span class="button-label">?? Lineal</span></button>' : "";
     zoomControls.insertAdjacentHTML("beforebegin", '<button type="button" class="tree-line-toggle tree-line-toggle-stacked action-button" data-toggle-non-lineal aria-pressed="' + String(state().ui.showInferredParentLines) + '" title="Toggle Non-Lineal parent lines"><span class="tree-toggle-symbol" data-symbol="nonLinealLinesFill" aria-hidden="true"></span><span class="button-label">Non-Lineal<br>Lines</span></button>' + unplacedLineageControl);
     wrapTreeControl(zoomControls, "Zoom", "tree-zoom-setting");
-    $("#directoryPanel", workspaceGrid).insertAdjacentHTML("afterend", '<button id="directoryTreeDivider" class="family-resize-handle" type="button" role="separator" aria-orientation="vertical" aria-label="Resize directory and Family Tree" aria-valuemin="220" aria-valuemax="480" aria-valuenow="' + state().ui.directoryPanelWidth + '"' + (directoryCollapsed ? " hidden" : "") + '><span aria-hidden="true"></span><output class="family-divider-percentage" aria-hidden="true"></output></button>');
+    $("#directoryPanel", workspaceGrid).insertAdjacentHTML("afterend", '<button id="directoryTreeDivider" class="family-resize-handle" type="button" role="separator" aria-orientation="vertical" aria-label="Resize list and Family Tree" aria-valuemin="220" aria-valuemax="480" aria-valuenow="' + state().ui.directoryPanelWidth + '"' + (directoryCollapsed ? " hidden" : "") + '><span aria-hidden="true"></span><output class="family-divider-percentage" aria-hidden="true"></output></button>');
     $(".tree-panel", workspaceGrid).insertAdjacentHTML("afterend", '<button id="treeProfileDivider" class="family-resize-handle" type="button" role="separator" aria-orientation="vertical" aria-label="Resize Family Tree and selected person" aria-valuemin="240" aria-valuemax="600" aria-valuenow="' + state().ui.profilePanelWidth + '"' + (profileCollapsed ? " hidden" : "") + '><span aria-hidden="true"></span><output class="family-divider-percentage" aria-hidden="true"></output></button>');
     $("#directorySort").value = state().ui.directorySort;
     renderDirectoryList();
@@ -2278,7 +2235,7 @@
     if (!familyEditingEnabled()) return;
     const relationship = state().workspace.relationships.find(function (item) { return item.id === id; });
     if (!relationship) return;
-    const accepted = await components.confirm({ title: "Remove this relationship?", message: "The people will remain in the directory, but this link and its relationship notes will be removed from the tree and atlas.", confirmLabel: "Remove relationship", cancelLabel: "Keep relationship", danger: true, trigger: trigger });
+    const accepted = await components.confirm({ title: "Remove this relationship?", message: "The people will remain in the list, but this link and its relationship notes will be removed from the tree and atlas.", confirmLabel: "Remove relationship", cancelLabel: "Keep relationship", danger: true, trigger: trigger });
     if (!accepted) return;
     const hosted = hostedVaultActive();
     if (!hosted) storage.saveRecovery("Before removing a relationship", state());
@@ -2624,12 +2581,18 @@
       history.replaceState(history.state, "", activePrintLocation);
       activePrintLocation = "";
     }
+    if (activePrintTitle) {
+      document.title = activePrintTitle;
+      activePrintTitle = "";
+    }
   }
 
   function invokeNativePrint(mode) {
     $("#printReport").setAttribute("aria-hidden", "false");
     setPrintPageMode(mode);
     useCleanPrintLocation();
+    activePrintTitle = document.title;
+    document.title = (mode === "labels" ? "McFamily-Mailing-Labels-" : "McFamily-Directory-") + printDate();
     requestAnimationFrame(function () {
       try {
         window.print();
@@ -2794,7 +2757,6 @@
     }).sort(function (a, b) {
       return Number(Boolean(georgeMcMillenRoot && b.includes(georgeMcMillenRoot.id))) - Number(Boolean(georgeMcMillenRoot && a.includes(georgeMcMillenRoot.id)));
     });
-    const notes = documentText(current.workspace.documents[0]);
     const componentHtml = componentsList.map(function (ids) {
       const componentPeople = ids.map(function (id) { return graph.peopleById.get(id); }).filter(Boolean);
       const idSet = new Set(ids);
@@ -2827,11 +2789,11 @@
     const households = printHouseholds(directoryPeople, graph, printState);
     const directoryHtml = households.length ? '<table class="print-directory-table"><colgroup><col class="print-directory-household-column"><col class="print-directory-phone-column"><col class="print-directory-email-column"><col class="print-directory-address-column"></colgroup><thead><tr><th scope="col">Household</th><th scope="col">Phone</th><th scope="col">Email</th><th scope="col"><span class="print-directory-address-heading"><span>Address</span><span>Landline</span></span></th></tr></thead>' + households.map(function (household) { return printHouseholdHtml(household, graph); }).join("") + "</table>" : '<p class="print-directory-empty">No phone, email, or address information is recorded.</p>';
     const reportDate = printDate();
-    $("#printReport").innerHTML = '<section class="print-directory"><header class="print-report-header"><h1>Directory of McMillen Clan</h1><time datetime="' + reportDate + '">' + reportDate + "</time></header>" + directoryHtml + '</section><section class="print-atlas"><h2>Family Maps</h2>' + componentHtml + "</section>" + (notes ? '<article class="print-family-notes"><h1>Family Notes</h1><p>' + u.escapeHtml(notes).replace(/\n/g, "<br>") + "</p></article>" : "");
+    $("#printReport").innerHTML = '<section class="print-directory"><header class="print-report-header"><h1>Directory of McMillen Clan</h1><time datetime="' + reportDate + '">' + reportDate + "</time></header>" + directoryHtml + '</section><section class="print-atlas"><h2>Family Maps</h2>' + componentHtml + "</section>";
   }
 
   function openPrintPreview(trigger, title) {
-    $("#printPreviewTitle").textContent = title || "PDF Preview";
+    $("#printPreviewTitle").textContent = title || "Directory Preview";
     const preview = $("#printPreviewContent");
     preview.innerHTML = $("#printReport").innerHTML;
     $$("[id]", preview).forEach(function (element) { element.removeAttribute("id"); });
@@ -2840,7 +2802,7 @@
 
   function printAtlas(eventOrTrigger) {
     if (!familyEditingEnabled()) {
-      components.message("Export unavailable", "PDF and print export are not provided in read-only access.");
+      components.message("Export unavailable", "Directory printing is not provided in read-only access.");
       return;
     }
     if (!initialized() || !state().workspace.people.length) {
@@ -2850,7 +2812,7 @@
     const trigger = eventOrTrigger && eventOrTrigger.currentTarget instanceof HTMLElement ? eventOrTrigger.currentTarget : eventOrTrigger instanceof HTMLElement ? eventOrTrigger : document.activeElement;
     buildPrintReport();
     if (developerReferencesEnabled()) {
-      openPrintPreview(trigger, "PDF Preview");
+      openPrintPreview(trigger, "Directory Preview");
       return;
     }
     invokeNativePrint("atlas");
@@ -2890,9 +2852,7 @@
     });
     results.sort(function (a, b) { return Number(b.favorite) - Number(a.favorite) || a.title.localeCompare(b.title); });
     if (favoritesPreviewOpen) return results;
-    const notes = familyEditingEnabled() ? state().workspace.documents[0] : null;
-    if (notes && model.fuzzySearchMatch(needle, "notes " + documentText(notes))) results.push({ type: "notes", id: notes.id, title: "Notes", meta: "Private family notes" });
-    config.help.forEach(function (topic) { if ((familyEditingEnabled() || !["notes", "print", "backup", "cloud"].includes(topic.id)) && model.fuzzySearchMatch(needle, topic.title + " " + topic.keywords + " " + u.stripHtml(topic.html))) results.push({ type: "help", id: topic.id, title: topic.title, meta: "Help · " + topic.section }); });
+    config.help.forEach(function (topic) { if ((familyEditingEnabled() || !["print", "backup", "cloud"].includes(topic.id)) && model.fuzzySearchMatch(needle, topic.title + " " + topic.keywords + " " + u.stripHtml(topic.html))) results.push({ type: "help", id: topic.id, title: topic.title, meta: "Help · " + topic.section }); });
     config.roadmap.forEach(function (item) { if (model.fuzzySearchMatch(needle, item.title + " " + item.description)) results.push({ type: "roadmap", id: item.id, title: item.title, meta: "Roadmap · " + item.state }); });
     config.releases.forEach(function (release) { const text = [release.version, release.title, release.summary].concat(release.features || [], release.improvements || [], release.fixes || [], release.knownIssues || []).join(" "); if (model.fuzzySearchMatch(needle, text)) results.push({ type: "release", id: release.version, title: release.title, meta: "Release · v" + release.version }); });
     return results.slice(0, 12);
@@ -2914,7 +2874,7 @@
       if (result.type !== "person") return '<div class="global-search-result-row no-favorite" role="listitem">' + main + "</div>";
       const action = result.favorite ? "Remove " + result.title + " from favorites" : "Star " + result.title;
       return '<div class="global-search-result-row' + (result.favorite ? " is-favorite" : "") + '" role="listitem">' + main + '<button type="button" class="search-favorite-toggle" data-toggle-favorite="' + u.escapeHtml(result.id) + '" aria-label="' + u.escapeHtml(action) + '" title="' + u.escapeHtml(action) + '" aria-pressed="' + String(result.favorite) + '"><span data-symbol="favorite" aria-hidden="true"></span></button></div>';
-    }).join("") : '<div class="search-empty">' + (favoritesPreviewOpen ? "No favorite people yet. Search for someone and select their star." : "No matches across people, contacts, " + (familyEditingEnabled() ? "Notes, " : "") + "Help, releases, or Roadmap.") + "</div>";
+    }).join("") : '<div class="search-empty">' + (favoritesPreviewOpen ? "No favorite people yet. Search for someone and select their star." : "No matches across people, contacts, Help, releases, or Roadmap.") + "</div>";
     $("#favoritesButton").setAttribute("aria-expanded", String(favoritesPreviewOpen));
     icons.mount(container);
   }
@@ -2975,6 +2935,10 @@
 
   async function restoreFavoritesFile(file) {
     if (!file) return;
+    if (!adminFavoritesRestoreEnabled()) {
+      components.toast("Only Admin can restore a Favorites file.", { title: "Favorites not restored", kind: "warning", duration: 5000 });
+      return;
+    }
     try {
       if (file.size > 256 * 1024) throw new Error("That Favorites file is larger than the 256 KB limit.");
       const text = file.text ? await file.text() : await new Promise(function (resolve, reject) {
@@ -3007,7 +2971,6 @@
     const favoritesWereOpen = favoritesPreviewOpen;
     favoritesPreviewOpen = false;
     if (type === "person") selectPerson(id, { focus: true, mobileProfile: true, focusMode: true });
-    else if (type === "notes") openNotes($("#globalSearch"));
     else if (type === "help") { openSupport("help", $("#globalSearch")); setInputValue($("#helpSearch"), config.help.find(function (topic) { return topic.id === id; })?.title || ""); renderHelp(); }
     else if (type === "roadmap") { storage.mutate(function (next) { next.modules.roadmap.search = config.roadmap.find(function (item) { return item.id === id; })?.title || ""; }, { touch: false, reason: "roadmap-search" }); openSupport("roadmap", $("#globalSearch")); }
     else if (type === "release") { versionView = "released"; openSupport("releases", $("#globalSearch")); }
@@ -3059,7 +3022,7 @@
 
   function renderHelp() {
     const query = String($("#helpSearch")?.value || "").trim().toLowerCase();
-    const topics = config.help.filter(function (topic) { return (familyEditingEnabled() || !["notes", "print", "backup", "cloud"].includes(topic.id)) && (!query || (topic.title + " " + topic.section + " " + topic.keywords + " " + u.stripHtml(topic.html)).toLowerCase().includes(query)); });
+    const topics = config.help.filter(function (topic) { return (familyEditingEnabled() || !["print", "backup", "cloud"].includes(topic.id)) && (!query || (topic.title + " " + topic.section + " " + topic.keywords + " " + u.stripHtml(topic.html)).toLowerCase().includes(query)); });
     $("#helpResultCount").textContent = topics.length + " topic" + (topics.length === 1 ? "" : "s");
     const groups = {};
     topics.forEach(function (topic) { (groups[topic.section] = groups[topic.section] || []).push(topic); });
@@ -3120,6 +3083,7 @@
     $("#saveRecoveryButton").hidden = hosted;
     $("#restoreRecoveryButton").disabled = !recovery;
     $("#saveFavoritesButton").disabled = !state().ui.favoritePersonIds.length;
+    $("#restoreFavoritesButton").hidden = !adminFavoritesRestoreEnabled();
   }
 
   function renderSupport() {
@@ -3128,23 +3092,12 @@
   }
 
   async function resetPreferences() {
-    const accepted = await components.confirm({ title: "Reset preferences?", message: "Appearance, family view settings, and filters will return to defaults. People, relationships, contacts, and Notes will stay.", confirmLabel: "Reset preferences", danger: true });
+    const accepted = await components.confirm({ title: "Reset preferences?", message: "Appearance, family view settings, and filters will return to defaults. The family record will stay.", confirmLabel: "Reset preferences", danger: true });
     if (!accepted) return;
     storage.replace(model.resetPreferences(state()), { saveRecovery: false, clearRecovery: hostedVaultActive(), reason: "reset-preferences", touch: false, preserveDevicePreferences: false });
     treeNeedsFit = true;
     renderAll();
     components.toast("Preferences were reset; family data was preserved.", { title: "Preferences reset", kind: "success" });
-  }
-
-  async function eraseAllData() {
-    const accepted = await components.confirm({ title: "Erase all local McFamily data?", message: "This permanently removes every person, place, residence, relationship, Note, preference, metadata event, and local recovery copy from this browser and returns to the strict import screen. The encrypted GitHub record will not change.", confirmLabel: "Erase everything", cancelLabel: "Keep my family", danger: true });
-    if (!accepted) return;
-    storage.clearAll();
-    components.closeDialog("#supportDialog", "erased");
-    treeNeedsFit = true;
-    renderAll();
-    announce("All local McFamily data was erased.", true);
-    components.toast("All McFamily data was erased from this browser.", { title: "Local data erased", kind: "info", duration: 5000 });
   }
 
   async function restoreRecovery() {
@@ -3293,7 +3246,7 @@
         focusTarget?.focus();
         fitTree();
       });
-      announce((willCollapse ? "Collapsed " : "Expanded ") + (pane === "directory" ? "the directory." : "the selected person panel."));
+      announce((willCollapse ? "Collapsed " : "Expanded ") + (pane === "directory" ? "the list." : "the selected person panel."));
       return;
     }
     const select = target.closest("[data-select-person], [data-tree-person]");
@@ -3381,7 +3334,6 @@
     $("#exportButton").addEventListener("click", portability.exportPackage);
     $("#importButton").addEventListener("click", function () { $("#importFileInput").click(); });
     $("#resetPreferencesButton").addEventListener("click", resetPreferences);
-    $("#eraseAllButton").addEventListener("click", eraseAllData);
     $("#helpSearch").addEventListener("input", renderHelp);
     $("#supportRoadmapSearch").addEventListener("input", function (event) { storage.mutate(function (next) { next.modules.roadmap.search = u.cleanLine(event.target.value, 200); }, { touch: false, reason: "roadmap-filter" }); renderSupportRoadmap(); });
     $("#supportRoadmapState").addEventListener("change", function (event) { storage.mutate(function (next) { next.modules.roadmap.state = event.target.value; }, { touch: false, reason: "roadmap-filter" }); renderSupportRoadmap(); });
@@ -3389,7 +3341,7 @@
     $("#restoreRecoveryButton").addEventListener("click", restoreRecovery);
     $("#saveRecoveryButton").addEventListener("click", saveRecoveryCopy);
     $("#saveFavoritesButton").addEventListener("click", saveFavoritesFile);
-    $("#restoreFavoritesButton").addEventListener("click", function () { $("#restoreFavoritesInput").click(); });
+    $("#restoreFavoritesButton").addEventListener("click", function () { if (adminFavoritesRestoreEnabled()) $("#restoreFavoritesInput").click(); });
     $("#restoreFavoritesInput").addEventListener("change", function (event) {
       restoreFavoritesFile(event.target.files && event.target.files[0]);
       event.target.value = "";
@@ -3436,14 +3388,12 @@
       const key = $(".tree-key details");
       if (key) { event.preventDefault(); key.open = !key.open; announce(key.open ? "Opened the Family Tree key." : "Closed the Family Tree key."); }
     }
-    else if (event.code === "KeyN" && familyEditingEnabled()) { event.preventDefault(); openNotes(event.target); }
     else if (event.code === "KeyV") { event.preventDefault(); openSupport("releases", event.target); }
     else if (event.code === "KeyW" && rolePreviewAvailable()) { event.preventDefault(); openRolePreviewMenu($("#accessModePill")); }
     else if (event.code === "KeyX") {
       const toast = $("#appToast");
       const updateVisible = !toast.hidden && $("[data-toast-title]", toast).textContent === "New version available";
       if (updateVisible) { event.preventDefault(); components.hideToast(); }
-      else if (!$("#whatsNewBanner").hidden) { event.preventDefault(); $("[data-dismiss-release]").click(); }
     }
     else if (event.code === "KeyR") {
       const toast = $("#appToast");
@@ -3473,7 +3423,7 @@
         (willOpen ? $("#directorySearch") : $("#familyTreeSvg"))?.focus();
         fitTree();
       });
-      announce(willOpen ? "Opened the directory." : "Closed the directory.");
+      announce(willOpen ? "Opened the list." : "Closed the list.");
     });
     $("#favoritesButton").addEventListener("click", function () {
       favoritesPreviewOpen = !favoritesPreviewOpen;
@@ -3488,18 +3438,17 @@
       renderHeader();
     });
     $("#restoreFavoritesHeaderButton").addEventListener("click", function () {
+      if (!adminFavoritesRestoreEnabled()) return;
       favoritesPreviewOpen = false;
       renderHeader();
       $("#restoreFavoritesInput").click();
     });
     $("#supportButton").addEventListener("click", function (event) { openSupport(state().ui.supportTab, event.currentTarget); });
-    $("#notesButton").addEventListener("click", function (event) { openNotes(event.currentTarget); });
     $("#addPersonButton").addEventListener("click", function (event) { pendingRelative = null; openPersonEditor("", event.currentTarget); });
     $("#printButton").addEventListener("click", printAtlas);
     $("#labelsButton").addEventListener("click", printMailingLabels);
     $("#directoryCsvButton").addEventListener("click", exportMailingCsv);
     $("#printPreviewDialog").addEventListener("close", function () { $("#printPreviewContent").replaceChildren(); });
-    $("#notesTextarea").addEventListener("input", function (event) { saveNotes(event.target.value); });
     $("#mainContent").addEventListener("click", handleMainClick);
     $("#mainContent").addEventListener("change", function (event) {
       if (event.target.id === "onboardingImportInput") { portability.previewFile(event.target.files && event.target.files[0], $("#firstImportButton")); event.target.value = ""; }
@@ -3560,10 +3509,6 @@
     document.addEventListener("click", function (event) {
       const action = event.target.closest("[data-action]");
       if (action && action.dataset.action === "clear-help-search") { $("#helpSearch").value = ""; renderHelp(); }
-      const dismissHint = event.target.closest("[data-dismiss-hint]");
-      if (dismissHint) { storage.mutate(function (next) { next.preferences.hints.dismissed = Array.from(new Set(next.preferences.hints.dismissed.concat(dismissHint.dataset.dismissHint))); }, { reason: "dismiss-hint" }); renderHeader(); }
-      if (event.target.closest("[data-dismiss-release]")) { storage.mutate(function (next) { next.ui.seenReleaseVersion = config.releases[0].version; }, { reason: "release-seen" }); renderHeader(); }
-      if (event.target.closest("[data-open-releases]")) openSupport("releases", event.target.closest("[data-open-releases]"));
       const safeLink = event.target.closest("[data-open-url]");
       if (safeLink && !u.safeExternalOpen(safeLink.dataset.openUrl)) components.toast("That external address is not allowed.", { title: "Link unavailable", kind: "warning" });
     });
@@ -3583,7 +3528,6 @@
   function renderAll() {
     applyAppearance();
     renderHeader();
-    renderNotesEditor();
     renderMain();
     renderGlobalSearchResults();
     if ($("#supportDialog").open && initialized()) renderSupport();
@@ -3593,7 +3537,7 @@
     window.addEventListener("app:storageerror", function (event) { components.toast(event.detail.message, { title: event.detail.title, kind: "danger", duration: 0, actionLabel: initialized() && familyEditingEnabled() ? "Recovery ZIP" : "", onAction: initialized() && familyEditingEnabled() ? portability.exportCsv : null }); renderLocalStatus(); });
     window.addEventListener("app:statesaved", renderLocalStatus);
     window.addEventListener("app:pwaerror", function (event) { components.toast(event.detail.message, { title: "Offline support unavailable", kind: "warning", duration: 5000 }); });
-    window.addEventListener("app:statechange", function (event) { if (["import", "recovery", "erase-all", "reset-preferences"].includes(event.detail.reason)) { treeNeedsFit = true; renderAll(); } });
+    window.addEventListener("app:statechange", function (event) { if (["import", "recovery", "reset-preferences"].includes(event.detail.reason)) { treeNeedsFit = true; renderAll(); } });
     window.addEventListener("resize", u.debounce(function () { if (initialized() && currentTreeLayout) { if (treeSurfaceMode === "fit") fitTree(); else sizeTreeSurface(); } if ($("#developerPanel") && !$("#developerPanel").hidden) renderDeveloper(); }, 120));
     ["(prefers-color-scheme: dark)", "(prefers-reduced-motion: reduce)"].forEach(function (query) { const media = window.matchMedia(query); if (typeof media.addEventListener === "function") media.addEventListener("change", applyAppearance); else if (typeof media.addListener === "function") media.addListener(applyAppearance); });
   }
@@ -3618,7 +3562,7 @@
     showLoadReport();
   }
 
-  App.application = { render: renderAll, openSupport: openSupport, openNotes: openNotes, printAtlas: printAtlas, shortcuts: SHORTCUTS };
+  App.application = { render: renderAll, openSupport: openSupport, printAtlas: printAtlas, shortcuts: SHORTCUTS };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true });
   else init();
 })();

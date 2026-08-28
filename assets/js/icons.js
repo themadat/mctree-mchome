@@ -81,7 +81,6 @@
     pdf: __DOCUMENT_FILL,
     labels: __MAIL_STACK_FILL,
     csv: __RECTANGLE_SPLIT_3X1,
-    notes: __TEXT_PAGE_FILL,
     cloudAudit: __APPLE_TERMINAL_ON_RECTANGLE_FILL,
     arrowClockwise: __ARROW_CLOCKWISE,
     releaseNotes: __LIST_BULLET_CLIPBOARD_FILL,
