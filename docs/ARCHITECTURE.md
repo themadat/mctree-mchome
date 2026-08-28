@@ -69,7 +69,7 @@ Admin publishes access changes and bulk packages; Admin/Editor publish ordinary 
 
 The tree is vanilla SVG with relationship-derived layout, pan/zoom, focus/full modes, keyboard navigation, and accessible node descriptions. The List and profile are DOM views over the same state; no separate search index is persisted. Panels are responsive, collapsible, and resizable.
 
-Print output is generated into a print-only DOM immediately before `window.print()`. CSS uses half-inch page margins, repeated directory headings, `break-inside: avoid` cards, print-safe colors, and cross-references rather than one unmanageably large tree.
+Print output is generated into a print-only DOM immediately before `window.print()`. Directory contains household contact cards, Groups contains the generation maps, and Tree tiles the current live SVG layout across landscape pages at the selected zoom. CSS uses half-inch page margins, repeated directory headings, `break-inside: avoid` cards, and print-safe colors.
 
 ## PWA and deployment
 
