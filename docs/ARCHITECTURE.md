@@ -69,9 +69,9 @@ Admin publishes access changes and bulk packages; Admin/Editor publish ordinary 
 
 The tree is vanilla SVG with relationship-derived layout, pan/zoom, focus/full modes, keyboard navigation, and accessible node descriptions. The List and profile are DOM views over the same state; no separate search index is persisted. Panels are responsive, collapsible, and resizable.
 
-Print output is generated into a print-only DOM immediately before `window.print()`. Directory contains household contact cards, Groups contains the generation maps, and Tree tiles the current live SVG layout across landscape pages at the selected zoom. CSS uses half-inch page margins, repeated directory headings, `break-inside: avoid` cards, and print-safe colors.
+Print output is generated into a print-only DOM immediately before `window.print()`. Directory contains household contact cards, Groups contains the generation maps, and Tree tiles the current live SVG layout across landscape pages at the selected zoom. Tree uses a simple explicit `@page { size: letter landscape }` rule so unsupported margin-box declarations cannot invalidate orientation. CSS uses half-inch page margins, repeated directory headings, `break-inside: avoid` cards, and print-safe colors.
 
-The Save dialog keeps session identity, hosted dataset/date, and GitHub connection state in its persistent header. The main publication section is a compact ordered workflow—publisher, next patch, Bulk Upload, Update—followed by the audit summary and one full-width row per calculated change.
+The Save dialog keeps session identity, hosted dataset/date, and GitHub connection state in two-line tiles within its persistent header. The main publication section is a compact ordered workflow—one-line publisher, equal-height next patch, Bulk Upload, Update—followed by an inline summary input and one full-width row per calculated change.
 
 ## PWA and deployment
 

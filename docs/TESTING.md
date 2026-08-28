@@ -30,7 +30,8 @@ Serve the repository over HTTP with `?local=1` for local package tests. Use synt
 | CSS/responsive | No horizontal page overflow; dialogs/sheets fit viewport; visible focus; 200% text; reduced motion; light/dark/system |
 | PWA/offline | Install metadata; first online load; second offline reload; update prompt; Reload activates new worker; vault is not served from cache |
 | Print | Preview Directory, Groups, and Tree; half-inch margins; repeated directory header; cards never split; maps absent from Directory; current tree mode/settings/zoom reflected; no controls/P ids/source/Notes; all allowed people and contacts present |
-| Save layout | Header shows signed-in identity, dataset/date, and GitHub status; publication controls read title, publisher, next patch, Bulk Upload, Update; every calculated change occupies its own row |
+| Save layout | Two-line header tiles show signed-in identity, dataset/date, and GitHub status; publication controls read title, one-line publisher, equal-height next patch, Bulk Upload, Update; summary uses an inline placeholder and every calculated change occupies its own row |
+| Tree defaults | Fresh Ancestors/Descendants are 10; a pre-0.0.1.105 persisted Descendants value of 3 migrates once to 10; a newly selected 3 remains selectable; native Tree print requests letter landscape |
 
 Always watch console/page errors. Check accessible names, focus restoration, Escape/close behavior, touch targets, and unsafe text such as `<script>`, quotes, commas, newlines, and spreadsheet-formula prefixes when the changed area accepts input.
 

@@ -47,6 +47,18 @@ try { App.stateModel.prepare(oldState); } catch (error) { rejectedOldState = /no
 if (!rejectedOldState) fail("The prior application state schema was not rejected");
 const normalizedDefault = App.stateModel.prepare(currentState).state;
 if ("records" in normalizedDefault.workspace || "tombstones" in normalizedDefault.meta) fail("Retired state collections remain normalized");
+if (normalizedDefault.ui.ancestorDepth !== 10 || normalizedDefault.ui.descendantDepth !== 10) fail("Tree depths no longer default to ten");
+const legacyThreeDepth = structuredClone(currentState);
+legacyThreeDepth.meta.buildId = "0.0.1.104";
+legacyThreeDepth.meta.appVersion = "0.0.1.104";
+legacyThreeDepth.ui.generationDepth = 3;
+legacyThreeDepth.ui.descendantDepth = 3;
+const migratedThreeDepth = App.stateModel.normalize(legacyThreeDepth);
+if (migratedThreeDepth.ui.generationDepth !== 10 || migratedThreeDepth.ui.descendantDepth !== 10) fail("The obsolete three-level descendant default was not migrated to ten");
+const currentThreeDepth = structuredClone(currentState);
+currentThreeDepth.ui.generationDepth = 10;
+currentThreeDepth.ui.descendantDepth = 3;
+if (App.stateModel.normalize(currentThreeDepth).ui.descendantDepth !== 3) fail("A current-session descendant depth of three no longer remains user-selectable");
 
 App.storage = {};
 vm.runInContext(read("assets/js/core/portability.js"), runtime, { filename: "assets/js/core/portability.js" });
@@ -69,6 +81,7 @@ const roundTrip = await App.portability.prepareBytes(packageBytes, "synthetic.zi
 if (roundTrip.state.workspace.people.length !== 1 || roundTrip.state.meta.package.datasetVersion !== config.datasetVersion) fail("Synthetic current-package round trip failed");
 
 const index = read("index.html");
+const css = read("assets/css/app.css");
 const sw = read("sw.js");
 const cloud = read("assets/js/core/cloud.js");
 const appSource = read("assets/js/app.js");
@@ -82,6 +95,8 @@ const savePublishOrder = ["hostedPublishTitle", "hostedRecordedBy", "hostedVersi
 if (savePublishOrder.some((position) => position < 0) || savePublishOrder.some((position, item) => item && position <= savePublishOrder[item - 1])) fail("Save publication controls no longer follow the compact publishing order");
 if (!(index.indexOf('id="currentAccessSummary"') < index.indexOf('class="dialog-body cloud-audit-body"')) || !(index.indexOf('id="cloudVaultSummary"') < index.indexOf('class="dialog-body cloud-audit-body"')) || !(index.indexOf('id="githubConnectionSummary"') < index.indexOf('class="dialog-body cloud-audit-body"'))) fail("Save status summaries are no longer in the dialog header");
 if (!appSource.includes('relationshipMaritalStatus(person, entry) + " :: " + years') || !appSource.includes("personButton + editButton + contextText")) fail("Partner relationship status or edit-button ordering regressed");
+if (!index.includes('id="hostedAuditSummary" type="text" placeholder="Summary of what changed"') || !css.includes('.hosted-publish-toolbar .status-pill { align-self: center; min-height: 36px; height: 36px;')) fail("The compact publishing inputs regressed");
+if (!appSource.includes('? "@page { size: letter landscape; margin: .5in; }"')) fail("Tree printing no longer explicitly requests letter landscape");
 const printActionOrder = ["printButton", "groupsButton", "labelsButton"].map((id) => index.indexOf(`id="${id}"`));
 if (printActionOrder.some((position) => position < 0) || !(printActionOrder[0] < printActionOrder[1] && printActionOrder[1] < printActionOrder[2])) fail("Groups is no longer adjacent to Directory");
 const directoryBuilderStart = appSource.indexOf("function buildDirectoryReport");
@@ -103,7 +118,7 @@ for (const [path, manifest] of manifests) {
 
 const referenced = new Set();
 for (const match of index.matchAll(/(?:src|href)="([^"]+)"/g)) referenced.add(match[1]);
-for (const match of read("assets/css/app.css").matchAll(/url\((?:"|')?([^"')]+)(?:"|')?\)/g)) referenced.add("assets/css/" + match[1]);
+for (const match of css.matchAll(/url\((?:"|')?([^"')]+)(?:"|')?\)/g)) referenced.add("assets/css/" + match[1]);
 for (const match of sw.matchAll(/(?:versioned\()?"(\.\/[^"?]+)(?:\?[^"\)]*)?"/g)) referenced.add(match[1]);
 for (const raw of referenced) {
   if (!raw || raw === "./" || raw.startsWith("#") || /^(?:https?:|data:|mailto:|tel:)/.test(raw)) continue;

@@ -2570,7 +2570,7 @@
     style.textContent = mode === "labels"
       ? "@page { size: letter; margin: 0; }"
       : mode === "tree"
-        ? '@page { size: letter landscape; margin: .5in; @top-right { content: "' + printDate() + '"; color: #555; font: 6pt Helvetica, Arial, sans-serif; } @bottom-right { content: counter(page) " of " counter(pages); color: #555; font: 6pt Helvetica, Arial, sans-serif; } }'
+        ? "@page { size: letter landscape; margin: .5in; }"
         : '@page { size: letter; margin: .5in; @top-right { content: "' + printDate() + '"; color: #555; font: 6pt Helvetica, Arial, sans-serif; } @bottom-left { content: ""; } @bottom-right { content: counter(page) " of " counter(pages); color: #555; font: 6pt Helvetica, Arial, sans-serif; } }';
     document.body.classList.toggle("printing-labels", mode === "labels");
     document.body.classList.toggle("printing-directory", mode === "directory");
