@@ -32,9 +32,9 @@ workspace
   people, relationships, places, residences
   documents: one Notes document
 preferences
-  appearance, controls, hints, installation
+  appearance, controls, installation
 ui
-  selection, tree/directory settings, panel sizes, favorites, support state
+  selection, tree/List settings, panel sizes, favorites, support state
 modules
   family, documents, roadmap
 ```
@@ -43,7 +43,7 @@ State v14 deliberately omits retired generic records and sync tombstones. `norma
 
 ## Persistence modes
 
-Local development (`?local=1` on localhost) stores full state in `mcfamily.state.v14` with recovery in `mcfamily.recovery.v6`. Older versioned McFamily state/recovery keys are removed rather than migrated. Current favorites, directory visibility, and dismissed UI state also live in the PII-free device-preference record.
+Local development (`?local=1` on localhost) stores full state in `mcfamily.state.v14` with recovery in `mcfamily.recovery.v6`. Older versioned McFamily state/recovery keys are removed rather than migrated. Current favorites and List visibility also live in the PII-free device-preference record.
 
 Hosted mode keeps decrypted family state and the publication baseline in memory. Lock/reload clears it. Only compact device preferences, non-secret connection coordinates, a session-scoped token, and a “hosted seen” flag may persist. Ordinary mutation is local until Update successfully publishes; revision/SHA verification prevents overwriting another publication.
 
@@ -61,11 +61,13 @@ The public data repository stores one `mcfamily-encrypted-vault` JSON object con
 
 Each grant uses PBKDF2 to wrap only the keys permitted by its role. On sign-in, the browser tries the entered passphrase against all grants and requires exactly one match; labels and roles are not exposed before authentication. Full and redacted package bytes are independently encrypted. Every decrypted package still passes the exact package validator before becoming state.
 
+Non-Admin grants always open with Developer Mode disabled even if the encrypted full-data package was saved while an Admin had it enabled. Editors may enable it deliberately for their current session; read-only roles cannot use it.
+
 Admin publishes access changes and bulk packages; Admin/Editor publish ordinary changes. Publication verifies the configured repository/token and current remote revision, appends an audit event, derives the redacted package, encrypts both views, and writes through the GitHub Contents API. Git history provides rollback of publications. The app cannot audit anonymous reads or protect a shared passphrase from being forwarded.
 
 ## UI and print
 
-The tree is vanilla SVG with relationship-derived layout, pan/zoom, focus/full modes, keyboard navigation, and accessible node descriptions. The directory and profile are DOM views over the same state; no separate search index is persisted. Panels are responsive, collapsible, and resizable.
+The tree is vanilla SVG with relationship-derived layout, pan/zoom, focus/full modes, keyboard navigation, and accessible node descriptions. The List and profile are DOM views over the same state; no separate search index is persisted. Panels are responsive, collapsible, and resizable.
 
 Print output is generated into a print-only DOM immediately before `window.print()`. CSS uses half-inch page margins, repeated directory headings, `break-inside: avoid` cards, print-safe colors, and cross-references rather than one unmanageably large tree.
 

@@ -38,7 +38,7 @@ Always watch console/page errors. Check accessible names, focus restoration, Esc
 Run Tier 1, then complete all of the following before `cut`:
 
 1. **Version surfaces:** config version/build and sole release entry, every HTML query/label, service-worker cache/asset version, README, handoff, and release date agree. A major/minor/patch cut resets build to `1`.
-2. **Clean-device access matrix:** Admin, each named Editor, Member, Viewer, wrong password, revoked password, and shared/duplicate-password rejection. Confirm source/edit/export/Directory visibility exactly matches the role contract, including Admin-only Favorites restore.
+2. **Clean-device access matrix:** Admin, each named Editor, Member, Viewer, wrong password, revoked password, and shared/duplicate-password rejection. Confirm source/edit/export/Directory visibility exactly matches the role contract, including Admin-only Favorites restore and Developer Mode starting off for every non-Admin grant.
 3. **Private recovery:** offline-store a current Editor ZIP securely, import it on a clean local browser, validate counts and home person, export again, and reopen the result. Never add it to Git.
 4. **Publication:** test connection with the intended fine-grained token; publish a harmless synthetic change in a safe test vault or verify production only when authorized; confirm revision, dataset patch, audit actor/details, stale-tab conflict, and Git history rollback instructions.
 5. **Family scenarios:** single person, multiple/current/former partners, adoption with multiple Non-Lineal parents, disconnected component, pedigree collapse, missing dates, presumed deceased, international address, and a large synthetic family near supported limits.
