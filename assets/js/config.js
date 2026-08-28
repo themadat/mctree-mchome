@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.101",
-      buildId: "0.0.1.101",
+      version: "0.0.1.102",
+      buildId: "0.0.1.102",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -166,13 +166,13 @@
 
     releases: [
       {
-        version: "0.0.1.101",
-        date: "2026-08-28T13:00:00.000Z",
-        title: "Compact role-safe header",
-        summary: "The header keeps its actions clear at enlarged text sizes, and non-Admin sessions always start outside Developer Mode.",
+        version: "0.0.1.102",
+        date: "2026-08-28T14:00:00.000Z",
+        title: "Centered search header",
+        summary: "Search stays centered while Favorites, List, and Save sit together in the right action group.",
         features: [],
-        improvements: ["Reduced header action widths, padding, and label spacing while preserving complete accessible names"],
-        fixes: ["Forced Developer Mode off whenever an Editor, Member, or Viewer opens the encrypted family record"],
+        improvements: ["Reordered the header actions as Favorites, List, then Save and moved Admin Restore out of the search group"],
+        fixes: ["Moved search onto a centered responsive track that becomes a full second row before toolbar actions can collide with it"],
         knownIssues: []
       }
     ],
