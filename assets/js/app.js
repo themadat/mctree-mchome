@@ -226,7 +226,7 @@
     const searchLabel = "Search people, contacts, Help, releases, and Roadmap";
     $("label[for='globalSearch']").textContent = searchLabel;
     $("#globalSearch").setAttribute("aria-label", searchLabel);
-    ["#printButton", "#labelsButton", "#directoryCsvButton"].forEach(function (selector) {
+    ["#printButton", "#groupsButton", "#labelsButton", "#directoryCsvButton"].forEach(function (selector) {
       $(selector).disabled = !isInitialized || !familyEditingEnabled();
       $(selector).hidden = isInitialized && !familyEditingEnabled();
     });
@@ -1081,6 +1081,55 @@
     announce("Centered " + nodes.length + " unresolved Lineal " + (nodes.length === 1 ? "person." : "people."));
   }
 
+  function treeEdgeHtml(edge, idPrefix) {
+    const relationship = edge.relationship;
+    const kind = relationship.type === "parent-child" ? relationship.kind : family.partnerLineKind(relationship, edge.current, edge.from.person, edge.to.person);
+    const description = relationshipDescription(edge);
+    const affinal = isNonLinealParentEdge(edge) ? " affinal-parent" : "";
+    const lineage = relationship.type === "parent-child" ? ' data-lineage="' + u.escapeHtml(relationship.lineage) + '"' : "";
+    const pathId = (idPrefix || "") + "tree-edge-" + u.escapeHtml(relationship.id);
+    const path = '<path id="' + pathId + '" class="tree-edge ' + u.escapeHtml(relationship.type) + affinal + '" role="img" aria-label="' + u.escapeHtml(description) + '" data-kind="' + u.escapeHtml(kind) + '"' + lineage + ' d="' + edgePath(edge) + '"><title>' + u.escapeHtml(description) + "</title></path>";
+    return path + (relationship.type === "partner" && kind === "unknown" ? unknownPartnerMarks(edge, pathId) : "");
+  }
+
+  function treeNodeHtml(node, options) {
+    const settings = Object.assign({ layout: currentTreeLayout, print: false }, options || {});
+    const layout = settings.layout;
+    const person = node.person;
+    const selected = state().ui.selectedPersonId === person.id;
+    const home = state().workspace.family.homePersonId === person.id;
+    const name = model.treeName(person, layout.nameBasis, layout.nameLength);
+    const renderWidth = node.renderWidth || node.width;
+    const renderHeight = node.renderHeight || node.height;
+    const scale = node.scale || 1;
+    const detailed = layout.nodeView === "detailed";
+    const nameLines = family.treeNameLines(person, { basis: layout.nameBasis, length: layout.nameLength });
+    const contactAvailability = detailed && piiVisible() && person.livingStatus === "living" ? [
+      person.addresses && person.addresses.length ? { symbol: "addressAvailable", label: "address" } : null,
+      personHasPhone(person) ? { symbol: "phoneAvailable", label: "phone" } : null,
+      person.emails && person.emails.length ? { symbol: "emailAvailable", label: "email" } : null
+    ].filter(Boolean) : [];
+    const contactLabel = contactAvailability.length ? " Recorded " + contactAvailability.map(function (item) { return item.label; }).join(", ") + "." : "";
+    const accessibleDetails = detailed ? ", " + family.lifespan(person) + "." + contactLabel : ".";
+    const interactive = settings.print ? "" : ' tabindex="0" role="button"';
+    const instruction = settings.print ? "" : " Select to focus.";
+    const shell = '<g class="tree-node' + (selected ? " selected" : "") + (home ? " home" : "") + (node.partnerPlacement === "left" ? " compact-partner" : "") + (isLinealPerson(person) ? " lineal" : "") + (person.livingStatus === "deceased" ? " deceased" : "") + '" data-view="' + u.escapeHtml(layout.nodeView) + '"' + interactive + ' aria-label="' + u.escapeHtml(name + accessibleDetails + instruction) + '" data-tree-person="' + u.escapeHtml(person.id) + '" transform="translate(' + node.x + " " + node.y + ") scale(" + scale + ')"><rect width="' + renderWidth + '" height="' + renderHeight + '" rx="10"></rect>';
+    const nameHtml = nameLines.map(function (line, index) {
+      const familyClass = layout.nameLength === "short" && index === nameLines.length - 1 ? " tree-family" : "";
+      const densityClass = line.length > 20 ? " tree-name-tight" : line.length > 14 ? " tree-name-compact" : "";
+      const fit = line.length > 18 ? ' textLength="' + (renderWidth - 14) + '" lengthAdjust="spacingAndGlyphs"' : "";
+      return '<text class="tree-name-line' + familyClass + densityClass + '" x="' + (renderWidth / 2) + '" y="' + (16 + index * 14) + '" text-anchor="middle"' + fit + ">" + u.escapeHtml(line) + "</text>";
+    }).join("");
+    const lifeY = 21 + nameLines.length * 14;
+    const reference = detailed && !settings.print && developerReferencesEnabled() ? '<text class="tree-reference" x="' + (renderWidth / 2) + '" y="' + (lifeY + 13) + '" text-anchor="middle">' + u.escapeHtml(person.reference) + "</text>" : "";
+    const life = detailed ? '<text class="tree-life" x="' + (renderWidth / 2) + '" y="' + lifeY + '" text-anchor="middle">' + u.escapeHtml(family.lifespan(person)) + "</text>" : "";
+    const linealMark = detailed && isLinealPerson(person) ? icons.markup("lineal").replace('<svg class="sf-symbol"', '<svg class="sf-symbol tree-lineal-mark" x="' + (renderWidth - 14) + '" y="' + (lifeY - 9) + '" width="7" height="10"') : "";
+    const contactMarks = contactAvailability.map(function (item, index) {
+      return icons.markup(item.symbol).replace('<svg class="sf-symbol"', '<svg class="sf-symbol tree-contact-mark" x="' + (6 + index * 22) + '" y="' + (renderHeight - 21) + '" width="18" height="18"');
+    }).join("");
+    return shell + nameHtml + life + reference + contactMarks + linealMark + "</g>";
+  }
+
   function renderTree() {
     const svg = $("#familyTreeSvg");
     if (!svg) return;
@@ -1091,51 +1140,8 @@
       return;
     }
     const showAffinalLines = state().ui.showInferredParentLines;
-    const edges = currentTreeLayout.edges.filter(function (edge) {
-      return showAffinalLines || !isNonLinealParentEdge(edge);
-    }).map(function (edge) {
-      const relationship = edge.relationship;
-      const kind = relationship.type === "parent-child" ? relationship.kind : family.partnerLineKind(relationship, edge.current, edge.from.person, edge.to.person);
-      const description = relationshipDescription(edge);
-      const affinal = isNonLinealParentEdge(edge) ? " affinal-parent" : "";
-      const lineage = relationship.type === "parent-child" ? ' data-lineage="' + u.escapeHtml(relationship.lineage) + '"' : "";
-      const pathId = "tree-edge-" + u.escapeHtml(relationship.id);
-      const path = '<path id="' + pathId + '" class="tree-edge ' + u.escapeHtml(relationship.type) + affinal + '" role="img" aria-label="' + u.escapeHtml(description) + '" data-kind="' + u.escapeHtml(kind) + '"' + lineage + ' d="' + edgePath(edge) + '"><title>' + u.escapeHtml(description) + "</title></path>";
-      return path + (relationship.type === "partner" && kind === "unknown" ? unknownPartnerMarks(edge, pathId) : "");
-    }).join("");
-    const nodes = currentTreeLayout.nodes.map(function (node) {
-      const person = node.person;
-      const selected = state().ui.selectedPersonId === person.id;
-      const home = state().workspace.family.homePersonId === person.id;
-      const name = model.treeName(person, currentTreeLayout.nameBasis, currentTreeLayout.nameLength);
-      const renderWidth = node.renderWidth || node.width;
-      const renderHeight = node.renderHeight || node.height;
-      const scale = node.scale || 1;
-      const detailed = currentTreeLayout.nodeView === "detailed";
-      const nameLines = family.treeNameLines(person, { basis: currentTreeLayout.nameBasis, length: currentTreeLayout.nameLength });
-      const contactAvailability = detailed && piiVisible() && person.livingStatus === "living" ? [
-        person.addresses && person.addresses.length ? { symbol: "addressAvailable", label: "address" } : null,
-        personHasPhone(person) ? { symbol: "phoneAvailable", label: "phone" } : null,
-        person.emails && person.emails.length ? { symbol: "emailAvailable", label: "email" } : null
-      ].filter(Boolean) : [];
-      const contactLabel = contactAvailability.length ? " Recorded " + contactAvailability.map(function (item) { return item.label; }).join(", ") + "." : "";
-      const accessibleDetails = detailed ? ", " + family.lifespan(person) + "." + contactLabel : ".";
-      const shell = '<g class="tree-node' + (selected ? " selected" : "") + (home ? " home" : "") + (node.partnerPlacement === "left" ? " compact-partner" : "") + (isLinealPerson(person) ? " lineal" : "") + (person.livingStatus === "deceased" ? " deceased" : "") + '" data-view="' + u.escapeHtml(currentTreeLayout.nodeView) + '" tabindex="0" role="button" aria-label="' + u.escapeHtml(name + accessibleDetails + " Select to focus.") + '" data-tree-person="' + u.escapeHtml(person.id) + '" transform="translate(' + node.x + " " + node.y + ") scale(" + scale + ')"><rect width="' + renderWidth + '" height="' + renderHeight + '" rx="10"></rect>';
-      const nameHtml = nameLines.map(function (line, index) {
-        const familyClass = currentTreeLayout.nameLength === "short" && index === nameLines.length - 1 ? " tree-family" : "";
-        const densityClass = line.length > 20 ? " tree-name-tight" : line.length > 14 ? " tree-name-compact" : "";
-        const fit = line.length > 18 ? ' textLength="' + (renderWidth - 14) + '" lengthAdjust="spacingAndGlyphs"' : "";
-        return '<text class="tree-name-line' + familyClass + densityClass + '" x="' + (renderWidth / 2) + '" y="' + (16 + index * 14) + '" text-anchor="middle"' + fit + '>' + u.escapeHtml(line) + "</text>";
-      }).join("");
-      const lifeY = 21 + nameLines.length * 14;
-      const reference = detailed && developerReferencesEnabled() ? '<text class="tree-reference" x="' + (renderWidth / 2) + '" y="' + (lifeY + 13) + '" text-anchor="middle">' + u.escapeHtml(person.reference) + "</text>" : "";
-      const life = detailed ? '<text class="tree-life" x="' + (renderWidth / 2) + '" y="' + lifeY + '" text-anchor="middle">' + u.escapeHtml(family.lifespan(person)) + "</text>" : "";
-      const linealMark = detailed && isLinealPerson(person) ? icons.markup("lineal").replace('<svg class="sf-symbol"', '<svg class="sf-symbol tree-lineal-mark" x="' + (renderWidth - 14) + '" y="' + (lifeY - 9) + '" width="7" height="10"') : "";
-      const contactMarks = contactAvailability.map(function (item, index) {
-        return icons.markup(item.symbol).replace('<svg class="sf-symbol"', '<svg class="sf-symbol tree-contact-mark" x="' + (6 + index * 22) + '" y="' + (renderHeight - 21) + '" width="18" height="18"');
-      }).join("");
-      return shell + nameHtml + life + reference + contactMarks + linealMark + "</g>";
-    }).join("");
+    const edges = currentTreeLayout.edges.filter(function (edge) { return showAffinalLines || !isNonLinealParentEdge(edge); }).map(function (edge) { return treeEdgeHtml(edge); }).join("");
+    const nodes = currentTreeLayout.nodes.map(function (node) { return treeNodeHtml(node); }).join("");
     svg.innerHTML = '<g id="treeViewport">' + developerTreeScaleHtml() + '<g class="tree-edges">' + edges + '</g><g class="tree-nodes">' + nodes + "</g></g>";
     bindTreeInteractions(svg);
     if (treeNeedsFit) {
@@ -1450,7 +1456,8 @@
     const zoomControls = $(".zoom-controls", treeControls);
     const unplacedLineageControl = state().ui.treeMode === "overview" ? '<button type="button" class="tree-line-toggle action-button" data-toggle-unplaced-lineage aria-pressed="' + String(!state().ui.hideUnplacedLineage) + '" title="Toggle unresolved Lineal people"><span class="tree-toggle-symbol" data-symbol="unknownLineal" aria-hidden="true"></span><span class="button-label">?? Lineal</span></button>' : "";
     zoomControls.insertAdjacentHTML("beforebegin", '<button type="button" class="tree-line-toggle tree-line-toggle-stacked action-button" data-toggle-non-lineal aria-pressed="' + String(state().ui.showInferredParentLines) + '" title="Toggle Non-Lineal parent lines"><span class="tree-toggle-symbol" data-symbol="nonLinealLinesFill" aria-hidden="true"></span><span class="button-label">Non-Lineal<br>Lines</span></button>' + unplacedLineageControl);
-    wrapTreeControl(zoomControls, "Zoom", "tree-zoom-setting");
+    const zoomSection = wrapTreeControl(zoomControls, "Zoom", "tree-zoom-setting");
+    if (familyEditingEnabled()) zoomSection.insertAdjacentHTML("afterend", '<button type="button" class="tree-print-action" data-print-tree aria-label="Print the current Family Tree" title="Print the current Family Tree"><span class="tree-print-action-icon" data-symbol="treePrint" aria-hidden="true"></span><span>Tree</span></button>');
     $("#directoryPanel", workspaceGrid).insertAdjacentHTML("afterend", '<button id="directoryTreeDivider" class="family-resize-handle" type="button" role="separator" aria-orientation="vertical" aria-label="Resize list and Family Tree" aria-valuemin="220" aria-valuemax="480" aria-valuenow="' + state().ui.directoryPanelWidth + '"' + (directoryCollapsed ? " hidden" : "") + '><span aria-hidden="true"></span><output class="family-divider-percentage" aria-hidden="true"></output></button>');
     $(".tree-panel", workspaceGrid).insertAdjacentHTML("afterend", '<button id="treeProfileDivider" class="family-resize-handle" type="button" role="separator" aria-orientation="vertical" aria-label="Resize Family Tree and selected person" aria-valuemin="240" aria-valuemax="600" aria-valuenow="' + state().ui.profilePanelWidth + '"' + (profileCollapsed ? " hidden" : "") + '><span aria-hidden="true"></span><output class="family-divider-percentage" aria-hidden="true"></output></button>');
     $("#directorySort").value = state().ui.directorySort;
@@ -2561,9 +2568,13 @@
     }
     style.textContent = mode === "labels"
       ? "@page { size: letter; margin: 0; }"
-      : '@page { size: letter; margin: .2in .5in; @top-right { content: "' + printDate() + '"; color: #555; font: 6pt Helvetica, Arial, sans-serif; } @bottom-left { content: ""; } @bottom-right { content: counter(page) " of " counter(pages); color: #555; font: 6pt Helvetica, Arial, sans-serif; } }';
+      : mode === "tree"
+        ? '@page { size: letter landscape; margin: .5in; @top-right { content: "' + printDate() + '"; color: #555; font: 6pt Helvetica, Arial, sans-serif; } @bottom-right { content: counter(page) " of " counter(pages); color: #555; font: 6pt Helvetica, Arial, sans-serif; } }'
+        : '@page { size: letter; margin: .5in; @top-right { content: "' + printDate() + '"; color: #555; font: 6pt Helvetica, Arial, sans-serif; } @bottom-left { content: ""; } @bottom-right { content: counter(page) " of " counter(pages); color: #555; font: 6pt Helvetica, Arial, sans-serif; } }';
     document.body.classList.toggle("printing-labels", mode === "labels");
-    document.body.classList.toggle("printing-atlas", mode === "atlas");
+    document.body.classList.toggle("printing-directory", mode === "directory");
+    document.body.classList.toggle("printing-groups", mode === "groups");
+    document.body.classList.toggle("printing-tree", mode === "tree");
   }
 
   function useCleanPrintLocation() {
@@ -2574,7 +2585,7 @@
   }
 
   function clearPrintMode() {
-    document.body.classList.remove("printing-atlas", "printing-labels");
+    document.body.classList.remove("printing-directory", "printing-groups", "printing-tree", "printing-labels");
     $("#dynamicPrintPageStyle")?.remove();
     $("#printReport").setAttribute("aria-hidden", "true");
     if (activePrintLocation) {
@@ -2592,7 +2603,8 @@
     setPrintPageMode(mode);
     useCleanPrintLocation();
     activePrintTitle = document.title;
-    document.title = (mode === "labels" ? "McFamily-Mailing-Labels-" : "McFamily-Directory-") + printDate();
+    const titlePrefix = { labels: "McFamily-Mailing-Labels-", directory: "McFamily-Directory-", groups: "McFamily-Groups-", tree: "McFamily-Tree-" }[mode] || "McFamily-";
+    document.title = titlePrefix + printDate();
     requestAnimationFrame(function () {
       try {
         window.print();
@@ -2737,7 +2749,7 @@
     return candidates.sort(function (a, b) { return family.compareLineage(a, b) || model.sortName(a).localeCompare(model.sortName(b)); })[0] || null;
   }
 
-  function buildPrintReport() {
+  function printableFamilyContext() {
     const current = state();
     const excludedIds = family.unplacedLineageIds(current);
     current.workspace.people.forEach(function (person) {
@@ -2750,6 +2762,15 @@
     });
     const printState = { workspace: { people: people, relationships: relationships } };
     const graph = family.indexes(printState);
+    return { people: people, relationships: relationships, state: printState, graph: graph };
+  }
+
+  function buildGroupsReport() {
+    const context = printableFamilyContext();
+    const people = context.people;
+    const relationships = context.relationships;
+    const printState = context.state;
+    const graph = context.graph;
     const printGenerations = family.generationMap(people, relationships);
     const georgeMcMillenRoot = people.find(function (person) { return isGeorgeMcMillenRoot(person, printGenerations); });
     const componentsList = family.connectedComponents(printState).filter(function (ids) {
@@ -2785,37 +2806,157 @@
       }).join("");
       return '<article class="print-component"><header><div><span>Root Ancestor</span><h3>' + u.escapeHtml(model.displayName(rootAncestor)) + "</h3></div></header>" + earlyGenerations + branchHtml + "</article>";
     }).join("");
-    const directoryPeople = printDirectoryPeople(people, printState);
-    const households = printHouseholds(directoryPeople, graph, printState);
-    const directoryHtml = households.length ? '<table class="print-directory-table"><colgroup><col class="print-directory-household-column"><col class="print-directory-phone-column"><col class="print-directory-email-column"><col class="print-directory-address-column"></colgroup><thead><tr><th scope="col">Household</th><th scope="col">Phone</th><th scope="col">Email</th><th scope="col"><span class="print-directory-address-heading"><span>Address</span><span>Landline</span></span></th></tr></thead>' + households.map(function (household) { return printHouseholdHtml(household, graph); }).join("") + "</table>" : '<p class="print-directory-empty">No phone, email, or address information is recorded.</p>';
     const reportDate = printDate();
-    $("#printReport").innerHTML = '<section class="print-directory"><header class="print-report-header"><h1>Directory of McMillen Clan</h1><time datetime="' + reportDate + '">' + reportDate + "</time></header>" + directoryHtml + '</section><section class="print-atlas"><h2>Family Maps</h2>' + componentHtml + "</section>";
+    $("#printReport").innerHTML = '<section class="print-atlas"><header class="print-report-header"><h1>Family Groups</h1><time datetime="' + reportDate + '">' + reportDate + "</time></header>" + componentHtml + "</section>";
+  }
+
+  function buildDirectoryReport() {
+    const context = printableFamilyContext();
+    const directoryPeople = printDirectoryPeople(context.people, context.state);
+    const households = printHouseholds(directoryPeople, context.graph, context.state);
+    const directoryHtml = households.length ? '<table class="print-directory-table"><colgroup><col class="print-directory-household-column"><col class="print-directory-phone-column"><col class="print-directory-email-column"><col class="print-directory-address-column"></colgroup><thead><tr><th scope="col">Household</th><th scope="col">Phone</th><th scope="col">Email</th><th scope="col"><span class="print-directory-address-heading"><span>Address</span><span>Landline</span></span></th></tr></thead>' + households.map(function (household) { return printHouseholdHtml(household, context.graph); }).join("") + "</table>" : '<p class="print-directory-empty">No phone, email, or address information is recorded.</p>';
+    const reportDate = printDate();
+    $("#printReport").innerHTML = '<section class="print-directory"><header class="print-report-header"><h1>Directory of McMillen Clan</h1><time datetime="' + reportDate + '">' + reportDate + "</time></header>" + directoryHtml + "</section>";
+  }
+
+  function printTreeTilePositions(total, viewport, overlap) {
+    if (total <= viewport) return [(total - viewport) / 2];
+    const step = Math.max(1, viewport - overlap);
+    const positions = [];
+    let position = 0;
+    while (position + viewport < total) {
+      positions.push(position);
+      position += step;
+    }
+    const last = Math.max(0, total - viewport);
+    if (!positions.length || Math.abs(positions[positions.length - 1] - last) > 0.5) positions.push(last);
+    return positions;
+  }
+
+  function printTreeIntersects(bounds, tile) {
+    return bounds.x <= tile.x + tile.width && bounds.x + bounds.width >= tile.x && bounds.y <= tile.y + tile.height && bounds.y + bounds.height >= tile.y;
+  }
+
+  function printTreeNodeBounds(node) {
+    return { x: node.x, y: node.y, width: node.width, height: node.height };
+  }
+
+  function printTreeEdgeBounds(edge) {
+    const left = Math.min(edge.from.x, edge.to.x) - 8;
+    const top = Math.min(edge.from.y, edge.to.y) - 8;
+    const right = Math.max(edge.from.x + edge.from.width, edge.to.x + edge.to.width) + 8;
+    const bottom = Math.max(edge.from.y + edge.from.height, edge.to.y + edge.to.height) + 8;
+    return { x: left, y: top, width: right - left, height: bottom - top };
+  }
+
+  function buildTreeReport() {
+    const layout = currentTreeLayout;
+    if (!layout || !layout.nodes.length) return { error: "The Family Tree has no visible people to print." };
+    const zoom = u.clamp(treeTransform.scale, 0.01, 2.5, 1);
+    const pageWorldWidth = 960 / zoom;
+    const pageWorldHeight = 640 / zoom;
+    const maxNodeWidth = Math.max.apply(null, layout.nodes.map(function (node) { return node.width; }));
+    const maxNodeHeight = Math.max.apply(null, layout.nodes.map(function (node) { return node.height; }));
+    const xPositions = printTreeTilePositions(layout.width, pageWorldWidth, Math.min(pageWorldWidth * 0.3, maxNodeWidth + 24));
+    const yPositions = printTreeTilePositions(layout.height, pageWorldHeight, Math.min(pageWorldHeight * 0.3, maxNodeHeight + 24));
+    const pageCount = xPositions.length * yPositions.length;
+    if (pageCount > config.controls.maxPrintTreePages) return { error: "This zoom would create " + pageCount + " pages. Zoom out until the Tree needs " + config.controls.maxPrintTreePages + " pages or fewer." };
+    const current = state();
+    const fullTree = current.ui.treeMode === "overview";
+    const focusId = current.ui.selectedPersonId || current.ui.treeFocusId || current.workspace.family.homePersonId;
+    const focusPerson = layout.peopleById && layout.peopleById.get(focusId);
+    const reportTitle = fullTree ? "Full Family Tree" : (focusPerson ? model.treeName(focusPerson, layout.nameBasis, layout.nameLength) + " Family Tree" : "Family Tree");
+    const basisLabel = { preferred: "Preferred", legal: "Legal", lineal: "Lineal" }[layout.nameBasis] || layout.nameBasis;
+    const settings = [
+      fullTree ? "Full Tree" : "Lineage",
+      layout.nodeView === "detailed" ? "Details" : "Summary",
+      basisLabel + " " + (layout.nameLength === "full" ? "Full" : "Short") + " Names",
+      fullTree ? "All Levels" : current.ui.ancestorDepth + " Ancestors / " + current.ui.descendantDepth + " Descendants",
+      Math.round(zoom * 100) + "% Zoom",
+      current.ui.showInferredParentLines ? "Non-Lineal Lines Shown" : "Non-Lineal Lines Hidden"
+    ];
+    if (fullTree) settings.push(current.ui.hideUnplacedLineage ? "?? Lineal Hidden" : "?? Lineal Shown");
+    const visibleEdges = layout.edges.filter(function (edge) { return current.ui.showInferredParentLines || !isNonLinealParentEdge(edge); });
+    const pages = [];
+    yPositions.forEach(function (y, rowIndex) {
+      xPositions.forEach(function (x, columnIndex) {
+        const pageNumber = pages.length + 1;
+        const tile = { x: x, y: y, width: pageWorldWidth, height: pageWorldHeight };
+        const nodes = layout.nodes.filter(function (node) { return printTreeIntersects(printTreeNodeBounds(node), tile); }).map(function (node) { return treeNodeHtml(node, { layout: layout, print: true }); }).join("");
+        const edges = visibleEdges.filter(function (edge) { return printTreeIntersects(printTreeEdgeBounds(edge), tile); }).map(function (edge) { return treeEdgeHtml(edge, "print-tree-" + pageNumber + "-"); }).join("");
+        const sectionLabel = pageCount > 1 ? "Section " + (columnIndex + 1) + " of " + xPositions.length + " across, " + (rowIndex + 1) + " of " + yPositions.length + " down" : "Complete view";
+        pages.push('<section class="print-tree-page"><header class="print-tree-header"><div><h1>' + u.escapeHtml(reportTitle) + '</h1><p>' + u.escapeHtml(settings.join(" · ")) + '</p></div><span>' + u.escapeHtml(sectionLabel) + " · Page " + pageNumber + " of " + pageCount + '</span></header><svg class="print-tree-svg" viewBox="' + [x, y, pageWorldWidth, pageWorldHeight].map(function (value) { return Number(value.toFixed(2)); }).join(" ") + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="' + u.escapeHtml(reportTitle + ", " + sectionLabel) + '"><g class="tree-edges">' + edges + '</g><g class="tree-nodes">' + nodes + "</g></svg></section>");
+      });
+    });
+    $("#printReport").innerHTML = pages.join("");
+    return { pageCount: pageCount, title: reportTitle };
   }
 
   function openPrintPreview(trigger, title) {
     $("#printPreviewTitle").textContent = title || "Directory Preview";
     const preview = $("#printPreviewContent");
     preview.innerHTML = $("#printReport").innerHTML;
-    $$("[id]", preview).forEach(function (element) { element.removeAttribute("id"); });
+    const previewIds = new Map();
+    $$("[id]", preview).forEach(function (element, index) {
+      const sourceId = element.id;
+      const previewId = "print-preview-" + index + "-" + sourceId;
+      previewIds.set(sourceId, previewId);
+      element.id = previewId;
+    });
+    $$('[href^="#"]', preview).forEach(function (element) {
+      const sourceId = element.getAttribute("href").slice(1);
+      if (previewIds.has(sourceId)) element.setAttribute("href", "#" + previewIds.get(sourceId));
+    });
     components.openDialog("#printPreviewDialog", { trigger: trigger, focus: "[data-close-dialog='printPreviewDialog']" });
   }
 
-  function printAtlas(eventOrTrigger) {
+  function printFamilyOutputUnavailable(label) {
     if (!familyEditingEnabled()) {
-      components.message("Export unavailable", "Directory printing is not provided in read-only access.");
-      return;
+      components.message("Export unavailable", label + " printing is not provided in read-only access.");
+      return true;
     }
     if (!initialized() || !state().workspace.people.length) {
-      components.message("Nothing to print", "Add at least one person before building the family atlas.");
-      return;
+      components.message("Nothing to print", "Add at least one person before building " + label.toLowerCase() + ".");
+      return true;
     }
+    return false;
+  }
+
+  function printDirectory(eventOrTrigger) {
+    if (printFamilyOutputUnavailable("the Directory")) return;
     const trigger = eventOrTrigger && eventOrTrigger.currentTarget instanceof HTMLElement ? eventOrTrigger.currentTarget : eventOrTrigger instanceof HTMLElement ? eventOrTrigger : document.activeElement;
-    buildPrintReport();
+    buildDirectoryReport();
     if (developerReferencesEnabled()) {
       openPrintPreview(trigger, "Directory Preview");
       return;
     }
-    invokeNativePrint("atlas");
+    invokeNativePrint("directory");
+  }
+
+  function printGroups(eventOrTrigger) {
+    if (printFamilyOutputUnavailable("Family Groups")) return;
+    const trigger = eventOrTrigger && eventOrTrigger.currentTarget instanceof HTMLElement ? eventOrTrigger.currentTarget : eventOrTrigger instanceof HTMLElement ? eventOrTrigger : document.activeElement;
+    buildGroupsReport();
+    if (developerReferencesEnabled()) {
+      openPrintPreview(trigger, "Groups Preview");
+      return;
+    }
+    invokeNativePrint("groups");
+  }
+
+  function printTree(eventOrTrigger) {
+    if (printFamilyOutputUnavailable("the Family Tree")) return;
+    const trigger = eventOrTrigger && eventOrTrigger.currentTarget instanceof HTMLElement ? eventOrTrigger.currentTarget : eventOrTrigger instanceof HTMLElement ? eventOrTrigger : document.activeElement;
+    const result = buildTreeReport();
+    if (result.error) {
+      components.message("Tree is too large at this zoom", result.error);
+      return;
+    }
+    if (developerReferencesEnabled()) {
+      openPrintPreview(trigger, "Tree Preview · " + result.pageCount + " " + (result.pageCount === 1 ? "page" : "pages"));
+      return;
+    }
+    invokeNativePrint("tree");
   }
 
   function filteredRoadmap() {
@@ -3314,7 +3455,8 @@
     if (zoomButton) { treeSurfaceMode = "natural"; treeTransform.scale = u.clamp(treeTransform.scale * (zoomButton.dataset.zoom === "in" ? 1.2 : 0.833), 0.01, 2.5, treeTransform.scale); applyTreeTransform(); return; }
     if (target.closest("[data-fit-tree]")) { fitTree(); return; }
     if (target.closest("[data-clear-directory]")) { storage.mutate(function (next) { next.ui.directorySearch = ""; next.ui.directoryFilters = []; }, { touch: false, reason: "directory-filter" }); renderWorkspace(); return; }
-    if (target.closest("[data-print-atlas]")) printAtlas(target.closest("[data-print-atlas]"));
+    if (target.closest("[data-print-tree]")) printTree(target.closest("[data-print-tree]"));
+    else if (target.closest("[data-print-atlas]")) printDirectory(target.closest("[data-print-atlas]"));
   }
 
   function bindSupportEvents() {
@@ -3381,7 +3523,7 @@
     if (event.repeat || !initialized()) return;
     if (event.key === "|" && config.features.developerTools) { event.preventDefault(); toggleDeveloperMode(); }
     else if (event.code === "KeyA" && familyEditingEnabled()) { event.preventDefault(); pendingRelative = null; openPersonEditor("", event.target); }
-    else if (event.code === "KeyP" && familyEditingEnabled()) { event.preventDefault(); printAtlas(); }
+    else if (event.code === "KeyP" && familyEditingEnabled()) { event.preventDefault(); printDirectory(); }
     else if (event.code === "KeyD") { event.preventDefault(); $("#directoryButton").click(); }
     else if (event.code === "KeyF") { event.preventDefault(); $("#favoritesButton").click(); }
     else if (event.code === "KeyK") {
@@ -3445,7 +3587,8 @@
     });
     $("#supportButton").addEventListener("click", function (event) { openSupport(state().ui.supportTab, event.currentTarget); });
     $("#addPersonButton").addEventListener("click", function (event) { pendingRelative = null; openPersonEditor("", event.currentTarget); });
-    $("#printButton").addEventListener("click", printAtlas);
+    $("#printButton").addEventListener("click", printDirectory);
+    $("#groupsButton").addEventListener("click", printGroups);
     $("#labelsButton").addEventListener("click", printMailingLabels);
     $("#directoryCsvButton").addEventListener("click", exportMailingCsv);
     $("#printPreviewDialog").addEventListener("close", function () { $("#printPreviewContent").replaceChildren(); });
@@ -3562,7 +3705,7 @@
     showLoadReport();
   }
 
-  App.application = { render: renderAll, openSupport: openSupport, printAtlas: printAtlas, shortcuts: SHORTCUTS };
+  App.application = { render: renderAll, openSupport: openSupport, printAtlas: printDirectory, printDirectory: printDirectory, printGroups: printGroups, printTree: printTree, shortcuts: SHORTCUTS };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true });
   else init();
 })();

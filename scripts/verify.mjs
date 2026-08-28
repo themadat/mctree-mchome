@@ -25,6 +25,7 @@ if (config.identity.version !== config.identity.buildId) fail("Application versi
 if (config.releases.length !== 1 || config.releases[0].version !== config.identity.version) fail("Current release metadata is not singular or current");
 if (config.themes.length !== 1) fail("Only the supported McFamily appearance should remain configured");
 if (!config.datasetVersion.startsWith(config.datasetSeries + ".")) fail("Dataset version is outside the configured series");
+if (!Number.isInteger(config.controls.maxPrintTreePages) || config.controls.maxPrintTreePages < 1) fail("Tree print page limit is invalid");
 
 const documentStub = {
   createElement() {
@@ -70,11 +71,19 @@ if (roundTrip.state.workspace.people.length !== 1 || roundTrip.state.meta.packag
 const index = read("index.html");
 const sw = read("sw.js");
 const cloud = read("assets/js/core/cloud.js");
+const appSource = read("assets/js/app.js");
 if (!cloud.includes("if (!definition.canManage) prepared.state.preferences.controls.developerMode = false;")) fail("Non-Admin hosted access no longer defaults Developer Mode off");
 const toolbarOrder = ["favoritesButton", "directoryButton", "cloudAuditButton"].map((id) => index.indexOf(`id="${id}"`));
 if (toolbarOrder.some((position) => position < 0) || !(toolbarOrder[0] < toolbarOrder[1] && toolbarOrder[1] < toolbarOrder[2])) fail("Header actions are no longer ordered Favorites, List, Save");
 const searchCluster = (index.match(/<div class="header-search-cluster">([\s\S]*?)<\/div>\s*<\/div>/) || [])[1] || "";
 if (!searchCluster.includes('id="globalSearch"') || /id="(?:favoritesButton|directoryButton|cloudAuditButton)"/.test(searchCluster)) fail("Search is no longer isolated in its centered header group");
+const printActionOrder = ["printButton", "groupsButton", "labelsButton"].map((id) => index.indexOf(`id="${id}"`));
+if (printActionOrder.some((position) => position < 0) || !(printActionOrder[0] < printActionOrder[1] && printActionOrder[1] < printActionOrder[2])) fail("Groups is no longer adjacent to Directory");
+const directoryBuilderStart = appSource.indexOf("function buildDirectoryReport");
+const treeBuilderStart = appSource.indexOf("function buildTreeReport");
+const groupsBuilderStart = appSource.indexOf("function buildGroupsReport");
+if (directoryBuilderStart < 0 || treeBuilderStart < 0 || groupsBuilderStart < 0 || !appSource.includes("data-print-tree")) fail("Separated Directory, Groups, and Tree print paths are missing");
+if (appSource.slice(directoryBuilderStart, treeBuilderStart).includes("print-atlas")) fail("Directory once again includes generation maps");
 const indexVersion = (index.match(/id="versionButton"[^>]*>v([^<]+)/) || [])[1];
 const swVersion = (sw.match(/ASSET_VERSION = "([^"]+)"/) || [])[1];
 if (indexVersion !== config.identity.version || swVersion !== config.identity.version) fail("HTML, config, and service-worker versions differ");
