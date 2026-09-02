@@ -613,8 +613,9 @@
       if (!peopleIds.has(draft.parentId) || !peopleIds.has(draft.childId)) return "Choose two existing people.";
       if (draft.parentId === draft.childId) return "A person cannot be their own parent.";
       if (!config.parentLineages.some(function (item) { return item.id === draft.lineage; })) return "Choose a Lineal or Non-Lineal parent role.";
-      if (!config.parentKinds.some(function (item) { return item.id === draft.kind; })) return "Choose a supported parent type.";
-      if (draft.kind === "step" && draft.lineage === "lineal") return "A Step parent must be Non-Lineal.";
+      const parentKind = config.parentKinds.find(function (item) { return item.id === draft.kind; });
+      if (!parentKind) return "Choose a supported parent type.";
+      if (draft.lineage === "lineal" && !parentKind.lineal) return parentKind.label + " parents must be Non-Lineal.";
       if (draft.lineage === "lineal" && relationships.some(function (item) { return item.id !== ignoreId && item.type === "parent-child" && item.childId === draft.childId && item.lineage === "lineal"; })) return "A child can have only one Lineal parent.";
       const duplicate = relationships.some(function (item) { return item.id !== ignoreId && item.type === "parent-child" && item.parentId === draft.parentId && item.childId === draft.childId; });
       if (duplicate) return "That parent-child relationship already exists.";

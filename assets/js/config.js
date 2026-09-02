@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.106",
-      buildId: "0.0.1.106",
+      version: "0.0.1.107",
+      buildId: "0.0.1.107",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -90,9 +90,12 @@
     },
 
     parentKinds: [
-      { id: "biological", label: "Biological" },
-      { id: "adoptive", label: "Adopted" },
-      { id: "step", label: "Step" }
+      { id: "biological", label: "Biological", lineal: true, lineStyle: "solid" },
+      { id: "adoptive", label: "Adopted", lineal: true, lineStyle: "dashed" },
+      { id: "step", label: "Step", lineal: false, lineStyle: "dotted" },
+      { id: "foster", label: "Foster", lineal: false, lineStyle: "dotted" },
+      { id: "guardian", label: "Guardian", lineal: false, lineStyle: "dotted" },
+      { id: "unknown", label: "Unknown", lineal: false, lineStyle: "unknown" }
     ],
 
     parentLineages: [
@@ -164,13 +167,13 @@
 
     releases: [
       {
-        version: "0.0.1.106",
+        version: "0.0.1.107",
         date: "2026-09-02T12:00:00.000Z",
-        title: "Relationship statuses and sibling context",
-        summary: "Parent-child relationships now use biological, adopted, or step status with distinct Tree line styles, centralized editing, and clearer sibling ordering.",
-        features: ["Added solid biological, dashed adopted, and dotted step parent lines across the five valid Lineal and Non-Lineal combinations", "Added a person-level relationship picker after Connect for editing any direct parent, partner, or child link"],
-        improvements: ["Added a non-clickable Self row to sibling lists and labeled step siblings by status and birth year"],
-        fixes: ["Enforced Step relationships as Non-Lineal in the editor, application state, and ZIP validation", "Removed the isolated edit control from partner rows"],
+        title: "Compatible parent statuses and reliable updates",
+        summary: "Existing Foster, Guardian, and Unknown parent relationships open again, with clear Non-Lineal Tree styles and a one-step app update.",
+        features: ["Added Foster, Guardian, and Unknown to the supported parent relationship editor", "Grouped Step, Foster, and Guardian under the dotted Non-Lineal Other Tree style and rendered Unknown parent links with question marks"],
+        improvements: ["Kept Biological and Adopted eligible for Lineal ancestry while automatically limiting all other parent statuses to Non-Lineal"],
+        fixes: ["Restored McRelations compatibility for all six supported parent statuses", "Stopped a newly activated service worker from immediately presenting the same version as another update"],
         knownIssues: []
       }
     ],
