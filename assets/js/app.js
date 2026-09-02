@@ -554,8 +554,10 @@
     people.sort(function (first, second) {
       const firstDate = relationshipBirthValue(first);
       const secondDate = relationshipBirthValue(second);
+      const firstUnknown = !firstDate || /^\?{4}/.test(firstDate);
+      const secondUnknown = !secondDate || /^\?{4}/.test(secondDate);
+      if (firstUnknown !== secondUnknown) return firstUnknown ? 1 : -1;
       if (firstDate && secondDate && firstDate !== secondDate) return firstDate.localeCompare(secondDate);
-      if (firstDate !== secondDate) return firstDate ? -1 : 1;
       return model.sortName(first).localeCompare(model.sortName(second)) || first.id.localeCompare(second.id);
     });
     return new Map(people.map(function (person, index) { return [person.id, index + 1]; }));
@@ -564,6 +566,11 @@
   function birthOrderContext(person, orderMap) {
     const order = String(orderMap.get(person.id) || 0).padStart(2, "0");
     return "(" + order + " :: " + relationshipBirthYear(person) + ")";
+  }
+
+  function siblingContext(person, entry, orderMap) {
+    if (!entry.self && family.siblingRelationshipKind(person.id, entry.person.id, state()) === "step") return "(Step :: " + relationshipBirthYear(entry.person) + ")";
+    return birthOrderContext(entry.person, orderMap);
   }
 
   function parentContext(child, entry) {
@@ -611,45 +618,52 @@
     return '<div><dt>Marital Status</dt><dd>' + u.escapeHtml(label === "Unknown" ? "UNKNOWN" : label) + "</dd></div>";
   }
 
-  function relationshipNameList(entries, emptyText, contextForEntry, editable) {
+  function relationshipNameList(entries, emptyText, contextForEntry, preserveRelationships) {
     const unique = [];
     const seen = new Set();
     entries.filter(Boolean).forEach(function (entry) {
       const person = entry.person || entry;
-      const uniqueKey = editable && entry.relationship && entry.relationship.id ? entry.relationship.id : person && person.id;
+      const uniqueKey = preserveRelationships && entry.relationship && entry.relationship.id ? entry.relationship.id : person && person.id;
       if (!person || seen.has(uniqueKey)) return;
       seen.add(uniqueKey);
-      unique.push({ person: person, relationship: entry.relationship, current: entry.current });
+      unique.push({ person: person, relationship: entry.relationship, current: entry.current, self: entry.self === true });
     });
     return unique.length ? unique.map(function (entry, index) {
       const partnerClass = entry.current === true ? " current-partner" : entry.current === false ? " previous-partner" : "";
       const context = contextForEntry ? contextForEntry(entry, index, unique) : "";
       const partnerStatus = entry.current === true ? ", current partner" : entry.current === false ? ", previous partner" : "";
-      const name = profileName(entry.person);
+      const name = entry.self ? "Self" : profileName(entry.person);
       const accessibleLabel = ' aria-label="' + u.escapeHtml(name + (context ? ", " + context.replace(/[()]/g, "") : "") + partnerStatus) + '"';
-      const personButton = '<button type="button" class="relationship-name' + partnerClass + '" data-select-person="' + u.escapeHtml(entry.person.id) + '"' + accessibleLabel + '><span>' + u.escapeHtml(name) + '</span>' + (!editable && context ? '<small class="relationship-context">' + u.escapeHtml(context) + "</small>" : "") + "</button>";
-      const editButton = editable && familyEditingEnabled() && entry.relationship && entry.relationship.id ? '<button type="button" class="relationship-edit-button" data-edit-relationship="' + u.escapeHtml(entry.relationship.id) + '" aria-label="Edit partner relationship with ' + u.escapeHtml(name) + '" title="Edit partner relationship"><span data-symbol="editPerson" aria-hidden="true"></span></button>' : "";
-      const contextText = editable && context ? '<small class="relationship-context">' + u.escapeHtml(context) + "</small>" : "";
-      return '<div class="relationship-name-row' + (editable ? " editable-relationship" : "") + '">' + personButton + editButton + contextText + "</div>";
+      const contents = '<span>' + u.escapeHtml(name) + '</span>' + (context ? '<small class="relationship-context">' + u.escapeHtml(context) + "</small>" : "");
+      const personControl = entry.self
+        ? '<span class="relationship-name relationship-self"' + accessibleLabel + ">" + contents + "</span>"
+        : '<button type="button" class="relationship-name' + partnerClass + '" data-select-person="' + u.escapeHtml(entry.person.id) + '"' + accessibleLabel + ">" + contents + "</button>";
+      return '<div class="relationship-name-row">' + personControl + "</div>";
     }).join("") : '<span class="relationship-empty">' + u.escapeHtml(emptyText) + "</span>";
   }
 
-  function relationshipGroup(label, generation, entries, emptyText, contextForEntry, editable) {
-    const count = new Set(entries.filter(Boolean).map(function (entry) {
+  function relationshipGroup(label, generation, entries, emptyText, contextForEntry, preserveRelationships) {
+    const count = new Set(entries.filter(function (entry) { return entry && entry.self !== true; }).map(function (entry) {
       const person = entry.person || entry;
-      return editable && entry.relationship && entry.relationship.id ? entry.relationship.id : person && person.id;
+      return preserveRelationships && entry.relationship && entry.relationship.id ? entry.relationship.id : person && person.id;
     }).filter(Boolean)).size;
-    return '<details class="relationship-group" open><summary><span>' + u.escapeHtml(relationshipGroupLabel(label, generation)) + '</span><span class="count-pill">' + count + '</span></summary><div class="relationship-names">' + relationshipNameList(entries, emptyText, contextForEntry, editable) + "</div></details>";
+    return '<details class="relationship-group" open><summary><span>' + u.escapeHtml(relationshipGroupLabel(label, generation)) + '</span><span class="count-pill">' + count + '</span></summary><div class="relationship-names">' + relationshipNameList(entries, emptyText, contextForEntry, preserveRelationships) + "</div></details>";
   }
 
   function relationshipRows(person) {
     const groups = family.relationGroups(person.id, state());
     const parents = groups.parents;
     const generation = relationshipGeneration(person);
-    const siblingOrder = birthOrderMap([person].concat(groups.siblings));
+    const siblingSortOrder = birthOrderMap([person].concat(groups.siblings));
+    const siblingOrder = birthOrderMap([person].concat(groups.siblings.filter(function (sibling) {
+      return family.siblingRelationshipKind(person.id, sibling.id, state()) !== "step";
+    })));
+    const siblings = groups.siblings.map(function (sibling) { return { person: sibling }; }).concat({ person: person, self: true }).sort(function (first, second) {
+      return siblingSortOrder.get(first.person.id) - siblingSortOrder.get(second.person.id);
+    });
     const childOrder = birthOrderMap(groups.children);
     return relationshipGroup("Parents", Math.max(0, generation - 1), parents, "No parents recorded", function (entry) { return parentContext(person, entry); })
-      + relationshipGroup("Siblings", generation, groups.siblings, "No siblings recorded", function (entry) { return birthOrderContext(entry.person, siblingOrder); })
+      + relationshipGroup("Siblings", generation, siblings, "No siblings recorded", function (entry) { return siblingContext(person, entry, siblingOrder); })
       + relationshipGroup("Partners", null, groups.partners, "No partners recorded", function (entry) { return partnerContext(entry, person); }, true)
       + relationshipGroup("Children", generation + 1, groups.children, "No children recorded", function (entry) { return birthOrderContext(entry.person, childOrder); });
   }
@@ -949,10 +963,10 @@
     const contactBlocks = [];
     if (piiVisible() && person.addresses.length) contactBlocks.push('<section class="profile-section"><h3>Addresses</h3>' + person.addresses.slice().sort(function (a, b) { return a.order - b.order; }).map(profileAddressCard).join("") + "</section>");
     if (piiVisible() && (person.phones.length || person.emails.length)) contactBlocks.push('<section class="profile-section"><h3>Contact</h3><dl class="profile-list">' + person.phones.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + person.emails.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + "</dl></section>");
-    const actionButton = function (label, symbol, attribute, danger) {
-      return '<button type="button" class="profile-action' + (danger ? " danger-text" : "") + '" ' + attribute + ' aria-label="' + u.escapeHtml(label + " person") + '"><span class="profile-action-icon" data-symbol="' + symbol + '" aria-hidden="true"></span><span>' + u.escapeHtml(label) + "</span></button>";
+    const actionButton = function (label, symbol, attribute, danger, accessibleLabel) {
+      return '<button type="button" class="profile-action' + (danger ? " danger-text" : "") + '" ' + attribute + ' aria-label="' + u.escapeHtml(accessibleLabel || label + " person") + '"><span class="profile-action-icon" data-symbol="' + symbol + '" aria-hidden="true"></span><span>' + u.escapeHtml(label) + "</span></button>";
     };
-    const relationshipActions = editing ? '<div class="relationship-actions">' + actionButton("Add", "addRelative", 'data-add-relative="' + u.escapeHtml(person.id) + '"', false) + actionButton("Connect", "connectPerson", 'data-add-relationship="' + u.escapeHtml(person.id) + '"', false) + "</div>" : "";
+    const relationshipActions = editing ? '<div class="relationship-actions">' + actionButton("Add", "addRelative", 'data-add-relative="' + u.escapeHtml(person.id) + '"', false) + actionButton("Connect", "connectPerson", 'data-add-relationship="' + u.escapeHtml(person.id) + '"', false) + actionButton("Edit", "editPerson", 'data-edit-person-relationships="' + u.escapeHtml(person.id) + '"', false, "Edit relationships") + "</div>" : "";
     const relationships = '<section class="profile-section"><div class="relationship-section-heading"><h3>Relationships</h3>' + relationshipActions + '</div><div class="relationship-list">' + relationshipRows(person) + "</div></section>";
     const selectedName = profileName(person);
     const favoriteAction = (isFavorite ? "Remove " : "Add ") + selectedName + (isFavorite ? " from" : " to") + " favorites";
@@ -1352,9 +1366,11 @@
       ['<span class="tree-key-marks" aria-hidden="true">????</span>', "Unknown status"],
       [treeKeyCardSwatch("deceased"), "Deceased"],
       [treeKeyCardSwatch("lineal"), "Bloodline"],
-      [treeKeySwatch("parent-child", "biological", "", "lineal"), "Lineal parent"],
-      [treeKeySwatch("parent-child", "adoptive", "", "lineal"), "Lineal adoption"],
-      [treeKeySwatch("parent-child", "biological", "affinal-parent", "non-lineal"), "Non-Lineal parent"]
+      [treeKeySwatch("parent-child", "biological", "", "lineal"), "Lineal biological"],
+      [treeKeySwatch("parent-child", "adoptive", "", "lineal"), "Lineal adopted"],
+      [treeKeySwatch("parent-child", "biological", "affinal-parent", "non-lineal"), "Non-Lineal biological"],
+      [treeKeySwatch("parent-child", "adoptive", "affinal-parent", "non-lineal"), "Non-Lineal adopted"],
+      [treeKeySwatch("parent-child", "step", "affinal-parent", "non-lineal"), "Non-Lineal step"]
     ];
     return '<aside class="tree-key"><details open><summary aria-keyshortcuts="K" data-shortcut="K">Key</summary><dl>' + rows.map(function (row) {
       return "<div><dt>" + row[0] + "</dt><dd>" + u.escapeHtml(row[1]) + "</dd></div>";
@@ -1803,7 +1819,7 @@
     const previewState = u.clone(state());
     const personId = nextNumericRecordId("P", previewState.workspace.people, 3);
     previewState.workspace.people.push({ id: personId, source: { format: "mcpeople-v1", fields: {} }, updatedAt: u.isoNow() });
-    const relationship = { id: "new-person-lineage-preview", type: "parent-child", parentId: parentId, childId: personId, lineage: "lineal", kind: "unknown" };
+    const relationship = { id: "new-person-lineage-preview", type: "parent-child", parentId: parentId, childId: personId, lineage: "lineal", kind: "biological" };
     previewState.workspace.relationships.push(relationship);
     try {
       const value = assignLineageForRelationship(previewState, relationship);
@@ -1994,7 +2010,7 @@
         };
         Object.assign(relationship, { person1Id: person.id, person2Id: choice.id, status: details.status });
       }
-      else Object.assign(relationship, { parentId: parentId, childId: childId, lineage: choice.kind === "parent" && choice.id === linealParentId ? "lineal" : "non-lineal", kind: "unknown" });
+      else Object.assign(relationship, { parentId: parentId, childId: childId, lineage: choice.kind === "parent" && choice.id === linealParentId ? "lineal" : "non-lineal", kind: "biological" });
       return relationship;
     }).filter(Boolean);
   }
@@ -2095,7 +2111,7 @@
     const existingId = $("#relationshipId").value;
     const relationship = {
       id: existingId || "lineage-preview", type: "parent-child", parentId: parentId, childId: childId,
-      lineage: "lineal", kind: $("#parentKind").value || "unknown"
+      lineage: "lineal", kind: $("#parentKind").value || "biological"
     };
     const existingIndex = previewState.workspace.relationships.findIndex(function (item) { return item.id === existingId; });
     if (existingIndex >= 0) previewState.workspace.relationships[existingIndex] = relationship;
@@ -2118,6 +2134,10 @@
     $("#parentKindField").hidden = partner;
     $("#partnerTypeField").hidden = !partner;
     $("#partnerEndReasonField").hidden = !partner;
+    const linealOption = Array.from($("#parentLineage").options).find(function (option) { return option.value === "lineal"; });
+    const step = !partner && $("#parentKind").value === "step";
+    if (linealOption) linealOption.disabled = step;
+    if (step) $("#parentLineage").value = "non-lineal";
     updateRelationshipLineagePreview();
   }
 
@@ -2136,7 +2156,7 @@
     $("#partnerType").innerHTML = config.partnerTypes.map(function (item) { return '<option value="' + item.id + '">' + u.escapeHtml(item.label) + "</option>"; }).join("");
     $("#partnerEndReason").innerHTML = config.partnerEndReasons.map(function (item) { return '<option value="' + u.escapeHtml(item.id) + '">' + u.escapeHtml(item.label) + "</option>"; }).join("");
     $("#parentLineage").value = relationship && relationship.lineage || "non-lineal";
-    $("#parentKind").value = relationship && relationship.kind || "unknown";
+    $("#parentKind").value = relationship && relationship.kind || "biological";
     $("#partnerType").value = partnerTypeValue(relationship);
     $("#partnerEndReason").value = partnerEndReasonValue(relationship);
     $("#relationshipStartDate").value = relationshipDateValue(relationship, "start");
@@ -2147,6 +2167,35 @@
     $("#relationshipFormError").hidden = true;
     updateRelationshipFormType();
     components.openDialog("#relationshipDialog", { trigger: trigger, focus: "#relationshipType" });
+  }
+
+  async function editPersonRelationships(personId, trigger) {
+    if (!familyEditingEnabled()) return;
+    const person = state().workspace.people.find(function (item) { return item.id === personId; });
+    if (!person) return;
+    const groups = family.relationGroups(personId, state());
+    const choices = [];
+    groups.parents.forEach(function (entry) {
+      choices.push({ value: entry.relationship.id, label: "Parent · " + profileName(entry.person), description: parentContext(person, entry).replace(/[()]/g, "") });
+    });
+    groups.partners.forEach(function (entry) {
+      choices.push({ value: entry.relationship.id, label: (entry.current ? "Current partner · " : "Previous partner · ") + profileName(entry.person), description: partnerContext(entry, person).replace(/[()]/g, "") });
+    });
+    groups.children.forEach(function (entry) {
+      choices.push({ value: entry.relationship.id, label: "Child · " + profileName(entry.person), description: parentContext(entry.person, entry).replace(/[()]/g, "") });
+    });
+    if (!choices.length) {
+      components.message("No relationships to edit", profileName(person) + " has no direct parent, partner, or child relationships.", { trigger: trigger });
+      return;
+    }
+    const relationshipId = await components.choose({
+      title: "Edit a relationship",
+      message: "Choose one of " + profileName(person) + "’s existing relationships.",
+      choices: choices,
+      cancelLabel: "Cancel",
+      trigger: trigger
+    });
+    if (relationshipId !== "cancel") openRelationshipEditor(relationshipId, "", trigger);
   }
 
   function saveRelationship(event) {
@@ -2292,10 +2341,17 @@
   }
 
   function printRelationshipList(person, sourceState) {
-    const groups = family.relationGroups(person.id, sourceState || state());
+    const printSourceState = sourceState || state();
+    const groups = family.relationGroups(person.id, printSourceState);
     const parents = groups.parents;
     const generation = relationshipGeneration(person);
-    const siblingOrder = birthOrderMap([person].concat(groups.siblings));
+    const siblingSortOrder = birthOrderMap([person].concat(groups.siblings));
+    const siblingOrder = birthOrderMap([person].concat(groups.siblings.filter(function (sibling) {
+      return family.siblingRelationshipKind(person.id, sibling.id, printSourceState) !== "step";
+    })));
+    const siblings = groups.siblings.map(function (sibling) { return { person: sibling }; }).concat({ person: person, self: true }).sort(function (first, second) {
+      return siblingSortOrder.get(first.person.id) - siblingSortOrder.get(second.person.id);
+    });
     const childOrder = birthOrderMap(groups.children);
     const section = function (label, groupGeneration, entries, contextForEntry, fallbackMeta) {
       if (!entries.length) return "";
@@ -2304,11 +2360,15 @@
         const relationship = entry.relationship;
         const meta = relationship ? relationshipLabel(relationship, person.id, other, entry) + (relationshipMeta(relationship) ? " · " + relationshipMeta(relationship) : "") : fallbackMeta;
         const context = contextForEntry ? contextForEntry(entry, index, entries) : "";
-        return u.escapeHtml(model.displayName(other) + (context ? " " + context : "") + " — " + meta);
+        const name = entry.self ? "Self" : model.displayName(other);
+        return u.escapeHtml(name + (context ? " " + context : "") + (entry.self ? "" : " — " + meta));
       }).join("<br>") + "</dd></div>";
     };
     return section("Parents", Math.max(0, generation - 1), parents, function (entry) { return parentContext(person, entry); }, "Parent")
-      + section("Siblings", generation, groups.siblings, function (entry) { return birthOrderContext(entry.person || entry, siblingOrder); }, "Sibling")
+      + section("Siblings", generation, siblings, function (entry) {
+        if (!entry.self && family.siblingRelationshipKind(person.id, entry.person.id, printSourceState) === "step") return "(Step :: " + relationshipBirthYear(entry.person) + ")";
+        return birthOrderContext(entry.person, siblingOrder);
+      }, "Sibling")
       + section("Partners", null, groups.partners, function (entry) { return partnerContext(entry, person); }, "Partner")
       + section("Children", generation + 1, groups.children, function (entry) { return birthOrderContext(entry.person || entry, childOrder); }, "Child");
   }
@@ -3404,6 +3464,8 @@
     if (addRelativeButton) { addRelative(addRelativeButton.dataset.addRelative, addRelativeButton); return; }
     const addRelationshipButton = target.closest("[data-add-relationship]");
     if (addRelationshipButton) { openRelationshipEditor("", addRelationshipButton.dataset.addRelationship, addRelationshipButton); return; }
+    const editPersonRelationshipsButton = target.closest("[data-edit-person-relationships]");
+    if (editPersonRelationshipsButton) { editPersonRelationships(editPersonRelationshipsButton.dataset.editPersonRelationships, editPersonRelationshipsButton); return; }
     const editRelationshipButton = target.closest("[data-edit-relationship]");
     if (editRelationshipButton) { openRelationshipEditor(editRelationshipButton.dataset.editRelationship, "", editRelationshipButton); return; }
     const deleteRelationshipButton = target.closest("[data-delete-relationship]");
@@ -3618,7 +3680,8 @@
     $("#relationshipForm").addEventListener("submit", saveRelationship);
     $("#relationshipType").addEventListener("change", updateRelationshipFormType);
     $("#relationshipForm").addEventListener("change", function (event) {
-      if (["relationPerson1", "relationPerson2", "parentLineage", "parentKind"].includes(event.target.id)) updateRelationshipLineagePreview();
+      if (event.target.id === "parentKind") updateRelationshipFormType();
+      else if (["relationPerson1", "relationPerson2", "parentLineage"].includes(event.target.id)) updateRelationshipLineagePreview();
     });
     $("#relationshipForm").addEventListener("input", function (event) {
       if (event.target.matches("[data-date-input]") && validateDateInputControl(event.target)) $("#relationshipFormError").hidden = true;

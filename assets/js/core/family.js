@@ -39,6 +39,20 @@
     return Array.from(siblingIds).map(function (siblingId) { return graph.peopleById.get(siblingId); }).filter(Boolean);
   }
 
+  function siblingRelationshipKind(firstId, secondId, stateOrGraph) {
+    const graph = stateOrGraph && stateOrGraph.peopleById ? stateOrGraph : indexes(stateOrGraph);
+    const secondParentLinks = new Map((graph.parents.get(secondId) || []).map(function (entry) { return [entry.person.id, entry]; }));
+    let sharesStepParent = false;
+    let sharesDirectParent = false;
+    (graph.parents.get(firstId) || []).forEach(function (firstParentLink) {
+      const secondParentLink = secondParentLinks.get(firstParentLink.person.id);
+      if (!secondParentLink) return;
+      if (firstParentLink.relationship.kind === "step" || secondParentLink.relationship.kind === "step") sharesStepParent = true;
+      else sharesDirectParent = true;
+    });
+    return sharesStepParent && !sharesDirectParent ? "step" : "";
+  }
+
   function traverseGenerations(id, adjacency) {
     const results = [];
     const bestDepth = new Map([[id, 0]]);
@@ -600,6 +614,7 @@
       if (draft.parentId === draft.childId) return "A person cannot be their own parent.";
       if (!config.parentLineages.some(function (item) { return item.id === draft.lineage; })) return "Choose a Lineal or Non-Lineal parent role.";
       if (!config.parentKinds.some(function (item) { return item.id === draft.kind; })) return "Choose a supported parent type.";
+      if (draft.kind === "step" && draft.lineage === "lineal") return "A Step parent must be Non-Lineal.";
       if (draft.lineage === "lineal" && relationships.some(function (item) { return item.id !== ignoreId && item.type === "parent-child" && item.childId === draft.childId && item.lineage === "lineal"; })) return "A child can have only one Lineal parent.";
       const duplicate = relationships.some(function (item) { return item.id !== ignoreId && item.type === "parent-child" && item.parentId === draft.parentId && item.childId === draft.childId; });
       if (duplicate) return "That parent-child relationship already exists.";
@@ -643,6 +658,7 @@
   App.family = {
     indexes: indexes,
     relationGroups: relationGroups,
+    siblingRelationshipKind: siblingRelationshipKind,
     ancestorsOf: ancestorsOf,
     descendantsOf: descendantsOf,
     familyUnits: familyUnits,

@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.105",
-      buildId: "0.0.1.105",
+      version: "0.0.1.106",
+      buildId: "0.0.1.106",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -92,10 +92,7 @@
     parentKinds: [
       { id: "biological", label: "Biological" },
       { id: "adoptive", label: "Adopted" },
-      { id: "step", label: "Step" },
-      { id: "foster", label: "Foster" },
-      { id: "guardian", label: "Guardian" },
-      { id: "unknown", label: "Unknown" }
+      { id: "step", label: "Step" }
     ],
 
     parentLineages: [
@@ -167,13 +164,13 @@
 
     releases: [
       {
-        version: "0.0.1.105",
-        date: "2026-08-28T18:00:00.000Z",
-        title: "Denser Save and reliable Tree defaults",
-        summary: "Save status tiles and publication inputs are denser, Tree printing explicitly requests landscape, and the obsolete three-level descendant default advances to ten.",
-        features: ["Migrated the legacy persisted descendant depth of three to the intended ten-level default exactly once"],
-        improvements: ["Reduced Save status tiles to two lines, made Publishing as a single gray inline field, matched the next-patch pill to button height, and moved the summary prompt inside its input"],
-        fixes: ["Simplified the Tree print page rule so browsers consistently recognize letter landscape orientation"],
+        version: "0.0.1.106",
+        date: "2026-09-02T12:00:00.000Z",
+        title: "Relationship statuses and sibling context",
+        summary: "Parent-child relationships now use biological, adopted, or step status with distinct Tree line styles, centralized editing, and clearer sibling ordering.",
+        features: ["Added solid biological, dashed adopted, and dotted step parent lines across the five valid Lineal and Non-Lineal combinations", "Added a person-level relationship picker after Connect for editing any direct parent, partner, or child link"],
+        improvements: ["Added a non-clickable Self row to sibling lists and labeled step siblings by status and birth year"],
+        fixes: ["Enforced Step relationships as Non-Lineal in the editor, application state, and ZIP validation", "Removed the isolated edit control from partner rows"],
         knownIssues: []
       }
     ],

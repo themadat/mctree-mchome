@@ -23,6 +23,7 @@ const config = sandbox.window.LocalApp && sandbox.window.LocalApp.config;
 if (!config) fail("config.js did not expose LocalApp.config");
 if (config.identity.version !== config.identity.buildId) fail("Application version and build id differ");
 if (config.releases.length !== 1 || config.releases[0].version !== config.identity.version) fail("Current release metadata is not singular or current");
+if (config.parentKinds.map((item) => item.id).join(",") !== "biological,adoptive,step") fail("Parent-child statuses no longer match the supported biological, adopted, and step vocabulary");
 if (config.themes.length !== 1) fail("Only the supported McFamily appearance should remain configured");
 if (!config.datasetVersion.startsWith(config.datasetSeries + ".")) fail("Dataset version is outside the configured series");
 if (!Number.isInteger(config.controls.maxPrintTreePages) || config.controls.maxPrintTreePages < 1) fail("Tree print page limit is invalid");
@@ -79,6 +80,32 @@ currentState.meta.package = {
 const packageBytes = App.portability.packageBytes(App.stateModel.normalize(currentState));
 const roundTrip = await App.portability.prepareBytes(packageBytes, "synthetic.zip");
 if (roundTrip.state.workspace.people.length !== 1 || roundTrip.state.meta.package.datasetVersion !== config.datasetVersion) fail("Synthetic current-package round trip failed");
+const invalidStepState = structuredClone(roundTrip.state);
+const invalidStepChild = structuredClone(invalidStepState.workspace.people[0]);
+invalidStepChild.id = "P002";
+invalidStepChild.names.birth.first = "Step";
+invalidStepChild.names.current.first = "Step";
+invalidStepChild.source.fields["lineage-id"] = "01.01";
+invalidStepState.workspace.people.push(invalidStepChild);
+invalidStepState.workspace.relationships.push({ id: "R001", type: "parent-child", parentId: "P001", childId: "P002", lineage: "lineal", kind: "step", startDate: {}, endDate: {}, source: { fields: {} }, order: 1, createdAt: now, updatedAt: now });
+let rejectedLinealStep = false;
+try { await App.portability.prepareBytes(App.portability.packageBytes(invalidStepState), "invalid-lineal-step.zip"); }
+catch (error) { rejectedLinealStep = /Step parent a Lineal role/.test(error.message); }
+if (!rejectedLinealStep) fail("A Lineal Step relationship was not rejected by package validation");
+
+vm.runInContext(read("assets/js/core/family.js"), runtime, { filename: "assets/js/core/family.js" });
+const siblingFixture = {
+  workspace: {
+    people: ["P001", "P002", "P003", "P004"].map((id) => ({ id, names: { birth: { first: id, last: "Test" }, current: { first: id, last: "Test" } }, birth: { date: {} } })),
+    relationships: [
+      { id: "R001", type: "parent-child", parentId: "P001", childId: "P002", lineage: "lineal", kind: "biological" },
+      { id: "R002", type: "parent-child", parentId: "P001", childId: "P003", lineage: "non-lineal", kind: "step" },
+      { id: "R003", type: "parent-child", parentId: "P001", childId: "P004", lineage: "lineal", kind: "adoptive" }
+    ]
+  }
+};
+if (App.family.siblingRelationshipKind("P002", "P003", siblingFixture) !== "step" || App.family.siblingRelationshipKind("P002", "P004", siblingFixture) === "step") fail("Step sibling derivation regressed");
+if (!/Step parent must be Non-Lineal/.test(App.family.validateRelationshipDraft({ type: "parent-child", parentId: "P001", childId: "P003", lineage: "lineal", kind: "step" }, siblingFixture, "R002"))) fail("The relationship editor no longer rejects Lineal Step links");
 
 const index = read("index.html");
 const css = read("assets/css/app.css");
@@ -94,7 +121,10 @@ if (searchActionOrder.some((position) => position < 0) || !(searchActionOrder[0]
 const savePublishOrder = ["hostedPublishTitle", "hostedRecordedBy", "hostedVersionChange", "hostedBulkUploadButton", "hostedPublishButton", "hostedAuditSummary", "hostedChangeList"].map((id) => index.indexOf(`id="${id}"`));
 if (savePublishOrder.some((position) => position < 0) || savePublishOrder.some((position, item) => item && position <= savePublishOrder[item - 1])) fail("Save publication controls no longer follow the compact publishing order");
 if (!(index.indexOf('id="currentAccessSummary"') < index.indexOf('class="dialog-body cloud-audit-body"')) || !(index.indexOf('id="cloudVaultSummary"') < index.indexOf('class="dialog-body cloud-audit-body"')) || !(index.indexOf('id="githubConnectionSummary"') < index.indexOf('class="dialog-body cloud-audit-body"'))) fail("Save status summaries are no longer in the dialog header");
-if (!appSource.includes('relationshipMaritalStatus(person, entry) + " :: " + years') || !appSource.includes("personButton + editButton + contextText")) fail("Partner relationship status or edit-button ordering regressed");
+if (!appSource.includes('relationshipMaritalStatus(person, entry) + " :: " + years') || !appSource.includes('data-edit-person-relationships=') || appSource.includes('class="relationship-edit-button"')) fail("Person-level relationship editing or partner status display regressed");
+for (const label of ["Lineal biological", "Lineal adopted", "Non-Lineal biological", "Non-Lineal adopted", "Non-Lineal step"]) if (!appSource.includes(label)) fail("The five-case parent relationship key is incomplete");
+if (!appSource.includes('name = entry.self ? "Self"') || !appSource.includes('return "(Step :: " + relationshipBirthYear(entry.person)')) fail("Sibling Self or Step context display regressed");
+for (const style of ['data-kind="biological"', 'data-kind="adoptive"', 'data-kind="step"']) if (!css.includes(".tree-edge.parent-child[" + style + "]")) fail("A parent relationship line style is missing");
 if (!index.includes('id="hostedAuditSummary" type="text" placeholder="Summary of what changed"') || !css.includes('.hosted-publish-toolbar .status-pill { align-self: center; min-height: 36px; height: 36px;')) fail("The compact publishing inputs regressed");
 if (!appSource.includes('? "@page { size: letter landscape; margin: .5in; }"')) fail("Tree printing no longer explicitly requests letter landscape");
 const printActionOrder = ["printButton", "groupsButton", "labelsButton"].map((id) => index.indexOf(`id="${id}"`));
