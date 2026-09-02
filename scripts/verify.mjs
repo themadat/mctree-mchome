@@ -23,7 +23,8 @@ const config = sandbox.window.LocalApp && sandbox.window.LocalApp.config;
 if (!config) fail("config.js did not expose LocalApp.config");
 if (config.identity.version !== config.identity.buildId) fail("Application version and build id differ");
 if (config.releases.length !== 1 || config.releases[0].version !== config.identity.version) fail("Current release metadata is not singular or current");
-if (config.parentKinds.map((item) => item.id).join(",") !== "biological,adoptive,step") fail("Parent-child statuses no longer match the supported biological, adopted, and step vocabulary");
+if (config.parentKinds.map((item) => item.id).join(",") !== "biological,adoptive,step,foster,guardian,unknown") fail("Parent-child statuses no longer match the six supported values");
+if (config.parentKinds.filter((item) => item.lineal).map((item) => item.id).join(",") !== "biological,adoptive") fail("Only Biological and Adopted may be Lineal");
 if (config.themes.length !== 1) fail("Only the supported McFamily appearance should remain configured");
 if (!config.datasetVersion.startsWith(config.datasetSeries + ".")) fail("Dataset version is outside the configured series");
 if (!Number.isInteger(config.controls.maxPrintTreePages) || config.controls.maxPrintTreePages < 1) fail("Tree print page limit is invalid");
@@ -80,18 +81,24 @@ currentState.meta.package = {
 const packageBytes = App.portability.packageBytes(App.stateModel.normalize(currentState));
 const roundTrip = await App.portability.prepareBytes(packageBytes, "synthetic.zip");
 if (roundTrip.state.workspace.people.length !== 1 || roundTrip.state.meta.package.datasetVersion !== config.datasetVersion) fail("Synthetic current-package round trip failed");
-const invalidStepState = structuredClone(roundTrip.state);
-const invalidStepChild = structuredClone(invalidStepState.workspace.people[0]);
-invalidStepChild.id = "P002";
-invalidStepChild.names.birth.first = "Step";
-invalidStepChild.names.current.first = "Step";
-invalidStepChild.source.fields["lineage-id"] = "01.01";
-invalidStepState.workspace.people.push(invalidStepChild);
-invalidStepState.workspace.relationships.push({ id: "R001", type: "parent-child", parentId: "P001", childId: "P002", lineage: "lineal", kind: "step", startDate: {}, endDate: {}, source: { fields: {} }, order: 1, createdAt: now, updatedAt: now });
-let rejectedLinealStep = false;
-try { await App.portability.prepareBytes(App.portability.packageBytes(invalidStepState), "invalid-lineal-step.zip"); }
-catch (error) { rejectedLinealStep = /Step parent a Lineal role/.test(error.message); }
-if (!rejectedLinealStep) fail("A Lineal Step relationship was not rejected by package validation");
+const compatibleParentState = structuredClone(roundTrip.state);
+for (const [index, kind] of ["step", "foster", "guardian", "unknown"].entries()) {
+  const child = structuredClone(compatibleParentState.workspace.people[0]);
+  child.id = "P00" + (index + 2);
+  child.names.birth.first = kind;
+  child.names.current.first = kind;
+  child.source.fields["lineage-id"] = "0" + (index + 2);
+  compatibleParentState.workspace.people.push(child);
+  compatibleParentState.workspace.relationships.push({ id: "R00" + (index + 1), type: "parent-child", parentId: "P001", childId: child.id, lineage: "non-lineal", kind, startDate: {}, endDate: {}, source: { fields: {} }, order: index + 1, createdAt: now, updatedAt: now });
+}
+const compatibleParentRoundTrip = await App.portability.prepareBytes(App.portability.packageBytes(compatibleParentState), "compatible-parent-statuses.zip");
+if (compatibleParentRoundTrip.state.workspace.relationships.map((item) => item.kind).join(",") !== "step,foster,guardian,unknown") fail("A supported Non-Lineal parent status failed its package round trip");
+const invalidUnknownState = structuredClone(compatibleParentState);
+invalidUnknownState.workspace.relationships.find((item) => item.kind === "unknown").lineage = "lineal";
+let rejectedLinealUnknown = false;
+try { await App.portability.prepareBytes(App.portability.packageBytes(invalidUnknownState), "invalid-lineal-unknown.zip"); }
+catch (error) { rejectedLinealUnknown = /only Biological or Adopted parents may be Lineal/.test(error.message); }
+if (!rejectedLinealUnknown) fail("A Lineal Unknown relationship was not rejected by package validation");
 
 vm.runInContext(read("assets/js/core/family.js"), runtime, { filename: "assets/js/core/family.js" });
 const siblingFixture = {
@@ -105,12 +112,15 @@ const siblingFixture = {
   }
 };
 if (App.family.siblingRelationshipKind("P002", "P003", siblingFixture) !== "step" || App.family.siblingRelationshipKind("P002", "P004", siblingFixture) === "step") fail("Step sibling derivation regressed");
-if (!/Step parent must be Non-Lineal/.test(App.family.validateRelationshipDraft({ type: "parent-child", parentId: "P001", childId: "P003", lineage: "lineal", kind: "step" }, siblingFixture, "R002"))) fail("The relationship editor no longer rejects Lineal Step links");
+for (const kind of ["step", "foster", "guardian", "unknown"]) {
+  if (!/must be Non-Lineal/.test(App.family.validateRelationshipDraft({ type: "parent-child", parentId: "P001", childId: "P003", lineage: "lineal", kind }, siblingFixture, "R002"))) fail("The relationship editor accepts a Lineal " + kind + " link");
+}
 
 const index = read("index.html");
 const css = read("assets/css/app.css");
 const sw = read("sw.js");
 const cloud = read("assets/js/core/cloud.js");
+const pwa = read("assets/js/core/pwa.js");
 const appSource = read("assets/js/app.js");
 if (!cloud.includes("if (!definition.canManage) prepared.state.preferences.controls.developerMode = false;")) fail("Non-Admin hosted access no longer defaults Developer Mode off");
 const toolbarOrder = ["cloudAuditButton", "addPersonButton", "directoryButton", "printButton"].map((id) => index.indexOf(`id="${id}"`));
@@ -122,9 +132,11 @@ const savePublishOrder = ["hostedPublishTitle", "hostedRecordedBy", "hostedVersi
 if (savePublishOrder.some((position) => position < 0) || savePublishOrder.some((position, item) => item && position <= savePublishOrder[item - 1])) fail("Save publication controls no longer follow the compact publishing order");
 if (!(index.indexOf('id="currentAccessSummary"') < index.indexOf('class="dialog-body cloud-audit-body"')) || !(index.indexOf('id="cloudVaultSummary"') < index.indexOf('class="dialog-body cloud-audit-body"')) || !(index.indexOf('id="githubConnectionSummary"') < index.indexOf('class="dialog-body cloud-audit-body"'))) fail("Save status summaries are no longer in the dialog header");
 if (!appSource.includes('relationshipMaritalStatus(person, entry) + " :: " + years') || !appSource.includes('data-edit-person-relationships=') || appSource.includes('class="relationship-edit-button"')) fail("Person-level relationship editing or partner status display regressed");
-for (const label of ["Lineal biological", "Lineal adopted", "Non-Lineal biological", "Non-Lineal adopted", "Non-Lineal step"]) if (!appSource.includes(label)) fail("The five-case parent relationship key is incomplete");
+for (const label of ["Lineal biological", "Lineal adopted", "Non-Lineal biological", "Non-Lineal adopted", "Non-Lineal Other (Step, Foster, Guardian)", "Non-Lineal unknown"]) if (!appSource.includes(label)) fail("The parent relationship key is incomplete");
 if (!appSource.includes('name = entry.self ? "Self"') || !appSource.includes('return "(Step :: " + relationshipBirthYear(entry.person)')) fail("Sibling Self or Step context display regressed");
-for (const style of ['data-kind="biological"', 'data-kind="adoptive"', 'data-kind="step"']) if (!css.includes(".tree-edge.parent-child[" + style + "]")) fail("A parent relationship line style is missing");
+for (const style of ['data-kind="biological"', 'data-kind="adoptive"', 'data-kind="step"', 'data-kind="foster"', 'data-kind="guardian"', 'data-kind="unknown"']) if (!css.includes(".tree-edge.parent-child[" + style + "]")) fail("A parent relationship line style is missing");
+if (!appSource.includes('kind === "unknown" ? unknownRelationshipMarks(edge, pathId)') || !css.includes(".tree-edge-marks.parent-child-marks") || !css.includes('.print-tree-svg .tree-edge[data-kind="unknown"] { stroke: none; }')) fail("Unknown relationships no longer render with question marks in screen and print trees");
+if (!pwa.includes('serviceWorker.register("sw.js", { updateViaCache: "none" })') || pwa.includes('serviceWorker.register(versionedAsset("sw.js")')) fail("The service worker registration URL must remain stable across builds");
 if (!index.includes('id="hostedAuditSummary" type="text" placeholder="Summary of what changed"') || !css.includes('.hosted-publish-toolbar .status-pill { align-self: center; min-height: 36px; height: 36px;')) fail("The compact publishing inputs regressed");
 if (!appSource.includes('? "@page { size: letter landscape; margin: .5in; }"')) fail("Tree printing no longer explicitly requests letter landscape");
 const printActionOrder = ["printButton", "groupsButton", "labelsButton"].map((id) => index.indexOf(`id="${id}"`));

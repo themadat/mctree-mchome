@@ -5,6 +5,7 @@
   const config = App.config;
   const u = App.utils;
   const PARENT_KINDS = new Set(config.parentKinds.map(function (item) { return item.id; }));
+  const LINEAL_PARENT_KINDS = new Set(config.parentKinds.filter(function (item) { return item.lineal; }).map(function (item) { return item.id; }));
   const PARENT_LINEAGES = new Set(config.parentLineages.map(function (item) { return item.id; }));
   const PARTNER_STATUSES = new Set(config.partnerStatuses.map(function (item) { return item.id; }));
   const DATE_QUALIFIERS = new Set(["exact", "about", "before", "after"]);
@@ -364,7 +365,7 @@
         parentId: parentId,
         childId: childId,
         lineage: PARENT_LINEAGES.has(source.lineage) ? source.lineage : "non-lineal",
-        kind: PARENT_KINDS.has(source.kind) ? source.kind : "biological",
+        kind: PARENT_KINDS.has(source.kind) ? source.kind : "unknown",
         startDate: normalizeFlexibleDate(source.startDate),
         endDate: normalizeFlexibleDate(source.endDate),
         place: u.cleanLine(source.place, 240),
@@ -608,7 +609,7 @@
         key = "parent|" + a + "|" + b;
         if (!PARENT_LINEAGES.has(relationship.lineage)) errors.push("Every parent-child relationship must identify a Lineal or Non-Lineal role.");
         if (!PARENT_KINDS.has(relationship.kind)) errors.push("Every parent-child relationship must identify a supported parent type.");
-        if (relationship.kind === "step" && relationship.lineage === "lineal") errors.push("A Step parent must be Non-Lineal.");
+        if (relationship.lineage === "lineal" && !LINEAL_PARENT_KINDS.has(relationship.kind)) errors.push("Only Biological or Adopted parents may be Lineal.");
         if (relationship.lineage === "lineal") {
           if (linealParents.has(b)) errors.push("A child cannot have more than one Lineal parent.");
           else linealParents.set(b, a);

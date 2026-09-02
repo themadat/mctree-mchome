@@ -16,6 +16,7 @@
   };
   const PARENT_LINEAGES = new Set(config.parentLineages.map(function (item) { return item.id; }));
   const PARENT_TYPES = new Set(config.parentKinds.map(function (item) { return item.id; }));
+  const LINEAL_PARENT_TYPES = new Set(config.parentKinds.filter(function (item) { return item.lineal; }).map(function (item) { return item.id; }));
   const PEOPLE_HEADERS = [
     "record-id",
     "person-name-birth-prefix", "person-birth-name-first", "person-birth-name-middle", "person-birth-name-last", "person-birth-name-suffix",
@@ -473,7 +474,7 @@
       if (row["place-id"] && !placeIds.has(row["place-id"].toUpperCase())) throw new Error("McRelations.csv " + id + " references a missing place.");
       if (type === "parent-child") {
         if (!PARENT_LINEAGES.has(row["parent-lineage"]) || !PARENT_TYPES.has(row["parent-type"]) || row["partner-type"] || row["end-reason"]) throw new Error("McRelations.csv " + id + " has inconsistent parent fields.");
-        if (row["parent-type"] === "step" && row["parent-lineage"] === "lineal") throw new Error("McRelations.csv " + id + " gives a Step parent a Lineal role.");
+        if (row["parent-lineage"] === "lineal" && !LINEAL_PARENT_TYPES.has(row["parent-type"])) throw new Error("McRelations.csv " + id + " gives a " + row["parent-type"] + " parent a Lineal role; only Biological or Adopted parents may be Lineal.");
         return {
           id: id, type: type, parentId: person1, childId: person2, lineage: row["parent-lineage"], kind: row["parent-type"],
           startDate: sourceDate(start.value, start.descriptor, counters), endDate: sourceDate(end.value, end.descriptor, counters),

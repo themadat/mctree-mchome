@@ -94,7 +94,7 @@
   async function registerServiceWorker() {
     if (!("serviceWorker" in navigator) || !/^https?:$/.test(location.protocol)) return;
     try {
-      registration = await navigator.serviceWorker.register(versionedAsset("sw.js"), { updateViaCache: "none" });
+      registration = await navigator.serviceWorker.register("sw.js", { updateViaCache: "none" });
       if (registration.waiting && navigator.serviceWorker.controller) updateAvailable(registration.waiting);
       registration.addEventListener("updatefound", function () {
         const worker = registration.installing;

@@ -729,11 +729,13 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .tree-edge.partner[data-kind="previous-marriage"] { stroke-dasharray: 7 4; stroke-linecap: butt; }
 .tree-edge.partner[data-kind="unknown"] { stroke: none; }
 .tree-edge-marks { fill: var(--partner-line); font-family: Helvetica, Arial, sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 1.4px; dominant-baseline: middle; pointer-events: none; user-select: none; }
+.tree-edge-marks.parent-child-marks { fill: var(--line-strong); opacity: .72; }
 .tree-edge.parent-child[data-lineage="lineal"] { stroke: color-mix(in srgb, var(--lineal-mark) 52%, var(--line)); }
 .tree-edge.parent-child[data-lineage="non-lineal"], .tree-edge.affinal-parent { stroke: var(--line-strong); stroke-width: 1.5; opacity: .72; }
 .tree-edge.parent-child[data-kind="biological"] { stroke-dasharray: none; stroke-linecap: butt; }
 .tree-edge.parent-child[data-kind="adoptive"] { stroke-dasharray: 7 4; stroke-linecap: butt; }
-.tree-edge.parent-child[data-kind="step"] { stroke-dasharray: 1 5; stroke-linecap: round; }
+.tree-edge.parent-child[data-kind="step"], .tree-edge.parent-child[data-kind="foster"], .tree-edge.parent-child[data-kind="guardian"] { stroke-dasharray: 1 5; stroke-linecap: round; }
+.tree-edge.parent-child[data-kind="unknown"] { stroke: none; }
 .tree-key { position: absolute; z-index: 5; top: .55rem; right: .55rem; pointer-events: none; max-width: min(15rem, 62%); border: 1px solid var(--line); border-radius: 10px; background: color-mix(in srgb, var(--surface) 92%, transparent); box-shadow: var(--shadow-small); backdrop-filter: blur(3px); }
 .tree-key > details { margin: 0; }
 .tree-key summary { pointer-events: auto; padding: .3rem .5rem; border-radius: 9px; color: var(--muted); font-size: .62rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; cursor: pointer; }
@@ -748,6 +750,7 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .tree-key-card .deceased { fill: var(--deceased-card); stroke: var(--deceased-card-muted); stroke-width: 1; }
 .tree-key-card .lineal { fill: var(--surface); stroke: var(--lineal-mark); stroke-width: 3; }
 .tree-key-marks { display: block; width: 30px; color: var(--partner-line); font-size: .6rem; font-weight: 800; letter-spacing: 1.2px; }
+.tree-key-marks.parent-child-marks { color: var(--line-strong); }
 .tree-node { cursor: pointer; outline: none; }
 .tree-node rect { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.5; vector-effect: non-scaling-stroke; filter: drop-shadow(0 3px 5px rgba(20, 28, 25, .12)); }
 .tree-node text { fill: var(--text); font-family: Helvetica, Arial, sans-serif; pointer-events: none; }
@@ -1090,7 +1093,9 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .print-tree-svg .tree-edge.partner { stroke: #c58f18; }
 .print-tree-svg .tree-edge.parent-child[data-lineage="lineal"] { stroke: #ad8587; }
 .print-tree-svg .tree-edge.affinal-parent { stroke: #607d89; }
+.print-tree-svg .tree-edge[data-kind="unknown"] { stroke: none; }
 .print-tree-svg .tree-edge-marks { fill: #c58f18; }
+.print-tree-svg .tree-edge-marks.parent-child-marks { fill: #607d89; }
 .print-tree-svg .tree-lineal-mark { color: #8f5b5d; fill: currentColor; }
 .print-tree-svg .tree-contact-mark { color: #53605b; fill: currentColor; }
 .print-preview-document .print-atlas > h2 { margin: 0 0 .08in; }

@@ -981,14 +981,17 @@
     return Boolean(edge && edge.relationship && edge.relationship.type === "parent-child" && edge.relationship.lineage === "non-lineal");
   }
 
-  function unknownPartnerMarks(edge, pathId) {
+  function unknownRelationshipMarks(edge, pathId) {
+    const parentChild = edge.relationship.type === "parent-child";
     const left = edge.from.x <= edge.to.x ? edge.from : edge.to;
     const right = left === edge.from ? edge.to : edge.from;
-    const length = Math.max(0, right.x - (left.x + left.width));
+    const length = parentChild
+      ? Math.hypot((edge.to.x + edge.to.width / 2) - (edge.from.x + edge.from.width / 2), edge.to.y - (edge.from.y + edge.from.height))
+      : Math.max(0, right.x - (left.x + left.width));
     const inset = Math.min(1, length / 4);
     const visibleLength = Math.max(0, length - inset * 2);
     const marks = new Array(Math.max(3, Math.ceil(visibleLength / 7))).fill("?").join("");
-    return '<text class="tree-edge-marks" aria-hidden="true"><textPath href="#' + pathId + '" startOffset="' + inset + '" textLength="' + visibleLength + '" lengthAdjust="spacingAndGlyphs">' + marks + "</textPath></text>";
+    return '<text class="tree-edge-marks' + (parentChild ? " parent-child-marks" : "") + '" aria-hidden="true"><textPath href="#' + pathId + '" startOffset="' + inset + '" textLength="' + visibleLength + '" lengthAdjust="spacingAndGlyphs">' + marks + "</textPath></text>";
   }
 
   function edgePath(edge) {
@@ -1104,7 +1107,7 @@
     const lineage = relationship.type === "parent-child" ? ' data-lineage="' + u.escapeHtml(relationship.lineage) + '"' : "";
     const pathId = (idPrefix || "") + "tree-edge-" + u.escapeHtml(relationship.id);
     const path = '<path id="' + pathId + '" class="tree-edge ' + u.escapeHtml(relationship.type) + affinal + '" role="img" aria-label="' + u.escapeHtml(description) + '" data-kind="' + u.escapeHtml(kind) + '"' + lineage + ' d="' + edgePath(edge) + '"><title>' + u.escapeHtml(description) + "</title></path>";
-    return path + (relationship.type === "partner" && kind === "unknown" ? unknownPartnerMarks(edge, pathId) : "");
+    return path + (kind === "unknown" ? unknownRelationshipMarks(edge, pathId) : "");
   }
 
   function treeNodeHtml(node, options) {
@@ -1370,7 +1373,8 @@
       [treeKeySwatch("parent-child", "adoptive", "", "lineal"), "Lineal adopted"],
       [treeKeySwatch("parent-child", "biological", "affinal-parent", "non-lineal"), "Non-Lineal biological"],
       [treeKeySwatch("parent-child", "adoptive", "affinal-parent", "non-lineal"), "Non-Lineal adopted"],
-      [treeKeySwatch("parent-child", "step", "affinal-parent", "non-lineal"), "Non-Lineal step"]
+      [treeKeySwatch("parent-child", "step", "affinal-parent", "non-lineal"), "Non-Lineal Other (Step, Foster, Guardian)"],
+      ['<span class="tree-key-marks parent-child-marks" aria-hidden="true">????</span>', "Non-Lineal unknown"]
     ];
     return '<aside class="tree-key"><details open><summary aria-keyshortcuts="K" data-shortcut="K">Key</summary><dl>' + rows.map(function (row) {
       return "<div><dt>" + row[0] + "</dt><dd>" + u.escapeHtml(row[1]) + "</dd></div>";
@@ -2135,9 +2139,10 @@
     $("#partnerTypeField").hidden = !partner;
     $("#partnerEndReasonField").hidden = !partner;
     const linealOption = Array.from($("#parentLineage").options).find(function (option) { return option.value === "lineal"; });
-    const step = !partner && $("#parentKind").value === "step";
-    if (linealOption) linealOption.disabled = step;
-    if (step) $("#parentLineage").value = "non-lineal";
+    const parentKind = !partner && config.parentKinds.find(function (item) { return item.id === $("#parentKind").value; });
+    const nonLinealOnly = Boolean(parentKind && !parentKind.lineal);
+    if (linealOption) linealOption.disabled = nonLinealOnly;
+    if (nonLinealOnly) $("#parentLineage").value = "non-lineal";
     updateRelationshipLineagePreview();
   }
 
