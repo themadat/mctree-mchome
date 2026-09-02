@@ -730,8 +730,10 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .tree-edge.partner[data-kind="unknown"] { stroke: none; }
 .tree-edge-marks { fill: var(--partner-line); font-family: Helvetica, Arial, sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 1.4px; dominant-baseline: middle; pointer-events: none; user-select: none; }
 .tree-edge.parent-child[data-lineage="lineal"] { stroke: color-mix(in srgb, var(--lineal-mark) 52%, var(--line)); }
-.tree-edge.affinal-parent { stroke: color-mix(in srgb, var(--accent) 58%, var(--line)); stroke-width: 1.5; stroke-dasharray: 4 5; opacity: .72; }
-.tree-edge[data-kind="adoptive"], .tree-edge[data-kind="step"], .tree-edge[data-kind="foster"], .tree-edge[data-kind="guardian"] { stroke-dasharray: 7 4; }
+.tree-edge.parent-child[data-lineage="non-lineal"], .tree-edge.affinal-parent { stroke: var(--line-strong); stroke-width: 1.5; opacity: .72; }
+.tree-edge.parent-child[data-kind="biological"] { stroke-dasharray: none; stroke-linecap: butt; }
+.tree-edge.parent-child[data-kind="adoptive"] { stroke-dasharray: 7 4; stroke-linecap: butt; }
+.tree-edge.parent-child[data-kind="step"] { stroke-dasharray: 1 5; stroke-linecap: round; }
 .tree-key { position: absolute; z-index: 5; top: .55rem; right: .55rem; pointer-events: none; max-width: min(15rem, 62%); border: 1px solid var(--line); border-radius: 10px; background: color-mix(in srgb, var(--surface) 92%, transparent); box-shadow: var(--shadow-small); backdrop-filter: blur(3px); }
 .tree-key > details { margin: 0; }
 .tree-key summary { pointer-events: auto; padding: .3rem .5rem; border-radius: 9px; color: var(--muted); font-size: .62rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; cursor: pointer; }
@@ -843,8 +845,6 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .relationship-group summary .count-pill { min-height: 20px; padding: .12rem .38rem; font-size: .62rem; }
 .relationship-names { display: grid; padding: 0 .3rem .3rem; }
 .relationship-name-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: .12rem; }
-.relationship-name-row.editable-relationship { grid-template-columns: minmax(0, 1fr) auto auto; }
-.relationship-name-row.editable-relationship .relationship-context { padding-right: .35rem; }
 .relationship-name { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; min-height: 30px; padding: .28rem .35rem; border: 0; border-radius: 6px; background: transparent; color: var(--person-link); font-size: .75rem; font-weight: 750; text-align: left; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 42%, transparent); text-underline-offset: 2px; }
 .relationship-name > span { min-width: 0; overflow-wrap: anywhere; }
 .relationship-context { flex: 0 0 auto; color: var(--muted); font-size: .68rem; font-weight: 650; white-space: nowrap; }
@@ -852,9 +852,7 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .relationship-name.current-partner { font-weight: 850; }
 .relationship-name.previous-partner { color: var(--person-link); font-weight: 550; opacity: .82; }
 .relationship-name.previous-partner:hover, .relationship-name.previous-partner:focus-visible { color: var(--person-link-hover); opacity: 1; }
-.relationship-edit-button { display: grid; place-items: center; width: 30px; min-width: 30px; min-height: 30px; padding: .3rem; border: 0; border-radius: 7px; background: transparent; color: var(--muted); }
-.relationship-edit-button:hover, .relationship-edit-button:focus-visible { background: var(--accent-soft); color: var(--accent-strong); }
-.relationship-edit-button .sf-symbol { width: .95rem; height: .95rem; }
+.relationship-self { color: var(--text); text-decoration: none; }
 .relationship-lineage-preview { padding: .55rem .65rem; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); }
 .relationship-lineage-preview output { min-height: 1.35rem; font-size: .85rem; }
 .relationship-lineage-preview small { color: var(--muted); font-size: .65rem; }
