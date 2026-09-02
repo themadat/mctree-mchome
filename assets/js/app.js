@@ -204,6 +204,7 @@
     versionButton.textContent = "v" + config.identity.version + (developerMode ? " DEV" : "");
     versionButton.dataset.developer = developerMode ? "true" : "false";
     versionButton.setAttribute("aria-label", "Open release notes for version " + config.identity.version + (developerMode ? ". Developer Mode is enabled" : ""));
+    $("#accessGateVersion").textContent = "v" + config.identity.version;
     const accessPill = $("#accessModePill");
     const runtimeAccess = App.cloud && App.cloud.currentAccess ? App.cloud.currentAccess() : null;
     accessPill.hidden = !isInitialized;
@@ -708,7 +709,7 @@
     const used = new Set(sourceState.workspace.people.filter(function (person) { return person.id !== personId; }).map(function (person) {
       return storedLineageValue(person).split(".")[0];
     }).filter(Boolean));
-    for (let number = 1; number <= 98; number += 1) {
+    for (let number = 1; number <= config.controls.maxLineageSegment; number += 1) {
       const segment = String(number).padStart(2, "0");
       if (!used.has(segment)) return segment;
     }
@@ -722,7 +723,7 @@
       const value = storedLineageValue(person);
       return value.startsWith(prefix) && value.split(".").length === depth ? value.slice(prefix.length) : "";
     }).filter(Boolean));
-    for (let number = 1; number <= 98; number += 1) {
+    for (let number = 1; number <= config.controls.maxLineageSegment; number += 1) {
       const segment = String(number).padStart(2, "0");
       if (!used.has(segment)) return segment;
     }
@@ -747,7 +748,8 @@
     const expectedDepth = parentLineage.split(".").length + 1;
     let newLineage = oldLineage.startsWith(prefix) && oldLineage.split(".").length === expectedDepth && !lineageValueTaken(sourceState, oldLineage, personId) ? oldLineage : "";
     const oldLastSegment = oldLineage.split(".").slice(-1)[0];
-    if (!newLineage && /^(?:0[1-9]|[1-8]\d|9[0-8])$/.test(oldLastSegment || "")) {
+    const oldLastNumber = Number(oldLastSegment);
+    if (!newLineage && /^\d{2}$/.test(oldLastSegment || "") && oldLastNumber >= 1 && oldLastNumber <= config.controls.maxLineageSegment) {
       const candidate = prefix + oldLastSegment;
       if (!lineageValueTaken(sourceState, candidate, personId)) newLineage = candidate;
     }
@@ -3285,6 +3287,26 @@
       ["Theme", document.documentElement.dataset.theme], ["Recovery", hosted ? "Hosted GitHub history" : (recovery ? u.dateLabel(recovery.createdAt) + " · " + recovery.reason : "None")]
     ];
     $("#developerDiagnostics").innerHTML = diagnostics.map(function (row) { return '<div><dt>' + u.escapeHtml(row[0]) + '</dt><dd>' + u.escapeHtml(row[1]) + "</dd></div>"; }).join("");
+    const admin = adminFavoritesRestoreEnabled();
+    const integritySection = $("#developerIntegritySection");
+    integritySection.hidden = !admin;
+    if (admin) {
+      const peopleById = new Map(state().workspace.people.map(function (person) { return [person.id, person]; }));
+      const lineageIssues = model.lineageIssues(state());
+      const relationshipIssues = model.relationshipIssues(state());
+      $("#developerLineageIssueCount").textContent = String(lineageIssues.length);
+      $("#developerRelationshipIssueCount").textContent = String(relationshipIssues.length);
+      $("#developerLineageIssues").innerHTML = lineageIssues.length ? lineageIssues.map(function (issue) {
+        const person = peopleById.get(issue.personId);
+        return '<li><button type="button" class="developer-issue-button" data-developer-person="' + u.escapeHtml(issue.personId) + '"><strong>' + u.escapeHtml((person ? model.displayName(person) : issue.personId) + " · " + issue.value) + '</strong><small>' + u.escapeHtml(issue.personId + " · " + issue.reasons.join(" ")) + "</small></button></li>";
+      }).join("") : '<li class="developer-issue-empty">No lineage issues found.</li>';
+      $("#developerRelationshipIssues").innerHTML = relationshipIssues.length ? relationshipIssues.map(function (issue) {
+        const parent = peopleById.get(issue.parentId);
+        const child = peopleById.get(issue.childId);
+        const pair = (parent ? model.displayName(parent) : issue.parentId) + " → " + (child ? model.displayName(child) : issue.childId);
+        return '<li><button type="button" class="developer-issue-button" data-edit-relationship="' + u.escapeHtml(issue.relationshipId) + '"><strong>' + u.escapeHtml(pair) + '</strong><small>' + u.escapeHtml(issue.relationshipId + " · " + issue.reason) + "</small></button></li>";
+      }).join("") : '<li class="developer-issue-empty">No relationship issues found.</li>';
+    }
     $("#developerState").textContent = JSON.stringify(model.exportEnvelope(state()), null, 2);
     $("#restoreRecoveryButton").hidden = hosted;
     $("#saveRecoveryButton").hidden = hosted;
@@ -3460,6 +3482,12 @@
     if (select) {
       const searchedDirectoryResult = select.classList.contains("directory-person") && Boolean(state().ui.directorySearch.trim());
       selectPerson(select.dataset.selectPerson || select.dataset.treePerson, { focus: true, mobileProfile: true, focusMode: searchedDirectoryResult });
+      return;
+    }
+    const developerPerson = target.closest("[data-developer-person]");
+    if (developerPerson) {
+      components.closeDialog("#supportDialog", "view-person");
+      selectPerson(developerPerson.dataset.developerPerson, { focus: true, mobileProfile: true });
       return;
     }
     if (target.closest("[data-add-person]")) { pendingRelative = null; openPersonEditor("", target.closest("[data-add-person]")); return; }
