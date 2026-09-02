@@ -463,6 +463,15 @@ details > summary { width: fit-content; cursor: pointer; color: var(--accent-str
 .developer-tool-section h4 { margin: 0 0 .2rem; }
 .developer-tool-section p { margin: 0; color: var(--muted); font-size: .72rem; }
 .developer-tool-section .developer-actions { flex: 0 0 auto; margin: 0; }
+.developer-integrity-section { display: grid; align-items: stretch; }
+.developer-issue-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: .6rem; }
+.developer-issue-columns h5 { display: flex; align-items: center; gap: .35rem; margin: 0 0 .35rem; }
+.developer-issue-list { display: grid; gap: .28rem; margin: 0; padding: 0; list-style: none; }
+.developer-issue-list > li { min-width: 0; }
+.developer-issue-button, .developer-issue-empty { display: grid; width: 100%; min-height: 38px; padding: .38rem .45rem; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--text); text-align: left; }
+.developer-issue-button { cursor: pointer; }
+.developer-issue-button:hover, .developer-issue-button:focus-visible { border-color: var(--accent); background: var(--accent-soft); }
+.developer-issue-button small, .developer-issue-empty { color: var(--muted); font-size: .66rem; overflow-wrap: anywhere; }
 .diagnostic-grid > div { padding: .6rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); }
 .diagnostic-grid dt { color: var(--muted); font-size: .68rem; font-weight: 800; text-transform: uppercase; }
 .diagnostic-grid dd { margin: .18rem 0 0; overflow-wrap: anywhere; }

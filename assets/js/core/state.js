@@ -609,7 +609,6 @@
         key = "parent|" + a + "|" + b;
         if (!PARENT_LINEAGES.has(relationship.lineage)) errors.push("Every parent-child relationship must identify a Lineal or Non-Lineal role.");
         if (!PARENT_KINDS.has(relationship.kind)) errors.push("Every parent-child relationship must identify a supported parent type.");
-        if (relationship.lineage === "lineal" && !LINEAL_PARENT_KINDS.has(relationship.kind)) errors.push("Only Biological or Adopted parents may be Lineal.");
         if (relationship.lineage === "lineal") {
           if (linealParents.has(b)) errors.push("A child cannot have more than one Lineal parent.");
           else linealParents.set(b, a);
@@ -665,6 +664,65 @@
       links.add(link);
     });
     return Array.from(new Set(errors));
+  }
+
+  function lineageIssues(input) {
+    const workspace = u.plainObject(u.plainObject(input).workspace);
+    const people = Array.isArray(workspace.people) ? workspace.people : [];
+    const relationships = Array.isArray(workspace.relationships) ? workspace.relationships : [];
+    const peopleById = new Map(people.map(function (person) { return [person.id, person]; }));
+    const linealParents = new Map();
+    const lineageOwners = new Map();
+    const reasonsByPerson = new Map();
+    const add = function (personId, reason) {
+      if (!reasonsByPerson.has(personId)) reasonsByPerson.set(personId, new Set());
+      reasonsByPerson.get(personId).add(reason);
+    };
+    relationships.filter(function (relationship) { return relationship.type === "parent-child" && relationship.lineage === "lineal"; }).forEach(function (relationship) {
+      if (!linealParents.has(relationship.childId)) linealParents.set(relationship.childId, relationship.parentId);
+    });
+    people.forEach(function (person) {
+      const fields = u.plainObject(u.plainObject(person.source).fields);
+      const raw = u.cleanLine(fields["lineage-id"], 100);
+      const parentId = linealParents.get(person.id);
+      if (!raw) {
+        if (parentId) add(person.id, "Has a Lineal parent but no Lineage ID.");
+        return;
+      }
+      const segments = raw.split(".");
+      if (!/^(?:\d{2})(?:\.\d{2})*$/.test(raw)) add(person.id, "Does not use dot-separated two-digit segments.");
+      const reserved = Array.from(new Set(segments.filter(function (segment) { return /^\d{2}$/.test(segment) && (Number(segment) < 1 || Number(segment) > config.controls.maxLineageSegment); })));
+      if (reserved.length) add(person.id, "Uses reserved or unresolved segment " + reserved.join(", ") + ".");
+      if (!lineageOwners.has(raw)) lineageOwners.set(raw, []);
+      lineageOwners.get(raw).push(person.id);
+      if (!parentId) {
+        if (segments.length > 1) add(person.id, "Has a multi-segment Lineage ID but no Lineal parent.");
+        return;
+      }
+      const parent = peopleById.get(parentId);
+      const parentFields = u.plainObject(u.plainObject(parent && parent.source).fields);
+      const parentLineage = u.cleanLine(parentFields["lineage-id"], 100);
+      if (!parentLineage || !raw.startsWith(parentLineage + ".") || segments.length !== parentLineage.split(".").length + 1) add(person.id, "Does not extend its Lineal parent's path by one segment.");
+    });
+    lineageOwners.forEach(function (personIds, raw) {
+      if (personIds.length < 2 || raw === "99") return;
+      personIds.forEach(function (personId) { add(personId, "Duplicates another person's Lineage ID."); });
+    });
+    return people.filter(function (person) { return reasonsByPerson.has(person.id); }).map(function (person) {
+      const fields = u.plainObject(u.plainObject(person.source).fields);
+      return { personId: person.id, value: u.cleanLine(fields["lineage-id"], 100) || "(blank)", reasons: Array.from(reasonsByPerson.get(person.id)) };
+    });
+  }
+
+  function relationshipIssues(input) {
+    const workspace = u.plainObject(u.plainObject(input).workspace);
+    const relationships = Array.isArray(workspace.relationships) ? workspace.relationships : [];
+    return relationships.reduce(function (issues, relationship) {
+      if (relationship.type !== "parent-child" || relationship.lineage !== "lineal") return issues;
+      const kind = config.parentKinds.find(function (item) { return item.id === relationship.kind; });
+      if (kind && !LINEAL_PARENT_KINDS.has(kind.id)) issues.push({ relationshipId: relationship.id, parentId: relationship.parentId, childId: relationship.childId, reason: kind.label + " parent is marked Lineal; change its status or make it Non-Lineal." });
+      return issues;
+    }, []);
   }
 
   function parentAdjacency(relationships) {
@@ -905,6 +963,8 @@
     personSearchText: personSearchText,
     normalizeSearchText: normalizeSearchText,
     fuzzySearchMatch: fuzzySearchMatch,
+    lineageIssues: lineageIssues,
+    relationshipIssues: relationshipIssues,
     hasAncestryCycle: hasAncestryCycle,
     wouldCreateAncestryCycle: wouldCreateAncestryCycle
   };

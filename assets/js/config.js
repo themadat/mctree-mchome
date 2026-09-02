@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.107",
-      buildId: "0.0.1.107",
+      version: "0.0.1.108",
+      buildId: "0.0.1.108",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -86,6 +86,7 @@
       maxTextLength: 20000,
       maxDocumentHtmlLength: 250000,
       maxTreeDepth: 10,
+      maxLineageSegment: 96,
       maxPrintTreePages: 240
     },
 
@@ -167,13 +168,13 @@
 
     releases: [
       {
-        version: "0.0.1.107",
+        version: "0.0.1.108",
         date: "2026-09-02T12:00:00.000Z",
-        title: "Compatible parent statuses and reliable updates",
-        summary: "Existing Foster, Guardian, and Unknown parent relationships open again, with clear Non-Lineal Tree styles and a one-step app update.",
-        features: ["Added Foster, Guardian, and Unknown to the supported parent relationship editor", "Grouped Step, Foster, and Guardian under the dotted Non-Lineal Other Tree style and rendered Unknown parent links with question marks"],
-        improvements: ["Kept Biological and Adopted eligible for Lineal ancestry while automatically limiting all other parent statuses to Non-Lineal"],
-        fixes: ["Restored McRelations compatibility for all six supported parent statuses", "Stopped a newly activated service worker from immediately presenting the same version as another update"],
+        title: "Admin cleanup diagnostics",
+        summary: "Legacy lineage and Lineal parent-status issues can open for cleanup and are listed for Admin in Developer Mode.",
+        features: ["Added Admin-only Invalid lineage and Invalid relationships lists with direct person and relationship actions", "Added the current version pill to the Welcome screen"],
+        improvements: ["Flagged malformed, unresolved, reserved, duplicate, and parent-mismatched Lineage IDs in one cleanup view"],
+        fixes: ["Temporarily allowed existing Lineal Step, Foster, Guardian, and Unknown relationships to load while new edits still enforce the supported rules"],
         knownIssues: []
       }
     ],

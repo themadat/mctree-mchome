@@ -16,7 +16,6 @@
   };
   const PARENT_LINEAGES = new Set(config.parentLineages.map(function (item) { return item.id; }));
   const PARENT_TYPES = new Set(config.parentKinds.map(function (item) { return item.id; }));
-  const LINEAL_PARENT_TYPES = new Set(config.parentKinds.filter(function (item) { return item.lineal; }).map(function (item) { return item.id; }));
   const PEOPLE_HEADERS = [
     "record-id",
     "person-name-birth-prefix", "person-birth-name-first", "person-birth-name-middle", "person-birth-name-last", "person-birth-name-suffix",
@@ -384,33 +383,6 @@
     };
   }
 
-  function validateLineage(people, relationships) {
-    const peopleById = new Map(people.map(function (person) { return [person.id, person]; }));
-    const linealParents = new Map();
-    relationships.filter(function (relationship) { return relationship.type === "parent-child" && relationship.lineage === "lineal"; }).forEach(function (relationship) {
-      if (linealParents.has(relationship.childId)) throw new Error("McRelations.csv gives " + relationship.childId + " more than one Lineal parent.");
-      linealParents.set(relationship.childId, relationship.parentId);
-    });
-    const usedLineage = new Set();
-    people.forEach(function (person) {
-      const lineage = u.cleanLine(person.source.fields["lineage-id"], 100);
-      const parentId = linealParents.get(person.id);
-      if (!lineage) {
-        if (parentId) throw new Error(person.id + " has a Lineal parent but no lineage-id.");
-        return;
-      }
-      if (!/^(?:\d{2})(?:\.\d{2})*$|^99$/.test(lineage)) throw new Error("McPeople.csv lineage-id values must use two-digit root-to-person segments.");
-      if (lineage !== "99" && usedLineage.has(lineage)) throw new Error("McPeople.csv contains a duplicate lineage-id: " + lineage + ".");
-      if (lineage !== "99") usedLineage.add(lineage);
-      if (!parentId) return;
-      const parent = peopleById.get(parentId);
-      const parentLineage = parent && u.cleanLine(parent.source.fields["lineage-id"], 100);
-      if (!parentLineage || !lineage.startsWith(parentLineage + ".") || lineage.split(".").length !== parentLineage.split(".").length + 1) {
-        throw new Error("The lineage-id for " + person.id + " must extend its Lineal parent's path by one segment.");
-      }
-    });
-  }
-
   function preparePackage(files, fileName) {
     const parsed = {};
     FILE_NAMES.forEach(function (name) { parsed[name] = parseCsv(files.get(name), name); });
@@ -474,7 +446,6 @@
       if (row["place-id"] && !placeIds.has(row["place-id"].toUpperCase())) throw new Error("McRelations.csv " + id + " references a missing place.");
       if (type === "parent-child") {
         if (!PARENT_LINEAGES.has(row["parent-lineage"]) || !PARENT_TYPES.has(row["parent-type"]) || row["partner-type"] || row["end-reason"]) throw new Error("McRelations.csv " + id + " has inconsistent parent fields.");
-        if (row["parent-lineage"] === "lineal" && !LINEAL_PARENT_TYPES.has(row["parent-type"])) throw new Error("McRelations.csv " + id + " gives a " + row["parent-type"] + " parent a Lineal role; only Biological or Adopted parents may be Lineal.");
         return {
           id: id, type: type, parentId: person1, childId: person2, lineage: row["parent-lineage"], kind: row["parent-type"],
           startDate: sourceDate(start.value, start.descriptor, counters), endDate: sourceDate(end.value, end.descriptor, counters),
@@ -510,8 +481,6 @@
       const lineal = parents.filter(function (relationship) { return relationship.lineage === "lineal"; });
       if (lineal.length > 1) throw new Error("McRelations.csv gives " + childId + " more than one Lineal parent.");
     });
-    validateLineage(people, relationships);
-
     const residenceIds = new Set();
     const residenceLinks = new Set();
     const residences = parsed["McResidences.csv"].rows.map(function (row, index) {
