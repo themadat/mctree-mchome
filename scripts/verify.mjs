@@ -94,6 +94,7 @@ for (const [index, kind] of ["step", "foster", "guardian", "unknown"].entries())
 const compatibleParentRoundTrip = await App.portability.prepareBytes(App.portability.packageBytes(compatibleParentState), "compatible-parent-statuses.zip");
 if (compatibleParentRoundTrip.state.workspace.relationships.map((item) => item.kind).join(",") !== "step,foster,guardian,unknown") fail("A supported Non-Lineal parent status failed its package round trip");
 if (!App.stateModel.relationshipIssues(compatibleParentRoundTrip.state).some((issue) => issue.relationshipId === "R004" && /Parent type is Unknown/.test(issue.reason))) fail("A Non-Lineal Unknown parent is missing from Admin cleanup");
+if (!App.stateModel.lineageIssues(compatibleParentRoundTrip.state).some((issue) => issue.personId === "P002" && /only step parent status/.test(issue.reasons.join(" ")))) fail("A Step-only child with a stale Lineage ID is missing from Admin cleanup");
 const invalidUnknownState = structuredClone(compatibleParentState);
 invalidUnknownState.workspace.relationships.find((item) => item.kind === "unknown").lineage = "lineal";
 const legacyUnknownRoundTrip = await App.portability.prepareBytes(App.portability.packageBytes(invalidUnknownState), "legacy-lineal-unknown.zip");
@@ -121,16 +122,26 @@ if (!restoredUnknownPerson || !restoredUnknownPerson.unknownPerson || restoredUn
 vm.runInContext(read("assets/js/core/family.js"), runtime, { filename: "assets/js/core/family.js" });
 const siblingFixture = {
   workspace: {
-    people: ["P001", "P002", "P003", "P004"].map((id) => ({ id, names: { birth: { first: id, last: "Test" }, current: { first: id, last: "Test" } }, birth: { date: {} } })),
+    people: ["P001", "P002", "P003", "P004", "P005", "P006", "P010"].map((id) => ({ id, names: { birth: { first: id, last: "Test" }, current: { first: id, last: "Test" } }, birth: { date: {} } })),
     relationships: [
       { id: "R001", type: "parent-child", parentId: "P001", childId: "P002", lineage: "lineal", kind: "biological" },
       { id: "R002", type: "parent-child", parentId: "P001", childId: "P003", lineage: "non-lineal", kind: "step" },
-      { id: "R003", type: "parent-child", parentId: "P001", childId: "P004", lineage: "lineal", kind: "adoptive" }
+      { id: "R003", type: "parent-child", parentId: "P001", childId: "P004", lineage: "lineal", kind: "adoptive" },
+      { id: "R004", type: "parent-child", parentId: "P001", childId: "P005", lineage: "lineal", kind: "biological" },
+      { id: "R005", type: "parent-child", parentId: "P001", childId: "P006", lineage: "non-lineal", kind: "step" },
+      { id: "R006", type: "parent-child", parentId: "P010", childId: "P002", lineage: "non-lineal", kind: "biological" },
+      { id: "R007", type: "parent-child", parentId: "P010", childId: "P003", lineage: "non-lineal", kind: "biological" },
+      { id: "R008", type: "parent-child", parentId: "P010", childId: "P004", lineage: "non-lineal", kind: "biological" },
+      { id: "R009", type: "parent-child", parentId: "P010", childId: "P005", lineage: "non-lineal", kind: "biological" },
+      { id: "R010", type: "parent-child", parentId: "P010", childId: "P006", lineage: "non-lineal", kind: "biological" }
     ]
   }
 };
-if (App.family.siblingRelationshipKind("P002", "P003", siblingFixture) !== "step" || App.family.siblingRelationshipKind("P003", "P002", siblingFixture) === "step" || App.family.siblingRelationshipKind("P003", "P003", siblingFixture) !== "step" || App.family.siblingRelationshipKind("P002", "P004", siblingFixture) === "step") fail("Directional Step sibling labels, including Self, regressed");
+if (App.family.siblingRelationshipKind("P002", "P003", siblingFixture) !== "step" || App.family.siblingRelationshipKind("P003", "P002", siblingFixture) !== "biological" || App.family.siblingRelationshipKind("P003", "P003", siblingFixture) !== "step" || App.family.siblingRelationshipKind("P003", "P004", siblingFixture) !== "adoptive") fail("Lineal-family sibling labels, including Self, regressed");
 if (App.family.isLinealRelationship(siblingFixture.workspace.relationships[1]) || !App.family.isLinealRelationship(siblingFixture.workspace.relationships[2])) fail("Only Biological and Adopted Lineal relationships may drive lineage");
+if (App.family.isLineageEligiblePerson("P003", siblingFixture) || !App.family.isLineageEligiblePerson("P002", siblingFixture)) fail("A Step child still receives an effective Lineage ID");
+const ongoingMarriage = { type: "partner", status: "married", source: { fields: { "partner-type": "marriage", "end-reason": "" } } };
+if (App.family.partnerLineKind(ongoingMarriage, false, siblingFixture.workspace.people[1], siblingFixture.workspace.people[2]) !== "married") fail("An ongoing marriage is styled as a previous marriage");
 if (App.family.compareBirthOrder({ id: "known", birth: { date: { value: "2000" } } }, { id: "unknown", birth: { date: {} }, source: { fields: { "person-date-birth-value": "????" } } }) >= 0) fail("Unknown birth years no longer sort after known years");
 for (const kind of ["step", "foster", "guardian", "unknown"]) {
   if (!/must be Non-Lineal/.test(App.family.validateRelationshipDraft({ type: "parent-child", parentId: "P001", childId: "P003", lineage: "lineal", kind }, siblingFixture, "R002"))) fail("The relationship editor accepts a Lineal " + kind + " link");
@@ -143,7 +154,7 @@ const cloud = read("assets/js/core/cloud.js");
 const pwa = read("assets/js/core/pwa.js");
 const appSource = read("assets/js/app.js");
 if (!index.includes('id="relationPerson1Search"') || !index.includes('id="relationPerson2Search"') || !appSource.includes("model.fuzzySearchMatch(query, searchText)")) fail("Connect Existing People search controls are missing");
-if (!index.includes('id="unknownPerson"') || !appSource.includes('data-rebuild-lineage="')) fail("Unknown person or Editor lineage repair controls are missing");
+if (!index.includes('id="unknownPerson"') || !appSource.includes('data-rebuild-lineage="') || !appSource.includes("family.isLineageEligiblePerson(root.id, sourceState)")) fail("Unknown person or Editor lineage repair controls are missing");
 if (!index.includes('id="adminIntegritySection"') || !index.includes("Bad Lineage IDs") || !index.includes("Unknown or Invalid Relationships") || !appSource.includes("renderIntegrityIssues();")) fail("Admin Data Cleanup lists are missing from Settings");
 if (!cloud.includes("if (!definition.canManage) prepared.state.preferences.controls.developerMode = false;")) fail("Non-Admin hosted access no longer defaults Developer Mode off");
 const toolbarOrder = ["cloudAuditButton", "addPersonButton", "directoryButton", "printButton"].map((id) => index.indexOf(`id="${id}"`));
@@ -155,9 +166,9 @@ const savePublishOrder = ["hostedPublishTitle", "hostedRecordedBy", "hostedVersi
 if (savePublishOrder.some((position) => position < 0) || savePublishOrder.some((position, item) => item && position <= savePublishOrder[item - 1])) fail("Save publication controls no longer follow the compact publishing order");
 if (!(index.indexOf('id="currentAccessSummary"') < index.indexOf('class="dialog-body cloud-audit-body"')) || !(index.indexOf('id="cloudVaultSummary"') < index.indexOf('class="dialog-body cloud-audit-body"')) || !(index.indexOf('id="githubConnectionSummary"') < index.indexOf('class="dialog-body cloud-audit-body"'))) fail("Save status summaries are no longer in the dialog header");
 if (!appSource.includes('relationshipMaritalStatus(person, entry) + " :: " + years') || !appSource.includes('data-edit-person-relationships=') || appSource.includes('class="relationship-edit-button"')) fail("Person-level relationship editing or partner status display regressed");
-for (const label of ["Lineal biological", "Lineal adopted", "Non-Lineal biological", "Non-Lineal adopted", "Non-Lineal Other", "Non-Lineal unknown"]) if (!appSource.includes(label)) fail("The parent relationship key is incomplete");
-if (appSource.includes("Non-Lineal Other (Step, Foster, Guardian)") || !appSource.includes("groups.children.filter(childUsesBirthOrder)") || !appSource.includes("function childContext")) fail("Step children still consume numbered child order or the Other key remains verbose");
-if (!appSource.includes('name = entry.self ? "Self"') || !appSource.includes('if (family.siblingRelationshipKind(person.id, entry.person.id, state()) === "step")')) fail("Sibling Self or Step context display regressed");
+for (const label of ["Lineal biological", "Lineal adopted", "Non-Lineal biological", "Non-Lineal adopted", "Non-Lineal other"]) if (!appSource.includes(label)) fail("The parent relationship key is incomplete");
+if (appSource.includes("Non-Lineal Other") || appSource.includes('"Non-Lineal unknown"') || !appSource.includes("groups.children.filter(childUsesBirthOrder)") || !appSource.includes("function childContext")) fail("The parent key or Step child numbering regressed");
+if (!appSource.includes('name = entry.self ? "Self"') || !appSource.includes("function siblingUsesBirthOrder") || !appSource.includes("kind && !kind.lineal")) fail("Sibling Self or relationship context display regressed");
 for (const style of ['data-kind="biological"', 'data-kind="adoptive"', 'data-kind="step"', 'data-kind="foster"', 'data-kind="guardian"', 'data-kind="unknown"']) if (!css.includes(".tree-edge.parent-child[" + style + "]")) fail("A parent relationship line style is missing");
 if (!appSource.includes('kind === "unknown" ? unknownRelationshipMarks(edge, pathId)') || !css.includes(".tree-edge-marks.parent-child-marks") || !css.includes('.print-tree-svg .tree-edge[data-kind="unknown"] { stroke: none; }')) fail("Unknown relationships no longer render with question marks in screen and print trees");
 if (!pwa.includes('serviceWorker.register("sw.js", { updateViaCache: "none" })') || pwa.includes('serviceWorker.register(versionedAsset("sw.js")')) fail("The service worker registration URL must remain stable across builds");

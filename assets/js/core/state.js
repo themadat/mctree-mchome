@@ -676,14 +676,20 @@
     const relationships = Array.isArray(workspace.relationships) ? workspace.relationships : [];
     const peopleById = new Map(people.map(function (person) { return [person.id, person]; }));
     const linealParents = new Map();
+    const nonLinealKindParents = new Map();
     const lineageOwners = new Map();
     const reasonsByPerson = new Map();
     const add = function (personId, reason) {
       if (!reasonsByPerson.has(personId)) reasonsByPerson.set(personId, new Set());
       reasonsByPerson.get(personId).add(reason);
     };
-    relationships.filter(function (relationship) { return relationship.type === "parent-child" && relationship.lineage === "lineal" && LINEAL_PARENT_KINDS.has(relationship.kind); }).forEach(function (relationship) {
-      if (!linealParents.has(relationship.childId)) linealParents.set(relationship.childId, relationship.parentId);
+    relationships.filter(function (relationship) { return relationship.type === "parent-child"; }).forEach(function (relationship) {
+      if (relationship.lineage === "lineal" && LINEAL_PARENT_KINDS.has(relationship.kind)) {
+        if (!linealParents.has(relationship.childId)) linealParents.set(relationship.childId, relationship.parentId);
+      } else if (!LINEAL_PARENT_KINDS.has(relationship.kind)) {
+        if (!nonLinealKindParents.has(relationship.childId)) nonLinealKindParents.set(relationship.childId, new Set());
+        nonLinealKindParents.get(relationship.childId).add(relationship.kind);
+      }
     });
     people.forEach(function (person) {
       const fields = u.plainObject(u.plainObject(person.source).fields);
@@ -693,6 +699,7 @@
         if (parentId) add(person.id, "Has a Lineal parent but no Lineage ID.");
         return;
       }
+      if (!parentId && nonLinealKindParents.has(person.id)) add(person.id, "Has a Lineage ID but only " + Array.from(nonLinealKindParents.get(person.id)).join(", ") + " parent status.");
       const segments = raw.split(".");
       if (!/^(?:\d{2})(?:\.\d{2})*$/.test(raw)) add(person.id, "Does not use dot-separated two-digit segments.");
       const reserved = Array.from(new Set(segments.filter(function (segment) { return /^\d{2}$/.test(segment) && (Number(segment) < 1 || Number(segment) > config.controls.maxLineageSegment); })));

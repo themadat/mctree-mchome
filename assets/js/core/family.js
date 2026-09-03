@@ -42,21 +42,35 @@
   function siblingRelationshipKind(firstId, secondId, stateOrGraph) {
     const graph = stateOrGraph && stateOrGraph.peopleById ? stateOrGraph : indexes(stateOrGraph);
     const secondParentLinks = new Map((graph.parents.get(secondId) || []).map(function (entry) { return [entry.person.id, entry]; }));
-    let sharesStepParent = false;
-    let sharesDirectParent = false;
-    (graph.parents.get(firstId) || []).forEach(function (firstParentLink) {
-      const secondParentLink = secondParentLinks.get(firstParentLink.person.id);
-      if (!secondParentLink) return;
-      if (secondParentLink.relationship.kind === "step") sharesStepParent = true;
-      else sharesDirectParent = true;
+    const rankedParents = (graph.parents.get(firstId) || []).slice().sort(function (first, second) {
+      const firstChildren = graph.children.get(first.person.id) || [];
+      const secondChildren = graph.children.get(second.person.id) || [];
+      const firstLinealChildren = firstChildren.filter(function (entry) { return isLinealRelationship(entry.relationship); }).length;
+      const secondLinealChildren = secondChildren.filter(function (entry) { return isLinealRelationship(entry.relationship); }).length;
+      return Number(isLinealRelationship(second.relationship)) - Number(isLinealRelationship(first.relationship))
+        || secondLinealChildren - firstLinealChildren
+        || secondChildren.length - firstChildren.length
+        || first.person.id.localeCompare(second.person.id);
     });
-    return sharesStepParent && !sharesDirectParent ? "step" : "";
+    const sharedParent = rankedParents.find(function (entry) { return secondParentLinks.has(entry.person.id); });
+    const secondLink = sharedParent && secondParentLinks.get(sharedParent.person.id);
+    return secondLink && secondLink.relationship.kind || "";
   }
 
   function isLinealRelationship(relationship) {
     if (!relationship || relationship.type !== "parent-child" || relationship.lineage !== "lineal") return false;
     const kind = config.parentKinds.find(function (item) { return item.id === relationship.kind; });
     return Boolean(kind && kind.lineal);
+  }
+
+  function isLineageEligiblePerson(personId, stateOrGraph) {
+    const graph = stateOrGraph && stateOrGraph.peopleById ? stateOrGraph : indexes(stateOrGraph);
+    const parents = graph.parents.get(personId) || [];
+    if (parents.some(function (entry) { return isLinealRelationship(entry.relationship); })) return true;
+    return !parents.some(function (entry) {
+      const kind = config.parentKinds.find(function (item) { return item.id === entry.relationship.kind; });
+      return kind && !kind.lineal;
+    });
   }
 
   function traverseGenerations(id, adjacency) {
@@ -225,6 +239,7 @@
     if (isUnknownPartnerRelationship(relationship)) return "unknown";
     const sourceType = partnerSourceType(relationship);
     const knownMarriage = sourceType === "marriage" || relationship && ["annulled", "married", "widowed", "divorced", "separated"].includes(relationship.status);
+    if (knownMarriage && !partnerHasRecordedEnd(relationship)) return "married";
     if (current && (!partnerHasRecordedEnd(relationship) || isDeathEndedMarriage(relationship))) {
       const bothDeceased = first && second && first.livingStatus === "deceased" && second.livingStatus === "deceased";
       const deathSplit = first && second && ((first.livingStatus === "living" && second.livingStatus === "deceased") || (first.livingStatus === "deceased" && second.livingStatus === "living"));
@@ -671,6 +686,7 @@
     compareBirthOrder: compareBirthOrder,
     siblingRelationshipKind: siblingRelationshipKind,
     isLinealRelationship: isLinealRelationship,
+    isLineageEligiblePerson: isLineageEligiblePerson,
     ancestorsOf: ancestorsOf,
     descendantsOf: descendantsOf,
     familyUnits: familyUnits,

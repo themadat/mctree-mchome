@@ -28,6 +28,7 @@
   let personNameOverrides = new Set();
   let activePrintLocation = "";
   let activePrintTitle = "";
+  const familyGraphCache = new WeakMap();
   const FAVORITES_BACKUP_FORMAT = "mcfamily-favorites";
   const FAVORITES_BACKUP_VERSION = 1;
   const NAME_PARTS = ["Prefix", "First", "Middle", "Last", "Suffix"];
@@ -316,7 +317,7 @@
     const fields = u.plainObject(person && person.source && person.source.fields);
     const importedMcLineage = ["mclineage-cleaned", "mcpeople-v1"].includes(String(person && person.source && person.source.format || ""));
     if (importedMcLineage && Object.prototype.hasOwnProperty.call(fields, "lineage-id")) {
-      const consanguineal = Boolean(u.cleanLine(fields["lineage-id"], 200));
+      const consanguineal = isLinealPerson(person, graph);
       return { consanguineal: consanguineal, affinal: !consanguineal };
     }
     return {
@@ -325,9 +326,15 @@
     };
   }
 
-  function isLinealPerson(person) {
-    const fields = u.plainObject(person && person.source && person.source.fields);
-    return Boolean(u.cleanLine(fields["lineage-id"], 200));
+  function relationshipGraph(sourceStateOrGraph) {
+    if (sourceStateOrGraph && sourceStateOrGraph.peopleById) return sourceStateOrGraph;
+    const sourceState = sourceStateOrGraph || state();
+    if (!familyGraphCache.has(sourceState)) familyGraphCache.set(sourceState, family.indexes(sourceState));
+    return familyGraphCache.get(sourceState);
+  }
+
+  function isLinealPerson(person, sourceStateOrGraph) {
+    return Boolean(lineageSegments(person, sourceStateOrGraph).length);
   }
 
   function directoryFilterSummary() {
@@ -580,8 +587,16 @@
     return "(" + (kind ? kind.label : "Unknown") + " :: " + relationshipBirthYear(entry.person) + ")";
   }
 
-  function siblingContext(person, entry, orderMap) {
-    if (family.siblingRelationshipKind(person.id, entry.person.id, state()) === "step") return "(Step :: " + relationshipBirthYear(entry.person) + ")";
+  function siblingUsesBirthOrder(person, sibling, sourceState) {
+    const kindId = family.siblingRelationshipKind(person.id, sibling.id, sourceState);
+    const kind = config.parentKinds.find(function (item) { return item.id === kindId; });
+    return !kind || kind.lineal;
+  }
+
+  function siblingContext(person, entry, orderMap, sourceState) {
+    const kindId = family.siblingRelationshipKind(person.id, entry.person.id, sourceState);
+    const kind = config.parentKinds.find(function (item) { return item.id === kindId; });
+    if (kind && !kind.lineal) return "(" + kind.label + " :: " + relationshipBirthYear(entry.person) + ")";
     return birthOrderContext(entry.person, orderMap);
   }
 
@@ -663,19 +678,19 @@
   }
 
   function relationshipRows(person) {
-    const groups = family.relationGroups(person.id, state());
+    const currentState = state();
+    const graph = relationshipGraph(currentState);
+    const groups = family.relationGroups(person.id, currentState);
     const parents = groups.parents;
     const generation = relationshipGeneration(person);
     const siblingSortOrder = birthOrderMap([person].concat(groups.siblings));
-    const siblingOrder = birthOrderMap([person].concat(groups.siblings).filter(function (sibling) {
-      return family.siblingRelationshipKind(person.id, sibling.id, state()) !== "step";
-    }));
+    const siblingOrder = birthOrderMap([person].concat(groups.siblings).filter(function (sibling) { return siblingUsesBirthOrder(person, sibling, graph); }));
     const siblings = groups.siblings.map(function (sibling) { return { person: sibling }; }).concat({ person: person, self: true }).sort(function (first, second) {
       return siblingSortOrder.get(first.person.id) - siblingSortOrder.get(second.person.id);
     });
     const childOrder = birthOrderMap(groups.children.filter(childUsesBirthOrder));
     return relationshipGroup("Parents", Math.max(0, generation - 1), parents, "No parents recorded", function (entry) { return parentContext(person, entry); })
-      + relationshipGroup("Siblings", generation, siblings, "No siblings recorded", function (entry) { return siblingContext(person, entry, siblingOrder); })
+      + relationshipGroup("Siblings", generation, siblings, "No siblings recorded", function (entry) { return siblingContext(person, entry, siblingOrder, graph); })
       + relationshipGroup("Partners", null, groups.partners, "No partners recorded", function (entry) { return partnerContext(entry, person); }, true)
       + relationshipGroup("Children", generation + 1, groups.children, "No children recorded", function (entry) { return childContext(entry, childOrder); });
   }
@@ -697,7 +712,8 @@
     return u.cleanLine(person && person.source && person.source.fields && person.source.fields[key], 4000);
   }
 
-  function lineageSegments(person) {
+  function lineageSegments(person, sourceStateOrGraph) {
+    if (!family.isLineageEligiblePerson(person.id, relationshipGraph(sourceStateOrGraph))) return [];
     const raw = sourceField(person, "lineage-id");
     if (!raw) return [];
     return raw.split(".").map(function (part) { return u.cleanLine(part, 20); }).filter(Boolean).map(function (part) {
@@ -865,8 +881,9 @@
     const validRoot = /^\d{2}$/.test(raw) && Number(raw) >= 1 && Number(raw) <= config.controls.maxLineageSegment;
     const preserveRoot = validRoot && !lineageValueTaken(sourceState, raw, root.id);
     const hasLinealChildren = linealChildRelationships(sourceState, root.id).length > 0;
+    const lineageEligible = family.isLineageEligiblePerson(root.id, sourceState);
     const affected = clearLineageBranch(sourceState, root.id);
-    if (sourceState.workspace.family.homePersonId === root.id || validRoot || hasLinealChildren) {
+    if (lineageEligible && (sourceState.workspace.family.homePersonId === root.id || validRoot || hasLinealChildren)) {
       if (preserveRoot) setPersonLineageValue(root, raw);
       else ensurePersonLineageValue(sourceState, root.id, new Set());
       rebuildLinealChildren(sourceState, root.id);
@@ -964,7 +981,7 @@
 
   function profileLineage(person) {
     const chain = lineageChain(person);
-    const background = person.heritageNote && !sourceField(person, "lineage-id") ? '<div class="lineage-background"><h4>Background</h4><p class="preserve-lines">' + u.escapeHtml(person.heritageNote) + "</p></div>" : "";
+    const background = person.heritageNote && !isLinealPerson(person) ? '<div class="lineage-background"><h4>Background</h4><p class="preserve-lines">' + u.escapeHtml(person.heritageNote) + "</p></div>" : "";
     const hasRecordedLineage = chain.members.length > 1 || chain.numbers.length > 0;
     const updateAction = familyEditingEnabled() ? '<button type="button" class="button small" data-rebuild-lineage="' + u.escapeHtml(person.id) + '">Check &amp; Update</button>' : "";
     return '<section class="profile-section lineage-section"><div class="lineage-section-heading"><h3>Lineage</h3>' + updateAction + '</div><div class="lineage-id-row"><span>ID</span>' + lineageIdHtml(chain.numbers) + '</div><div class="lineage-columns"><h4>Family Line</h4><ol class="lineage-paired-list">' + chain.members.map(function (member, index) {
@@ -1474,8 +1491,7 @@
       [treeKeySwatch("parent-child", "adoptive", "", "lineal"), "Lineal adopted"],
       [treeKeySwatch("parent-child", "biological", "affinal-parent", "non-lineal"), "Non-Lineal biological"],
       [treeKeySwatch("parent-child", "adoptive", "affinal-parent", "non-lineal"), "Non-Lineal adopted"],
-      [treeKeySwatch("parent-child", "step", "affinal-parent", "non-lineal"), "Non-Lineal Other"],
-      ['<span class="tree-key-marks parent-child-marks" aria-hidden="true">????</span>', "Non-Lineal unknown"]
+      [treeKeySwatch("parent-child", "step", "affinal-parent", "non-lineal"), "Non-Lineal other"]
     ];
     return '<aside class="tree-key"><details open><summary aria-keyshortcuts="K" data-shortcut="K">Key</summary><dl>' + rows.map(function (row) {
       return "<div><dt>" + row[0] + "</dt><dd>" + u.escapeHtml(row[1]) + "</dd></div>";
@@ -2507,13 +2523,12 @@
 
   function printRelationshipList(person, sourceState) {
     const printSourceState = sourceState || state();
+    const printGraph = relationshipGraph(printSourceState);
     const groups = family.relationGroups(person.id, printSourceState);
     const parents = groups.parents;
     const generation = relationshipGeneration(person);
     const siblingSortOrder = birthOrderMap([person].concat(groups.siblings));
-    const siblingOrder = birthOrderMap([person].concat(groups.siblings).filter(function (sibling) {
-      return family.siblingRelationshipKind(person.id, sibling.id, printSourceState) !== "step";
-    }));
+    const siblingOrder = birthOrderMap([person].concat(groups.siblings).filter(function (sibling) { return siblingUsesBirthOrder(person, sibling, printGraph); }));
     const siblings = groups.siblings.map(function (sibling) { return { person: sibling }; }).concat({ person: person, self: true }).sort(function (first, second) {
       return siblingSortOrder.get(first.person.id) - siblingSortOrder.get(second.person.id);
     });
@@ -2531,8 +2546,7 @@
     };
     return section("Parents", Math.max(0, generation - 1), parents, function (entry) { return parentContext(person, entry); }, "Parent")
       + section("Siblings", generation, siblings, function (entry) {
-        if (family.siblingRelationshipKind(person.id, entry.person.id, printSourceState) === "step") return "(Step :: " + relationshipBirthYear(entry.person) + ")";
-        return birthOrderContext(entry.person, siblingOrder);
+        return siblingContext(person, entry, siblingOrder, printGraph);
       }, "Sibling")
       + section("Partners", null, groups.partners, function (entry) { return partnerContext(entry, person); }, "Partner")
       + section("Children", generation + 1, groups.children, function (entry) { return childContext(entry, childOrder); }, "Child");
