@@ -465,7 +465,7 @@ details > summary { width: fit-content; cursor: pointer; color: var(--accent-str
 .developer-tool-section .developer-actions { flex: 0 0 auto; margin: 0; }
 .developer-integrity-section { display: grid; align-items: stretch; }
 .developer-issue-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: .6rem; }
-.developer-issue-columns h5 { display: flex; align-items: center; gap: .35rem; margin: 0 0 .35rem; }
+.developer-issue-columns h4 { display: flex; align-items: center; gap: .35rem; margin: 0 0 .35rem; }
 .developer-issue-list { display: grid; gap: .28rem; margin: 0; padding: 0; list-style: none; }
 .developer-issue-list > li { min-width: 0; }
 .developer-issue-button, .developer-issue-empty { display: grid; width: 100%; min-height: 38px; padding: .38rem .45rem; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--text); text-align: left; }

@@ -682,7 +682,7 @@
       if (!reasonsByPerson.has(personId)) reasonsByPerson.set(personId, new Set());
       reasonsByPerson.get(personId).add(reason);
     };
-    relationships.filter(function (relationship) { return relationship.type === "parent-child" && relationship.lineage === "lineal"; }).forEach(function (relationship) {
+    relationships.filter(function (relationship) { return relationship.type === "parent-child" && relationship.lineage === "lineal" && LINEAL_PARENT_KINDS.has(relationship.kind); }).forEach(function (relationship) {
       if (!linealParents.has(relationship.childId)) linealParents.set(relationship.childId, relationship.parentId);
     });
     people.forEach(function (person) {
@@ -722,9 +722,20 @@
     const workspace = u.plainObject(u.plainObject(input).workspace);
     const relationships = Array.isArray(workspace.relationships) ? workspace.relationships : [];
     return relationships.reduce(function (issues, relationship) {
-      if (relationship.type !== "parent-child" || relationship.lineage !== "lineal") return issues;
-      const kind = config.parentKinds.find(function (item) { return item.id === relationship.kind; });
-      if (kind && !LINEAL_PARENT_KINDS.has(kind.id)) issues.push({ relationshipId: relationship.id, parentId: relationship.parentId, childId: relationship.childId, reason: kind.label + " parent is marked Lineal; change its status or make it Non-Lineal." });
+      const reasons = [];
+      if (relationship.type === "parent-child") {
+        const kind = config.parentKinds.find(function (item) { return item.id === relationship.kind; });
+        if (relationship.kind === "unknown") reasons.push("Parent type is Unknown.");
+        if (relationship.lineage === "lineal" && kind && !LINEAL_PARENT_KINDS.has(kind.id)) reasons.push(kind.label + " parent is marked Lineal; change its status or make it Non-Lineal.");
+        if (reasons.length) issues.push({ relationshipId: relationship.id, parentId: relationship.parentId, childId: relationship.childId, reason: reasons.join(" ") });
+        return issues;
+      }
+      if (relationship.type === "partner") {
+        const fields = u.plainObject(u.plainObject(relationship.source).fields);
+        if (relationship.status === "unknown" || u.cleanLine(fields["partner-type"], 80) === "UNKNOWN") reasons.push("Partner relationship type is Unknown.");
+        if (relationship.status === "former" || u.cleanLine(fields["end-reason"], 80) === "UNKNOWN") reasons.push("Partner relationship ending is Unknown.");
+        if (reasons.length) issues.push({ relationshipId: relationship.id, person1Id: relationship.person1Id, person2Id: relationship.person2Id, reason: reasons.join(" ") });
+      }
       return issues;
     }, []);
   }

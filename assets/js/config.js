@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.109",
-      buildId: "0.0.1.109",
+      version: "0.0.1.110",
+      buildId: "0.0.1.110",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -168,13 +168,13 @@
 
     releases: [
       {
-        version: "0.0.1.109",
+        version: "0.0.1.110",
         date: "2026-09-02T12:00:00.000Z",
-        title: "Relationship search and lineage repair",
-        summary: "Editors can find people faster, record completely unknown relatives, and rebuild Lineage IDs after parent changes.",
-        features: ["Added fuzzy name, date, lineage, and ID search to Connect Existing People", "Added Unknown person placeholders and a relationship-status choice when adding an unknown partner", "Added an Editor/Admin Check & Update action for Lineage IDs"],
-        improvements: ["Parent edits and removals now rebuild affected siblings and their Lineal descendant branches in birth order"],
-        fixes: ["Removed stale Lineage IDs when a person no longer belongs to a Lineal branch"],
+        title: "Step-child order and Admin cleanup",
+        summary: "Step children no longer consume numbered child order, and Admin cleanup issues are directly available in Settings.",
+        features: ["Added Bad Lineage IDs and Unknown or Invalid Relationships lists under Settings → Admin → Data Cleanup"],
+        improvements: ["Unknown parent types and unknown partner types or endings now appear in the Admin relationship list", "Shortened the tree key label to Non-Lineal Other"],
+        fixes: ["Labeled Step, Foster, Guardian, and Unknown children by relationship type instead of a birth-order number, including Step children shown as Self in sibling lists", "Restricted Lineage ID allocation and Lineal tree styling to Biological and Adopted Lineal relationships so valid children start at 01"],
         knownIssues: []
       }
     ],
