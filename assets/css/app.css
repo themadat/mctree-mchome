@@ -625,7 +625,12 @@ body[data-onboarding="true"] main { min-height: 100svh; padding: max(1rem, var(-
 .privacy-callout strong { color: var(--warning); }
 .large-button { min-height: 48px; padding-inline: 1.15rem; }
 
+body[data-onboarding="false"] { display: flex; flex-direction: column; height: 100svh; overflow-y: hidden; }
+body[data-onboarding="false"] > .app-header { flex: 0 0 auto; }
+body[data-onboarding="false"] > main { display: flex; flex: 1 1 auto; min-height: 0; overflow: hidden; }
 .family-workspace { min-width: 0; }
+body[data-onboarding="false"] .family-workspace { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; }
+body[data-onboarding="false"] .family-workspace-grid { flex: 1 1 auto; height: auto; min-height: 0; }
 .family-workspace-grid { display: grid; grid-template-columns: minmax(220px, var(--directory-panel-width, 20%)) 6px minmax(420px, 1fr) 6px minmax(240px, var(--profile-panel-width, 30%)); gap: 2px; min-width: 0; height: calc(100svh - 7.4rem - var(--safe-top)); min-height: 540px; }
 .workspace-card { min-width: 0; min-height: 0; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow-small); }
 .family-resize-handle { position: relative; display: grid; place-items: center; min-width: 6px; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 7px; background: transparent; cursor: col-resize; touch-action: none; }
