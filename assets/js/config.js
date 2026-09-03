@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.112",
-      buildId: "0.0.1.112",
+      version: "0.0.1.113",
+      buildId: "0.0.1.113",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -168,13 +168,13 @@
 
     releases: [
       {
-        version: "0.0.1.112",
-        date: "2026-09-03T12:00:00.000Z",
-        title: "Relationship action flows",
-        summary: "Relationship management now starts from clear Add, Edit, and Delete actions with grouped, left-aligned decisions.",
-        features: ["Added grouped Add choices for creating a new Parent, Child, or Partner or connecting an existing one", "Added grouped Edit and Delete pickers for Parents, Partners, and Children"],
-        improvements: ["Added larger dedicated relationship action icons and a Check & Update lineage icon", "Left-aligned relationship actions and choice content for faster scanning"],
-        fixes: [],
+        version: "0.0.1.113",
+        date: "2026-09-03T18:00:00.000Z",
+        title: "Relationship editor clarity",
+        summary: "Relationship choices now fill their rows cleanly, profile relationship actions stay beside their heading, and existing relationships open in a focused type-aware editor.",
+        features: [],
+        improvements: ["Kept Add, Edit, and Delete relationship actions on the Relationships heading line", "Replaced fixed relationship selectors with a concise summary while editing an existing relationship"],
+        fixes: ["Removed the centered-content spacing artifact from grouped relationship choices", "Limited existing relationship editors to fields relevant to parent-child or partner records"],
         knownIssues: []
       }
     ],

@@ -386,8 +386,13 @@ dialog::backdrop { background: rgba(10, 16, 14, .56); backdrop-filter: blur(3px)
 .choice-group { display: grid; gap: .42rem; }
 .choice-group h3 { margin: 0; color: var(--muted); font-size: .7rem; font-weight: 850; letter-spacing: .06em; text-align: left; text-transform: uppercase; }
 .choice-group-actions { display: grid; gap: .45rem; }
-.choice-actions .button { display: grid; justify-items: start; width: 100%; height: auto; min-height: 60px; text-align: left; }
+.choice-actions .button { display: grid; grid-template-columns: minmax(0, 1fr); justify-content: stretch; justify-items: start; width: 100%; height: auto; min-height: 58px; padding: .65rem .8rem; text-align: left; }
+.choice-actions .button > strong, .choice-actions .button > span { width: 100%; text-align: left; }
 .choice-actions .button span { color: var(--muted); font-size: .72rem; font-weight: 500; }
+.choice-actions .button.primary span { color: rgba(255, 255, 255, .78); }
+.relationship-fixed-summary { display: grid; gap: .2rem; padding: .72rem .8rem; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); }
+.relationship-fixed-summary strong { overflow-wrap: anywhere; }
+.relationship-fixed-summary small { color: var(--muted); }
 
 .support-dialog { width: min(1080px, calc(100vw - 2rem)); height: min(88svh, 860px); max-height: 88svh; }
 .support-header { min-height: 68px; }
@@ -799,14 +804,14 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .profile-header h2 { margin: .08rem 0; font-size: 1.2rem; line-height: 1.15; }
 .profile-header p { margin: 0; color: var(--muted); }
 .profile-header-actions { display: flex; flex: 0 0 auto; align-items: flex-start; justify-content: flex-end; gap: .12rem; }
-.relationship-actions { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: flex-start; gap: .3rem; }
+.relationship-actions { display: flex; flex: 0 0 auto; flex-wrap: nowrap; align-items: flex-start; justify-content: flex-end; gap: .2rem; }
 .profile-action { appearance: none; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: .1rem; min-width: 42px; min-height: 42px; padding: .2rem .28rem; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--muted); font-size: .6rem; font-weight: 750; line-height: 1; }
 .profile-action:hover, .profile-action:focus-visible { border-color: var(--line); background: var(--surface-2); color: var(--accent-strong); }
 .profile-favorite-action[aria-pressed="true"] { border-color: color-mix(in srgb, var(--warning) 72%, var(--line)); background: color-mix(in srgb, var(--warning) 20%, var(--surface)); color: color-mix(in srgb, var(--warning) 78%, var(--text)); box-shadow: 0 0 0 2px color-mix(in srgb, var(--warning) 15%, transparent); }
 .profile-action:disabled { cursor: not-allowed; opacity: .38; }
 .profile-action-icon { display: grid; place-items: center; width: 1.1rem; height: 1.1rem; }
 .profile-action-icon .sf-symbol { width: 1.1rem; height: 1.1rem; }
-.relationship-actions .profile-action { min-width: 58px; min-height: 52px; gap: .18rem; }
+.relationship-actions .profile-action { min-width: 50px; min-height: 52px; gap: .18rem; }
 .relationship-actions .profile-action-icon { width: 2rem; height: 1.45rem; }
 .relationship-actions .profile-action-icon .sf-symbol { width: 2rem; height: 1.45rem; }
 .profile-close { margin-left: .1rem; }
@@ -823,8 +828,8 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .profile-section { padding: .75rem 0; border-top: 1px solid var(--line); }
 .profile-section h3 { margin: 0 0 .45rem; font-size: .84rem; }
 .profile-names-list dd { align-self: start; }
-.relationship-section-heading { display: grid; justify-items: start; gap: .35rem; }
-.relationship-section-heading h3 { margin: 0; }
+.relationship-section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem; }
+.relationship-section-heading h3 { margin: .42rem 0 0; }
 .lineage-update-button .button-icon, .lineage-update-button .button-icon .sf-symbol { width: 1.45rem; height: 1.15rem; }
 .preserve-lines { margin: 0; white-space: pre-line; }
 .source-section details { margin: 0; }
