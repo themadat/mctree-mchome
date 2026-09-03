@@ -2,7 +2,7 @@
 
 McFamily is a private family atlas: an interactive lineage tree, searchable people list, person/place editor, saved-change history, and print-ready family directory. It is plain HTML, CSS, and JavaScript with no runtime dependencies or custom backend.
 
-Current pre-1.0 version: `0.0.1.114`. Application versions use `major.minor.patch.build`; the first repository 1.0 cut is therefore `1.0.0.1`.
+Current pre-1.0 version: `0.0.1.115`. Application versions use `major.minor.patch.build`; the first repository 1.0 cut is therefore `1.0.0.1`.
 
 ## Use McFamily
 

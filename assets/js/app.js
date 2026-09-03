@@ -2366,6 +2366,8 @@
     $("#relationshipFixedSummary").hidden = !focusedRelationship;
     $("#relationPerson1Field").hidden = Boolean(relationship || guidedAdd && relationshipRole !== "parent");
     $("#relationPerson2Field").hidden = Boolean(relationship || guidedAdd && relationshipRole === "parent");
+    $("#relationPerson1Field").classList.toggle("full", Boolean(guidedAdd && relationshipRole === "parent"));
+    $("#relationPerson2Field").classList.toggle("full", Boolean(guidedAdd && relationshipRole !== "parent"));
     if (relationship) {
       const firstPerson = state().workspace.people.find(function (person) { return person.id === firstId; });
       const secondPerson = state().workspace.people.find(function (person) { return person.id === secondId; });
