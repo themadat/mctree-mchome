@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.113",
-      buildId: "0.0.1.113",
+      version: "0.0.1.114",
+      buildId: "0.0.1.114",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -168,13 +168,13 @@
 
     releases: [
       {
-        version: "0.0.1.113",
+        version: "0.0.1.114",
         date: "2026-09-03T18:00:00.000Z",
-        title: "Relationship editor clarity",
-        summary: "Relationship choices now fill their rows cleanly, profile relationship actions stay beside their heading, and existing relationships open in a focused type-aware editor.",
+        title: "Focused relationship adding",
+        summary: "Adding an existing relative now locks the selected relationship role and current profile person while profile actions and destructive controls are clearer.",
         features: [],
-        improvements: ["Kept Add, Edit, and Delete relationship actions on the Relationships heading line", "Replaced fixed relationship selectors with a concise summary while editing an existing relationship"],
-        fixes: ["Removed the centered-content spacing artifact from grouped relationship choices", "Limited existing relationship editors to fields relevant to parent-child or partner records"],
+        improvements: ["Made existing-person Add flows type-aware with one focused person search", "Reordered profile actions to Edit, Delete, Favorite, and Close and enlarged their symbols", "Applied the supplied Check & Update and person Delete symbols"],
+        fixes: ["Kept both person and relationship Delete actions visibly red, including hover and keyboard focus"],
         knownIssues: []
       }
     ],
