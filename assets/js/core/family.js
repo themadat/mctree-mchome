@@ -133,8 +133,11 @@
   function compareBirthOrder(a, b) {
     const first = relationPerson(a);
     const second = relationPerson(b);
-    const firstDate = String(first && first.birth && first.birth.date && first.birth.date.value || "");
-    const secondDate = String(second && second.birth && second.birth.date && second.birth.date.value || "");
+    const firstDate = String(first && first.birth && first.birth.date && first.birth.date.value || sourceField(first, "person-date-birth-value") || "");
+    const secondDate = String(second && second.birth && second.birth.date && second.birth.date.value || sourceField(second, "person-date-birth-value") || "");
+    const firstUnknown = !/\d/.test(firstDate);
+    const secondUnknown = !/\d/.test(secondDate);
+    if (firstUnknown !== secondUnknown) return firstUnknown ? 1 : -1;
     if (firstDate && secondDate && firstDate !== secondDate) return firstDate.localeCompare(secondDate);
     if (firstDate !== secondDate) return firstDate ? -1 : 1;
     return model.sortName(first).localeCompare(model.sortName(second)) || String(first && first.id || "").localeCompare(String(second && second.id || ""));
@@ -659,6 +662,7 @@
   App.family = {
     indexes: indexes,
     relationGroups: relationGroups,
+    compareBirthOrder: compareBirthOrder,
     siblingRelationshipKind: siblingRelationshipKind,
     ancestorsOf: ancestorsOf,
     descendantsOf: descendantsOf,

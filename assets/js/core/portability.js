@@ -294,7 +294,14 @@
   }
 
   function sourcePerson(row, index, counters) {
-    ["person-birth-name-first", "person-birth-name-last", "person-current-name-first", "person-current-name-last"].forEach(function (field) {
+    const requiredNameFields = ["person-birth-name-first", "person-birth-name-last", "person-current-name-first", "person-current-name-last"];
+    const allNameFields = [
+      "person-name-birth-prefix", "person-birth-name-first", "person-birth-name-middle", "person-birth-name-last", "person-birth-name-suffix",
+      "person-name-current-prefix", "person-current-name-first", "person-current-name-middle", "person-current-name-last", "person-current-name-suffix",
+      "person-name-preferred-prefix", "person-preferred-name-first", "person-preferred-name-middle", "person-preferred-name-last", "person-preferred-name-suffix", "person-name-maiden-last"
+    ];
+    const unknownPerson = allNameFields.every(function (field) { return !u.cleanLine(row[field], 120); });
+    if (!unknownPerson) requiredNameFields.forEach(function (field) {
       if (!u.cleanLine(row[field], 120)) throw new Error("McPeople.csv " + row["record-id"] + " requires " + field + ".");
     });
     const birth = validateSourceDate(row["person-date-birth-value"], row["person-date-birth-descriptor"], "McPeople.csv birth date on " + row["record-id"], { allowBlankDescriptor: false });
@@ -304,13 +311,14 @@
     if (u.cleanText(row["data-quality-notes"], 4000).trim()) notes.push("Data quality: " + u.cleanText(row["data-quality-notes"], 4000).trim());
     const person = {
       id: row["record-id"],
+      unknownPerson: unknownPerson,
       names: {
         birth: { prefix: row["person-name-birth-prefix"], first: row["person-birth-name-first"], middle: row["person-birth-name-middle"], last: row["person-birth-name-last"], suffix: row["person-birth-name-suffix"] },
         current: { prefix: row["person-name-current-prefix"], first: row["person-current-name-first"], middle: row["person-current-name-middle"], last: row["person-current-name-last"], suffix: row["person-current-name-suffix"] },
         preferred: { prefix: row["person-name-preferred-prefix"], first: row["person-preferred-name-first"], middle: row["person-preferred-name-middle"], last: row["person-preferred-name-last"], suffix: row["person-preferred-name-suffix"] },
         maidenLast: row["person-name-maiden-last"]
       },
-      livingStatus: death.value || ["UNKNOWN", "UNKNOWN PRESUMED"].includes(death.descriptor) ? "deceased" : death.descriptor === "NONE" ? "living" : "unknown",
+      livingStatus: unknownPerson && !death.value ? "unknown" : death.value || ["UNKNOWN", "UNKNOWN PRESUMED"].includes(death.descriptor) ? "deceased" : death.descriptor === "NONE" ? "living" : "unknown",
       birth: { date: sourceDate(birth.value, birth.descriptor, counters), place: "" },
       death: { date: death.value && !death.partial ? { value: death.value, qualifier: "exact" } : { value: "", qualifier: death.partial ? "about" : "exact" }, place: "" },
       addresses: [], phones: [], emails: [], heritageNote: "", notes: notes.join("\n\n"),

@@ -25,7 +25,7 @@ record-id,person-name-birth-prefix,person-birth-name-first,person-birth-name-mid
 ```
 
 - `record-id` is a unique `P` reference with at least three digits, such as `P001`.
-- Birth First/Last and Current First/Last are required. Each Birth, Current, and Preferred name has Prefix, First, Middle, Last, and Suffix parts. Maiden Last is separate.
+- Birth First/Last and Current First/Last are required for a known person. An intentional Unknown person is represented by leaving every name cell—including all four ordinarily required cells—blank; McFamily preserves that placeholder as “Unknown person” so a known marriage or partnership can be recorded even when nothing is known about the other person. Each Birth, Current, and Preferred name has Prefix, First, Middle, Last, and Suffix parts. Maiden Last is separate.
 - Display preference remains Preferred, then Current, then Birth.
 - `lineage-id` is normally a unique root-to-person path of two-digit dotted segments. Each non-root path should extend its Lineal parent's path by one segment. When an Editor creates a Lineal parent link, McFamily previews and assigns this path automatically, preserving a valid existing child segment or using the next available `01`–`96` segment. During the current cleanup window, malformed, duplicate, reserved `97`–`99`, unresolved, and parent-mismatched legacy values remain loadable and appear in Admin’s Developer diagnostics.
 - Known dates use `YYYY`, `YYYY-MM`, or `YYYY-MM-DD`. Question-mark partial dates use the same shapes and the `partial` descriptor.

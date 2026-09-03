@@ -824,6 +824,8 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .source-format { margin: .2rem 0 .45rem; color: var(--muted); font-size: .72rem; }
 .source-list dd { overflow-wrap: anywhere; white-space: pre-wrap; }
 .lineage-section { text-align: left; }
+.lineage-section-heading { display: flex; align-items: center; justify-content: space-between; gap: .6rem; }
+.lineage-section-heading h3 { margin: 0; }
 .lineage-id-row { display: grid; grid-template-columns: 54px minmax(0, 1fr); align-items: baseline; gap: .4rem; padding: .1rem 0 .55rem; border-bottom: 1px solid var(--line); }
 .lineage-id-row > span:first-child { color: var(--muted); font-size: .7rem; font-weight: 750; }
 .lineage-columns { padding-top: .55rem; }
@@ -868,6 +870,10 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .relationship-lineage-preview { padding: .55rem .65rem; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); }
 .relationship-lineage-preview output { min-height: 1.35rem; font-size: .85rem; }
 .relationship-lineage-preview small { color: var(--muted); font-size: .65rem; }
+.relationship-person-field { align-content: start; }
+.relationship-person-field input[type="search"] { min-width: 0; }
+.relationship-person-field select { min-height: 6.8rem; }
+.relationship-person-field small { color: var(--muted); font-size: .68rem; }
 .relationship-empty { padding: .25rem .35rem; color: var(--muted); font-size: .7rem; }
 .mobile-workspace-tabs { display: none; margin-bottom: .55rem; }
 
@@ -876,6 +882,9 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .person-dialog .dialog-footer { padding: .42rem .65rem calc(.42rem + var(--safe-bottom)); }
 .person-form-body { display: grid; grid-template-columns: minmax(650px, 1.45fr) minmax(410px, 1fr); grid-template-areas: "names details" "names relationships" "names notes" "contacts contacts" "error error"; align-items: start; gap: .28rem; padding: .38rem .45rem; }
 .person-names-section { grid-area: names; }
+.unknown-person-field { align-items: flex-start; margin: .55rem 0 .75rem; padding: .6rem .7rem; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); }
+.unknown-person-field span { display: grid; gap: .12rem; }
+.unknown-person-field small { color: var(--muted); font-weight: 400; line-height: 1.35; }
 .person-details-section { grid-area: details; }
 .person-relationships-section { grid-area: relationships; }
 .person-contact-sections { grid-area: contacts; }

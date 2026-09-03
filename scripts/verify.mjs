@@ -95,10 +95,27 @@ const compatibleParentRoundTrip = await App.portability.prepareBytes(App.portabi
 if (compatibleParentRoundTrip.state.workspace.relationships.map((item) => item.kind).join(",") !== "step,foster,guardian,unknown") fail("A supported Non-Lineal parent status failed its package round trip");
 const invalidUnknownState = structuredClone(compatibleParentState);
 invalidUnknownState.workspace.relationships.find((item) => item.kind === "unknown").lineage = "lineal";
-let rejectedLinealUnknown = false;
-try { await App.portability.prepareBytes(App.portability.packageBytes(invalidUnknownState), "invalid-lineal-unknown.zip"); }
-catch (error) { rejectedLinealUnknown = /only Biological or Adopted parents may be Lineal/.test(error.message); }
-if (!rejectedLinealUnknown) fail("A Lineal Unknown relationship was not rejected by package validation");
+const legacyUnknownRoundTrip = await App.portability.prepareBytes(App.portability.packageBytes(invalidUnknownState), "legacy-lineal-unknown.zip");
+if (!App.stateModel.relationshipIssues(legacyUnknownRoundTrip.state).some((issue) => issue.relationshipId === "R004" && /Unknown parent/.test(issue.reason))) fail("A legacy Lineal Unknown relationship was not preserved for Admin cleanup");
+
+const unknownPersonState = structuredClone(roundTrip.state);
+const unknownPerson = structuredClone(unknownPersonState.workspace.people[0]);
+unknownPerson.id = "P002";
+unknownPerson.unknownPerson = true;
+unknownPerson.names = { birth: {}, current: {}, preferred: {}, maidenLast: "" };
+unknownPerson.livingStatus = "unknown";
+unknownPerson.birth.date = { value: "", qualifier: "about" };
+unknownPerson.death.date = { value: "", qualifier: "about" };
+unknownPerson.source.fields["lineage-id"] = "";
+unknownPerson.source.fields["person-date-birth-value"] = "";
+unknownPerson.source.fields["person-date-birth-descriptor"] = "UNKNOWN";
+unknownPerson.source.fields["person-date-death-value"] = "";
+unknownPerson.source.fields["person-date-death-descriptor"] = "UNKNOWN";
+unknownPersonState.workspace.people.push(unknownPerson);
+unknownPersonState.workspace.relationships.push({ id: "R001", type: "partner", person1Id: "P001", person2Id: "P002", status: "married", startDate: {}, endDate: {}, source: { format: "mcrelations-v2", fields: { "partner-type": "marriage", "end-reason": "" } }, order: 1, createdAt: now, updatedAt: now });
+const unknownPersonRoundTrip = await App.portability.prepareBytes(App.portability.packageBytes(unknownPersonState), "unknown-spouse.zip");
+const restoredUnknownPerson = unknownPersonRoundTrip.state.workspace.people.find((person) => person.id === "P002");
+if (!restoredUnknownPerson || !restoredUnknownPerson.unknownPerson || restoredUnknownPerson.livingStatus !== "unknown" || App.stateModel.displayName(restoredUnknownPerson) !== "Unknown person" || unknownPersonRoundTrip.state.workspace.relationships[0].status !== "married") fail("An Unknown married partner failed its package round trip");
 
 vm.runInContext(read("assets/js/core/family.js"), runtime, { filename: "assets/js/core/family.js" });
 const siblingFixture = {
@@ -112,6 +129,7 @@ const siblingFixture = {
   }
 };
 if (App.family.siblingRelationshipKind("P002", "P003", siblingFixture) !== "step" || App.family.siblingRelationshipKind("P002", "P004", siblingFixture) === "step") fail("Step sibling derivation regressed");
+if (App.family.compareBirthOrder({ id: "known", birth: { date: { value: "2000" } } }, { id: "unknown", birth: { date: {} }, source: { fields: { "person-date-birth-value": "????" } } }) >= 0) fail("Unknown birth years no longer sort after known years");
 for (const kind of ["step", "foster", "guardian", "unknown"]) {
   if (!/must be Non-Lineal/.test(App.family.validateRelationshipDraft({ type: "parent-child", parentId: "P001", childId: "P003", lineage: "lineal", kind }, siblingFixture, "R002"))) fail("The relationship editor accepts a Lineal " + kind + " link");
 }
@@ -122,6 +140,8 @@ const sw = read("sw.js");
 const cloud = read("assets/js/core/cloud.js");
 const pwa = read("assets/js/core/pwa.js");
 const appSource = read("assets/js/app.js");
+if (!index.includes('id="relationPerson1Search"') || !index.includes('id="relationPerson2Search"') || !appSource.includes("model.fuzzySearchMatch(query, searchText)")) fail("Connect Existing People search controls are missing");
+if (!index.includes('id="unknownPerson"') || !appSource.includes('data-rebuild-lineage="')) fail("Unknown person or Editor lineage repair controls are missing");
 if (!cloud.includes("if (!definition.canManage) prepared.state.preferences.controls.developerMode = false;")) fail("Non-Admin hosted access no longer defaults Developer Mode off");
 const toolbarOrder = ["cloudAuditButton", "addPersonButton", "directoryButton", "printButton"].map((id) => index.indexOf(`id="${id}"`));
 if (toolbarOrder.some((position) => position < 0) || !(toolbarOrder[0] < toolbarOrder[1] && toolbarOrder[1] < toolbarOrder[2] && toolbarOrder[2] < toolbarOrder[3])) fail("Header actions are no longer ordered Save, Add, List, Directory");

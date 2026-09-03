@@ -731,11 +731,34 @@
   }
 
   function setPersonLineageValue(person, value) {
-    if (storedLineageValue(person) === value) return;
+    const current = u.cleanLine(person && person.source && person.source.fields && person.source.fields["lineage-id"], 100);
+    if (current === value) return;
     person.source = u.plainObject(person.source);
     person.source.format = person.source.format || "mcpeople-v1";
     person.source.fields = Object.assign({}, u.plainObject(person.source.fields), { "lineage-id": value });
     person.updatedAt = u.isoNow();
+  }
+
+  function linealChildRelationships(sourceState, parentId) {
+    const peopleById = new Map(sourceState.workspace.people.map(function (person) { return [person.id, person]; }));
+    return sourceState.workspace.relationships.filter(function (relationship) {
+      return relationship.type === "parent-child" && relationship.lineage === "lineal" && relationship.parentId === parentId;
+    }).sort(function (first, second) {
+      return family.compareBirthOrder(peopleById.get(first.childId), peopleById.get(second.childId));
+    });
+  }
+
+  function clearLineageBranch(sourceState, personId, visited) {
+    const seen = visited || new Set();
+    if (seen.has(personId)) return 0;
+    seen.add(personId);
+    const person = sourceState.workspace.people.find(function (candidate) { return candidate.id === personId; });
+    if (person) setPersonLineageValue(person, "");
+    let affected = person ? 1 : 0;
+    linealChildRelationships(sourceState, personId).forEach(function (relationship) {
+      affected += clearLineageBranch(sourceState, relationship.childId, seen);
+    });
+    return affected;
   }
 
   function assignLineageBranch(sourceState, personId, parentLineage, visited) {
@@ -755,9 +778,7 @@
     }
     if (!newLineage) newLineage = prefix + nextChildLineageSegment(sourceState, parentLineage, personId);
     setPersonLineageValue(person, newLineage);
-    sourceState.workspace.relationships.filter(function (relationship) {
-      return relationship.type === "parent-child" && relationship.lineage === "lineal" && relationship.parentId === personId;
-    }).forEach(function (relationship) {
+    linealChildRelationships(sourceState, personId).forEach(function (relationship) {
       assignLineageBranch(sourceState, relationship.childId, newLineage, visited);
     });
     visited.delete(personId);
@@ -785,10 +806,51 @@
     return rootLineage;
   }
 
-  function assignLineageForRelationship(sourceState, relationship) {
-    if (!relationship || relationship.type !== "parent-child" || relationship.lineage !== "lineal") return "";
-    const parentLineage = ensurePersonLineageValue(sourceState, relationship.parentId, new Set());
-    return assignLineageBranch(sourceState, relationship.childId, parentLineage, new Set());
+  function rebuildLinealChildren(sourceState, parentId) {
+    const relationships = linealChildRelationships(sourceState, parentId);
+    relationships.forEach(function (relationship) { clearLineageBranch(sourceState, relationship.childId); });
+    const parentLineage = relationships.length ? ensurePersonLineageValue(sourceState, parentId, new Set()) : "";
+    relationships.forEach(function (relationship) { assignLineageBranch(sourceState, relationship.childId, parentLineage, new Set()); });
+    return relationships.length;
+  }
+
+  function rebuildLineageAfterRelationshipChange(sourceState, previous, relationship) {
+    const previousLineal = previous && previous.type === "parent-child" && previous.lineage === "lineal" ? previous : null;
+    const nextLineal = relationship && relationship.type === "parent-child" && relationship.lineage === "lineal" ? relationship : null;
+    if (previousLineal && (!nextLineal || previousLineal.parentId !== nextLineal.parentId || previousLineal.childId !== nextLineal.childId)) clearLineageBranch(sourceState, previousLineal.childId);
+    const parentIds = new Set();
+    if (previousLineal) parentIds.add(previousLineal.parentId);
+    if (nextLineal) parentIds.add(nextLineal.parentId);
+    parentIds.forEach(function (parentId) { rebuildLinealChildren(sourceState, parentId); });
+    const child = nextLineal && sourceState.workspace.people.find(function (person) { return person.id === nextLineal.childId; });
+    return child ? storedLineageValue(child) : "";
+  }
+
+  function rebuildLineageForPerson(sourceState, personId) {
+    const person = sourceState.workspace.people.find(function (candidate) { return candidate.id === personId; });
+    if (!person) throw new Error("The person could not be found.");
+    let root = person;
+    const visited = new Set();
+    while (root && !visited.has(root.id)) {
+      visited.add(root.id);
+      const parentRelationship = sourceState.workspace.relationships.find(function (relationship) {
+        return relationship.type === "parent-child" && relationship.lineage === "lineal" && relationship.childId === root.id;
+      });
+      const parent = parentRelationship && sourceState.workspace.people.find(function (candidate) { return candidate.id === parentRelationship.parentId; });
+      if (!parent) break;
+      root = parent;
+    }
+    const raw = u.cleanLine(root.source && root.source.fields && root.source.fields["lineage-id"], 100);
+    const validRoot = /^\d{2}$/.test(raw) && Number(raw) >= 1 && Number(raw) <= config.controls.maxLineageSegment;
+    const preserveRoot = validRoot && !lineageValueTaken(sourceState, raw, root.id);
+    const hasLinealChildren = linealChildRelationships(sourceState, root.id).length > 0;
+    const affected = clearLineageBranch(sourceState, root.id);
+    if (sourceState.workspace.family.homePersonId === root.id || validRoot || hasLinealChildren) {
+      if (preserveRoot) setPersonLineageValue(root, raw);
+      else ensurePersonLineageValue(sourceState, root.id, new Set());
+      rebuildLinealChildren(sourceState, root.id);
+    }
+    return { value: storedLineageValue(person), affected: affected };
   }
 
   function displayLineageSegment(segment) {
@@ -883,9 +945,25 @@
     const chain = lineageChain(person);
     const background = person.heritageNote && !sourceField(person, "lineage-id") ? '<div class="lineage-background"><h4>Background</h4><p class="preserve-lines">' + u.escapeHtml(person.heritageNote) + "</p></div>" : "";
     const hasRecordedLineage = chain.members.length > 1 || chain.numbers.length > 0;
-    return '<section class="profile-section lineage-section"><h3>Lineage</h3><div class="lineage-id-row"><span>ID</span>' + lineageIdHtml(chain.numbers) + '</div><div class="lineage-columns"><h4>Family Line</h4><ol class="lineage-paired-list">' + chain.members.map(function (member, index) {
+    const updateAction = familyEditingEnabled() ? '<button type="button" class="button small" data-rebuild-lineage="' + u.escapeHtml(person.id) + '">Check &amp; Update</button>' : "";
+    return '<section class="profile-section lineage-section"><div class="lineage-section-heading"><h3>Lineage</h3>' + updateAction + '</div><div class="lineage-id-row"><span>ID</span>' + lineageIdHtml(chain.numbers) + '</div><div class="lineage-columns"><h4>Family Line</h4><ol class="lineage-paired-list">' + chain.members.map(function (member, index) {
       return '<li><div class="lineage-name-cell">' + lineagePersonLink(member, true) + '</div><div class="lineage-reading-cell">' + lineageReadingCell(member, chain.members[index + 1], hasRecordedLineage) + "</div></li>";
     }).join("") + '</ol><p class="lineage-summary">' + u.escapeHtml(lineageSummaryText(person)) + "</p></div>" + background + "</section>";
+  }
+
+  function forceRebuildLineage(personId) {
+    if (!familyEditingEnabled()) return;
+    const preview = u.clone(state());
+    let result;
+    try { result = rebuildLineageForPerson(preview, personId); }
+    catch (error) {
+      components.toast(error.message, { title: "Lineage update failed", kind: "danger", duration: 6000 });
+      return;
+    }
+    storage.mutate(function (next) { rebuildLineageForPerson(next, personId); }, { reason: "rebuild-lineage" });
+    treeNeedsFit = true;
+    renderAll();
+    components.toast(result.value ? "Lineage ID " + result.value + " is current. Checked " + result.affected + " person" + (result.affected === 1 ? "." : "s in this branch.") : "No Lineal parent or branch was found, so the Lineage ID was removed.", { title: "Lineage updated", kind: "success", duration: 5000 });
   }
 
   function profileNames(person) {
@@ -1685,7 +1763,7 @@
       return valid;
     }).every(Boolean);
     const partnerRelationshipsValid = validateNewPartnerRows();
-    const valid = firstNamePresent && datesValid && emailsValid && phonesValid && addressesValid && partnerRelationshipsValid;
+    const valid = (firstNamePresent || $("#unknownPerson").checked) && datesValid && emailsValid && phonesValid && addressesValid && partnerRelationshipsValid;
     $("#savePersonButton").disabled = !valid;
     return valid;
   }
@@ -1828,7 +1906,7 @@
     const relationship = { id: "new-person-lineage-preview", type: "parent-child", parentId: parentId, childId: personId, lineage: "lineal", kind: "biological" };
     previewState.workspace.relationships.push(relationship);
     try {
-      const value = assignLineageForRelationship(previewState, relationship);
+      const value = rebuildLineageAfterRelationshipChange(previewState, null, relationship);
       output.classList.remove("danger-text");
       output.innerHTML = lineageIdHtml(value.split(".").map(displayLineageSegment));
       return value;
@@ -1907,6 +1985,17 @@
       personNotes: person && person.notes
     };
     Object.keys(values).forEach(function (id) { const input = $("#" + id); if (input) input.value = values[id] || ""; });
+    $("#unknownPerson").checked = Boolean(person && person.unknownPerson);
+    const pendingPartner = !person && pendingRelative && pendingRelative.role === "partner";
+    $("#pendingPartnerStatusField").hidden = !pendingPartner;
+    if (pendingPartner) {
+      $("#pendingPartnerStatusLabel").textContent = "Relationship to " + model.displayName(state().workspace.people.find(function (candidate) { return candidate.id === pendingRelative.sourceId; }));
+      $("#pendingPartnerStatus").innerHTML = config.partnerStatuses.map(function (item) {
+        const label = item.id === "partnered" ? "Unmarried partners" : item.id === "unknown" ? "Unknown" : item.label;
+        return '<option value="' + u.escapeHtml(item.id) + '">' + u.escapeHtml(label) + "</option>";
+      }).join("");
+      $("#pendingPartnerStatus").value = "unknown";
+    }
     personNameOverrides = new Set(person ? ["current", "preferred"].flatMap(function (group) { return NAME_PARTS.map(function (part) { return targetNameInputId(group, part); }); }) : []);
     personDraft = {
       addresses: u.clone(person && person.addresses || []),
@@ -1952,8 +2041,12 @@
       "person-date-death-value": deathValue,
       "person-date-death-descriptor": deathDescriptor
     });
+    const hasAnyName = ["birth", "current", "preferred"].some(function (group) {
+      return NAME_PARTS.some(function (part) { return Boolean($("#" + targetNameInputId(group, part)).value.trim()); });
+    }) || Boolean($("#maidenLastName").value.trim());
     return {
       id: existing ? existing.id : nextNumericRecordId("P", state().workspace.people, 3),
+      unknownPerson: $("#unknownPerson").checked && !hasAnyName,
       names: {
         birth: { prefix: $("#birthNamePrefix").value, first: $("#birthNameFirst").value, middle: $("#birthNameMiddle").value, last: $("#birthNameLast").value, suffix: $("#birthNameSuffix").value },
         current: { prefix: $("#currentNamePrefix").value, first: $("#currentNameFirst").value, middle: $("#currentNameMiddle").value, last: $("#currentNameLast").value, suffix: $("#currentNameSuffix").value },
@@ -1984,7 +2077,11 @@
     selectedNewPersonRelationshipIds("partners").forEach(function (id) { choices.push({ kind: "partner", id: id, details: selectedNewPartnerDetails(id) }); });
     selectedNewPersonRelationshipIds("children").forEach(function (id) { choices.push({ kind: "child", id: id }); });
     if (pendingRelative) {
-      choices.push({ kind: pendingRelative.role === "parent" ? "child" : pendingRelative.role === "child" ? "parent" : "partner", id: pendingRelative.sourceId });
+      choices.push({
+        kind: pendingRelative.role === "parent" ? "child" : pendingRelative.role === "child" ? "parent" : "partner",
+        id: pendingRelative.sourceId,
+        details: pendingRelative.role === "partner" ? { status: $("#pendingPartnerStatus").value || "unknown", startDate: "", endDate: "" } : null
+      });
     }
     const linealParentId = automaticLinealParentId();
     const seen = new Set();
@@ -2027,7 +2124,7 @@
     const id = $("#personId").value;
     const existing = id ? state().workspace.people.find(function (person) { return person.id === id; }) : null;
     const firstNamePresent = ["birthNameFirst", "currentNameFirst", "preferredNameFirst"].some(function (idValue) { return $("#" + idValue).value.trim(); });
-    if (!firstNamePresent) return showPersonError("Enter at least one First name in Birth, Current, or Preferred.");
+    if (!firstNamePresent && !$("#unknownPerson").checked) return showPersonError("Enter at least one First name in Birth, Current, or Preferred, or mark this as an Unknown person.");
     syncPersonRepeatables();
     const dateInputs = $$('[data-date-input]', $("#personDialog")).filter(function (input) {
       const partnerDetails = input.closest("[data-new-partner-details]");
@@ -2047,7 +2144,7 @@
         if (relationshipError) return showPersonError("The selected relationships cannot be added: " + relationshipError);
         validationState.workspace.relationships.push(relationship);
         if (relationship.lineage === "lineal") {
-          try { assignLineageForRelationship(validationState, relationship); }
+          try { rebuildLineageAfterRelationshipChange(validationState, null, relationship); }
           catch (lineageError) { return showPersonError("The Lineage ID could not be calculated: " + lineageError.message); }
         }
       }
@@ -2060,7 +2157,7 @@
       next.ui.selectedPersonId = person.id;
       next.ui.treeFocusId = person.id;
       relationshipDrafts.forEach(function (relationship) { next.workspace.relationships.push(relationship); });
-      relationshipDrafts.filter(function (relationship) { return relationship.lineage === "lineal"; }).forEach(function (relationship) { assignLineageForRelationship(next, relationship); });
+      relationshipDrafts.filter(function (relationship) { return relationship.lineage === "lineal"; }).forEach(function (relationship) { rebuildLineageAfterRelationshipChange(next, null, relationship); });
     }, { reason: existing ? "edit-person" : "add-person" });
     const message = existing ? "Updated " + model.displayName(person) + "." : "Added " + model.displayName(person) + ".";
     pendingRelative = null;
@@ -2070,8 +2167,31 @@
     components.toast(message + (relationshipDrafts.length ? " Added " + relationshipDrafts.length + " relationship" + (relationshipDrafts.length === 1 ? "." : "s.") : ""), { title: existing ? "Person updated" : "Person added", kind: "success" });
   }
 
-  function personOptions(selectedId) {
-    return state().workspace.people.slice().sort(function (a, b) { return model.sortName(a).localeCompare(model.sortName(b)); }).map(function (person) { return '<option value="' + u.escapeHtml(person.id) + '" ' + (person.id === selectedId ? "selected" : "") + '>' + u.escapeHtml(model.displayName(person) + (developerReferencesEnabled() ? " · " + person.reference : "")) + "</option>"; }).join("");
+  function relationshipPersonMatches(person, query) {
+    const searchText = [
+      model.personSearchText(person, { includeNotes: false, includeSource: false }),
+      person.id, person.reference, sourceField(person, "lineage-id"), family.lifespan(person)
+    ].filter(Boolean).join(" ");
+    return model.fuzzySearchMatch(query, searchText);
+  }
+
+  function personOptions(selectedId, query) {
+    return state().workspace.people.slice().filter(function (person) { return relationshipPersonMatches(person, query); }).sort(function (a, b) { return model.sortName(a).localeCompare(model.sortName(b)); }).map(function (person) {
+      const birthYear = family.eventYearLabel(person, "birth");
+      const details = [birthYear ? "b. " + birthYear : "", sourceField(person, "lineage-id") ? "Lineage " + sourceField(person, "lineage-id") : "", person.reference].filter(Boolean);
+      return '<option value="' + u.escapeHtml(person.id) + '" ' + (person.id === selectedId ? "selected" : "") + '>' + u.escapeHtml(model.displayName(person) + (details.length ? " · " + details.join(" · ") : "")) + "</option>";
+    }).join("");
+  }
+
+  function filterRelationshipPersonSelect(number) {
+    const input = $("#relationPerson" + number + "Search");
+    const select = $("#relationPerson" + number);
+    const previous = select.value;
+    select.innerHTML = personOptions(previous, input.value);
+    const count = select.options.length;
+    if (!count) select.innerHTML = '<option value="">No matching people</option>';
+    $("#relationPerson" + number + "ResultCount").textContent = count + " match" + (count === 1 ? "" : "es");
+    updateRelationshipLineagePreview();
   }
 
   function partnerSourceValue(relationship, key) {
@@ -2115,6 +2235,7 @@
     const childId = $("#relationPerson2").value;
     const previewState = u.clone(state());
     const existingId = $("#relationshipId").value;
+    const previous = existingId ? state().workspace.relationships.find(function (item) { return item.id === existingId; }) : null;
     const relationship = {
       id: existingId || "lineage-preview", type: "parent-child", parentId: parentId, childId: childId,
       lineage: "lineal", kind: $("#parentKind").value || "biological"
@@ -2123,7 +2244,7 @@
     if (existingIndex >= 0) previewState.workspace.relationships[existingIndex] = relationship;
     else previewState.workspace.relationships.push(relationship);
     try {
-      const value = assignLineageForRelationship(previewState, relationship);
+      const value = rebuildLineageAfterRelationshipChange(previewState, previous, relationship);
       output.classList.remove("danger-text");
       output.innerHTML = lineageIdHtml(value.split(".").map(displayLineageSegment));
     } catch (error) {
@@ -2136,6 +2257,8 @@
     const partner = $("#relationshipType").value === "partner";
     $("#relationPerson1Label").textContent = partner ? "First partner" : "Parent";
     $("#relationPerson2Label").textContent = partner ? "Second partner" : "Child";
+    $("#relationPerson1Search").setAttribute("aria-label", partner ? "Search first partner" : "Search parent");
+    $("#relationPerson2Search").setAttribute("aria-label", partner ? "Search second partner" : "Search child");
     $("#parentLineageField").hidden = partner;
     $("#parentKindField").hidden = partner;
     $("#partnerTypeField").hidden = !partner;
@@ -2156,8 +2279,14 @@
     $("#relationshipType").value = relationship ? relationship.type : "parent-child";
     const firstId = relationship ? (relationship.type === "parent-child" ? relationship.parentId : relationship.person1Id) : personId;
     const secondId = relationship ? (relationship.type === "parent-child" ? relationship.childId : relationship.person2Id) : state().workspace.people.find(function (person) { return person.id !== firstId; })?.id;
+    $("#relationPerson1Search").value = "";
+    $("#relationPerson2Search").value = "";
     $("#relationPerson1").innerHTML = personOptions(firstId);
     $("#relationPerson2").innerHTML = personOptions(secondId);
+    [1, 2].forEach(function (number) {
+      const count = $("#relationPerson" + number).options.length;
+      $("#relationPerson" + number + "ResultCount").textContent = count + " match" + (count === 1 ? "" : "es");
+    });
     $("#parentLineage").innerHTML = config.parentLineages.map(function (item) { return '<option value="' + item.id + '">' + u.escapeHtml(item.label) + "</option>"; }).join("");
     $("#parentKind").innerHTML = config.parentKinds.map(function (item) { return '<option value="' + item.id + '">' + u.escapeHtml(item.label) + "</option>"; }).join("");
     $("#partnerType").innerHTML = config.partnerTypes.map(function (item) { return '<option value="' + item.id + '">' + u.escapeHtml(item.label) + "</option>"; }).join("");
@@ -2173,7 +2302,7 @@
     $("#relationshipNotes").value = relationship && relationship.notes || "";
     $("#relationshipFormError").hidden = true;
     updateRelationshipFormType();
-    components.openDialog("#relationshipDialog", { trigger: trigger, focus: "#relationshipType" });
+    components.openDialog("#relationshipDialog", { trigger: trigger, focus: relationship ? "#relationshipType" : "#relationPerson1Search" });
   }
 
   async function editPersonRelationships(personId, trigger) {
@@ -2260,7 +2389,7 @@
     else validationState.workspace.relationships.push(u.clone(relationship));
     let assignedLineage = "";
     try {
-      assignedLineage = assignLineageForRelationship(validationState, relationship);
+      assignedLineage = rebuildLineageAfterRelationshipChange(validationState, existing, relationship);
     } catch (lineageError) {
       $("#relationshipFormError").textContent = lineageError.message;
       $("#relationshipFormError").hidden = false;
@@ -2269,7 +2398,7 @@
     storage.mutate(function (next) {
       if (existing) next.workspace.relationships[next.workspace.relationships.findIndex(function (item) { return item.id === existing.id; })] = relationship;
       else next.workspace.relationships.push(relationship);
-      if (assignedLineage) assignLineageForRelationship(next, relationship);
+      rebuildLineageAfterRelationshipChange(next, existing, relationship);
     }, { reason: existing ? "edit-relationship" : "add-relationship" });
     treeNeedsFit = true;
     components.closeDialog("#relationshipDialog", "saved");
@@ -2303,7 +2432,10 @@
     if (!accepted) return;
     const hosted = hostedVaultActive();
     if (!hosted) storage.saveRecovery("Before removing a relationship", state());
-    storage.mutate(function (next) { next.workspace.relationships = next.workspace.relationships.filter(function (item) { return item.id !== id; }); }, { reason: "delete-relationship" });
+    storage.mutate(function (next) {
+      next.workspace.relationships = next.workspace.relationships.filter(function (item) { return item.id !== id; });
+      rebuildLineageAfterRelationshipChange(next, relationship, null);
+    }, { reason: "delete-relationship" });
     treeNeedsFit = true;
     renderAll();
     components.toast(hosted ? "The relationship was removed from this working copy. GitHub will stay unchanged until you choose Update." : "The relationship was removed. A recovery copy is available in Developer Mode.", { title: "Relationship removed", kind: "success" });
@@ -2319,8 +2451,13 @@
     if (!accepted) return;
     if (!hosted) storage.saveRecovery("Before deleting " + model.displayName(person), state());
     storage.mutate(function (next) {
+      const affectedParentIds = new Set(next.workspace.relationships.filter(function (relationship) {
+        return relationship.type === "parent-child" && relationship.lineage === "lineal" && relationship.childId === id;
+      }).map(function (relationship) { return relationship.parentId; }));
+      clearLineageBranch(next, id);
       next.workspace.people = next.workspace.people.filter(function (item) { return item.id !== id; });
       next.workspace.relationships = next.workspace.relationships.filter(function (relationship) { return relationship.type === "parent-child" ? relationship.parentId !== id && relationship.childId !== id : relationship.person1Id !== id && relationship.person2Id !== id; });
+      affectedParentIds.forEach(function (parentId) { rebuildLinealChildren(next, parentId); });
       next.workspace.residences = next.workspace.residences.filter(function (residence) { return residence.personId !== id; });
       removeUnreferencedPlaces(next);
       next.ui.favoritePersonIds = next.ui.favoritePersonIds.filter(function (personId) { return personId !== id; });
@@ -3499,6 +3636,8 @@
     if (addRelationshipButton) { openRelationshipEditor("", addRelationshipButton.dataset.addRelationship, addRelationshipButton); return; }
     const editPersonRelationshipsButton = target.closest("[data-edit-person-relationships]");
     if (editPersonRelationshipsButton) { editPersonRelationships(editPersonRelationshipsButton.dataset.editPersonRelationships, editPersonRelationshipsButton); return; }
+    const rebuildLineageButton = target.closest("[data-rebuild-lineage]");
+    if (rebuildLineageButton) { forceRebuildLineage(rebuildLineageButton.dataset.rebuildLineage); return; }
     const editRelationshipButton = target.closest("[data-edit-relationship]");
     if (editRelationshipButton) { openRelationshipEditor(editRelationshipButton.dataset.editRelationship, "", editRelationshipButton); return; }
     const deleteRelationshipButton = target.closest("[data-delete-relationship]");
@@ -3717,7 +3856,9 @@
       else if (["relationPerson1", "relationPerson2", "parentLineage"].includes(event.target.id)) updateRelationshipLineagePreview();
     });
     $("#relationshipForm").addEventListener("input", function (event) {
-      if (event.target.matches("[data-date-input]") && validateDateInputControl(event.target)) $("#relationshipFormError").hidden = true;
+      if (event.target.id === "relationPerson1Search") filterRelationshipPersonSelect(1);
+      else if (event.target.id === "relationPerson2Search") filterRelationshipPersonSelect(2);
+      else if (event.target.matches("[data-date-input]") && validateDateInputControl(event.target)) $("#relationshipFormError").hidden = true;
     });
     $("#personDialog").addEventListener("input", function (event) {
       if (event.target.matches("[data-phone-input]")) formatPhoneInput(event.target);
@@ -3733,6 +3874,7 @@
         const valid = validateDateInputControl(event.target);
         if (event.target.id === "deathDate" && valid && event.target.value.trim()) $("#livingStatus").value = "deceased";
       }
+      if (event.target.id === "unknownPerson" && event.target.checked && !$("#deathDate").value.trim()) $("#livingStatus").value = "unknown";
       if (event.target.matches("[data-new-person-relationship]")) updateNewPersonRelationshipCounts();
       if (event.target.matches("[data-new-partner-status], [data-new-partner-start-date], [data-new-partner-end-date]")) validateNewPartnerRow(event.target.closest("[data-new-person-relationship-row]"));
       if (updatePersonFormValidity()) $("#personFormError").hidden = true;
