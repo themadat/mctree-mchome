@@ -69,10 +69,29 @@
     const settings = Object.assign({ title: "Choose an action", message: "", choices: [], cancelLabel: "Cancel" }, options || {});
     const dialog = document.querySelector("#choiceDialog");
     dialog.querySelector("[data-choice-title]").textContent = settings.title;
-    dialog.querySelector("[data-choice-message]").textContent = settings.message;
+    const message = dialog.querySelector("[data-choice-message]");
+    message.textContent = settings.message;
+    message.hidden = !settings.message;
     const container = dialog.querySelector("[data-choice-actions]");
     container.innerHTML = "";
+    let groupName = null;
+    let groupActions = null;
     settings.choices.forEach(function (choice, index) {
+      const nextGroupName = choice.group || "";
+      if (groupName !== nextGroupName) {
+        groupName = nextGroupName;
+        const group = document.createElement("section");
+        group.className = "choice-group";
+        if (groupName) {
+          const heading = document.createElement("h3");
+          heading.textContent = groupName;
+          group.appendChild(heading);
+        }
+        groupActions = document.createElement("div");
+        groupActions.className = "choice-group-actions";
+        group.appendChild(groupActions);
+        container.appendChild(group);
+      }
       const button = document.createElement("button");
       button.type = "button";
       button.className = "button " + (choice.kind || "secondary");
@@ -86,7 +105,7 @@
         description.textContent = choice.description;
         button.appendChild(description);
       }
-      container.appendChild(button);
+      groupActions.appendChild(button);
     });
     dialog.querySelector("[data-choice-cancel]").textContent = settings.cancelLabel;
     if (choiceResolve) choiceResolve("cancel");
@@ -262,6 +281,19 @@
           else closeDialog(dialog, "cancel");
           return;
         }
+      }
+      const openChoiceDialog = document.querySelector("#choiceDialog[open]");
+      if (openChoiceDialog && ["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
+        const choices = Array.from(openChoiceDialog.querySelectorAll("[data-choice-value]:not([disabled])"));
+        const choiceIndex = choices.indexOf(document.activeElement);
+        event.preventDefault();
+        if (event.key === "Home") choices[0]?.focus();
+        else if (event.key === "End") choices[choices.length - 1]?.focus();
+        else {
+          const delta = event.key === "ArrowDown" ? 1 : -1;
+          choices[(choiceIndex + delta + choices.length) % choices.length]?.focus();
+        }
+        return;
       }
       if (event.key === "Escape" && !activePopover) {
         const dialogs = Array.from(document.querySelectorAll("dialog[open]"));

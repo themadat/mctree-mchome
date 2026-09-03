@@ -983,7 +983,7 @@
     const chain = lineageChain(person);
     const background = person.heritageNote && !isLinealPerson(person) ? '<div class="lineage-background"><h4>Background</h4><p class="preserve-lines">' + u.escapeHtml(person.heritageNote) + "</p></div>" : "";
     const hasRecordedLineage = chain.members.length > 1 || chain.numbers.length > 0;
-    const updateAction = familyEditingEnabled() ? '<button type="button" class="button small" data-rebuild-lineage="' + u.escapeHtml(person.id) + '">Check &amp; Update</button>' : "";
+    const updateAction = familyEditingEnabled() ? '<button type="button" class="button small lineage-update-button" data-rebuild-lineage="' + u.escapeHtml(person.id) + '"><span class="button-icon" data-symbol="lineageCheck" aria-hidden="true"></span><span>Check &amp; Update</span></button>' : "";
     return '<section class="profile-section lineage-section"><div class="lineage-section-heading"><h3>Lineage</h3>' + updateAction + '</div><div class="lineage-id-row"><span>ID</span>' + lineageIdHtml(chain.numbers) + '</div><div class="lineage-columns"><h4>Family Line</h4><ol class="lineage-paired-list">' + chain.members.map(function (member, index) {
       return '<li><div class="lineage-name-cell">' + lineagePersonLink(member, true) + '</div><div class="lineage-reading-cell">' + lineageReadingCell(member, chain.members[index + 1], hasRecordedLineage) + "</div></li>";
     }).join("") + '</ol><p class="lineage-summary">' + u.escapeHtml(lineageSummaryText(person)) + "</p></div>" + background + "</section>";
@@ -1084,7 +1084,14 @@
     const actionButton = function (label, symbol, attribute, danger, accessibleLabel) {
       return '<button type="button" class="profile-action' + (danger ? " danger-text" : "") + '" ' + attribute + ' aria-label="' + u.escapeHtml(accessibleLabel || label + " person") + '"><span class="profile-action-icon" data-symbol="' + symbol + '" aria-hidden="true"></span><span>' + u.escapeHtml(label) + "</span></button>";
     };
-    const relationshipActions = editing ? '<div class="relationship-actions">' + actionButton("Add", "addRelative", 'data-add-relative="' + u.escapeHtml(person.id) + '"', false) + actionButton("Connect", "connectPerson", 'data-add-relationship="' + u.escapeHtml(person.id) + '"', false) + actionButton("Edit", "editPerson", 'data-edit-person-relationships="' + u.escapeHtml(person.id) + '"', false, "Edit relationships") + "</div>" : "";
+    const hasRelationships = state().workspace.relationships.some(function (relationship) {
+      return relationship.type === "parent-child" ? relationship.parentId === person.id || relationship.childId === person.id : relationship.person1Id === person.id || relationship.person2Id === person.id;
+    });
+    const relationshipActions = editing ? '<div class="relationship-actions">'
+      + actionButton("Add", "relationshipAdd", 'data-add-person-relationship="' + u.escapeHtml(person.id) + '"', false, "Add a relationship")
+      + actionButton("Edit", "relationshipEdit", 'data-edit-person-relationships="' + u.escapeHtml(person.id) + '"' + (hasRelationships ? "" : " disabled"), false, "Edit a relationship")
+      + actionButton("Delete", "relationshipDelete", 'data-delete-person-relationships="' + u.escapeHtml(person.id) + '"' + (hasRelationships ? "" : " disabled"), true, "Delete a relationship")
+      + "</div>" : "";
     const relationships = '<section class="profile-section"><div class="relationship-section-heading"><h3>Relationships</h3>' + relationshipActions + '</div><div class="relationship-list">' + relationshipRows(person) + "</div></section>";
     const selectedName = profileName(person);
     const favoriteAction = (isFavorite ? "Remove " : "Add ") + selectedName + (isFavorite ? " from" : " to") + " favorites";
@@ -2308,14 +2315,16 @@
     updateRelationshipLineagePreview();
   }
 
-  function openRelationshipEditor(id, personId, trigger) {
+  function openRelationshipEditor(id, personId, trigger, role) {
     if (!familyEditingEnabled()) return;
     const relationship = id ? state().workspace.relationships.find(function (item) { return item.id === id; }) : null;
-    $("#relationshipDialogTitle").textContent = relationship ? "Edit Relationship" : "Connect Existing People";
+    const relationshipRole = ["parent", "partner", "child"].includes(role) ? role : "";
+    $("#relationshipDialogTitle").textContent = relationship ? "Edit Relationship" : relationshipRole ? "Connect Existing " + relationshipRole[0].toUpperCase() + relationshipRole.slice(1) : "Connect Existing People";
     $("#relationshipId").value = relationship ? relationship.id : "";
-    $("#relationshipType").value = relationship ? relationship.type : "parent-child";
-    const firstId = relationship ? (relationship.type === "parent-child" ? relationship.parentId : relationship.person1Id) : personId;
-    const secondId = relationship ? (relationship.type === "parent-child" ? relationship.childId : relationship.person2Id) : state().workspace.people.find(function (person) { return person.id !== firstId; })?.id;
+    $("#relationshipType").value = relationship ? relationship.type : relationshipRole === "partner" ? "partner" : "parent-child";
+    const otherPersonId = state().workspace.people.find(function (person) { return person.id !== personId; })?.id;
+    const firstId = relationship ? (relationship.type === "parent-child" ? relationship.parentId : relationship.person1Id) : relationshipRole === "parent" ? otherPersonId : personId;
+    const secondId = relationship ? (relationship.type === "parent-child" ? relationship.childId : relationship.person2Id) : relationshipRole === "parent" ? personId : otherPersonId;
     $("#relationPerson1Search").value = "";
     $("#relationPerson2Search").value = "";
     $("#relationPerson1").innerHTML = personOptions(firstId);
@@ -2339,24 +2348,33 @@
     $("#relationshipNotes").value = relationship && relationship.notes || "";
     $("#relationshipFormError").hidden = true;
     updateRelationshipFormType();
-    components.openDialog("#relationshipDialog", { trigger: trigger, focus: relationship ? "#relationshipType" : "#relationPerson1Search" });
+    const initialSearch = relationshipRole === "parent" || !relationshipRole ? "#relationPerson1Search" : "#relationPerson2Search";
+    components.openDialog("#relationshipDialog", { trigger: trigger, focus: relationship ? "#relationshipType" : initialSearch });
+  }
+
+  function personRelationshipChoices(personId) {
+    const person = state().workspace.people.find(function (item) { return item.id === personId; });
+    if (!person) return { person: null, choices: [] };
+    const groups = family.relationGroups(personId, state());
+    const choices = [];
+    groups.parents.forEach(function (entry) {
+      choices.push({ value: entry.relationship.id, group: "Parents", label: profileName(entry.person), description: parentContext(person, entry).replace(/[()]/g, "") });
+    });
+    groups.partners.forEach(function (entry) {
+      choices.push({ value: entry.relationship.id, group: "Partners", label: profileName(entry.person), description: (entry.current ? "Current · " : "Previous · ") + partnerContext(entry, person).replace(/[()]/g, "") });
+    });
+    groups.children.forEach(function (entry) {
+      choices.push({ value: entry.relationship.id, group: "Children", label: profileName(entry.person), description: parentContext(entry.person, entry).replace(/[()]/g, "") });
+    });
+    return { person: person, choices: choices };
   }
 
   async function editPersonRelationships(personId, trigger) {
     if (!familyEditingEnabled()) return;
-    const person = state().workspace.people.find(function (item) { return item.id === personId; });
+    const relationshipChoices = personRelationshipChoices(personId);
+    const person = relationshipChoices.person;
+    const choices = relationshipChoices.choices;
     if (!person) return;
-    const groups = family.relationGroups(personId, state());
-    const choices = [];
-    groups.parents.forEach(function (entry) {
-      choices.push({ value: entry.relationship.id, label: "Parent · " + profileName(entry.person), description: parentContext(person, entry).replace(/[()]/g, "") });
-    });
-    groups.partners.forEach(function (entry) {
-      choices.push({ value: entry.relationship.id, label: (entry.current ? "Current partner · " : "Previous partner · ") + profileName(entry.person), description: partnerContext(entry, person).replace(/[()]/g, "") });
-    });
-    groups.children.forEach(function (entry) {
-      choices.push({ value: entry.relationship.id, label: "Child · " + profileName(entry.person), description: parentContext(entry.person, entry).replace(/[()]/g, "") });
-    });
     if (!choices.length) {
       components.message("No relationships to edit", profileName(person) + " has no direct parent, partner, or child relationships.", { trigger: trigger });
       return;
@@ -2369,6 +2387,26 @@
       trigger: trigger
     });
     if (relationshipId !== "cancel") openRelationshipEditor(relationshipId, "", trigger);
+  }
+
+  async function deletePersonRelationships(personId, trigger) {
+    if (!familyEditingEnabled()) return;
+    const relationshipChoices = personRelationshipChoices(personId);
+    const person = relationshipChoices.person;
+    const choices = relationshipChoices.choices.map(function (choice) { return Object.assign({}, choice, { kind: "danger-text" }); });
+    if (!person) return;
+    if (!choices.length) {
+      components.message("No relationships to delete", profileName(person) + " has no direct parent, partner, or child relationships.", { trigger: trigger });
+      return;
+    }
+    const relationshipId = await components.choose({
+      title: "Delete a relationship",
+      message: "Choose which of " + profileName(person) + "’s relationships to delete.",
+      choices: choices,
+      cancelLabel: "Cancel",
+      trigger: trigger
+    });
+    if (relationshipId !== "cancel") deleteRelationship(relationshipId, trigger);
   }
 
   function saveRelationship(event) {
@@ -2444,28 +2482,41 @@
     components.toast((existing ? "The relationship was updated." : "The people are now connected.") + lineageMessage, { title: existing ? "Relationship updated" : "Relationship added", kind: "success" });
   }
 
-  async function addRelative(personId, trigger) {
+  async function addPersonRelationship(personId, trigger) {
     if (!familyEditingEnabled()) return;
+    const person = state().workspace.people.find(function (item) { return item.id === personId; });
+    if (!person) return;
     const choice = await components.choose({
-      title: "Add a new relative",
-      message: "Choose how the new person is related. You can refine the relationship details afterward.",
+      title: "Add a relationship",
+      message: "Choose whether to add a new person or connect someone already in McFamily.",
       choices: [
-        { value: "parent", label: "Add parent", description: "Create a new person as a parent of the selected person.", kind: "primary" },
-        { value: "child", label: "Add child", description: "Create a new person as a child of the selected person." },
-        { value: "partner", label: "Add partner", description: "Create a new person as a partner of the selected person." }
+        { value: "new-parent", group: "New person with relationship", label: "Parent", description: "Create a new person as a parent of " + profileName(person) + ".", kind: "primary" },
+        { value: "new-child", group: "New person with relationship", label: "Child", description: "Create a new person as a child of " + profileName(person) + "." },
+        { value: "new-partner", group: "New person with relationship", label: "Partner", description: "Create a new person as a partner of " + profileName(person) + "." },
+        { value: "existing-parent", group: "Relationship to existing person", label: "Parent", description: "Connect an existing person as a parent of " + profileName(person) + "." },
+        { value: "existing-child", group: "Relationship to existing person", label: "Child", description: "Connect an existing person as a child of " + profileName(person) + "." },
+        { value: "existing-partner", group: "Relationship to existing person", label: "Partner", description: "Connect an existing person as a partner of " + profileName(person) + "." }
       ],
       trigger: trigger
     });
     if (choice === "cancel") return;
-    pendingRelative = { sourceId: personId, role: choice };
-    openPersonEditor("", trigger);
+    const parts = choice.split("-");
+    const personSource = parts[0];
+    const role = parts[1];
+    if (personSource === "new") {
+      pendingRelative = { sourceId: personId, role: role };
+      openPersonEditor("", trigger);
+    } else {
+      pendingRelative = null;
+      openRelationshipEditor("", personId, trigger, role);
+    }
   }
 
   async function deleteRelationship(id, trigger) {
     if (!familyEditingEnabled()) return;
     const relationship = state().workspace.relationships.find(function (item) { return item.id === id; });
     if (!relationship) return;
-    const accepted = await components.confirm({ title: "Remove this relationship?", message: "The people will remain in the list, but this link and its relationship notes will be removed from the tree and atlas.", confirmLabel: "Remove relationship", cancelLabel: "Keep relationship", danger: true, trigger: trigger });
+    const accepted = await components.confirm({ title: "Delete this relationship?", message: "The people will remain in the list, but this link and its relationship notes will be deleted from the tree and atlas.", confirmLabel: "Delete relationship", cancelLabel: "Keep relationship", danger: true, trigger: trigger });
     if (!accepted) return;
     const hosted = hostedVaultActive();
     if (!hosted) storage.saveRecovery("Before removing a relationship", state());
@@ -2475,7 +2526,7 @@
     }, { reason: "delete-relationship" });
     treeNeedsFit = true;
     renderAll();
-    components.toast(hosted ? "The relationship was removed from this working copy. GitHub will stay unchanged until you choose Update." : "The relationship was removed. A recovery copy is available in Developer Mode.", { title: "Relationship removed", kind: "success" });
+    components.toast(hosted ? "The relationship was deleted from this working copy. GitHub will stay unchanged until you choose Update." : "The relationship was deleted. A recovery copy is available in Developer Mode.", { title: "Relationship deleted", kind: "success" });
   }
 
   async function deletePerson(id, trigger) {
@@ -3668,12 +3719,12 @@
     if (target.closest("[data-add-person]")) { pendingRelative = null; openPersonEditor("", target.closest("[data-add-person]")); return; }
     const editPerson = target.closest("[data-edit-person]");
     if (editPerson) { pendingRelative = null; openPersonEditor(editPerson.dataset.editPerson, editPerson); return; }
-    const addRelativeButton = target.closest("[data-add-relative]");
-    if (addRelativeButton) { addRelative(addRelativeButton.dataset.addRelative, addRelativeButton); return; }
-    const addRelationshipButton = target.closest("[data-add-relationship]");
-    if (addRelationshipButton) { openRelationshipEditor("", addRelationshipButton.dataset.addRelationship, addRelationshipButton); return; }
+    const addPersonRelationshipButton = target.closest("[data-add-person-relationship]");
+    if (addPersonRelationshipButton) { addPersonRelationship(addPersonRelationshipButton.dataset.addPersonRelationship, addPersonRelationshipButton); return; }
     const editPersonRelationshipsButton = target.closest("[data-edit-person-relationships]");
     if (editPersonRelationshipsButton) { editPersonRelationships(editPersonRelationshipsButton.dataset.editPersonRelationships, editPersonRelationshipsButton); return; }
+    const deletePersonRelationshipsButton = target.closest("[data-delete-person-relationships]");
+    if (deletePersonRelationshipsButton) { deletePersonRelationships(deletePersonRelationshipsButton.dataset.deletePersonRelationships, deletePersonRelationshipsButton); return; }
     const rebuildLineageButton = target.closest("[data-rebuild-lineage]");
     if (rebuildLineageButton) { forceRebuildLineage(rebuildLineageButton.dataset.rebuildLineage); return; }
     const editRelationshipButton = target.closest("[data-edit-relationship]");
