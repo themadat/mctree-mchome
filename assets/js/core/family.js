@@ -47,10 +47,16 @@
     (graph.parents.get(firstId) || []).forEach(function (firstParentLink) {
       const secondParentLink = secondParentLinks.get(firstParentLink.person.id);
       if (!secondParentLink) return;
-      if (firstParentLink.relationship.kind === "step" || secondParentLink.relationship.kind === "step") sharesStepParent = true;
+      if (secondParentLink.relationship.kind === "step") sharesStepParent = true;
       else sharesDirectParent = true;
     });
     return sharesStepParent && !sharesDirectParent ? "step" : "";
+  }
+
+  function isLinealRelationship(relationship) {
+    if (!relationship || relationship.type !== "parent-child" || relationship.lineage !== "lineal") return false;
+    const kind = config.parentKinds.find(function (item) { return item.id === relationship.kind; });
+    return Boolean(kind && kind.lineal);
   }
 
   function traverseGenerations(id, adjacency) {
@@ -228,7 +234,7 @@
   }
 
   function bloodlineParentRank(person, entry) {
-    return entry && entry.relationship && entry.relationship.lineage === "lineal" ? 0 : 1;
+    return isLinealRelationship(entry && entry.relationship) ? 0 : 1;
   }
 
   function orderPartnerHistory(entries) {
@@ -664,6 +670,7 @@
     relationGroups: relationGroups,
     compareBirthOrder: compareBirthOrder,
     siblingRelationshipKind: siblingRelationshipKind,
+    isLinealRelationship: isLinealRelationship,
     ancestorsOf: ancestorsOf,
     descendantsOf: descendantsOf,
     familyUnits: familyUnits,
