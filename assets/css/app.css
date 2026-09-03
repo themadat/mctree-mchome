@@ -627,7 +627,7 @@ body[data-onboarding="true"] main { min-height: 100svh; padding: max(1rem, var(-
 
 body[data-onboarding="false"] { display: flex; flex-direction: column; height: 100svh; overflow-y: hidden; }
 body[data-onboarding="false"] > .app-header { flex: 0 0 auto; }
-body[data-onboarding="false"] > main { display: flex; flex: 1 1 auto; min-height: 0; overflow: hidden; }
+body[data-onboarding="false"] > main { display: flex; flex: 1 1 auto; min-height: 0; overflow: hidden; padding-bottom: max(.75rem, var(--safe-bottom)); }
 .family-workspace { min-width: 0; }
 body[data-onboarding="false"] .family-workspace { display: flex; flex: 1 1 auto; flex-direction: column; min-height: 0; }
 body[data-onboarding="false"] .family-workspace-grid { flex: 1 1 auto; height: auto; min-height: 0; }
