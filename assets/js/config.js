@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.115",
-      buildId: "0.0.1.115",
+      version: "0.0.1.116",
+      buildId: "0.0.1.116",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -168,13 +168,13 @@
 
     releases: [
       {
-        version: "0.0.1.115",
-        date: "2026-09-03T18:00:00.000Z",
-        title: "Aligned relationship adding",
-        summary: "Focused relationship pickers now span the dialog cleanly, and the application stays within one vertical viewport.",
+        version: "0.0.1.116",
+        date: "2026-09-03T21:30:00.000Z",
+        title: "Restored full workspace height",
+        summary: "The initialized workspace now uses the available viewport height without reserving the former floating-action buffer.",
         features: [],
-        improvements: ["Made the active Add relationship person picker span the full dialog so type controls and dates align in pairs"],
-        fixes: ["Removed the outer application scrollbar while preserving independent List, Tree, and Person pane scrolling"],
+        improvements: [],
+        fixes: ["Removed the obsolete large bottom buffer from the viewport-locked application layout"],
         knownIssues: []
       }
     ],
