@@ -1096,8 +1096,8 @@
     const selectedName = profileName(person);
     const favoriteAction = (isFavorite ? "Remove " : "Add ") + selectedName + (isFavorite ? " from" : " to") + " favorites";
     const favoriteButton = '<button type="button" class="profile-action profile-favorite-action" data-toggle-favorite="' + u.escapeHtml(person.id) + '" aria-pressed="' + String(isFavorite) + '" aria-label="' + u.escapeHtml(favoriteAction) + '" title="' + u.escapeHtml(favoriteAction) + '"><span class="profile-action-icon" data-symbol="favorite" aria-hidden="true"></span><span>Favorite</span></button>';
-    const recordActions = editing ? actionButton("Delete", "deletePerson", 'data-delete-person="' + u.escapeHtml(person.id) + '"', true) + actionButton("Edit", "editPerson", 'data-edit-person="' + u.escapeHtml(person.id) + '"', false) : "";
-    const headerActions = '<div class="profile-header-actions">' + favoriteButton + recordActions + '<button type="button" class="icon-button profile-close" data-close-profile aria-controls="profilePanel" aria-label="Close and deselect person" title="Close and deselect person"><span data-symbol="close" aria-hidden="true"></span></button></div>';
+    const recordActions = editing ? actionButton("Edit", "editPerson", 'data-edit-person="' + u.escapeHtml(person.id) + '"', false) + actionButton("Delete", "deletePerson", 'data-delete-person="' + u.escapeHtml(person.id) + '"', true) : "";
+    const headerActions = '<div class="profile-header-actions">' + recordActions + favoriteButton + '<button type="button" class="icon-button profile-close" data-close-profile aria-controls="profilePanel" aria-label="Close and deselect person" title="Close and deselect person"><span data-symbol="close" aria-hidden="true"></span></button></div>';
     container.innerHTML = '<article class="person-profile"><header class="profile-header"><div class="profile-title">' + profileEyebrow + '<h2>' + u.escapeHtml(selectedName) + '</h2><p>' + u.escapeHtml(family.lifespan(person)) + "</p></div>" + headerActions + '</header><dl class="profile-list identity-list">' + formatEvent("Born", person, "birth") + formatEvent("Died", person, "death") + ageDetail(person, false) + livingStatusDetail(person) + maritalStatusDetail(person, family.relationGroups(person.id, state()).partners) + "</dl>" + profileNames(person) + profileLineage(person) + relationships + contactBlocks.join("") + (familyEditingEnabled() && person.notes ? '<section class="profile-section"><h3>Notes</h3><p class="preserve-lines">' + u.escapeHtml(person.notes) + "</p></section>" : "") + profileSource(person) + "</article>";
     icons.mount(container);
   }
@@ -2030,6 +2030,15 @@
     };
     Object.keys(values).forEach(function (id) { const input = $("#" + id); if (input) input.value = values[id] || ""; });
     $("#unknownPerson").checked = Boolean(person && person.unknownPerson);
+    const pendingContext = Boolean(!person && pendingRelative);
+    $("#pendingRelativeSummary").hidden = !pendingContext;
+    if (pendingContext) {
+      const sourcePerson = state().workspace.people.find(function (candidate) { return candidate.id === pendingRelative.sourceId; });
+      const sourceName = profileName(sourcePerson);
+      $("#pendingRelativeType").textContent = pendingRelative.role === "partner" ? "Partners" : "Parent → Child";
+      $("#pendingRelativePeople").textContent = pendingRelative.role === "parent" ? "New parent → " + sourceName : pendingRelative.role === "child" ? sourceName + " → New child" : sourceName + " ↔ New partner";
+      $("#pendingRelativeDetail").textContent = sourceName + " and the selected relationship role are fixed. Enter the new person below.";
+    }
     const pendingPartner = !person && pendingRelative && pendingRelative.role === "partner";
     $("#pendingPartnerStatusField").hidden = !pendingPartner;
     if (pendingPartner) {
@@ -2219,8 +2228,8 @@
     return model.fuzzySearchMatch(query, searchText);
   }
 
-  function personOptions(selectedId, query) {
-    return state().workspace.people.slice().filter(function (person) { return relationshipPersonMatches(person, query); }).sort(function (a, b) { return model.sortName(a).localeCompare(model.sortName(b)); }).map(function (person) {
+  function personOptions(selectedId, query, excludedId) {
+    return state().workspace.people.slice().filter(function (person) { return person.id !== excludedId && relationshipPersonMatches(person, query); }).sort(function (a, b) { return model.sortName(a).localeCompare(model.sortName(b)); }).map(function (person) {
       const birthYear = family.eventYearLabel(person, "birth");
       const details = [birthYear ? "b. " + birthYear : "", sourceField(person, "lineage-id") ? "Lineage " + sourceField(person, "lineage-id") : "", person.reference].filter(Boolean);
       return '<option value="' + u.escapeHtml(person.id) + '" ' + (person.id === selectedId ? "selected" : "") + '>' + u.escapeHtml(model.displayName(person) + (details.length ? " · " + details.join(" · ") : "")) + "</option>";
@@ -2231,7 +2240,7 @@
     const input = $("#relationPerson" + number + "Search");
     const select = $("#relationPerson" + number);
     const previous = select.value;
-    select.innerHTML = personOptions(previous, input.value);
+    select.innerHTML = personOptions(previous, input.value, select.dataset.excludePersonId || "");
     const count = select.options.length;
     if (!count) select.innerHTML = '<option value="">No matching people</option>';
     $("#relationPerson" + number + "ResultCount").textContent = count + " match" + (count === 1 ? "" : "es");
@@ -2319,16 +2328,19 @@
     if (!familyEditingEnabled()) return;
     const relationship = id ? state().workspace.relationships.find(function (item) { return item.id === id; }) : null;
     const relationshipRole = ["parent", "partner", "child"].includes(role) ? role : "";
-    $("#relationshipDialogTitle").textContent = relationship ? "Edit " + (relationship.type === "partner" ? "Partner" : "Parent and Child") + " Relationship" : relationshipRole ? "Connect Existing " + relationshipRole[0].toUpperCase() + relationshipRole.slice(1) : "Connect Existing People";
+    const guidedAdd = Boolean(!relationship && personId && relationshipRole);
+    $("#relationshipDialogTitle").textContent = relationship ? "Edit " + (relationship.type === "partner" ? "Partner" : "Parent and Child") + " Relationship" : guidedAdd ? "Add " + relationshipRole[0].toUpperCase() + relationshipRole.slice(1) + " Relationship" : "Connect Existing People";
     $("#relationshipId").value = relationship ? relationship.id : "";
     $("#relationshipType").value = relationship ? relationship.type : relationshipRole === "partner" ? "partner" : "parent-child";
     const otherPersonId = state().workspace.people.find(function (person) { return person.id !== personId; })?.id;
     const firstId = relationship ? (relationship.type === "parent-child" ? relationship.parentId : relationship.person1Id) : relationshipRole === "parent" ? otherPersonId : personId;
     const secondId = relationship ? (relationship.type === "parent-child" ? relationship.childId : relationship.person2Id) : relationshipRole === "parent" ? personId : otherPersonId;
+    $("#relationPerson1").dataset.excludePersonId = guidedAdd && relationshipRole === "parent" ? personId : "";
+    $("#relationPerson2").dataset.excludePersonId = guidedAdd && relationshipRole !== "parent" ? personId : "";
     $("#relationPerson1Search").value = "";
     $("#relationPerson2Search").value = "";
-    $("#relationPerson1").innerHTML = personOptions(firstId);
-    $("#relationPerson2").innerHTML = personOptions(secondId);
+    $("#relationPerson1").innerHTML = personOptions(firstId, "", $("#relationPerson1").dataset.excludePersonId);
+    $("#relationPerson2").innerHTML = personOptions(secondId, "", $("#relationPerson2").dataset.excludePersonId);
     [1, 2].forEach(function (number) {
       const count = $("#relationPerson" + number).options.length;
       $("#relationPerson" + number + "ResultCount").textContent = count + " match" + (count === 1 ? "" : "es");
@@ -2348,12 +2360,12 @@
     $("#relationshipNotes").value = relationship && relationship.notes || "";
     $("#relationshipFormError").hidden = true;
     updateRelationshipFormType();
-    const editingExisting = Boolean(relationship);
-    $("#relationshipTypeField").hidden = editingExisting;
-    $("#relationshipTypeSpacer").hidden = editingExisting;
-    $("#relationshipFixedSummary").hidden = !editingExisting;
-    $("#relationPerson1Field").hidden = editingExisting;
-    $("#relationPerson2Field").hidden = editingExisting;
+    const focusedRelationship = Boolean(relationship || guidedAdd);
+    $("#relationshipTypeField").hidden = focusedRelationship;
+    $("#relationshipTypeSpacer").hidden = focusedRelationship;
+    $("#relationshipFixedSummary").hidden = !focusedRelationship;
+    $("#relationPerson1Field").hidden = Boolean(relationship || guidedAdd && relationshipRole !== "parent");
+    $("#relationPerson2Field").hidden = Boolean(relationship || guidedAdd && relationshipRole === "parent");
     if (relationship) {
       const firstPerson = state().workspace.people.find(function (person) { return person.id === firstId; });
       const secondPerson = state().workspace.people.find(function (person) { return person.id === secondId; });
@@ -2364,6 +2376,19 @@
       } else {
         const partnerEntry = family.relationGroups(firstId, state()).partners.find(function (entry) { return entry.relationship.id === relationship.id; });
         $("#relationshipFixedDetail").textContent = partnerContext(partnerEntry || { person: secondPerson, relationship: relationship, current: false }, firstPerson).replace(/[()]/g, "");
+      }
+    } else if (guidedAdd) {
+      const fixedPerson = state().workspace.people.find(function (person) { return person.id === personId; });
+      const fixedName = profileName(fixedPerson);
+      $("#relationshipFixedType").textContent = relationshipRole === "partner" ? "Partners" : "Parent → Child";
+      $("#relationshipFixedPeople").textContent = relationshipRole === "parent" ? "Choose parent → " + fixedName : relationshipRole === "child" ? fixedName + " → Choose child" : fixedName + " ↔ Choose partner";
+      $("#relationshipFixedDetail").textContent = fixedName + " is fixed as the " + (relationshipRole === "parent" ? "child" : relationshipRole === "child" ? "parent" : "first partner") + ". Choose the " + relationshipRole + " below.";
+      if (relationshipRole === "parent") {
+        $("#relationPerson1Label").textContent = "Choose parent";
+        $("#relationPerson1Search").setAttribute("aria-label", "Search for the parent");
+      } else {
+        $("#relationPerson2Label").textContent = "Choose " + relationshipRole;
+        $("#relationPerson2Search").setAttribute("aria-label", "Search for the " + relationshipRole);
       }
     }
     const initialSearch = relationshipRole === "parent" || !relationshipRole ? "#relationPerson1Search" : "#relationPerson2Search";

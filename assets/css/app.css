@@ -807,10 +807,12 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .relationship-actions { display: flex; flex: 0 0 auto; flex-wrap: nowrap; align-items: flex-start; justify-content: flex-end; gap: .2rem; }
 .profile-action { appearance: none; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: .1rem; min-width: 42px; min-height: 42px; padding: .2rem .28rem; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--muted); font-size: .6rem; font-weight: 750; line-height: 1; }
 .profile-action:hover, .profile-action:focus-visible { border-color: var(--line); background: var(--surface-2); color: var(--accent-strong); }
+.profile-action.danger-text, .profile-action.danger-text:hover, .profile-action.danger-text:focus-visible { color: var(--danger); }
 .profile-favorite-action[aria-pressed="true"] { border-color: color-mix(in srgb, var(--warning) 72%, var(--line)); background: color-mix(in srgb, var(--warning) 20%, var(--surface)); color: color-mix(in srgb, var(--warning) 78%, var(--text)); box-shadow: 0 0 0 2px color-mix(in srgb, var(--warning) 15%, transparent); }
 .profile-action:disabled { cursor: not-allowed; opacity: .38; }
 .profile-action-icon { display: grid; place-items: center; width: 1.1rem; height: 1.1rem; }
 .profile-action-icon .sf-symbol { width: 1.1rem; height: 1.1rem; }
+.profile-header-actions .profile-action-icon, .profile-header-actions .profile-action-icon .sf-symbol { width: 1.4rem; height: 1.4rem; }
 .relationship-actions .profile-action { min-width: 50px; min-height: 52px; gap: .18rem; }
 .relationship-actions .profile-action-icon { width: 2rem; height: 1.45rem; }
 .relationship-actions .profile-action-icon .sf-symbol { width: 2rem; height: 1.45rem; }
@@ -894,6 +896,8 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .person-dialog .dialog-header { min-height: 52px; padding: .42rem .65rem; }
 .person-dialog .dialog-footer { padding: .42rem .65rem calc(.42rem + var(--safe-bottom)); }
 .person-form-body { display: grid; grid-template-columns: minmax(650px, 1.45fr) minmax(410px, 1fr); grid-template-areas: "names details" "names relationships" "names notes" "contacts contacts" "error error"; align-items: start; gap: .28rem; padding: .38rem .45rem; }
+.person-form-body:has(.pending-relative-summary:not([hidden])) { grid-template-areas: "context context" "names details" "names relationships" "names notes" "contacts contacts" "error error"; }
+.pending-relative-summary { grid-area: context; }
 .person-names-section { grid-area: names; }
 .unknown-person-field { align-items: flex-start; margin: .55rem 0 .75rem; padding: .6rem .7rem; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); }
 .unknown-person-field span { display: grid; gap: .12rem; }
