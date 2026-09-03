@@ -2319,7 +2319,7 @@
     if (!familyEditingEnabled()) return;
     const relationship = id ? state().workspace.relationships.find(function (item) { return item.id === id; }) : null;
     const relationshipRole = ["parent", "partner", "child"].includes(role) ? role : "";
-    $("#relationshipDialogTitle").textContent = relationship ? "Edit Relationship" : relationshipRole ? "Connect Existing " + relationshipRole[0].toUpperCase() + relationshipRole.slice(1) : "Connect Existing People";
+    $("#relationshipDialogTitle").textContent = relationship ? "Edit " + (relationship.type === "partner" ? "Partner" : "Parent and Child") + " Relationship" : relationshipRole ? "Connect Existing " + relationshipRole[0].toUpperCase() + relationshipRole.slice(1) : "Connect Existing People";
     $("#relationshipId").value = relationship ? relationship.id : "";
     $("#relationshipType").value = relationship ? relationship.type : relationshipRole === "partner" ? "partner" : "parent-child";
     const otherPersonId = state().workspace.people.find(function (person) { return person.id !== personId; })?.id;
@@ -2348,8 +2348,27 @@
     $("#relationshipNotes").value = relationship && relationship.notes || "";
     $("#relationshipFormError").hidden = true;
     updateRelationshipFormType();
+    const editingExisting = Boolean(relationship);
+    $("#relationshipTypeField").hidden = editingExisting;
+    $("#relationshipTypeSpacer").hidden = editingExisting;
+    $("#relationshipFixedSummary").hidden = !editingExisting;
+    $("#relationPerson1Field").hidden = editingExisting;
+    $("#relationPerson2Field").hidden = editingExisting;
+    if (relationship) {
+      const firstPerson = state().workspace.people.find(function (person) { return person.id === firstId; });
+      const secondPerson = state().workspace.people.find(function (person) { return person.id === secondId; });
+      $("#relationshipFixedType").textContent = relationship.type === "partner" ? "Partners" : "Parent → Child";
+      $("#relationshipFixedPeople").textContent = profileName(firstPerson) + (relationship.type === "partner" ? " ↔ " : " → ") + profileName(secondPerson);
+      if (relationship.type === "parent-child") {
+        $("#relationshipFixedDetail").textContent = parentContext(secondPerson, { relationship: relationship }).replace(/[()]/g, "");
+      } else {
+        const partnerEntry = family.relationGroups(firstId, state()).partners.find(function (entry) { return entry.relationship.id === relationship.id; });
+        $("#relationshipFixedDetail").textContent = partnerContext(partnerEntry || { person: secondPerson, relationship: relationship, current: false }, firstPerson).replace(/[()]/g, "");
+      }
+    }
     const initialSearch = relationshipRole === "parent" || !relationshipRole ? "#relationPerson1Search" : "#relationPerson2Search";
-    components.openDialog("#relationshipDialog", { trigger: trigger, focus: relationship ? "#relationshipType" : initialSearch });
+    const initialEditField = relationship && relationship.type === "partner" ? "#partnerType" : "#parentLineage";
+    components.openDialog("#relationshipDialog", { trigger: trigger, focus: relationship ? initialEditField : initialSearch });
   }
 
   function personRelationshipChoices(personId) {
