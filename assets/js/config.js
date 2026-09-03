@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.110",
-      buildId: "0.0.1.110",
+      version: "0.0.1.111",
+      buildId: "0.0.1.111",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -168,13 +168,13 @@
 
     releases: [
       {
-        version: "0.0.1.110",
-        date: "2026-09-02T12:00:00.000Z",
-        title: "Step-child order and Admin cleanup",
-        summary: "Step children no longer consume numbered child order, and Admin cleanup issues are directly available in Settings.",
-        features: ["Added Bad Lineage IDs and Unknown or Invalid Relationships lists under Settings → Admin → Data Cleanup"],
-        improvements: ["Unknown parent types and unknown partner types or endings now appear in the Admin relationship list", "Shortened the tree key label to Non-Lineal Other"],
-        fixes: ["Labeled Step, Foster, Guardian, and Unknown children by relationship type instead of a birth-order number, including Step children shown as Self in sibling lists", "Restricted Lineage ID allocation and Lineal tree styling to Biological and Adopted Lineal relationships so valid children start at 01"],
+        version: "0.0.1.111",
+        date: "2026-09-03T12:00:00.000Z",
+        title: "Lineal-family sibling context",
+        summary: "Sibling order now follows the authoritative Lineal family parent, stale Step lineage values are suppressed and repairable, and ongoing marriages remain current.",
+        features: [],
+        improvements: ["Simplified the tree key to Non-Lineal other and removed its unused parent-child Unknown entry"],
+        fixes: ["Kept Step children labeled Step across shared-parent sibling lists while numbering Biological and Adopted children in birth order", "Stopped Step-only children from displaying or retaining a Lineage ID during lineage repair", "Kept marriages without a recorded ending styled as current marriages"],
         knownIssues: []
       }
     ],
