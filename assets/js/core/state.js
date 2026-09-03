@@ -26,10 +26,12 @@
     const names = u.plainObject(source.names);
     const birth = normalizeNameParts(names.birth);
     const current = normalizeNameParts(names.current);
-    birth.first = birth.first || "UNKNOWN";
-    birth.last = birth.last || "UNKNOWN";
-    current.first = current.first || birth.first;
-    current.last = current.last || birth.last;
+    if (source.unknownPerson !== true) {
+      birth.first = birth.first || "UNKNOWN";
+      birth.last = birth.last || "UNKNOWN";
+      current.first = current.first || birth.first;
+      current.last = current.last || birth.last;
+    }
     return {
       birth: birth,
       current: current,
@@ -139,6 +141,7 @@
     if (!["mclineage-cleaned", "mcpeople-v1"].includes(imported.format)) return fallback;
     const fields = u.plainObject(imported.fields);
     const deathValue = u.cleanLine(fields["person-date-death-value"], 40) || u.cleanLine(source.death && source.death.date && source.death.date.value, 40);
+    if (source.unknownPerson === true && !deathValue) return "unknown";
     if (deathValue) return "deceased";
     const deathDescriptor = u.cleanLine(fields["person-date-death-descriptor"], 40);
     if (["UNKNOWN", "UNKNOWN PRESUMED"].includes(deathDescriptor)) return "deceased";
@@ -157,12 +160,12 @@
       relationships.filter(function (relationship) { return relationship.type === "partner"; }).forEach(function (relationship) {
         const first = peopleById.get(relationship.person1Id);
         const second = peopleById.get(relationship.person2Id);
-        if (first && deceasedIds.has(first.id) && second && second.livingStatus === "unknown") {
+        if (first && deceasedIds.has(first.id) && second && !second.unknownPerson && second.livingStatus === "unknown") {
           second.livingStatus = "deceased";
           deceasedIds.add(second.id);
           changed = true;
         }
-        if (second && deceasedIds.has(second.id) && first && first.livingStatus === "unknown") {
+        if (second && deceasedIds.has(second.id) && first && !first.unknownPerson && first.livingStatus === "unknown") {
           first.livingStatus = "deceased";
           deceasedIds.add(first.id);
           changed = true;
@@ -173,7 +176,7 @@
 
   function presumeEarlyLinealGenerationsDeceased(people) {
     people.forEach(function (person) {
-      if (person.livingStatus !== "unknown") return;
+      if (person.unknownPerson || person.livingStatus !== "unknown") return;
       const fields = u.plainObject(person.source && person.source.fields);
       const lineage = u.cleanLine(fields["lineage-id"], 400);
       if (!lineage || lineage.split(".").some(function (part) { return part === "99"; })) return;
@@ -331,6 +334,7 @@
     return {
       id: id,
       reference: "",
+      unknownPerson: source.unknownPerson === true,
       names: normalizePersonNames(source),
       livingStatus: ["living", "deceased", "unknown"].includes(source.livingStatus) ? source.livingStatus : "unknown",
       gender: u.cleanLine(source.gender, 80),
@@ -830,7 +834,7 @@
     const birth = normalizeNameParts(names.birth);
     if (hasNameParts(preferred)) return formatNameParts(preferred, "full");
     if (hasNameParts(current)) return formatNameParts(current, "full");
-    return formatNameParts(birth, "full") || "Unnamed person";
+    return formatNameParts(birth, "full") || "Unknown person";
   }
 
   function treeName(person, basis, length) {

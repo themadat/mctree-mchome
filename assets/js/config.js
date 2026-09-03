@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.108",
-      buildId: "0.0.1.108",
+      version: "0.0.1.109",
+      buildId: "0.0.1.109",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -168,13 +168,13 @@
 
     releases: [
       {
-        version: "0.0.1.108",
+        version: "0.0.1.109",
         date: "2026-09-02T12:00:00.000Z",
-        title: "Admin cleanup diagnostics",
-        summary: "Legacy lineage and Lineal parent-status issues can open for cleanup and are listed for Admin in Developer Mode.",
-        features: ["Added Admin-only Invalid lineage and Invalid relationships lists with direct person and relationship actions", "Added the current version pill to the Welcome screen"],
-        improvements: ["Flagged malformed, unresolved, reserved, duplicate, and parent-mismatched Lineage IDs in one cleanup view"],
-        fixes: ["Temporarily allowed existing Lineal Step, Foster, Guardian, and Unknown relationships to load while new edits still enforce the supported rules"],
+        title: "Relationship search and lineage repair",
+        summary: "Editors can find people faster, record completely unknown relatives, and rebuild Lineage IDs after parent changes.",
+        features: ["Added fuzzy name, date, lineage, and ID search to Connect Existing People", "Added Unknown person placeholders and a relationship-status choice when adding an unknown partner", "Added an Editor/Admin Check & Update action for Lineage IDs"],
+        improvements: ["Parent edits and removals now rebuild affected siblings and their Lineal descendant branches in birth order"],
+        fixes: ["Removed stale Lineage IDs when a person no longer belongs to a Lineal branch"],
         knownIssues: []
       }
     ],
