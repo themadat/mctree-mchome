@@ -558,7 +558,7 @@
     const detailed = settings.nodeView === "detailed";
     const nodeWidth = detailed ? 116 : 100;
     const horizontalGap = settings.mode === "overview" ? 20 : 26;
-    const verticalGap = 60;
+    const verticalGap = 40;
     const rowHeights = new Map();
     sortedLevels.forEach(function (level) {
       const lineCount = Math.max.apply(null, groups.get(level).map(function (person) { return treeNameLines(person, { basis: settings.nameBasis, length: settings.nameLength }).length; }));
