@@ -67,7 +67,7 @@ Admin publishes access changes and bulk packages; Admin/Editor publish ordinary 
 
 ## UI and print
 
-The tree is vanilla SVG with relationship-derived layout, pan/zoom, focus/full modes, keyboard navigation, and accessible node descriptions. Outline is a DOM-based, depth-first descendant view over the same relationship index; it keeps spouses beside descendant rows and uses indentation instead of parent-child connectors. The List and profile are DOM views over the same state; no separate search index is persisted. Panels are responsive, collapsible, and resizable.
+The tree is vanilla SVG with relationship-derived layout, pan/zoom, focus/full modes, keyboard navigation, and accessible node descriptions. A central Tree/Outline control switches to the DOM-based, depth-first descendant view over the same relationship index; Outline keeps only the latest spouse or partner beside each compact single-line descendant row and uses indentation instead of parent-child connectors. The List and profile are DOM views over the same state; no separate search index is persisted. Panels are responsive, collapsible, and resizable.
 
 Print output is generated into a print-only DOM immediately before `window.print()`. Directory contains household contact cards, Outline emits the complete expanded descendant order for its chosen root, Groups contains the generation maps, and Tree tiles the current live SVG layout across landscape pages at the selected zoom. Outline and Tree use a simple explicit `@page { size: letter landscape }` rule so unsupported margin-box declarations cannot invalidate orientation. CSS uses half-inch page margins, repeated directory headings, `break-inside: avoid` rows/cards, and print-safe colors.
 
