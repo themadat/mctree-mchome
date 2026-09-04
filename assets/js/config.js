@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.117",
-      buildId: "0.0.1.117",
+      version: "0.0.1.118",
+      buildId: "0.0.1.118",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -168,12 +168,12 @@
 
     releases: [
       {
-        version: "0.0.1.117",
-        date: "2026-09-03T21:30:59.000Z",
-        title: "Added the descendant Outline",
-        summary: "A printable indented Outline now presents descendant branches in birth order with spouses, relationship dates, scan bars, branch controls, and optional direct-lineage highlighting.",
-        features: ["Added the interactive Outline view between Directory and Groups", "Added a complete landscape print mode for the selected Outline root"],
-        improvements: ["Added branch-level expand and collapse, root switching, and selected-descendant lineage highlighting"],
+        version: "0.0.1.118",
+        date: "2026-09-04T04:23:19.000Z",
+        title: "Refined the descendant Outline",
+        summary: "The descendant Outline now uses a central Tree/Outline switch, compact single-line rows, icon controls, and only the latest spouse or partner.",
+        features: ["Moved Outline from the application toolbar into the central Tree/Outline view switch", "Kept the complete landscape print mode for the selected Outline root"],
+        improvements: ["Compressed each descendant and latest partner onto one row", "Added icons to Outline view and branch controls"],
         fixes: [],
         knownIssues: []
       }
