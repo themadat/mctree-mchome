@@ -1270,9 +1270,9 @@
     const lifeY = 21 + nameLines.length * 14;
     const reference = detailed && !settings.print && developerReferencesEnabled() ? '<text class="tree-reference" x="' + (renderWidth / 2) + '" y="' + (lifeY + 13) + '" text-anchor="middle">' + u.escapeHtml(person.reference) + "</text>" : "";
     const life = detailed ? '<text class="tree-life" x="' + (renderWidth / 2) + '" y="' + lifeY + '" text-anchor="middle">' + u.escapeHtml(family.lifespan(person)) + "</text>" : "";
-    const linealMark = detailed && isLinealPerson(person) ? icons.markup("lineal").replace('<svg class="sf-symbol"', '<svg class="sf-symbol tree-lineal-mark" x="' + (renderWidth - 14) + '" y="' + (lifeY - 9) + '" width="7" height="10"') : "";
+    const linealMark = detailed && isLinealPerson(person) ? icons.markup("lineal").replace('<svg class="sf-symbol"', '<svg class="sf-symbol tree-lineal-mark" x="' + (renderWidth - 12) + '" y="' + (lifeY - 8) + '" width="6" height="9"') : "";
     const contactMarks = contactAvailability.map(function (item, index) {
-      return icons.markup(item.symbol).replace('<svg class="sf-symbol"', '<svg class="sf-symbol tree-contact-mark" x="' + (6 + index * 22) + '" y="' + (renderHeight - 21) + '" width="18" height="18"');
+      return icons.markup(item.symbol).replace('<svg class="sf-symbol"', '<svg class="sf-symbol tree-contact-mark" x="' + (6 + index * 11) + '" y="' + (lifeY - 8) + '" width="9" height="9"');
     }).join("");
     return shell + nameHtml + life + reference + contactMarks + linealMark + "</g>";
   }
@@ -3439,46 +3439,82 @@
   function printTreeHorizontalBands(nodes, edges, maximum) {
     const clusters = printTreePartnerClusters(nodes, edges, maximum);
     if (!clusters.length) return [];
-    const byGeneration = new Map();
-    clusters.forEach(function (cluster) {
-      if (!byGeneration.has(cluster.generation)) byGeneration.set(cluster.generation, []);
-      byGeneration.get(cluster.generation).push(cluster);
+    const nodeById = new Map(nodes.map(function (node) { return [node.id, node]; }));
+    const parentEdgesByChild = new Map();
+    edges.forEach(function (edge) {
+      if (edge.relationship.type !== "parent-child" || !nodeById.has(edge.from.id) || !nodeById.has(edge.to.id)) return;
+      if (!parentEdgesByChild.has(edge.to.id)) parentEdgesByChild.set(edge.to.id, []);
+      parentEdgesByChild.get(edge.to.id).push(edge);
     });
-    byGeneration.forEach(function (items) { items.sort(function (a, b) { return a.center - b.center; }); });
-    const centers = clusters.map(function (cluster) { return cluster.center; });
-    function clustersIn(items, interval) {
-      return items.filter(function (cluster) { return cluster.center >= interval.left && cluster.center < interval.right; });
-    }
-    function split(interval, depth) {
-      let crowded = null;
-      byGeneration.forEach(function (items) {
-        if (crowded) return;
-        const inside = clustersIn(items, interval);
-        const people = inside.reduce(function (total, cluster) { return total + cluster.nodes.length; }, 0);
-        if (people > maximum) crowded = inside;
+    parentEdgesByChild.forEach(function (items, childId) {
+      const child = nodeById.get(childId);
+      items.sort(function (a, b) {
+        const lineage = Number(family.isLinealRelationship(b.relationship)) - Number(family.isLinealRelationship(a.relationship));
+        const proximity = Math.abs(a.from.x - child.x) - Math.abs(b.from.x - child.x);
+        return lineage || proximity;
       });
-      if (!crowded || depth > nodes.length * 2) return [interval];
-      let people = 0;
-      let splitIndex = 1;
-      for (; splitIndex < crowded.length; splitIndex += 1) {
-        const nextCount = people + crowded[splitIndex - 1].nodes.length;
-        if (nextCount + crowded[splitIndex].nodes.length > maximum) break;
-        people = nextCount;
+    });
+    function ancestorAtGeneration(node, generation, candidateIds) {
+      let current = node;
+      const seen = new Set();
+      while (current && current.generation > generation && !seen.has(current.id)) {
+        seen.add(current.id);
+        const parentEdge = (parentEdgesByChild.get(current.id) || []).find(function (edge) { return candidateIds.has(edge.from.id); });
+        current = parentEdge && nodeById.get(parentEdge.from.id);
       }
-      const before = crowded[Math.max(0, splitIndex - 1)];
-      const after = crowded[Math.min(crowded.length - 1, splitIndex)];
-      let cut = (before.right + after.left) / 2;
-      if (!(cut > interval.left && cut < interval.right)) cut = (before.center + after.center) / 2;
-      if (!(cut > interval.left && cut < interval.right)) return [interval];
-      return split({ left: interval.left, right: cut }, depth + 1).concat(split({ left: cut, right: interval.right }, depth + 1));
+      return current && current.generation === generation ? current.id : "";
     }
-    return split({ left: Math.min.apply(null, centers) - 1, right: Math.max.apply(null, centers) + 1 }, 0).map(function (interval) {
-      const nodeIds = new Set();
-      clusters.filter(function (cluster) { return cluster.center >= interval.left && cluster.center < interval.right; }).forEach(function (cluster) {
-        cluster.nodes.forEach(function (node) { nodeIds.add(node.id); });
+    function splitCandidate(candidateIds, depth) {
+      const counts = new Map();
+      candidateIds.forEach(function (id) {
+        const node = nodeById.get(id);
+        if (node) counts.set(node.generation, (counts.get(node.generation) || 0) + 1);
       });
-      return { left: interval.left, right: interval.right, nodeIds: nodeIds };
-    }).filter(function (interval) { return interval.nodeIds.size; });
+      const crowdedGeneration = Array.from(counts.keys()).sort(function (a, b) { return a - b; }).find(function (generation) { return counts.get(generation) > maximum; });
+      if (crowdedGeneration == null || depth > nodes.length * 2) return [{ nodeIds: candidateIds }];
+      const candidateClusters = clusters.filter(function (cluster) { return cluster.nodes.some(function (node) { return candidateIds.has(node.id); }); });
+      const crowdedClusters = candidateClusters.filter(function (cluster) { return cluster.generation === crowdedGeneration; }).sort(function (a, b) { return a.center - b.center; });
+      const chunks = [];
+      let chunk = [];
+      let chunkPeople = 0;
+      crowdedClusters.forEach(function (cluster) {
+        if (chunk.length && chunkPeople + cluster.nodes.length > maximum) {
+          chunks.push(chunk);
+          chunk = [];
+          chunkPeople = 0;
+        }
+        chunk.push(cluster);
+        chunkPeople += cluster.nodes.length;
+      });
+      if (chunk.length) chunks.push(chunk);
+      if (chunks.length < 2) return [{ nodeIds: candidateIds }];
+      const assignments = chunks.map(function () { return new Set(); });
+      const anchorChunkById = new Map();
+      const chunkCenters = chunks.map(function (items, chunkIndex) {
+        items.forEach(function (cluster) { cluster.nodes.forEach(function (node) { assignments[chunkIndex].add(node.id); anchorChunkById.set(node.id, chunkIndex); }); });
+        return items.reduce(function (total, cluster) { return total + cluster.center; }, 0) / items.length;
+      });
+      candidateClusters.forEach(function (cluster) {
+        if (cluster.generation === crowdedGeneration) return;
+        let chunkIndex = -1;
+        if (cluster.generation > crowdedGeneration) {
+          cluster.nodes.some(function (node) {
+            const anchorId = ancestorAtGeneration(node, crowdedGeneration, candidateIds);
+            if (!anchorChunkById.has(anchorId)) return false;
+            chunkIndex = anchorChunkById.get(anchorId);
+            return true;
+          });
+        }
+        if (chunkIndex < 0) {
+          chunkIndex = chunkCenters.reduce(function (best, center, index) {
+            return Math.abs(center - cluster.center) < Math.abs(chunkCenters[best] - cluster.center) ? index : best;
+          }, 0);
+        }
+        cluster.nodes.forEach(function (node) { if (candidateIds.has(node.id)) assignments[chunkIndex].add(node.id); });
+      });
+      return assignments.flatMap(function (ids) { return splitCandidate(ids, depth + 1); });
+    }
+    return splitCandidate(new Set(nodes.map(function (node) { return node.id; })), 0).filter(function (page) { return page.nodeIds.size; });
   }
 
   function printTreeContentBounds(nodes, metrics) {
@@ -3496,34 +3532,39 @@
     const clusters = printTreePartnerClusters(generationNodes, edges, maximum);
     const clusterByNodeId = new Map();
     clusters.forEach(function (cluster) { cluster.nodes.forEach(function (node) { clusterByNodeId.set(node.id, cluster); }); });
-    const requested = new Map();
-    edges.forEach(function (edge) {
-      if (edge.relationship.type !== "parent-child" || !selectedIds.has(edge.to.id) || selectedIds.has(edge.from.id) || !nodeById.has(edge.from.id)) return;
-      const cluster = clusterByNodeId.get(edge.from.id);
-      if (!cluster) return;
-      const key = cluster.nodes.map(function (node) { return node.id; }).sort().join("|");
-      if (!requested.has(key)) requested.set(key, { cluster: cluster, childNodes: [] });
-      requested.get(key).childNodes.push(selectedById.get(edge.to.id));
-    });
     const counts = new Map();
     selectedNodes.forEach(function (node) { counts.set(node.generation, (counts.get(node.generation) || 0) + 1); });
-    Array.from(requested.values()).sort(function (a, b) { return a.cluster.generation - b.cluster.generation || a.cluster.center - b.cluster.center; }).forEach(function (request) {
-      const cluster = request.cluster;
-      const additions = cluster.nodes.filter(function (node) { return !selectedIds.has(node.id); });
-      const count = counts.get(cluster.generation) || 0;
-      if (!additions.length || count + additions.length > maximum) return;
-      const childNodes = request.childNodes;
-      const childLeft = childNodes.length ? Math.min.apply(null, childNodes.map(function (node) { return node.x; })) : cluster.left;
-      const childRight = childNodes.length ? Math.max.apply(null, childNodes.map(function (node) { return node.x + node.width; })) : cluster.right;
-      const offset = (childLeft + childRight) / 2 - cluster.center;
-      additions.forEach(function (node) {
-        const contextNode = Object.assign({}, node, { x: node.x + offset });
-        selectedIds.add(node.id);
-        selectedById.set(node.id, contextNode);
-        selectedNodes.push(contextNode);
+    let added = true;
+    while (added) {
+      added = false;
+      const requested = new Map();
+      edges.forEach(function (edge) {
+        if (edge.relationship.type !== "parent-child" || !selectedIds.has(edge.to.id) || selectedIds.has(edge.from.id) || !nodeById.has(edge.from.id)) return;
+        const cluster = clusterByNodeId.get(edge.from.id);
+        if (!cluster) return;
+        const key = cluster.nodes.map(function (node) { return node.id; }).sort().join("|");
+        if (!requested.has(key)) requested.set(key, { cluster: cluster, childNodes: [] });
+        requested.get(key).childNodes.push(selectedById.get(edge.to.id));
       });
-      counts.set(cluster.generation, count + additions.length);
-    });
+      Array.from(requested.values()).sort(function (a, b) { return a.cluster.generation - b.cluster.generation || a.cluster.center - b.cluster.center; }).forEach(function (request) {
+        const cluster = request.cluster;
+        const additions = cluster.nodes.filter(function (node) { return !selectedIds.has(node.id); });
+        const count = counts.get(cluster.generation) || 0;
+        if (!additions.length || count + additions.length > maximum) return;
+        const childNodes = request.childNodes;
+        const childLeft = childNodes.length ? Math.min.apply(null, childNodes.map(function (node) { return node.x; })) : cluster.left;
+        const childRight = childNodes.length ? Math.max.apply(null, childNodes.map(function (node) { return node.x + node.width; })) : cluster.right;
+        const offset = (childLeft + childRight) / 2 - cluster.center;
+        additions.forEach(function (node) {
+          const contextNode = Object.assign({}, node, { x: node.x + offset });
+          selectedIds.add(node.id);
+          selectedById.set(node.id, contextNode);
+          selectedNodes.push(contextNode);
+          added = true;
+        });
+        counts.set(cluster.generation, count + additions.length);
+      });
+    }
     return selectedNodes.sort(function (a, b) { return a.generation - b.generation || a.x - b.x; });
   }
 
