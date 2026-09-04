@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.124",
-      buildId: "0.0.1.124",
+      version: "0.0.1.125",
+      buildId: "0.0.1.125",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -170,13 +170,13 @@
 
     releases: [
       {
-        version: "0.0.1.124",
-        date: "2026-09-04T19:00:00.000Z",
-        title: "Denser branch-aware Tree printing",
-        summary: "Printed Family Trees now fit more of a family on each page while keeping parent and descendant branches together across page divisions.",
-        features: ["Increased each printed Tree page to a maximum of eight generation levels and ten people in one generation row", "Assigns descendant branches to the same horizontal page section as their parent before repeating the required ancestor context"],
-        improvements: ["Condensed Detailed Tree cards into one lifespan and symbol row", "Reduced contact symbols and reserves the extra reference row only for Developer Mode"],
-        fixes: ["Prevents a child with descendants from being separated onto another page while that branch remains behind"],
+        version: "0.0.1.125",
+        date: "2026-09-04T20:00:00.000Z",
+        title: "Unified Tree and Outline print icon",
+        summary: "Tree and Outline printing now use the same dedicated printer symbol without changing the Tree view selector.",
+        features: ["Added the requested printer symbol to the shared inline SVG catalog"],
+        improvements: ["Uses the printer symbol for both the right-side Tree print action and the Outline Print action"],
+        fixes: [],
         knownIssues: []
       }
     ],
