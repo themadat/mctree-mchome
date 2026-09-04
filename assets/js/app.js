@@ -3384,48 +3384,153 @@
     return { error: "" };
   }
 
-  function printTreeTilePositions(total, viewport, overlap) {
-    if (total <= viewport) return [(total - viewport) / 2];
-    const step = Math.max(1, viewport - overlap);
-    const positions = [];
-    let position = 0;
-    while (position + viewport < total) {
-      positions.push(position);
-      position += step;
+  function printTreeGenerationBands(metrics, maximum) {
+    const sorted = metrics.slice().sort(function (a, b) { return a.y - b.y; });
+    const bands = [];
+    let start = 0;
+    while (start < sorted.length) {
+      const end = Math.min(sorted.length, start + maximum);
+      bands.push({ metrics: sorted.slice(start, end), start: start, end: end });
+      if (end >= sorted.length) break;
+      start = end - 1;
     }
-    const last = Math.max(0, total - viewport);
-    if (!positions.length || Math.abs(positions[positions.length - 1] - last) > 0.5) positions.push(last);
-    return positions;
+    return bands;
   }
 
-  function printTreeIntersects(bounds, tile) {
-    return bounds.x <= tile.x + tile.width && bounds.x + bounds.width >= tile.x && bounds.y <= tile.y + tile.height && bounds.y + bounds.height >= tile.y;
+  function printTreePartnerClusters(nodes, edges, maximum) {
+    const nodeById = new Map(nodes.map(function (node) { return [node.id, node]; }));
+    const parent = new Map(nodes.map(function (node) { return [node.id, node.id]; }));
+    function root(id) {
+      let current = id;
+      while (parent.get(current) !== current) current = parent.get(current);
+      let cursor = id;
+      while (parent.get(cursor) !== cursor) {
+        const next = parent.get(cursor);
+        parent.set(cursor, current);
+        cursor = next;
+      }
+      return current;
+    }
+    function join(firstId, secondId) {
+      const firstRoot = root(firstId);
+      const secondRoot = root(secondId);
+      if (firstRoot !== secondRoot) parent.set(secondRoot, firstRoot);
+    }
+    edges.forEach(function (edge) {
+      if (edge.relationship.type !== "partner" || !nodeById.has(edge.from.id) || !nodeById.has(edge.to.id) || edge.from.generation !== edge.to.generation) return;
+      join(edge.from.id, edge.to.id);
+    });
+    const grouped = new Map();
+    nodes.forEach(function (node) {
+      const key = root(node.id);
+      if (!grouped.has(key)) grouped.set(key, []);
+      grouped.get(key).push(node);
+    });
+    return Array.from(grouped.values()).flatMap(function (members) {
+      const sets = members.length > maximum ? members.map(function (node) { return [node]; }) : [members];
+      return sets.map(function (cluster) {
+        const left = Math.min.apply(null, cluster.map(function (node) { return node.x; }));
+        const right = Math.max.apply(null, cluster.map(function (node) { return node.x + node.width; }));
+        return { generation: cluster[0].generation, nodes: cluster, center: (left + right) / 2, left: left, right: right };
+      });
+    });
   }
 
-  function printTreeNodeBounds(node) {
-    return { x: node.x, y: node.y, width: node.width, height: node.height };
+  function printTreeHorizontalBands(nodes, edges, maximum) {
+    const clusters = printTreePartnerClusters(nodes, edges, maximum);
+    if (!clusters.length) return [];
+    const byGeneration = new Map();
+    clusters.forEach(function (cluster) {
+      if (!byGeneration.has(cluster.generation)) byGeneration.set(cluster.generation, []);
+      byGeneration.get(cluster.generation).push(cluster);
+    });
+    byGeneration.forEach(function (items) { items.sort(function (a, b) { return a.center - b.center; }); });
+    const centers = clusters.map(function (cluster) { return cluster.center; });
+    function clustersIn(items, interval) {
+      return items.filter(function (cluster) { return cluster.center >= interval.left && cluster.center < interval.right; });
+    }
+    function split(interval, depth) {
+      let crowded = null;
+      byGeneration.forEach(function (items) {
+        if (crowded) return;
+        const inside = clustersIn(items, interval);
+        const people = inside.reduce(function (total, cluster) { return total + cluster.nodes.length; }, 0);
+        if (people > maximum) crowded = inside;
+      });
+      if (!crowded || depth > nodes.length * 2) return [interval];
+      let people = 0;
+      let splitIndex = 1;
+      for (; splitIndex < crowded.length; splitIndex += 1) {
+        const nextCount = people + crowded[splitIndex - 1].nodes.length;
+        if (nextCount + crowded[splitIndex].nodes.length > maximum) break;
+        people = nextCount;
+      }
+      const before = crowded[Math.max(0, splitIndex - 1)];
+      const after = crowded[Math.min(crowded.length - 1, splitIndex)];
+      let cut = (before.right + after.left) / 2;
+      if (!(cut > interval.left && cut < interval.right)) cut = (before.center + after.center) / 2;
+      if (!(cut > interval.left && cut < interval.right)) return [interval];
+      return split({ left: interval.left, right: cut }, depth + 1).concat(split({ left: cut, right: interval.right }, depth + 1));
+    }
+    return split({ left: Math.min.apply(null, centers) - 1, right: Math.max.apply(null, centers) + 1 }, 0).map(function (interval) {
+      const nodeIds = new Set();
+      clusters.filter(function (cluster) { return cluster.center >= interval.left && cluster.center < interval.right; }).forEach(function (cluster) {
+        cluster.nodes.forEach(function (node) { nodeIds.add(node.id); });
+      });
+      return { left: interval.left, right: interval.right, nodeIds: nodeIds };
+    }).filter(function (interval) { return interval.nodeIds.size; });
   }
 
-  function printTreeEdgeBounds(edge) {
-    const left = Math.min(edge.from.x, edge.to.x) - 8;
-    const top = Math.min(edge.from.y, edge.to.y) - 8;
-    const right = Math.max(edge.from.x + edge.from.width, edge.to.x + edge.to.width) + 8;
-    const bottom = Math.max(edge.from.y + edge.from.height, edge.to.y + edge.to.height) + 8;
-    return { x: left, y: top, width: right - left, height: bottom - top };
+  function printTreeContentBounds(nodes, metrics) {
+    const left = Math.min.apply(null, nodes.map(function (node) { return node.x; }));
+    const right = Math.max.apply(null, nodes.map(function (node) { return node.x + node.width; }));
+    const top = Math.min.apply(null, metrics.map(function (metric) { return metric.y; }));
+    const bottom = Math.max.apply(null, metrics.map(function (metric) { return metric.y + metric.height; }));
+    return { left: left, right: right, top: top, bottom: bottom, width: right - left, height: bottom - top };
+  }
+
+  function printTreeContextNodes(generationNodes, selectedNodes, edges, maximum) {
+    const nodeById = new Map(generationNodes.map(function (node) { return [node.id, node]; }));
+    const selectedIds = new Set(selectedNodes.map(function (node) { return node.id; }));
+    const selectedById = new Map(selectedNodes.map(function (node) { return [node.id, node]; }));
+    const clusters = printTreePartnerClusters(generationNodes, edges, maximum);
+    const clusterByNodeId = new Map();
+    clusters.forEach(function (cluster) { cluster.nodes.forEach(function (node) { clusterByNodeId.set(node.id, cluster); }); });
+    const requested = new Map();
+    edges.forEach(function (edge) {
+      if (edge.relationship.type !== "parent-child" || !selectedIds.has(edge.to.id) || selectedIds.has(edge.from.id) || !nodeById.has(edge.from.id)) return;
+      const cluster = clusterByNodeId.get(edge.from.id);
+      if (!cluster) return;
+      const key = cluster.nodes.map(function (node) { return node.id; }).sort().join("|");
+      if (!requested.has(key)) requested.set(key, { cluster: cluster, childNodes: [] });
+      requested.get(key).childNodes.push(selectedById.get(edge.to.id));
+    });
+    const counts = new Map();
+    selectedNodes.forEach(function (node) { counts.set(node.generation, (counts.get(node.generation) || 0) + 1); });
+    Array.from(requested.values()).sort(function (a, b) { return a.cluster.generation - b.cluster.generation || a.cluster.center - b.cluster.center; }).forEach(function (request) {
+      const cluster = request.cluster;
+      const additions = cluster.nodes.filter(function (node) { return !selectedIds.has(node.id); });
+      const count = counts.get(cluster.generation) || 0;
+      if (!additions.length || count + additions.length > maximum) return;
+      const childNodes = request.childNodes;
+      const childLeft = childNodes.length ? Math.min.apply(null, childNodes.map(function (node) { return node.x; })) : cluster.left;
+      const childRight = childNodes.length ? Math.max.apply(null, childNodes.map(function (node) { return node.x + node.width; })) : cluster.right;
+      const offset = (childLeft + childRight) / 2 - cluster.center;
+      additions.forEach(function (node) {
+        const contextNode = Object.assign({}, node, { x: node.x + offset });
+        selectedIds.add(node.id);
+        selectedById.set(node.id, contextNode);
+        selectedNodes.push(contextNode);
+      });
+      counts.set(cluster.generation, count + additions.length);
+    });
+    return selectedNodes.sort(function (a, b) { return a.generation - b.generation || a.x - b.x; });
   }
 
   function buildTreeReport() {
     const layout = currentTreeLayout;
     if (!layout || !layout.nodes.length) return { error: "The Family Tree has no visible people to print." };
     const zoom = u.clamp(treeTransform.scale, 0.01, 2.5, 1);
-    const pageWorldWidth = 960 / zoom;
-    const pageWorldHeight = 640 / zoom;
-    const maxNodeWidth = Math.max.apply(null, layout.nodes.map(function (node) { return node.width; }));
-    const maxNodeHeight = Math.max.apply(null, layout.nodes.map(function (node) { return node.height; }));
-    const xPositions = printTreeTilePositions(layout.width, pageWorldWidth, Math.min(pageWorldWidth * 0.3, maxNodeWidth + 24));
-    const yPositions = printTreeTilePositions(layout.height, pageWorldHeight, Math.min(pageWorldHeight * 0.3, maxNodeHeight + 24));
-    const pageCount = xPositions.length * yPositions.length;
-    if (pageCount > config.controls.maxPrintTreePages) return { error: "This zoom would create " + pageCount + " pages. Zoom out until the Tree needs " + config.controls.maxPrintTreePages + " pages or fewer." };
     const current = state();
     const fullTree = current.ui.treeMode === "overview";
     const focusId = current.ui.selectedPersonId || current.ui.treeFocusId || current.workspace.family.homePersonId;
@@ -3442,16 +3547,62 @@
     ];
     if (fullTree) settings.push(current.ui.hideUnplacedLineage ? "?? Lineal Hidden" : "?? Lineal Shown");
     const visibleEdges = layout.edges.filter(function (edge) { return current.ui.showInferredParentLines || !isNonLinealParentEdge(edge); });
-    const pages = [];
-    yPositions.forEach(function (y, rowIndex) {
-      xPositions.forEach(function (x, columnIndex) {
-        const pageNumber = pages.length + 1;
-        const tile = { x: x, y: y, width: pageWorldWidth, height: pageWorldHeight };
-        const nodes = layout.nodes.filter(function (node) { return printTreeIntersects(printTreeNodeBounds(node), tile); }).map(function (node) { return treeNodeHtml(node, { layout: layout, print: true }); }).join("");
-        const edges = visibleEdges.filter(function (edge) { return printTreeIntersects(printTreeEdgeBounds(edge), tile); }).map(function (edge) { return treeEdgeHtml(edge, "print-tree-" + pageNumber + "-"); }).join("");
-        const sectionLabel = pageCount > 1 ? "Section " + (columnIndex + 1) + " of " + xPositions.length + " across, " + (rowIndex + 1) + " of " + yPositions.length + " down" : "Complete view";
-        pages.push('<section class="print-tree-page"><header class="print-tree-header"><div><h1>' + u.escapeHtml(reportTitle) + '</h1><p>' + u.escapeHtml(settings.join(" · ")) + '</p></div><span>' + u.escapeHtml(sectionLabel) + " · Page " + pageNumber + " of " + pageCount + '</span></header><svg class="print-tree-svg" viewBox="' + [x, y, pageWorldWidth, pageWorldHeight].map(function (value) { return Number(value.toFixed(2)); }).join(" ") + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="' + u.escapeHtml(reportTitle + ", " + sectionLabel) + '"><g class="tree-edges">' + edges + '</g><g class="tree-nodes">' + nodes + "</g></svg></section>");
+    const zoomForCapacity = Math.max(1, zoom);
+    const maximumLevels = Math.max(2, Math.min(config.controls.maxPrintTreeLevels, Math.floor(config.controls.maxPrintTreeLevels / zoomForCapacity)));
+    const maximumPeopleAcross = Math.max(3, Math.min(config.controls.maxPrintTreePeopleAcross, Math.floor(config.controls.maxPrintTreePeopleAcross / zoomForCapacity)));
+    const generationBands = printTreeGenerationBands(layout.generationMetrics, maximumLevels);
+    const pagePlans = [];
+    generationBands.forEach(function (generationBand, rowIndex) {
+      const generations = new Set(generationBand.metrics.map(function (metric) { return metric.generation; }));
+      const generationNodes = layout.nodes.filter(function (node) { return generations.has(node.generation); });
+      const horizontalBands = printTreeHorizontalBands(generationNodes, visibleEdges, maximumPeopleAcross);
+      horizontalBands.forEach(function (horizontalBand, columnIndex) {
+        const selectedNodes = printTreeContextNodes(generationNodes, generationNodes.filter(function (node) { return horizontalBand.nodeIds.has(node.id); }), visibleEdges, maximumPeopleAcross);
+        const selectedIds = new Set(selectedNodes.map(function (node) { return node.id; }));
+        const pageNodeById = new Map(selectedNodes.map(function (node) { return [node.id, node]; }));
+        pagePlans.push({
+          nodes: selectedNodes,
+          edges: visibleEdges.filter(function (edge) { return selectedIds.has(edge.from.id) && selectedIds.has(edge.to.id); }).map(function (edge) {
+            return Object.assign({}, edge, { from: pageNodeById.get(edge.from.id), to: pageNodeById.get(edge.to.id) });
+          }),
+          bounds: printTreeContentBounds(selectedNodes, generationBand.metrics),
+          rowIndex: rowIndex,
+          rowCount: generationBands.length,
+          columnIndex: columnIndex,
+          columnCount: horizontalBands.length,
+          levelStart: generationBand.start + 1,
+          levelEnd: generationBand.end,
+          levelCount: layout.generationMetrics.length,
+          generationCount: generationBand.metrics.length
+        });
       });
+    });
+    const pageCount = pagePlans.length;
+    if (pageCount > config.controls.maxPrintTreePages) return { error: "This zoom would create " + pageCount + " pages. Zoom out until the Tree needs " + config.controls.maxPrintTreePages + " pages or fewer." };
+    const maximumNodeWidth = Math.max.apply(null, layout.nodes.map(function (node) { return node.renderWidth || node.width; }));
+    const maximumRowHeight = Math.max.apply(null, layout.generationMetrics.map(function (metric) { return metric.height; }));
+    const plannedPeopleAcross = Math.max.apply(null, pagePlans.map(function (plan) {
+      const counts = new Map();
+      plan.nodes.forEach(function (node) { counts.set(node.generation, (counts.get(node.generation) || 0) + 1); });
+      return Math.max.apply(null, Array.from(counts.values()));
+    }));
+    const plannedLevels = Math.max.apply(null, pagePlans.map(function (plan) { return plan.generationCount; }));
+    const baseWidth = maximumNodeWidth * plannedPeopleAcross + 26 * Math.max(0, plannedPeopleAcross - 1) + 40;
+    const baseHeight = maximumRowHeight * plannedLevels + 60 * Math.max(0, plannedLevels - 1) + 40;
+    let pageWorldWidth = Math.max(baseWidth / zoom, Math.max.apply(null, pagePlans.map(function (plan) { return plan.bounds.width + 40; })));
+    let pageWorldHeight = Math.max(baseHeight / zoom, Math.max.apply(null, pagePlans.map(function (plan) { return plan.bounds.height + 40; })));
+    if (pageWorldWidth / pageWorldHeight < 1.5) pageWorldWidth = pageWorldHeight * 1.5;
+    else pageWorldHeight = pageWorldWidth / 1.5;
+    settings.push(config.controls.maxPrintTreeLevels + " Levels / " + config.controls.maxPrintTreePeopleAcross + " People Maximum");
+    const pages = pagePlans.map(function (plan, index) {
+      const pageNumber = index + 1;
+      const x = (plan.bounds.left + plan.bounds.right - pageWorldWidth) / 2;
+      const y = (plan.bounds.top + plan.bounds.bottom - pageWorldHeight) / 2;
+      const nodes = plan.nodes.map(function (node) { return treeNodeHtml(node, { layout: layout, print: true }); }).join("");
+      const edges = plan.edges.map(function (edge) { return treeEdgeHtml(edge, "print-tree-" + pageNumber + "-"); }).join("");
+      const levelLabel = "Levels " + plan.levelStart + "–" + plan.levelEnd + " of " + plan.levelCount;
+      const sectionLabel = pageCount > 1 ? levelLabel + " · Across " + (plan.columnIndex + 1) + " of " + plan.columnCount : "Complete view";
+      return '<section class="print-tree-page"><header class="print-tree-header"><div><h1>' + u.escapeHtml(reportTitle) + '</h1><p>' + u.escapeHtml(settings.join(" · ")) + '</p></div><span>' + u.escapeHtml(sectionLabel) + " · Page " + pageNumber + " of " + pageCount + '</span></header><svg class="print-tree-svg" viewBox="' + [x, y, pageWorldWidth, pageWorldHeight].map(function (value) { return Number(value.toFixed(2)); }).join(" ") + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="' + u.escapeHtml(reportTitle + ", " + sectionLabel) + '"><g class="tree-edges">' + edges + '</g><g class="tree-nodes">' + nodes + "</g></svg></section>";
     });
     $("#printReport").innerHTML = pages.join("");
     return { pageCount: pageCount, title: reportTitle };
