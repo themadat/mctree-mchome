@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.119",
-      buildId: "0.0.1.119",
+      version: "0.0.1.120",
+      buildId: "0.0.1.120",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -168,12 +168,12 @@
 
     releases: [
       {
-        version: "0.0.1.119",
-        date: "2026-09-04T04:49:58.000Z",
-        title: "Polished Outline controls and printing",
-        summary: "Outline now has compact chevron branches, purpose-built root and branch controls, stacked view tabs, and print-safe full names.",
-        features: ["Added the supplied Root, Expand, and Condense artwork to the shared icon catalog", "Changed descendant branch controls to right and down chevrons"],
-        improvements: ["Tightened desktop Outline rows and controls while preserving mobile touch targets", "Allowed long Lineal names to wrap in print instead of being truncated"],
+        version: "0.0.1.120",
+        date: "2026-09-04T05:03:19.000Z",
+        title: "Unified the Tree and Outline toolbars",
+        summary: "Tree and Outline now switch between matching control toolbars, with stacked icon labels and the corrected outward Expand All symbol.",
+        features: ["Replaced Expand All with the supplied outward-arrow artwork rotated for the Outline toolbar", "Made every Outline action use the same icon-over-label treatment as Tree controls"],
+        improvements: ["Removed the separate descendant-view heading so selecting Tree or Outline simply switches the available toolbar and content"],
         fixes: [],
         knownIssues: []
       }
