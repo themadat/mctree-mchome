@@ -148,12 +148,38 @@ for (const kind of ["step", "foster", "guardian", "unknown"]) {
   if (!/must be Non-Lineal/.test(App.family.validateRelationshipDraft({ type: "parent-child", parentId: "P001", childId: "P003", lineage: "lineal", kind }, siblingFixture, "R002"))) fail("The relationship editor accepts a Lineal " + kind + " link");
 }
 
+const layoutPerson = (id, lineage, primary = true) => ({
+  id,
+  names: { birth: { first: id, last: "Layout" }, current: { first: id, last: "Layout" }, preferred: {} },
+  birth: { date: {} }, livingStatus: "living",
+  source: { format: primary ? "mclineage-cleaned" : "manual", fields: lineage ? { "lineage-id": lineage } : {} }
+});
+const layoutPeople = [layoutPerson("A", "01"), layoutPerson("B", "", false), layoutPerson("C1", "01.01"), layoutPerson("S1", "", false), layoutPerson("C2", "01.02"), layoutPerson("S2", "", false), layoutPerson("G1", "01.01.01"), layoutPerson("G2", "01.02.01"), layoutPerson("G3", "01.02.02"), layoutPerson("G4", "01.02.03")];
+let layoutRelationshipId = 0;
+const layoutParent = (parentId, childId, lineage) => ({ id: "LP" + (++layoutRelationshipId), type: "parent-child", parentId, childId, lineage, kind: "biological" });
+const layoutPartner = (person1Id, person2Id) => ({ id: "LS" + (++layoutRelationshipId), type: "partner", person1Id, person2Id, status: "married", startDate: {}, endDate: {}, source: { fields: { "partner-type": "marriage" } } });
+const layoutRelationships = [
+  layoutPartner("A", "B"), layoutParent("A", "C1", "lineal"), layoutParent("B", "C1", "non-lineal"), layoutParent("A", "C2", "lineal"), layoutParent("B", "C2", "non-lineal"),
+  layoutPartner("C1", "S1"), layoutPartner("C2", "S2"), layoutParent("C1", "G1", "lineal"), layoutParent("S1", "G1", "non-lineal"),
+  layoutParent("C2", "G2", "lineal"), layoutParent("S2", "G2", "non-lineal"), layoutParent("C2", "G3", "lineal"), layoutParent("S2", "G3", "non-lineal"), layoutParent("C2", "G4", "lineal"), layoutParent("S2", "G4", "non-lineal")
+];
+const parentCenteredLayout = App.family.layout({ workspace: { people: layoutPeople, relationships: layoutRelationships } }, { mode: "overview", nodeView: "condensed", nameBasis: "lineal", nameLength: "short" });
+const layoutNodes = new Map(parentCenteredLayout.nodes.map((node) => [node.id, node]));
+const layoutCenter = (id) => layoutNodes.get(id).x + layoutNodes.get(id).width / 2;
+if (Math.abs((layoutCenter("C1") + layoutCenter("C2")) / 2 - (layoutCenter("A") + layoutCenter("B")) / 2) > 0.01) fail("A child generation is no longer centered beneath its parents");
+if (Math.abs(layoutCenter("G1") - (layoutCenter("C1") + layoutCenter("S1")) / 2) > 0.01 || Math.abs((layoutCenter("G2") + layoutCenter("G4")) / 2 - (layoutCenter("C2") + layoutCenter("S2")) / 2) > 0.01) fail("A descendant branch is no longer centered beneath its specific parent couple");
+for (const generation of new Set(parentCenteredLayout.nodes.map((node) => node.generation))) {
+  const row = parentCenteredLayout.nodes.filter((node) => node.generation === generation).sort((first, second) => first.x - second.x);
+  if (row.some((node, index) => index && row[index - 1].x + row[index - 1].width > node.x + 0.01)) fail("Parent-centered Tree branches overlap");
+}
+
 const index = read("index.html");
 const css = read("assets/css/app.css");
 const sw = read("sw.js");
 const cloud = read("assets/js/core/cloud.js");
 const pwa = read("assets/js/core/pwa.js");
 const appSource = read("assets/js/app.js");
+const familySource = read("assets/js/core/family.js");
 const componentsSource = read("assets/js/core/components.js");
 const iconsSource = read("assets/js/icons.js");
 if (!index.includes('id="relationPerson1Search"') || !index.includes('id="relationPerson2Search"') || !appSource.includes("model.fuzzySearchMatch(query, searchText)")) fail("Connect Existing People search controls are missing");
