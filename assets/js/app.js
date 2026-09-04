@@ -1614,7 +1614,7 @@
       const toggle = settings.print
         ? '<span class="outline-toggle-placeholder" aria-hidden="true"></span>'
         : children.length
-          ? '<button type="button" class="outline-branch-toggle" data-outline-branch="' + u.escapeHtml(key) + '" aria-label="' + (collapsed ? "Expand" : "Collapse") + " descendants of " + u.escapeHtml(model.treeName(person, "lineal", "full")) + '" aria-expanded="' + String(!collapsed) + '"><span data-symbol="' + (collapsed ? "down" : "up") + '" aria-hidden="true"></span></button>'
+          ? '<button type="button" class="outline-branch-toggle" data-outline-branch="' + u.escapeHtml(key) + '" aria-label="' + (collapsed ? "Expand" : "Collapse") + " descendants of " + u.escapeHtml(model.treeName(person, "lineal", "full")) + '" aria-expanded="' + String(!collapsed) + '"><span data-symbol="' + (collapsed ? "chevronRight" : "chevronDown") + '" aria-hidden="true"></span></button>'
           : '<span class="outline-toggle-placeholder" aria-hidden="true">•</span>';
       const generation = '<span class="outline-generation" title="Generation ' + (depth + 1) + '">G' + (depth + 1) + "</span>";
       const partners = '<span class="outline-partners">' + outlinePartnersHtml(person, settings.print) + "</span>";
@@ -1641,9 +1641,9 @@
     }).join("");
     const selectedAvailable = Boolean(current.ui.selectedPersonId && current.workspace.people.some(function (person) { return person.id === current.ui.selectedPersonId; }));
     const printAction = familyEditingEnabled() ? outlineActionHtml("data-print-outline", "pdf", "Print") : "";
-    const selectedRootAction = outlineActionHtml("data-outline-selected-root", "lineal", "Selected as root", selectedAvailable ? "" : " disabled");
-    const expandAction = outlineActionHtml("data-outline-expand-all", "zoomIn", "Expand all");
-    const collapseAction = outlineActionHtml("data-outline-collapse-all", "zoomOut", "Collapse all");
+    const selectedRootAction = outlineActionHtml("data-outline-selected-root", "outlineRoot", "Selected as root", selectedAvailable ? "" : " disabled");
+    const expandAction = outlineActionHtml("data-outline-expand-all", "outlineExpand", "Expand all");
+    const collapseAction = outlineActionHtml("data-outline-collapse-all", "outlineCondense", "Condense all");
     const lineageAction = outlineActionHtml('data-outline-highlight aria-pressed="' + String(outlineHighlightEnabled) + '"', "lineageView", "Lineage");
     return '<section class="tree-panel outline-panel workspace-card" aria-labelledby="outlineTitle"><header class="outline-toolbar"><div class="outline-heading"><span class="eyebrow">Descendant view</span><h2 id="outlineTitle">Outline</h2><span id="outlineCount" class="count-pill" aria-live="polite"></span></div>' + workspaceViewControlHtml() + '<div class="outline-root-controls"><label for="outlineRootSelect"><span>Root</span><select id="outlineRootSelect">' + options + "</select></label>" + selectedRootAction + '</div><div class="outline-actions" role="group" aria-label="Outline controls">' + expandAction + collapseAction + lineageAction + printAction + '</div></header><div class="outline-scroll"><div id="descendantOutline" class="descendant-outline" role="tree" aria-label="Indented descendant outline" tabindex="0"></div></div></section>';
   }
