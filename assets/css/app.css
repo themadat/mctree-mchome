@@ -805,11 +805,28 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .outline-toolbar { --tree-toolbar-control-height: 48px; align-items: center; flex-wrap: wrap; }
 .outline-view-controls { align-items: flex-end; }
 .outline-root-setting { flex: 1 1 220px; }
-.outline-root-controls { display: flex; min-width: 180px; height: var(--tree-toolbar-control-height); align-items: stretch; }
-.outline-root-controls select { width: 100%; min-height: var(--tree-toolbar-control-height); padding: .3rem .48rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text); font-size: .7rem; font-weight: 700; }
+.outline-root-controls { display: flex; min-width: 180px; min-height: var(--tree-toolbar-control-height); align-items: stretch; }
+.outline-root-picker { position: relative; width: 100%; min-width: 0; min-height: var(--tree-toolbar-control-height); }
+.outline-root-picker > summary { display: flex; box-sizing: border-box; width: 100%; height: var(--tree-toolbar-control-height); min-height: var(--tree-toolbar-control-height); align-items: center; gap: .35rem; padding: .3rem .55rem; overflow: hidden; list-style: none; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text); font-size: .7rem; font-weight: 700; cursor: pointer; }
+.outline-root-picker > summary::-webkit-details-marker { display: none; }
+.outline-root-picker > summary::after { content: "⌄"; flex: 0 0 auto; color: var(--muted); font-size: .8rem; }
+.outline-root-picker > summary > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.outline-root-picker[open] > summary { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.outline-root-menu { position: absolute; z-index: 80; top: calc(100% + .3rem); left: 0; display: grid; width: 100%; min-width: 260px; gap: .25rem; padding: .35rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); box-shadow: var(--shadow); }
+.outline-root-search-field { display: block; }
+.outline-root-search-field input { width: 100%; min-height: 36px; padding: .35rem .5rem; border: 1px solid var(--line); border-radius: 7px; background: var(--surface-2); color: var(--text); font-size: .7rem; }
+.outline-root-options { display: grid; max-height: 230px; overflow-y: auto; overscroll-behavior: contain; }
+.outline-root-options button { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: .4rem; width: 100%; min-height: 36px; padding: .32rem .45rem; border: 0; border-radius: 7px; background: transparent; color: var(--text); text-align: left; }
+.outline-root-options button:hover, .outline-root-options button:focus-visible { background: var(--surface-2); }
+.outline-root-options button[aria-selected="true"] { background: var(--accent-soft); color: var(--accent-strong); }
+.outline-root-options strong, .outline-root-options small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.outline-root-options strong { font-size: .7rem; }
+.outline-root-options small, .outline-root-result-count, .outline-root-empty { color: var(--muted); font-size: .58rem; }
+.outline-root-empty { margin: .15rem .3rem; }
+.outline-root-result-count { padding: 0 .25rem; }
 .outline-actions { display: flex; flex: 0 1 auto; height: var(--tree-toolbar-control-height); align-items: stretch; justify-content: flex-end; gap: .12rem; margin-left: auto; }
 .outline-action { appearance: none; display: inline-flex; flex-direction: column; min-width: 58px; min-height: var(--tree-toolbar-control-height); height: var(--tree-toolbar-control-height); align-items: center; justify-content: center; gap: .08rem; padding: .2rem .38rem; border: 1px solid transparent; border-radius: 10px; background: transparent; color: var(--muted); font-size: .62rem; font-weight: 750; line-height: 1; white-space: nowrap; }
-.outline-action[data-outline-selected-root] { min-width: 82px; }
+.outline-action[data-outline-reset-root] { min-width: 68px; }
 .outline-action:hover, .outline-action:focus-visible { border-color: transparent; background: var(--surface-2); color: var(--accent-strong); }
 .outline-action[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent-strong); }
 .outline-action-icon { display: grid; place-items: center; width: 1.15rem; height: 1.15rem; }
@@ -836,12 +853,15 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
 .outline-person.deceased { background: var(--deceased-card); color: var(--deceased-card-text); }
 .outline-person.deceased small { color: var(--deceased-card-muted); }
 .outline-row.selected > .outline-person, .outline-person.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.outline-person.outline-spouse { border-left-width: 1px; border-left-color: var(--line); }
 .outline-row.lineage-highlight > .outline-person { border-left-color: var(--accent); }
 .outline-partners { display: block; min-width: 0; }
 .outline-partner { display: grid; grid-template-columns: minmax(120px, 160px) minmax(205px, 1fr); align-items: center; gap: .28rem; min-width: 0; }
-.outline-relationship { display: grid; grid-template-columns: minmax(12px, 1fr) auto; align-items: center; gap: .25rem; min-width: 0; color: var(--muted); }
+.outline-relationship { display: grid; grid-template-columns: minmax(10px, 1fr) auto minmax(10px, 1fr); align-items: center; gap: .22rem; min-width: 0; color: var(--muted); }
+.outline-relationship::after { content: ""; width: 100%; height: 2px; background: var(--partner-line); }
 .outline-relationship > span { width: 100%; height: 2px; background: var(--partner-line); }
-.outline-relationship small { max-width: 100%; overflow: hidden; font-size: .52rem; font-weight: 750; line-height: 1; text-overflow: ellipsis; white-space: nowrap; }
+.outline-relationship small { display: grid; max-width: 84px; justify-items: center; overflow: hidden; font-size: .5rem; font-weight: 750; line-height: .95; text-align: center; text-overflow: ellipsis; white-space: normal; }
+.outline-relationship small span { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .outline-scan-bar { display: block; width: 100%; height: 2px; background: color-mix(in srgb, var(--line-strong) 72%, transparent); }
 .outline-row.lineage-highlight .outline-scan-bar { height: 3px; background: var(--accent); }
 .outline-hidden-count { padding: .12rem .34rem; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); font-size: .58rem; font-weight: 800; white-space: nowrap; }
@@ -1172,13 +1192,14 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
 .print-outline .outline-generation { color: #555; font: 700 5.5pt Helvetica, Arial, sans-serif; }
 .print-outline .outline-person { display: flex; min-height: 0; align-items: center; gap: .04in; padding: .012in .035in; overflow: visible; border: .6pt solid #aaa; border-left: 2pt solid #8f5b5d; border-radius: .035in; background: #fff; color: #111; white-space: normal; }
 .print-outline .outline-person.deceased { background: #eadcc9; color: #3f3025; }
+.print-outline .outline-person.outline-spouse { border-left-width: .6pt; border-left-color: #aaa; }
 .print-outline .outline-person strong { flex: 1 1 auto; min-width: 0; max-width: none; overflow: visible; overflow-wrap: anywhere; font-size: 6.4pt; line-height: 1.08; text-overflow: clip; white-space: normal; }
 .print-outline .outline-person small { flex: 0 0 auto; max-width: none; overflow: visible; color: #555; font: 5.6pt Helvetica, Arial, sans-serif; text-overflow: clip; white-space: nowrap; }
 .print-outline .outline-person.deceased small { color: #6c5847; }
 .print-outline .outline-partners { display: block; }
 .print-outline .outline-partner { grid-template-columns: 1.35in minmax(2.15in, 1fr); gap: .04in; }
 .print-outline .outline-relationship { color: #555; }
-.print-outline .outline-relationship > span { height: 1pt; background: #a86f00; }
+.print-outline .outline-relationship > span, .print-outline .outline-relationship::after { height: 1pt; background: #a86f00; }
 .print-outline .outline-relationship small { font: 700 4.8pt Helvetica, Arial, sans-serif; }
 .print-outline .outline-scan-bar { height: 1pt; background: #aaa; }
 .print-outline .outline-row.lineage-highlight .outline-scan-bar { height: 1.5pt; background: #315f73; }
@@ -1353,6 +1374,8 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
   .outline-toolbar .workspace-view-setting { flex: 1 1 calc(50% - .25rem); }
   .outline-root-setting { flex: 1 1 calc(50% - .25rem); }
   .outline-root-controls { width: 100%; min-width: 0; }
+  .outline-root-picker[open] { height: auto; }
+  .outline-root-picker[open] .outline-root-menu { position: static; min-width: 0; margin-top: .25rem; }
   .outline-actions { flex: 1 1 100%; width: 100%; height: auto; flex-wrap: wrap; justify-content: flex-start; margin-left: 0; }
   .outline-actions .outline-action { flex: 1 1 calc(33.333% - .25rem); min-width: 74px; min-height: var(--tree-toolbar-control-height); }
   .descendant-outline { min-width: 730px; }

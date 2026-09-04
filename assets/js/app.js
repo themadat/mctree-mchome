@@ -1509,11 +1509,30 @@
     }).join("") + "</dl></details></aside>";
   }
 
+  function outlineLineagePeople() {
+    const current = state();
+    const graph = relationshipGraph(current);
+    const homeId = current.workspace.family.homePersonId || (current.workspace.people[0] && current.workspace.people[0].id) || "";
+    const ids = new Set();
+    function visit(personId) {
+      if (!personId || ids.has(personId) || !graph.peopleById.has(personId)) return;
+      ids.add(personId);
+      (graph.children.get(personId) || []).forEach(function (entry) {
+        if (family.isLinealRelationship(entry.relationship)) visit(entry.person.id);
+      });
+    }
+    visit(homeId);
+    return Array.from(ids).map(function (id) { return graph.peopleById.get(id); }).filter(Boolean).sort(function (first, second) {
+      return model.sortName(first).localeCompare(model.sortName(second));
+    });
+  }
+
   function outlineRootPerson() {
     const current = state();
-    const peopleById = new Map(current.workspace.people.map(function (person) { return [person.id, person]; }));
-    if (!peopleById.has(outlineRootId)) outlineRootId = current.workspace.family.homePersonId || (current.workspace.people[0] && current.workspace.people[0].id) || "";
-    return peopleById.get(outlineRootId) || current.workspace.people[0] || null;
+    const lineagePeople = outlineLineagePeople();
+    const peopleById = new Map(lineagePeople.map(function (person) { return [person.id, person]; }));
+    if (!peopleById.has(outlineRootId)) outlineRootId = current.workspace.family.homePersonId || (lineagePeople[0] && lineagePeople[0].id) || "";
+    return peopleById.get(outlineRootId) || lineagePeople[0] || null;
   }
 
   function outlineChildren(person, graph) {
@@ -1559,7 +1578,12 @@
     const relationship = entry.relationship;
     const marriage = !family.isNeverMarriedPartnership(relationship) && ["married", "widowed", "divorced", "separated", "annulled"].includes(family.partnerMaritalStatusId(person, entry));
     const date = outlineRelationshipDate(relationship);
-    return (marriage ? "Marriage" : "Relationship") + (date ? " · " + date : " · date unknown");
+    return { type: marriage ? "Marriage" : "Relationship", date: date || "Date unknown" };
+  }
+
+  function outlineName(person, length) {
+    const current = state();
+    return model.treeName(person, current.ui.treeNameBasis, length || current.ui.treeNameLength);
   }
 
   function workspaceViewControlHtml() {
@@ -1572,7 +1596,7 @@
 
   function outlinePersonHtml(person, options) {
     const settings = Object.assign({ print: false, partner: false }, options || {});
-    const name = model.treeName(person, "lineal", "full");
+    const name = outlineName(person);
     const dates = outlineLifeDates(person);
     const selected = !settings.print && state().ui.selectedPersonId === person.id;
     const classes = "outline-person" + (settings.partner ? " outline-spouse" : "") + (person.livingStatus === "deceased" ? " deceased" : "") + (selected ? " selected" : "");
@@ -1584,8 +1608,27 @@
     const partners = family.relationGroups(person.id, state()).partners.slice(0, 1);
     if (!partners.length) return "";
     return partners.map(function (entry) {
-      return '<span class="outline-partner"><span class="outline-relationship"><span aria-hidden="true"></span><small>' + u.escapeHtml(outlineRelationshipLabel(person, entry)) + "</small></span>" + outlinePersonHtml(entry.person, { print: print, partner: true }) + "</span>";
+      const label = outlineRelationshipLabel(person, entry);
+      return '<span class="outline-partner"><span class="outline-relationship"><span aria-hidden="true"></span><small><span>' + u.escapeHtml(label.type) + '</span><span>' + u.escapeHtml(label.date) + "</span></small></span>" + outlinePersonHtml(entry.person, { print: print, partner: true }) + "</span>";
     }).join("");
+  }
+
+  function outlineRootPickerHtml(root) {
+    const people = outlineLineagePeople();
+    const options = people.map(function (person) {
+      const name = outlineName(person);
+      const dates = outlineLifeDates(person);
+      const searchText = [
+        model.treeName(person, "preferred", "full"),
+        model.treeName(person, "legal", "full"),
+        model.treeName(person, "lineal", "full"),
+        dates,
+        sourceField(person, "lineage-id")
+      ].join(" ").toLocaleLowerCase();
+      return '<button type="button" role="option" data-outline-root-option="' + u.escapeHtml(person.id) + '" data-outline-root-search="' + u.escapeHtml(searchText) + '" aria-selected="' + String(Boolean(root && root.id === person.id)) + '"><strong>' + u.escapeHtml(name) + '</strong><small>(' + u.escapeHtml(dates) + ")</small></button>";
+    }).join("");
+    const currentName = root ? outlineName(root) : "Choose a root";
+    return '<details class="outline-root-picker"><summary aria-label="Choose Outline root. Current root: ' + u.escapeHtml(currentName) + '"><span>' + u.escapeHtml(currentName) + '</span></summary><div class="outline-root-menu"><label class="outline-root-search-field" for="outlineRootSearch"><span class="visually-hidden">Search Lineage people</span><input id="outlineRootSearch" type="search" autocomplete="off" spellcheck="false" placeholder="Search Lineage" aria-controls="outlineRootOptions"></label><div id="outlineRootOptions" class="outline-root-options" role="listbox" aria-label="Lineage people">' + options + '</div><p class="outline-root-empty" data-outline-root-empty hidden>No matching Lineage people.</p><small id="outlineRootResultCount" class="outline-root-result-count" aria-live="polite">' + people.length + " " + (people.length === 1 ? "person" : "people") + "</small></div></details>";
   }
 
   function buildOutlineRows(options) {
@@ -1614,7 +1657,7 @@
       const toggle = settings.print
         ? '<span class="outline-toggle-placeholder" aria-hidden="true"></span>'
         : children.length
-          ? '<button type="button" class="outline-branch-toggle" data-outline-branch="' + u.escapeHtml(key) + '" aria-label="' + (collapsed ? "Expand" : "Collapse") + " descendants of " + u.escapeHtml(model.treeName(person, "lineal", "full")) + '" aria-expanded="' + String(!collapsed) + '"><span data-symbol="' + (collapsed ? "chevronRight" : "chevronDown") + '" aria-hidden="true"></span></button>'
+          ? '<button type="button" class="outline-branch-toggle" data-outline-branch="' + u.escapeHtml(key) + '" aria-label="' + (collapsed ? "Expand" : "Collapse") + " descendants of " + u.escapeHtml(outlineName(person)) + '" aria-expanded="' + String(!collapsed) + '"><span data-symbol="' + (collapsed ? "chevronRight" : "chevronDown") + '" aria-hidden="true"></span></button>'
           : '<span class="outline-toggle-placeholder" aria-hidden="true">•</span>';
       const generation = '<span class="outline-generation" title="Generation ' + (depth + 1) + '">G' + (depth + 1) + "</span>";
       const partners = '<span class="outline-partners">' + outlinePartnersHtml(person, settings.print) + "</span>";
@@ -1633,19 +1676,16 @@
     return { html: rows.join(""), root: root, visibleCount: visiblePersonIds.size, branchKeys: branchKeys, highlightPath: highlightPath, availableHighlightPath: availableHighlightPath };
   }
 
-  function outlinePanelHtml() {
+  function outlinePanelHtml(nameControls) {
     const current = state();
     const root = outlineRootPerson();
-    const options = current.workspace.people.slice().sort(function (a, b) { return model.sortName(a).localeCompare(model.sortName(b)); }).map(function (person) {
-      return '<option value="' + u.escapeHtml(person.id) + '"' + (root && root.id === person.id ? " selected" : "") + ">" + u.escapeHtml(model.treeName(person, "lineal", "full")) + "</option>";
-    }).join("");
-    const selectedAvailable = Boolean(current.ui.selectedPersonId && current.workspace.people.some(function (person) { return person.id === current.ui.selectedPersonId; }));
+    const homeId = current.workspace.family.homePersonId;
     const printAction = familyEditingEnabled() ? outlineActionHtml("data-print-outline", "pdf", "Print") : "";
-    const selectedRootAction = outlineActionHtml("data-outline-selected-root", "outlineRoot", "Selected as root", selectedAvailable ? "" : " disabled");
+    const resetRootAction = outlineActionHtml("data-outline-reset-root", "outlineRoot", "Reset Root", root && root.id !== homeId ? "" : " disabled");
     const expandAction = outlineActionHtml("data-outline-expand-all", "outlineExpand", "Expand all");
     const collapseAction = outlineActionHtml("data-outline-collapse-all", "outlineCondense", "Condense all");
     const lineageAction = outlineActionHtml('data-outline-highlight aria-pressed="' + String(outlineHighlightEnabled) + '"', "lineageView", "Lineage");
-    return '<section class="tree-panel outline-panel workspace-card" aria-label="Outline"><header class="tree-toolbar outline-toolbar"><div class="tree-view-controls outline-view-controls">' + workspaceViewControlHtml() + '<div class="tree-control-section outline-root-setting"><span class="tree-control-heading">Root</span><div class="outline-root-controls"><label class="visually-hidden" for="outlineRootSelect">Outline root</label><select id="outlineRootSelect">' + options + '</select></div></div><div class="outline-actions" role="group" aria-label="Outline controls">' + selectedRootAction + expandAction + collapseAction + lineageAction + printAction + '</div><span id="outlineCount" class="visually-hidden" aria-live="polite"></span></div></header><div class="outline-scroll"><div id="descendantOutline" class="descendant-outline" role="tree" aria-label="Indented descendant outline" tabindex="0"></div></div></section>';
+    return '<section class="tree-panel outline-panel workspace-card" aria-label="Outline"><header class="tree-toolbar outline-toolbar"><div class="tree-view-controls outline-view-controls">' + workspaceViewControlHtml() + (nameControls || "") + '<div class="tree-control-section outline-root-setting"><span class="tree-control-heading">Root</span><div class="outline-root-controls">' + outlineRootPickerHtml(root) + '</div></div><div class="outline-actions" role="group" aria-label="Outline controls">' + resetRootAction + expandAction + collapseAction + lineageAction + printAction + '</div><span id="outlineCount" class="visually-hidden" aria-live="polite"></span></div></header><div class="outline-scroll"><div id="descendantOutline" class="descendant-outline" role="tree" aria-label="Indented descendant outline" tabindex="0"></div></div></section>';
   }
 
   function renderOutline() {
@@ -1678,7 +1718,7 @@
     const treeLengthOption = function (length, symbol, label) {
       return '<button type="button" class="tree-name-option" data-tree-name-length="' + length + '" aria-pressed="' + String(state().ui.treeNameLength === length) + '"><span class="tree-name-option-icon" data-symbol="' + symbol + '" aria-hidden="true"></span><span>' + label + "</span></button>";
     };
-    const treeNameControls = '<div class="tree-control-section tree-name-preferences"><span class="tree-control-heading">Name Preferences</span><div class="tree-name-controls" role="group" aria-label="Tree name preferences"><div class="tree-name-setting tree-name-source"><div class="segmented" aria-label="Tree name source">' + treeNameOption("preferred", "preferredName", "Preferred", "Display") + treeNameOption("legal", "legalName", "Legal", "Current") + treeNameOption("lineal", "linealName", "Lineal", "Birth") + '</div></div><div class="tree-name-setting tree-name-length"><div class="segmented" aria-label="Tree name length">' + treeLengthOption("short", "shortName", "Short") + treeLengthOption("full", "fullName", "Full") + "</div></div></div></div>";
+    const treeNameControls = '<div class="tree-control-section tree-name-preferences"><span class="tree-control-heading">Name Preferences</span><div class="tree-name-controls" role="group" aria-label="Name preferences"><div class="tree-name-setting tree-name-source"><div class="segmented" aria-label="Name source">' + treeNameOption("preferred", "preferredName", "Preferred", "Display") + treeNameOption("legal", "legalName", "Legal", "Current") + treeNameOption("lineal", "linealName", "Lineal", "Birth") + '</div></div><div class="tree-name-setting tree-name-length"><div class="segmented" aria-label="Name length">' + treeLengthOption("short", "shortName", "Short") + treeLengthOption("full", "fullName", "Full") + "</div></div></div></div>";
     $("#mainContent").innerHTML = '<section class="family-workspace" aria-label="Family workspace"><nav class="mobile-workspace-tabs segmented" aria-label="Workspace views"><button type="button" data-mobile-view="directory" aria-pressed="' + String(state().ui.mobileView === "directory") + '">Directory</button><button type="button" data-mobile-view="tree" aria-pressed="' + String(state().ui.mobileView === "tree") + '">Family Tree</button><button type="button" data-mobile-view="profile" aria-pressed="' + String(state().ui.mobileView === "profile") + '"' + personTabDisabled + '>Person</button></nav><div class="family-workspace-grid" data-mobile-view="' + u.escapeHtml(state().ui.mobileView) + '" data-directory-collapsed="' + String(directoryCollapsed) + '" data-profile-collapsed="' + String(profileCollapsed) + '"><aside id="directoryPanel" class="directory-panel workspace-card' + (directoryCollapsed ? " is-collapsed" : "") + '" aria-label="Family directory">' + directoryHeader + directoryControls + '<div class="directory-body"><div id="directoryList" class="directory-list"></div><nav id="directoryAlphaRail" class="directory-alpha-rail" aria-label="Jump to directory letter"></nav></div></aside><section class="tree-panel workspace-card" aria-label="Family Tree"><header class="tree-toolbar"><div class="tree-view-controls"><div class="segmented" aria-label="Tree mode"><button type="button" data-tree-mode="focus" aria-pressed="' + String(state().ui.treeMode === "focus") + '"' + lineageDisabled + '>Focus</button><button type="button" data-tree-mode="overview" aria-pressed="' + String(state().ui.treeMode === "overview") + '">Overview</button></div><div class="segmented" aria-label="Person card detail"><button type="button" data-tree-node-view="condensed" aria-pressed="' + String(state().ui.treeNodeView === "condensed") + '">Condensed</button><button type="button" data-tree-node-view="detailed" aria-pressed="' + String(state().ui.treeNodeView === "detailed") + '">Detailed</button></div><label class="depth-control"><span>Ancestors</span><input id="ancestorDepth" type="number" min="0" max="' + config.controls.maxTreeDepth + '" step="1" value="' + state().ui.ancestorDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><label class="depth-control"><span>Descendants</span><input id="descendantDepth" type="number" min="0" max="' + config.controls.maxTreeDepth + '" step="1" value="' + state().ui.descendantDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><div class="zoom-controls" role="group" aria-label="Tree zoom controls"><button type="button" class="zoom-action" data-zoom="out" aria-label="Zoom out" title="Zoom out"><span class="zoom-action-icon" data-symbol="zoomOut" aria-hidden="true"></span><span>Out</span></button><label class="zoom-value-control"><span class="visually-hidden">Zoom percentage</span><span class="zoom-value-box"><input id="zoomValue" type="text" pattern="[0-9]{1,3}" maxlength="3" value="100" inputmode="numeric" autocomplete="off"><span class="zoom-percent" aria-hidden="true">%</span><span class="zoom-stepper"><button type="button" data-zoom-step="1" aria-label="Increase zoom by one percent" title="Increase zoom"><span data-symbol="up" aria-hidden="true"></span></button><button type="button" data-zoom-step="-1" aria-label="Decrease zoom by one percent" title="Decrease zoom"><span data-symbol="down" aria-hidden="true"></span></button></span></span></label><button type="button" class="zoom-action" data-zoom="in" aria-label="Zoom in" title="Zoom in"><span class="zoom-action-icon" data-symbol="zoomIn" aria-hidden="true"></span><span>In</span></button><button type="button" class="zoom-action" data-fit-tree aria-label="Fit tree" title="Fit tree"><span class="zoom-action-icon" data-symbol="fit" aria-hidden="true"></span><span>Fit</span></button><span id="zoomStatus" class="visually-hidden" aria-live="polite">100% zoom</span></div></div></header><div class="tree-canvas"><svg id="familyTreeSvg" role="group" aria-label="Interactive Family Tree. Scroll horizontally or vertically, drag to pan, use the zoom controls, and select a person to focus." tabindex="0"></svg></div>' + treeKeyHtml() + '</section><aside id="profilePanel" class="profile-panel workspace-card' + (profileCollapsed ? " is-collapsed" : "") + '" aria-label="Selected person profile"><div id="profilePanelContent" class="profile-panel-content"></div></aside></div></section>';
     $("[data-mobile-view='directory']", $("#mainContent")).textContent = "List";
     $("[data-mobile-view='tree']", $("#mainContent")).textContent = workspaceView === "outline" ? "Outline" : "Family Tree";
@@ -1686,7 +1726,7 @@
     $("#directoryAlphaRail").setAttribute("aria-label", "Jump to list letter");
     if (workspaceView === "outline") {
       const workspaceGrid = $(".family-workspace-grid", $("#mainContent"));
-      $(".tree-panel", workspaceGrid).outerHTML = outlinePanelHtml();
+      $(".tree-panel", workspaceGrid).outerHTML = outlinePanelHtml(treeNameControls);
       workspaceGrid.style.setProperty("--directory-panel-width", state().ui.panelSizingCustomized ? state().ui.directoryPanelWidth + "px" : "20%");
       workspaceGrid.style.setProperty("--profile-panel-width", state().ui.panelSizingCustomized ? state().ui.profilePanelWidth + "px" : "30%");
       $("#directoryPanel", workspaceGrid).insertAdjacentHTML("afterend", '<button id="directoryTreeDivider" class="family-resize-handle" type="button" role="separator" aria-orientation="vertical" aria-label="Resize list and Outline" aria-valuemin="220" aria-valuemax="480" aria-valuenow="' + state().ui.directoryPanelWidth + '"' + (directoryCollapsed ? " hidden" : "") + '><span aria-hidden="true"></span><output class="family-divider-percentage" aria-hidden="true"></output></button>');
@@ -3887,6 +3927,12 @@
     const target = event.target;
     const openDirectoryFilter = $(".directory-filter-menu[open]");
     if (openDirectoryFilter && !target.closest(".directory-filter-menu")) openDirectoryFilter.removeAttribute("open");
+    const openOutlineRoot = $(".outline-root-picker[open]");
+    if (openOutlineRoot && !target.closest(".outline-root-picker")) openOutlineRoot.removeAttribute("open");
+    if (target.closest(".outline-root-picker > summary")) {
+      requestAnimationFrame(function () { if ($(".outline-root-picker[open]")) $("#outlineRootSearch")?.focus(); });
+      return;
+    }
     const outlineBranch = target.closest("[data-outline-branch]");
     if (outlineBranch) {
       const key = outlineBranch.dataset.outlineBranch;
@@ -3916,12 +3962,17 @@
       announce(outlineHighlightEnabled ? "Highlighted the selected descendant's direct lineage." : "Removed the lineage highlight.");
       return;
     }
-    if (target.closest("[data-outline-selected-root]")) {
-      if (state().ui.selectedPersonId) {
-        outlineRootId = state().ui.selectedPersonId;
-        renderWorkspace();
-        announce("Set the selected person as the Outline root.");
-      }
+    const outlineRootOption = target.closest("[data-outline-root-option]");
+    if (outlineRootOption) {
+      outlineRootId = outlineRootOption.dataset.outlineRootOption;
+      renderWorkspace();
+      announce("Changed the Outline root.");
+      return;
+    }
+    if (target.closest("[data-outline-reset-root]")) {
+      outlineRootId = state().workspace.family.homePersonId;
+      renderWorkspace();
+      announce("Reset the Outline to the Root Ancestor.");
       return;
     }
     const workspaceViewButton = target.closest("[data-workspace-view]");
@@ -4236,7 +4287,6 @@
         renderDirectoryList();
       }
       else if (event.target.id === "directorySort") { storage.mutate(function (next) { next.ui.directorySort = event.target.value; }, { touch: false, reason: "directory-sort" }); renderDirectoryList(); }
-      else if (event.target.id === "outlineRootSelect") { outlineRootId = event.target.value; renderWorkspace(); announce("Changed the Outline root."); }
       else if (event.target.id === "ancestorDepth" || event.target.id === "descendantDepth") {
         updateTreeDepthControl(event.target, true);
       }
@@ -4246,6 +4296,18 @@
     });
     $("#mainContent").addEventListener("input", function (event) {
       if (event.target.id === "directorySearch") { storage.mutate(function (next) { next.ui.directorySearch = u.cleanLine(event.target.value, 200); }, { touch: false, reason: "directory-filter" }); renderDirectoryList(); }
+      else if (event.target.id === "outlineRootSearch") {
+        const needle = u.cleanLine(event.target.value, 200).toLocaleLowerCase();
+        const options = $$("[data-outline-root-option]", $("#outlineRootOptions"));
+        let visible = 0;
+        options.forEach(function (option) {
+          const matches = !needle || model.fuzzySearchMatch(needle, option.dataset.outlineRootSearch || "");
+          option.hidden = !matches;
+          if (matches) visible += 1;
+        });
+        $("[data-outline-root-empty]").hidden = visible > 0;
+        $("#outlineRootResultCount").textContent = visible + " " + (visible === 1 ? "person" : "people");
+      }
       else if (event.target.id === "ancestorDepth" || event.target.id === "descendantDepth") updateTreeDepthControl(event.target, false);
       else if (event.target.id === "zoomValue") updateTreeZoomControl(event.target, false);
     });
