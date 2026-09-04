@@ -1682,7 +1682,7 @@
     const current = state();
     const root = outlineRootPerson();
     const homeId = current.workspace.family.homePersonId;
-    const printAction = familyEditingEnabled() ? outlineActionHtml("data-print-outline", "pdf", "Print") : "";
+    const printAction = familyEditingEnabled() ? outlineActionHtml("data-print-outline", "print", "Print") : "";
     const resetRootAction = outlineActionHtml("data-outline-reset-root", "outlineRoot", "Reset Root", root && root.id !== homeId ? "" : " disabled");
     const expandAction = outlineActionHtml("data-outline-expand-all", "outlineExpand", "Expand all");
     const collapseAction = outlineActionHtml("data-outline-collapse-all", "outlineCondense", "Condense all");
@@ -1820,7 +1820,7 @@
     const unplacedLineageControl = state().ui.treeMode === "overview" ? '<button type="button" class="tree-line-toggle action-button" data-toggle-unplaced-lineage aria-pressed="' + String(!state().ui.hideUnplacedLineage) + '" title="Toggle unresolved Lineal people"><span class="tree-toggle-symbol" data-symbol="unknownLineal" aria-hidden="true"></span><span class="button-label">?? Lineal</span></button>' : "";
     zoomControls.insertAdjacentHTML("beforebegin", '<button type="button" class="tree-line-toggle tree-line-toggle-stacked action-button" data-toggle-non-lineal aria-pressed="' + String(state().ui.showInferredParentLines) + '" title="Toggle Non-Lineal parent lines"><span class="tree-toggle-symbol" data-symbol="nonLinealLinesFill" aria-hidden="true"></span><span class="button-label">Non-Lineal<br>Lines</span></button>' + unplacedLineageControl);
     const zoomSection = wrapTreeControl(zoomControls, "Zoom", "tree-zoom-setting");
-    if (familyEditingEnabled()) zoomSection.insertAdjacentHTML("afterend", '<button type="button" class="tree-print-action" data-print-tree aria-label="Print the current Family Tree" title="Print the current Family Tree"><span class="tree-print-action-icon" data-symbol="treePrint" aria-hidden="true"></span><span>Tree</span></button>');
+    if (familyEditingEnabled()) zoomSection.insertAdjacentHTML("afterend", '<button type="button" class="tree-print-action" data-print-tree aria-label="Print the current Family Tree" title="Print the current Family Tree"><span class="tree-print-action-icon" data-symbol="print" aria-hidden="true"></span><span>Tree</span></button>');
     $("#directoryPanel", workspaceGrid).insertAdjacentHTML("afterend", '<button id="directoryTreeDivider" class="family-resize-handle" type="button" role="separator" aria-orientation="vertical" aria-label="Resize list and Family Tree" aria-valuemin="220" aria-valuemax="480" aria-valuenow="' + state().ui.directoryPanelWidth + '"' + (directoryCollapsed ? " hidden" : "") + '><span aria-hidden="true"></span><output class="family-divider-percentage" aria-hidden="true"></output></button>');
     $(".tree-panel", workspaceGrid).insertAdjacentHTML("afterend", '<button id="treeProfileDivider" class="family-resize-handle" type="button" role="separator" aria-orientation="vertical" aria-label="Resize Family Tree and selected person" aria-valuemin="240" aria-valuemax="600" aria-valuenow="' + state().ui.profilePanelWidth + '"' + (profileCollapsed ? " hidden" : "") + '><span aria-hidden="true"></span><output class="family-divider-percentage" aria-hidden="true"></output></button>');
     $("#directorySort").value = state().ui.directorySort;
