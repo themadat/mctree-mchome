@@ -27,7 +27,7 @@ if (config.parentKinds.map((item) => item.id).join(",") !== "biological,adoptive
 if (config.parentKinds.filter((item) => item.lineal).map((item) => item.id).join(",") !== "biological,adoptive") fail("Only Biological and Adopted may be Lineal");
 if (config.themes.length !== 1) fail("Only the supported McFamily appearance should remain configured");
 if (!config.datasetVersion.startsWith(config.datasetSeries + ".")) fail("Dataset version is outside the configured series");
-if (config.controls.maxPrintTreeLevels !== 6 || config.controls.maxPrintTreePeopleAcross !== 8) fail("Tree print density must remain six levels by eight people");
+if (config.controls.maxPrintTreeLevels !== 8 || config.controls.maxPrintTreePeopleAcross !== 10) fail("Tree print density must remain eight levels by ten people");
 if (!Number.isInteger(config.controls.maxPrintTreePages) || config.controls.maxPrintTreePages < 1) fail("Tree print page limit is invalid");
 
 const documentStub = {
@@ -188,6 +188,8 @@ if (!pwa.includes('serviceWorker.register("sw.js", { updateViaCache: "none" })')
 if (!index.includes('id="hostedAuditSummary" type="text" placeholder="Summary of what changed"') || !css.includes('.hosted-publish-toolbar .status-pill { align-self: center; min-height: 36px; height: 36px;')) fail("The compact publishing inputs regressed");
 if (!appSource.includes('? "@page { size: letter landscape; margin: .5in; }"')) fail("Tree printing no longer explicitly requests letter landscape");
 if (!appSource.includes("function printTreeGenerationBands") || !appSource.includes("function printTreeHorizontalBands") || !appSource.includes("function printTreePartnerClusters") || !appSource.includes("function printTreeContextNodes") || !appSource.includes('settings.push(config.controls.maxPrintTreeLevels + " Levels / " + config.controls.maxPrintTreePeopleAcross + " People Maximum")')) fail("Semantic Tree print pagination is missing");
+if (!appSource.includes("function ancestorAtGeneration") || !appSource.includes("family.isLinealRelationship(b.relationship)") || !appSource.includes("return assignments.flatMap(function (ids) { return splitCandidate(ids, depth + 1); })")) fail("Tree print pages no longer keep descendant branches with their parents");
+if (!appSource.includes('width="9" height="9"') || !appSource.includes('(lifeY - 8)') || !read("assets/js/core/family.js").includes('(detailed ? 26 : 12) + Math.max(1, lineCount) * 14 + (detailed && settings.showDeveloperScale ? 13 : 0)')) fail("Detailed Tree cards are no longer using the compact shared metadata row");
 const printActionOrder = ["printButton", "groupsButton", "labelsButton"].map((id) => index.indexOf(`id="${id}"`));
 if (printActionOrder.some((position) => position < 0) || printActionOrder.some((position, item) => item && position <= printActionOrder[item - 1])) fail("Directory, Groups, and Labels are no longer ordered together");
 if (index.includes('id="outlineButton"') || !appSource.includes('class="segmented workspace-view-switch"') || !appSource.includes('data-workspace-view="outline"')) fail("Outline must be available beside Tree in the central view switch, not the application toolbar");

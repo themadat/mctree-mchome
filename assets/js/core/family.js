@@ -562,14 +562,7 @@
     const rowHeights = new Map();
     sortedLevels.forEach(function (level) {
       const lineCount = Math.max.apply(null, groups.get(level).map(function (person) { return treeNameLines(person, { basis: settings.nameBasis, length: settings.nameLength }).length; }));
-      const hasLivingContact = groups.get(level).some(function (person) {
-        return person.livingStatus === "living" && Boolean(
-          person.addresses && person.addresses.length
-          || person.phones && person.phones.length
-          || person.emails && person.emails.length
-        );
-      });
-      rowHeights.set(level, (detailed ? 45 : 12) + Math.max(1, lineCount) * 14 + (detailed && hasLivingContact ? 21 : 0));
+      rowHeights.set(level, (detailed ? 26 : 12) + Math.max(1, lineCount) * 14 + (detailed && settings.showDeveloperScale ? 13 : 0));
     });
     const rowTrackHeights = new Map();
     sortedLevels.forEach(function (level) { rowTrackHeights.set(level, rowHeights.get(level)); });

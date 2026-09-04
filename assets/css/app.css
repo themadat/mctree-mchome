@@ -792,8 +792,8 @@ body.resizing-family, body.resizing-family * { cursor: col-resize !important; us
 .tree-node.deceased .tree-life, .tree-node.deceased .tree-reference { fill: var(--deceased-card-muted); }
 .tree-node.lineal > rect { stroke: var(--lineal-mark); stroke-width: 3; }
 .tree-node.lineal.selected > rect { stroke: var(--accent); stroke-width: 3; }
-.tree-lineal-mark { width: 7px; height: 10px; color: var(--lineal-mark); }
-.tree-contact-mark { width: 18px; height: 18px; color: var(--muted); }
+.tree-lineal-mark { width: 6px; height: 9px; color: var(--lineal-mark); }
+.tree-contact-mark { width: 9px; height: 9px; color: var(--muted); }
 .tree-generation-scale { pointer-events: none; }
 .tree-generation-scale path { fill: none; stroke: var(--faint); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .tree-generation-scale text { fill: var(--muted); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 8px; dominant-baseline: middle; }
