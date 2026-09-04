@@ -28,6 +28,7 @@
   let personNameOverrides = new Set();
   let activePrintLocation = "";
   let activePrintTitle = "";
+  let activePrintPreviewMode = "";
   let workspaceView = "tree";
   let outlineRootId = "";
   let outlineHighlightEnabled = true;
@@ -1721,7 +1722,7 @@
       return '<button type="button" class="tree-name-option" data-tree-name-length="' + length + '" aria-pressed="' + String(state().ui.treeNameLength === length) + '"><span class="tree-name-option-icon" data-symbol="' + symbol + '" aria-hidden="true"></span><span>' + label + "</span></button>";
     };
     const treeNameControls = '<div class="tree-control-section tree-name-preferences"><span class="tree-control-heading">Name Preferences</span><div class="tree-name-controls" role="group" aria-label="Name preferences"><div class="tree-name-setting tree-name-source"><div class="segmented" aria-label="Name source">' + treeNameOption("preferred", "preferredName", "Preferred", "Display") + treeNameOption("legal", "legalName", "Legal", "Current") + treeNameOption("lineal", "linealName", "Lineal", "Birth") + '</div></div><div class="tree-name-setting tree-name-length"><div class="segmented" aria-label="Name length">' + treeLengthOption("short", "shortName", "Short") + treeLengthOption("full", "fullName", "Full") + "</div></div></div></div>";
-    $("#mainContent").innerHTML = '<section class="family-workspace" aria-label="Family workspace"><nav class="mobile-workspace-tabs segmented" aria-label="Workspace views"><button type="button" data-mobile-view="directory" aria-pressed="' + String(state().ui.mobileView === "directory") + '">Directory</button><button type="button" data-mobile-view="tree" aria-pressed="' + String(state().ui.mobileView === "tree") + '">Family Tree</button><button type="button" data-mobile-view="profile" aria-pressed="' + String(state().ui.mobileView === "profile") + '"' + personTabDisabled + '>Person</button></nav><div class="family-workspace-grid" data-mobile-view="' + u.escapeHtml(state().ui.mobileView) + '" data-directory-collapsed="' + String(directoryCollapsed) + '" data-profile-collapsed="' + String(profileCollapsed) + '"><aside id="directoryPanel" class="directory-panel workspace-card' + (directoryCollapsed ? " is-collapsed" : "") + '" aria-label="Family directory">' + directoryHeader + directoryControls + '<div class="directory-body"><div id="directoryList" class="directory-list"></div><nav id="directoryAlphaRail" class="directory-alpha-rail" aria-label="Jump to directory letter"></nav></div></aside><section class="tree-panel workspace-card" aria-label="Family Tree"><header class="tree-toolbar"><div class="tree-view-controls"><div class="segmented" aria-label="Tree mode"><button type="button" data-tree-mode="focus" aria-pressed="' + String(state().ui.treeMode === "focus") + '"' + lineageDisabled + '>Focus</button><button type="button" data-tree-mode="overview" aria-pressed="' + String(state().ui.treeMode === "overview") + '">Overview</button></div><div class="segmented" aria-label="Person card detail"><button type="button" data-tree-node-view="condensed" aria-pressed="' + String(state().ui.treeNodeView === "condensed") + '">Condensed</button><button type="button" data-tree-node-view="detailed" aria-pressed="' + String(state().ui.treeNodeView === "detailed") + '">Detailed</button></div><label class="depth-control"><span>Ancestors</span><input id="ancestorDepth" type="number" min="0" max="' + config.controls.maxTreeDepth + '" step="1" value="' + state().ui.ancestorDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><label class="depth-control"><span>Descendants</span><input id="descendantDepth" type="number" min="0" max="' + config.controls.maxTreeDepth + '" step="1" value="' + state().ui.descendantDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><div class="zoom-controls" role="group" aria-label="Tree zoom controls"><button type="button" class="zoom-action" data-zoom="out" aria-label="Zoom out" title="Zoom out"><span class="zoom-action-icon" data-symbol="zoomOut" aria-hidden="true"></span><span>Out</span></button><label class="zoom-value-control"><span class="visually-hidden">Zoom percentage</span><span class="zoom-value-box"><input id="zoomValue" type="text" pattern="[0-9]{1,3}" maxlength="3" value="100" inputmode="numeric" autocomplete="off"><span class="zoom-percent" aria-hidden="true">%</span><span class="zoom-stepper"><button type="button" data-zoom-step="1" aria-label="Increase zoom by one percent" title="Increase zoom"><span data-symbol="up" aria-hidden="true"></span></button><button type="button" data-zoom-step="-1" aria-label="Decrease zoom by one percent" title="Decrease zoom"><span data-symbol="down" aria-hidden="true"></span></button></span></span></label><button type="button" class="zoom-action" data-zoom="in" aria-label="Zoom in" title="Zoom in"><span class="zoom-action-icon" data-symbol="zoomIn" aria-hidden="true"></span><span>In</span></button><button type="button" class="zoom-action" data-fit-tree aria-label="Fit tree" title="Fit tree"><span class="zoom-action-icon" data-symbol="fit" aria-hidden="true"></span><span>Fit</span></button><span id="zoomStatus" class="visually-hidden" aria-live="polite">100% zoom</span></div></div></header><div class="tree-canvas"><svg id="familyTreeSvg" role="group" aria-label="Interactive Family Tree. Scroll horizontally or vertically, drag to pan, use the zoom controls, and select a person to focus." tabindex="0"></svg></div>' + treeKeyHtml() + '</section><aside id="profilePanel" class="profile-panel workspace-card' + (profileCollapsed ? " is-collapsed" : "") + '" aria-label="Selected person profile"><div id="profilePanelContent" class="profile-panel-content"></div></aside></div></section>';
+    $("#mainContent").innerHTML = '<section class="family-workspace" aria-label="Family workspace"><nav class="mobile-workspace-tabs segmented" aria-label="Workspace views"><button type="button" data-mobile-view="directory" aria-pressed="' + String(state().ui.mobileView === "directory") + '">Directory</button><button type="button" data-mobile-view="tree" aria-pressed="' + String(state().ui.mobileView === "tree") + '">Family Tree</button><button type="button" data-mobile-view="profile" aria-pressed="' + String(state().ui.mobileView === "profile") + '"' + personTabDisabled + '>Person</button></nav><div class="family-workspace-grid" data-mobile-view="' + u.escapeHtml(state().ui.mobileView) + '" data-directory-collapsed="' + String(directoryCollapsed) + '" data-profile-collapsed="' + String(profileCollapsed) + '"><aside id="directoryPanel" class="directory-panel workspace-card' + (directoryCollapsed ? " is-collapsed" : "") + '" aria-label="Family directory">' + directoryHeader + directoryControls + '<div class="directory-body"><div id="directoryList" class="directory-list"></div><nav id="directoryAlphaRail" class="directory-alpha-rail" aria-label="Jump to directory letter"></nav></div></aside><section class="tree-panel workspace-card" aria-label="Family Tree"><header class="tree-toolbar"><div class="tree-view-controls"><div class="segmented" aria-label="Tree mode"><button type="button" data-tree-mode="focus" aria-pressed="' + String(state().ui.treeMode === "focus") + '"' + lineageDisabled + '>Focus</button><button type="button" data-tree-mode="overview" aria-pressed="' + String(state().ui.treeMode === "overview") + '">Overview</button></div><div class="segmented" aria-label="Person card detail"><button type="button" data-tree-node-view="condensed" aria-pressed="' + String(state().ui.treeNodeView === "condensed") + '">Condensed</button><button type="button" data-tree-node-view="detailed" aria-pressed="' + String(state().ui.treeNodeView === "detailed") + '">Detailed</button></div><label class="depth-control"><span>Ancestors</span><input id="ancestorDepth" type="number" min="0" max="' + config.controls.maxTreeDepth + '" step="1" value="' + state().ui.ancestorDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><label class="depth-control"><span>Descendants</span><input id="descendantDepth" type="number" min="0" max="' + config.controls.maxTreeDepth + '" step="1" value="' + state().ui.descendantDepth + '" inputmode="numeric" ' + overviewDisabled + '></label><div class="zoom-controls" role="group" aria-label="Tree zoom controls"><button type="button" class="zoom-action" data-zoom="out" aria-label="Zoom out" title="Zoom out"><span class="zoom-action-icon" data-symbol="zoomOut" aria-hidden="true"></span><span>Out</span></button><label class="zoom-value-control"><span class="visually-hidden">Zoom percentage</span><span class="zoom-value-box"><input id="zoomValue" type="text" pattern="[0-9]{1,3}" maxlength="3" value="100" inputmode="numeric" autocomplete="off"><span class="zoom-percent" aria-hidden="true">%</span><span class="zoom-stepper"><button type="button" data-zoom-step="5" aria-label="Increase zoom by five percent" title="Increase zoom"><span data-symbol="up" aria-hidden="true"></span></button><button type="button" data-zoom-step="-5" aria-label="Decrease zoom by five percent" title="Decrease zoom"><span data-symbol="down" aria-hidden="true"></span></button></span></span></label><button type="button" class="zoom-action" data-zoom="in" aria-label="Zoom in" title="Zoom in"><span class="zoom-action-icon" data-symbol="zoomIn" aria-hidden="true"></span><span>In</span></button><button type="button" class="zoom-action" data-fit-tree aria-label="Fit tree" title="Fit tree"><span class="zoom-action-icon" data-symbol="fit" aria-hidden="true"></span><span>Fit</span></button><span id="zoomStatus" class="visually-hidden" aria-live="polite">100% zoom</span></div></div></header><div class="tree-canvas"><svg id="familyTreeSvg" role="group" aria-label="Interactive Family Tree. Scroll horizontally or vertically, drag to pan, use the zoom controls, and select a person to focus." tabindex="0"></svg></div>' + treeKeyHtml() + '</section><aside id="profilePanel" class="profile-panel workspace-card' + (profileCollapsed ? " is-collapsed" : "") + '" aria-label="Selected person profile"><div id="profilePanelContent" class="profile-panel-content"></div></aside></div></section>';
     $("[data-mobile-view='directory']", $("#mainContent")).textContent = "List";
     $("[data-mobile-view='tree']", $("#mainContent")).textContent = workspaceView === "outline" ? "Outline" : "Family Tree";
     $("#directoryPanel").setAttribute("aria-label", "Family list");
@@ -3210,11 +3211,7 @@
     }
     const trigger = eventOrTrigger && eventOrTrigger.currentTarget instanceof HTMLElement ? eventOrTrigger.currentTarget : eventOrTrigger instanceof HTMLElement ? eventOrTrigger : document.activeElement;
     buildMailingLabelReport(entries);
-    if (developerReferencesEnabled()) {
-      openPrintPreview(trigger, "Labels Preview");
-      return;
-    }
-    invokeNativePrint("labels");
+    openPrintPreview(trigger, "Labels Preview", "labels");
   }
 
   function exportMailingCsv() {
@@ -3629,7 +3626,7 @@
     }));
     const plannedLevels = Math.max.apply(null, pagePlans.map(function (plan) { return plan.generationCount; }));
     const baseWidth = maximumNodeWidth * plannedPeopleAcross + 26 * Math.max(0, plannedPeopleAcross - 1) + 40;
-    const baseHeight = maximumRowHeight * plannedLevels + 60 * Math.max(0, plannedLevels - 1) + 40;
+    const baseHeight = maximumRowHeight * plannedLevels + 40 * Math.max(0, plannedLevels - 1) + 40;
     let pageWorldWidth = Math.max(baseWidth / zoom, Math.max.apply(null, pagePlans.map(function (plan) { return plan.bounds.width + 40; })));
     let pageWorldHeight = Math.max(baseHeight / zoom, Math.max.apply(null, pagePlans.map(function (plan) { return plan.bounds.height + 40; })));
     if (pageWorldWidth / pageWorldHeight < 1.5) pageWorldWidth = pageWorldHeight * 1.5;
@@ -3649,7 +3646,8 @@
     return { pageCount: pageCount, title: reportTitle };
   }
 
-  function openPrintPreview(trigger, title) {
+  function openPrintPreview(trigger, title, mode) {
+    activePrintPreviewMode = mode;
     $("#printPreviewTitle").textContent = title || "Directory Preview";
     const preview = $("#printPreviewContent");
     preview.innerHTML = $("#printReport").innerHTML;
@@ -3664,7 +3662,7 @@
       const sourceId = element.getAttribute("href").slice(1);
       if (previewIds.has(sourceId)) element.setAttribute("href", "#" + previewIds.get(sourceId));
     });
-    components.openDialog("#printPreviewDialog", { trigger: trigger, focus: "[data-close-dialog='printPreviewDialog']" });
+    components.openDialog("#printPreviewDialog", { trigger: trigger, focus: "#printPreviewPrintButton" });
   }
 
   function printFamilyOutputUnavailable(label) {
@@ -3683,22 +3681,14 @@
     if (printFamilyOutputUnavailable("the Directory")) return;
     const trigger = eventOrTrigger && eventOrTrigger.currentTarget instanceof HTMLElement ? eventOrTrigger.currentTarget : eventOrTrigger instanceof HTMLElement ? eventOrTrigger : document.activeElement;
     buildDirectoryReport();
-    if (developerReferencesEnabled()) {
-      openPrintPreview(trigger, "Directory Preview");
-      return;
-    }
-    invokeNativePrint("directory");
+    openPrintPreview(trigger, "Directory Preview", "directory");
   }
 
   function printGroups(eventOrTrigger) {
     if (printFamilyOutputUnavailable("Family Groups")) return;
     const trigger = eventOrTrigger && eventOrTrigger.currentTarget instanceof HTMLElement ? eventOrTrigger.currentTarget : eventOrTrigger instanceof HTMLElement ? eventOrTrigger : document.activeElement;
     buildGroupsReport();
-    if (developerReferencesEnabled()) {
-      openPrintPreview(trigger, "Groups Preview");
-      return;
-    }
-    invokeNativePrint("groups");
+    openPrintPreview(trigger, "Groups Preview", "groups");
   }
 
   function printOutline(eventOrTrigger) {
@@ -3709,11 +3699,7 @@
       components.message("Nothing to print", result.error);
       return;
     }
-    if (developerReferencesEnabled()) {
-      openPrintPreview(trigger, "Outline Preview");
-      return;
-    }
-    invokeNativePrint("outline");
+    openPrintPreview(trigger, "Outline Preview", "outline");
   }
 
   function printTree(eventOrTrigger) {
@@ -3724,11 +3710,7 @@
       components.message("Tree is too large at this zoom", result.error);
       return;
     }
-    if (developerReferencesEnabled()) {
-      openPrintPreview(trigger, "Tree Preview · " + result.pageCount + " " + (result.pageCount === 1 ? "page" : "pages"));
-      return;
-    }
-    invokeNativePrint("tree");
+    openPrintPreview(trigger, "Tree Preview · " + result.pageCount + " " + (result.pageCount === 1 ? "page" : "pages"), "tree");
   }
 
   function filteredRoadmap() {
@@ -4471,7 +4453,8 @@
     $("#groupsButton").addEventListener("click", printGroups);
     $("#labelsButton").addEventListener("click", printMailingLabels);
     $("#directoryCsvButton").addEventListener("click", exportMailingCsv);
-    $("#printPreviewDialog").addEventListener("close", function () { $("#printPreviewContent").replaceChildren(); });
+    $("#printPreviewPrintButton").addEventListener("click", function () { if (activePrintPreviewMode) invokeNativePrint(activePrintPreviewMode); });
+    $("#printPreviewDialog").addEventListener("close", function () { activePrintPreviewMode = ""; $("#printPreviewContent").replaceChildren(); });
     $("#mainContent").addEventListener("click", handleMainClick);
     $("#mainContent").addEventListener("change", function (event) {
       if (event.target.id === "onboardingImportInput") { portability.previewFile(event.target.files && event.target.files[0], $("#firstImportButton")); event.target.value = ""; }

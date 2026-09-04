@@ -1170,6 +1170,8 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
 
 .print-report { display: none; }
 .print-preview-dialog { width: min(1200px, calc(100vw - 1.5rem)); height: min(94svh, 1000px); max-height: 94svh; }
+.print-preview-actions { display: flex; align-items: center; gap: .4rem; }
+.print-preview-actions .button-icon, .print-preview-actions .button-icon .sf-symbol { width: 1.15rem; height: 1.15rem; }
 .print-preview-scroll { padding: 1rem; background: #4b504e; }
 .print-preview-document { color: #111; font-family: Georgia, "Times New Roman", serif; font-size: 10pt; line-height: 1.35; }
 .print-preview-document > section, .print-preview-document > article { width: min(8.5in, 100%); margin: 0 auto 1rem; padding: .55in; background: #fff; box-shadow: 0 8px 28px rgba(0, 0, 0, .28); }
