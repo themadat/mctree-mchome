@@ -566,54 +566,132 @@
     });
     const rowTrackHeights = new Map();
     sortedLevels.forEach(function (level) { rowTrackHeights.set(level, rowHeights.get(level)); });
-    const rowWidths = new Map();
-    sortedLevels.forEach(function (level) {
-      const items = groups.get(level);
-      const width = items.reduce(function (total, person) {
-        const placement = partnerPlacements.get(person.id);
-        return total + nodeWidth * (placement && placement.scale || 1);
-      }, 0) + Math.max(0, items.length - 1) * horizontalGap;
-      rowWidths.set(level, width);
-    });
     const developerScaleGutter = settings.showDeveloperScale ? 116 : 0;
-    const baseContentWidth = Math.max(680, Math.max.apply(null, Array.from(rowWidths.values())) + 80);
-    const contentWidth = baseContentWidth + developerScaleGutter;
     const nodes = [];
+    const nodeById = new Map();
     const generationMetrics = [];
     let rowY = 40;
     sortedLevels.forEach(function (level) {
       const items = groups.get(level);
       const nodeHeight = rowHeights.get(level);
       const trackHeight = rowTrackHeights.get(level);
-      const rowWidth = rowWidths.get(level);
-      const startX = developerScaleGutter + (baseContentWidth - rowWidth) / 2;
       generationMetrics.push({ generation: level, y: rowY, height: trackHeight, nodeWidth: nodeWidth, nodeHeight: nodeHeight });
-      let cursorX = startX;
-      items.forEach(function (person) {
+      const components = [];
+      const componentsByAnchor = new Map();
+      items.forEach(function (person, order) {
         const placement = partnerPlacements.get(person.id);
         const scale = placement && placement.scale || 1;
         const width = nodeWidth * scale;
         const height = nodeHeight * scale;
-        nodes.push({
-          id: person.id,
-          person: person,
-          x: cursorX,
-          y: rowY + (placement && placement.align === "bottom" ? trackHeight - height : placement && placement.align === "top" ? 0 : (trackHeight - height) / 2),
-          width: width,
-          height: height,
-          renderWidth: nodeWidth,
-          renderHeight: nodeHeight,
-          scale: scale,
-          partnerPlacement: placement && placement.side || "",
-          partnerAlign: placement && placement.align || "",
-          partnerCount: placement && placement.count || 0,
-          generation: level
+        const anchorId = placement && placement.anchorId || person.id;
+        let component = componentsByAnchor.get(anchorId);
+        if (!component) {
+          component = { anchorId: anchorId, members: [], width: 0, order: order };
+          componentsByAnchor.set(anchorId, component);
+          components.push(component);
+        }
+        const offset = component.width + (component.members.length ? horizontalGap : 0);
+        component.members.push({ person: person, placement: placement, width: width, height: height, offset: offset });
+        component.width = offset + width;
+      });
+      components.forEach(function (component) {
+        const anchor = component.members.find(function (member) { return member.person.id === component.anchorId; }) || component.members[0];
+        component.anchorOffset = anchor.offset + anchor.width / 2;
+      });
+      const branches = [];
+      const branchesByParents = new Map();
+      components.forEach(function (component) {
+        let visibleParentIds = (parentIds.get(component.anchorId) || []).filter(function (id) { return nodeById.has(id); });
+        if (!visibleParentIds.length) {
+          component.members.some(function (member) {
+            const memberParentIds = (parentIds.get(member.person.id) || []).filter(function (id) { return nodeById.has(id); });
+            if (!memberParentIds.length) return false;
+            visibleParentIds = memberParentIds;
+            return true;
+          });
+        }
+        visibleParentIds = Array.from(new Set(visibleParentIds)).sort();
+        const key = visibleParentIds.length ? visibleParentIds.join("|") : "__root__";
+        let branch = branchesByParents.get(key);
+        if (!branch) {
+          branch = { parentIds: visibleParentIds, components: [], width: 0, order: component.order };
+          branchesByParents.set(key, branch);
+          branches.push(branch);
+        }
+        branch.components.push(component);
+      });
+      branches.forEach(function (branch) {
+        let cursor = 0;
+        branch.components.forEach(function (component, index) {
+          component.branchOffset = cursor;
+          cursor += component.width + (index < branch.components.length - 1 ? horizontalGap : 0);
         });
-        cursorX += width + horizontalGap;
+        branch.width = cursor;
+        const first = branch.components[0];
+        const last = branch.components[branch.components.length - 1];
+        const childAnchorCenter = (first.branchOffset + first.anchorOffset + last.branchOffset + last.anchorOffset) / 2;
+        const parentCenters = branch.parentIds.map(function (id) {
+          const parent = nodeById.get(id);
+          return parent.x + parent.width / 2;
+        });
+        const parentCenter = parentCenters.length
+          ? parentCenters.reduce(function (sum, value) { return sum + value; }, 0) / parentCenters.length
+          : 0;
+        branch.idealLeft = parentCenter - childAnchorCenter;
+      });
+      branches.sort(function (first, second) { return first.idealLeft - second.idealLeft || first.order - second.order; });
+      const branchOffsets = [];
+      let branchCursor = 0;
+      branches.forEach(function (branch, index) {
+        branchOffsets[index] = branchCursor;
+        branchCursor += branch.width + (index < branches.length - 1 ? horizontalGap : 0);
+      });
+      const packedBlocks = [];
+      branches.forEach(function (branch, index) {
+        packedBlocks.push({ start: index, end: index, weight: 1, value: branch.idealLeft - branchOffsets[index] });
+        while (packedBlocks.length > 1 && packedBlocks[packedBlocks.length - 2].value > packedBlocks[packedBlocks.length - 1].value) {
+          const second = packedBlocks.pop();
+          const first = packedBlocks.pop();
+          const weight = first.weight + second.weight;
+          packedBlocks.push({ start: first.start, end: second.end, weight: weight, value: (first.value * first.weight + second.value * second.weight) / weight });
+        }
+      });
+      packedBlocks.forEach(function (block) {
+        for (let index = block.start; index <= block.end; index += 1) branches[index].x = block.value + branchOffsets[index];
+      });
+      branches.forEach(function (branch) {
+        branch.components.forEach(function (component) {
+          component.members.forEach(function (member) {
+            const placement = member.placement;
+            const node = {
+              id: member.person.id,
+              person: member.person,
+              x: branch.x + component.branchOffset + member.offset,
+              y: rowY + (placement && placement.align === "bottom" ? trackHeight - member.height : placement && placement.align === "top" ? 0 : (trackHeight - member.height) / 2),
+              width: member.width,
+              height: member.height,
+              renderWidth: nodeWidth,
+              renderHeight: nodeHeight,
+              scale: placement && placement.scale || 1,
+              partnerPlacement: placement && placement.side || "",
+              partnerAlign: placement && placement.align || "",
+              partnerCount: placement && placement.count || 0,
+              generation: level
+            };
+            nodes.push(node);
+            nodeById.set(node.id, node);
+          });
+        });
       });
       rowY += trackHeight + verticalGap;
     });
-    const nodeById = new Map(nodes.map(function (node) { return [node.id, node]; }));
+    const minimumX = Math.min.apply(null, nodes.map(function (node) { return node.x; }));
+    const maximumX = Math.max.apply(null, nodes.map(function (node) { return node.x + node.width; }));
+    const layoutWidth = maximumX - minimumX;
+    const baseContentWidth = Math.max(680, layoutWidth + 80);
+    const contentWidth = baseContentWidth + developerScaleGutter;
+    const horizontalOffset = developerScaleGutter + (baseContentWidth - layoutWidth) / 2 - minimumX;
+    nodes.forEach(function (node) { node.x += horizontalOffset; });
     const edges = visibleRelationships.map(function (relationship) {
       const aId = relationship.type === "parent-child" ? relationship.parentId : relationship.person1Id;
       const bId = relationship.type === "parent-child" ? relationship.childId : relationship.person2Id;

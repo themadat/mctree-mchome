@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.126",
-      buildId: "0.0.1.126",
+      version: "0.0.1.127",
+      buildId: "0.0.1.127",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -170,13 +170,13 @@
 
     releases: [
       {
-        version: "0.0.1.126",
-        date: "2026-09-04T21:00:00.000Z",
-        title: "Universal print preview and tighter Tree controls",
-        summary: "Every print action now opens a preview first, while Tree generations and zoom stepping use tighter, more practical spacing.",
-        features: ["Added an always-available print preview with a printer-labelled action beside Close"],
-        improvements: ["Reduced the vertical gap between Tree generations", "Changed the Zoom percentage steppers to five-percent increments"],
-        fixes: ["Removes the Developer Mode requirement for previewing Directory, Groups, Labels, Outline, and Tree output"],
+        version: "0.0.1.127",
+        date: "2026-09-04T22:02:40.000Z",
+        title: "Parent-centered Tree branches",
+        summary: "Tree descendant branches now center beneath their specific parents or parent couple while collision packing keeps neighboring families separated.",
+        features: [],
+        improvements: ["Centered each sibling branch beneath its own recorded parent or parent couple", "Packed adjacent family branches without node overlaps"],
+        fixes: [],
         knownIssues: []
       }
     ],
@@ -190,7 +190,7 @@
 
     help: [
       { id: "start", title: "Getting started", section: "Basics", keywords: "start passphrase password access owner editor viewer encrypted first launch", html: "<p>Open the ordinary McFamily link and enter the private passphrase assigned by the Owner. McFamily identifies the matching access locally, downloads only ciphertext, decrypts it in this browser, and validates the complete five-file family record before opening. Recipients do not choose a role and do not need a ZIP. Before the first encrypted vault exists, the Owner uses one private recovery ZIP to initialize their browser and publish hosted access.</p>" },
-      { id: "tree", title: "Exploring the Family Tree", section: "Family", keywords: "tree focus overview zoom pan scroll generation ancestor descendant condensed detailed co-parent non-lineal resize preferred legal birth name", html: "<p>Focus shows the selected person and nearby generations; Full Tree shows every component and closes the profile. Ancestor and Descendant levels default to 10; this release replaces the obsolete saved Descendants value of 3 once, while a level you deliberately choose afterward remains saved. Summary cards show names; Details adds lifespan and Lineal/contact symbols. Name Preferences chooses Preferred, Legal, or Lineal names and Short or Full length. Gold links show partner status, muted-red links show Lineal parents, and Non-Lineal Lines reveals other recorded parents. Use the Key, scroll, pan, zoom, Fit, and the desktop dividers to explore or resize the tree.</p>" },
+      { id: "tree", title: "Exploring the Family Tree", section: "Family", keywords: "tree focus overview zoom pan scroll generation ancestor descendant condensed detailed co-parent non-lineal resize preferred legal birth name", html: "<p>Focus shows the selected person and nearby generations; Full Tree shows every component and closes the profile. Each descendant branch centers beneath its recorded parent or parent couple, with neighboring family branches moved only as needed to avoid overlap. Ancestor and Descendant levels default to 10; this release replaces the obsolete saved Descendants value of 3 once, while a level you deliberately choose afterward remains saved. Summary cards show names; Details adds lifespan and Lineal/contact symbols. Name Preferences chooses Preferred, Legal, or Lineal names and Short or Full length. Gold links show partner status, muted-red links show Lineal parents, and Non-Lineal Lines reveals other recorded parents. Use the Key, scroll, pan, zoom, Fit, and the desktop dividers to explore or resize the tree.</p>" },
       { id: "people", title: "People and relationships", section: "Family", keywords: "people list favorites star search sort filter blood lineal non-lineal alphabet address phone email parent child partner ancestry lineage generation names preferred legal birth maiden", html: "<p>Use <strong>List</strong> after Add to open the searchable people pane. Filter by living status, Lineal scope, address, phone, or email; sort by first or last name; and use the A–Z rail to jump. Global search shows Preferred, Current, and Birth names. Star people from search or a profile, then choose the Favorites star inside the right side of search to list them. Admin can restore a Favorites file in Developer Mode. Profiles contain Names, auto-generated Lineage, Relationships, contacts, and person-level editor notes. The Relationships section uses Add, Edit, and Delete: Add separates new people from existing people, while Edit and Delete group choices under Parents, Partners, and Children. Imported Source appears only to editors in Developer Mode. Lineal parents generate the child’s Lineage ID automatically.</p>" },
       { id: "print", title: "Print Directory, Outline, Groups, or Tree", section: "Family", keywords: "print pdf directory outline descendants spouse household address phone contact lineage family groups maps generation tree zoom developer preview landscape", html: "<p><strong>Directory</strong> prints only the compact household contact cards in <strong>Directory of McMillen Clan</strong>. <strong>Outline</strong> opens an indented descendant view with the latest spouse beside each person, shared Name Preferences, a compact searchable Lineage-only root picker with a people-count pill, Reset Root, branch controls, and optional selected-lineage highlighting; its Print action includes the complete expanded descendant outline for the chosen root in letter landscape. <strong>Groups</strong> prints the six-column generation maps organized by Root Ancestor and Generation 3 Line. <strong>Tree</strong>, at the far right of the Family Tree controls, paginates the currently displayed tree in letter landscape with no more than eight generation levels or ten people across on a page. Descendant branches stay with their parent when the tree divides horizontally, with the necessary ancestor context repeated. Full Tree includes the complete visible family, while Lineage uses the selected or focused person. Tree output follows the active Card View, name preferences, levels, Non-Lineal and ?? Lineal visibility, and Zoom; zooming in may create more pages. Every print action opens an in-app preview first; choose Print beside Close to open the browser print dialog. Each output uses a dated title.</p>" },
       { id: "backup", title: "Owner recovery file", section: "Data", keywords: "zip csv recovery backup restore owner private metadata audit", html: "<p>Owner and Editor access can download a private recovery ZIP containing McPeople, McPlaces, McRelations, McResidences, and McMetadata. It is not the normal sharing method and contains readable private information. Store it securely and use it only to recover or initialize the Owner workspace. Members and Viewers receive no recovery import or download controls.</p>" },
