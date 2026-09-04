@@ -186,8 +186,11 @@ if (!appSource.includes('kind === "unknown" ? unknownRelationshipMarks(edge, pat
 if (!pwa.includes('serviceWorker.register("sw.js", { updateViaCache: "none" })') || pwa.includes('serviceWorker.register(versionedAsset("sw.js")')) fail("The service worker registration URL must remain stable across builds");
 if (!index.includes('id="hostedAuditSummary" type="text" placeholder="Summary of what changed"') || !css.includes('.hosted-publish-toolbar .status-pill { align-self: center; min-height: 36px; height: 36px;')) fail("The compact publishing inputs regressed");
 if (!appSource.includes('? "@page { size: letter landscape; margin: .5in; }"')) fail("Tree printing no longer explicitly requests letter landscape");
-const printActionOrder = ["printButton", "groupsButton", "labelsButton"].map((id) => index.indexOf(`id="${id}"`));
-if (printActionOrder.some((position) => position < 0) || !(printActionOrder[0] < printActionOrder[1] && printActionOrder[1] < printActionOrder[2])) fail("Groups is no longer adjacent to Directory");
+const printActionOrder = ["printButton", "outlineButton", "groupsButton", "labelsButton"].map((id) => index.indexOf(`id="${id}"`));
+if (printActionOrder.some((position) => position < 0) || printActionOrder.some((position, item) => item && position <= printActionOrder[item - 1])) fail("Directory, Outline, Groups, and Labels are no longer ordered together");
+if (!iconsSource.includes("outline: __OUTLINE") || !iconsSource.includes("M14.7217 19.0625L31.7969 19.0625")) fail("The requested Outline symbol is missing");
+if (!appSource.includes("function buildOutlineRows") || !appSource.includes("function buildOutlineReport") || !appSource.includes("ignoreCollapsed: true") || !appSource.includes('data-outline-branch=') || !appSource.includes('data-outline-highlight')) fail("Interactive or printable Outline behavior is missing");
+if (!css.includes(".outline-row") || !css.includes(".outline-scan-bar") || !css.includes(".print-outline .outline-row")) fail("Outline screen or print styling is missing");
 const directoryBuilderStart = appSource.indexOf("function buildDirectoryReport");
 const treeBuilderStart = appSource.indexOf("function buildTreeReport");
 const groupsBuilderStart = appSource.indexOf("function buildGroupsReport");
