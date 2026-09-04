@@ -1567,7 +1567,7 @@
   }
 
   function outlineActionHtml(attribute, symbol, label, extra) {
-    return '<button type="button" class="button small outline-action" ' + attribute + (extra || "") + '><span class="outline-action-icon" data-symbol="' + symbol + '" aria-hidden="true"></span><span>' + label + "</span></button>";
+    return '<button type="button" class="outline-action" ' + attribute + (extra || "") + '><span class="outline-action-icon" data-symbol="' + symbol + '" aria-hidden="true"></span><span>' + label + "</span></button>";
   }
 
   function outlinePersonHtml(person, options) {
@@ -1645,7 +1645,7 @@
     const expandAction = outlineActionHtml("data-outline-expand-all", "outlineExpand", "Expand all");
     const collapseAction = outlineActionHtml("data-outline-collapse-all", "outlineCondense", "Condense all");
     const lineageAction = outlineActionHtml('data-outline-highlight aria-pressed="' + String(outlineHighlightEnabled) + '"', "lineageView", "Lineage");
-    return '<section class="tree-panel outline-panel workspace-card" aria-labelledby="outlineTitle"><header class="outline-toolbar"><div class="outline-heading"><span class="eyebrow">Descendant view</span><h2 id="outlineTitle">Outline</h2><span id="outlineCount" class="count-pill" aria-live="polite"></span></div>' + workspaceViewControlHtml() + '<div class="outline-root-controls"><label for="outlineRootSelect"><span>Root</span><select id="outlineRootSelect">' + options + "</select></label>" + selectedRootAction + '</div><div class="outline-actions" role="group" aria-label="Outline controls">' + expandAction + collapseAction + lineageAction + printAction + '</div></header><div class="outline-scroll"><div id="descendantOutline" class="descendant-outline" role="tree" aria-label="Indented descendant outline" tabindex="0"></div></div></section>';
+    return '<section class="tree-panel outline-panel workspace-card" aria-label="Outline"><header class="tree-toolbar outline-toolbar"><div class="tree-view-controls outline-view-controls">' + workspaceViewControlHtml() + '<div class="tree-control-section outline-root-setting"><span class="tree-control-heading">Root</span><div class="outline-root-controls"><label class="visually-hidden" for="outlineRootSelect">Outline root</label><select id="outlineRootSelect">' + options + '</select></div></div><div class="outline-actions" role="group" aria-label="Outline controls">' + selectedRootAction + expandAction + collapseAction + lineageAction + printAction + '</div><span id="outlineCount" class="visually-hidden" aria-live="polite"></span></div></header><div class="outline-scroll"><div id="descendantOutline" class="descendant-outline" role="tree" aria-label="Indented descendant outline" tabindex="0"></div></div></section>';
   }
 
   function renderOutline() {
