@@ -1615,6 +1615,8 @@
 
   function outlineRootPickerHtml(root) {
     const people = outlineLineagePeople();
+    const outlinePeopleCount = root ? family.descendantsOf(root.id, relationshipGraph(state())).length + 1 : 0;
+    const outlinePeopleLabel = outlinePeopleCount + " " + (outlinePeopleCount === 1 ? "person" : "people");
     const options = people.map(function (person) {
       const name = outlineName(person);
       const dates = outlineLifeDates(person);
@@ -1628,7 +1630,7 @@
       return '<button type="button" role="option" data-outline-root-option="' + u.escapeHtml(person.id) + '" data-outline-root-search="' + u.escapeHtml(searchText) + '" aria-selected="' + String(Boolean(root && root.id === person.id)) + '"><strong>' + u.escapeHtml(name) + '</strong><small>(' + u.escapeHtml(dates) + ")</small></button>";
     }).join("");
     const currentName = root ? outlineName(root) : "Choose a root";
-    return '<details class="outline-root-picker"><summary aria-label="Choose Outline root. Current root: ' + u.escapeHtml(currentName) + '"><span>' + u.escapeHtml(currentName) + '</span></summary><div class="outline-root-menu"><label class="outline-root-search-field" for="outlineRootSearch"><span class="visually-hidden">Search Lineage people</span><input id="outlineRootSearch" type="search" autocomplete="off" spellcheck="false" placeholder="Search Lineage" aria-controls="outlineRootOptions"></label><div id="outlineRootOptions" class="outline-root-options" role="listbox" aria-label="Lineage people">' + options + '</div><p class="outline-root-empty" data-outline-root-empty hidden>No matching Lineage people.</p><small id="outlineRootResultCount" class="outline-root-result-count" aria-live="polite">' + people.length + " " + (people.length === 1 ? "person" : "people") + "</small></div></details>";
+    return '<details class="outline-root-picker"><summary aria-label="Choose Outline root. Current root: ' + u.escapeHtml(currentName) + ". " + u.escapeHtml(outlinePeopleLabel) + ' in this Outline"><span class="outline-root-name">' + u.escapeHtml(currentName) + '</span><span class="count-pill outline-root-count">' + u.escapeHtml(outlinePeopleLabel) + '</span></summary><div class="outline-root-menu"><label class="outline-root-search-field" for="outlineRootSearch"><span class="visually-hidden">Search Lineage people</span><input id="outlineRootSearch" type="search" autocomplete="off" spellcheck="false" placeholder="Search Lineage" aria-controls="outlineRootOptions"></label><div id="outlineRootOptions" class="outline-root-options" role="listbox" aria-label="Lineage people">' + options + '</div><p class="outline-root-empty" data-outline-root-empty hidden>No matching Lineage people.</p><small id="outlineRootResultCount" class="outline-root-result-count" aria-live="polite">' + people.length + " " + (people.length === 1 ? "person" : "people") + "</small></div></details>";
   }
 
   function buildOutlineRows(options) {
