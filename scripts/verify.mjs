@@ -29,7 +29,7 @@ if (config.themes.length !== 1) fail("Only the supported McFamily appearance sho
 if (!config.datasetVersion.startsWith(config.datasetSeries + ".")) fail("Dataset version is outside the configured series");
 if (config.controls.maxPrintTreeLevels !== 8 || config.controls.maxPrintTreePeopleAcross !== 10) fail("Tree print density must remain eight levels by ten people");
 if (config.controls.maxPrintLineageLevels !== 12 || config.controls.maxPrintLineagePeopleAcross !== 16) fail("Lineage print density must remain twelve levels by sixteen people");
-if (config.controls.maxPrintOutlineRows !== 20 || config.controls.maxPrintDirectoryUnits !== 28 || config.controls.maxPrintGroupUnits !== 24 || config.controls.maxPrintGroupPeoplePerSection !== 42) fail("Paged report preview limits are invalid");
+if (config.controls.maxPrintOutlineRows !== 40 || config.controls.maxPrintDirectoryUnits !== 56 || config.controls.maxPrintGroupUnits !== 26 || config.controls.maxPrintGroupPeoplePerSection !== 42) fail("Paged report preview limits are invalid");
 if (!Number.isInteger(config.controls.maxPrintTreePages) || config.controls.maxPrintTreePages < 1) fail("Tree print page limit is invalid");
 
 const documentStub = {
@@ -174,6 +174,27 @@ for (const generation of new Set(parentCenteredLayout.nodes.map((node) => node.g
   const row = parentCenteredLayout.nodes.filter((node) => node.generation === generation).sort((first, second) => first.x - second.x);
   if (row.some((node, index) => index && row[index - 1].x + row[index - 1].width > node.x + 0.01)) fail("Parent-centered Tree branches overlap");
 }
+const orderedBranchPeople = [layoutPerson("OR", "01"), layoutPerson("ORS", "", false)];
+const orderedBranchRelationships = [layoutPartner("OR", "ORS")];
+for (let branch = 1; branch <= 3; branch += 1) {
+  orderedBranchPeople.push(layoutPerson("OC" + branch, "01.0" + branch), layoutPerson("OCS" + branch, "", false));
+  orderedBranchRelationships.push(layoutParent("OR", "OC" + branch, "lineal"), layoutParent("ORS", "OC" + branch, "non-lineal"), layoutPartner("OC" + branch, "OCS" + branch));
+  const childCount = branch === 3 ? 6 : 1;
+  for (let child = 1; child <= childCount; child += 1) {
+    orderedBranchPeople.push(layoutPerson("OG" + branch + "-" + child, "01.0" + branch + ".0" + child));
+    orderedBranchRelationships.push(layoutParent("OC" + branch, "OG" + branch + "-" + child, "lineal"), layoutParent("OCS" + branch, "OG" + branch + "-" + child, "non-lineal"));
+  }
+}
+const orderedBranchState = { workspace: { people: orderedBranchPeople, relationships: orderedBranchRelationships } };
+const orderedBranchLayouts = [
+  App.family.layout(orderedBranchState, { mode: "overview", nodeView: "condensed", nameBasis: "lineal", nameLength: "short" }),
+  App.family.layout(orderedBranchState, { mode: "focus", focusId: "OR", ancestorDepth: 10, descendantDepth: 10, nodeView: "condensed", nameBasis: "lineal", nameLength: "short" })
+];
+orderedBranchLayouts.forEach((orderedBranchLayout) => {
+  const orderedBranchNodes = new Map(orderedBranchLayout.nodes.map((node) => [node.id, node]));
+  const orderedCenter = (id) => orderedBranchNodes.get(id).x + orderedBranchNodes.get(id).width / 2;
+  if (!(orderedCenter("OC1") < orderedCenter("OC2") && orderedCenter("OC2") < orderedCenter("OC3") && orderedCenter("OG1-1") < orderedCenter("OG2-1") && orderedCenter("OG2-1") < orderedCenter("OG3-1"))) fail("A wide later descendant branch crossed ahead of an earlier parent branch");
+});
 const printPackingNodes = [
   { id: "A", generation: 1, x: 0, width: 100 },
   { id: "B", generation: 1, x: 126, width: 100 },
@@ -225,7 +246,7 @@ for (const style of ['data-kind="biological"', 'data-kind="adoptive"', 'data-kin
 if (!appSource.includes('kind === "unknown" ? unknownRelationshipMarks(edge, pathId)') || !css.includes(".tree-edge-marks.parent-child-marks") || !css.includes('.print-tree-svg .tree-edge[data-kind="unknown"] { stroke: none; }')) fail("Unknown relationships no longer render with question marks in screen and print trees");
 if (!pwa.includes('serviceWorker.register("sw.js", { updateViaCache: "none" })') || pwa.includes('serviceWorker.register(versionedAsset("sw.js")')) fail("The service worker registration URL must remain stable across builds");
 if (!index.includes('id="hostedAuditSummary" type="text" placeholder="Summary of what changed"') || !css.includes('.hosted-publish-toolbar .status-pill { align-self: center; min-height: 36px; height: 36px;')) fail("The compact publishing inputs regressed");
-if (!appSource.includes('? "@page { size: letter landscape; margin: .5in; }"')) fail("Tree printing no longer explicitly requests letter landscape");
+if (!appSource.includes('mode === "tree"') || !appSource.includes('? "@page { size: letter landscape; margin: .5in; }"') || !appSource.includes(': "@page { size: letter portrait; margin: .5in; }"') || appSource.includes('mode === "tree" || mode === "outline"')) fail("Tree must print landscape while all other reports print portrait");
 for (const previewCall of ['printPreviewPageTitle("Directory", result.pageCount), "directory")', 'printPreviewPageTitle("Groups", result.pageCount), "groups")', 'openPrintPreview(trigger, "Labels Preview", "labels")', 'printPreviewPageTitle("Outline", result.pageCount), "outline")', 'printPreviewPageTitle("Tree", result.pageCount), "tree")']) if (!appSource.includes(previewCall)) fail("A print action no longer opens the shared preview first");
 if (!index.includes('id="printPreviewPrintButton"') || !index.includes('<span class="eyebrow">Print Preview</span>') || !appSource.includes('if (activePrintPreviewMode) invokeNativePrint(activePrintPreviewMode)') || !css.includes('.print-preview-actions { display: flex;')) fail("The print preview header action is missing");
 if (!appSource.includes('data-zoom-step="5" aria-label="Increase zoom by five percent"') || !appSource.includes('data-zoom-step="-5" aria-label="Decrease zoom by five percent"') || !read("assets/js/core/family.js").includes("const verticalGap = 40;") || !appSource.includes("+ 40 * Math.max(0, plannedLevels - 1) + 40")) fail("Tree spacing or five-percent zoom stepping regressed");
@@ -251,7 +272,7 @@ if (!appSource.includes('class="outline-action"') || !appSource.includes('(colla
 if (appSource.includes("Descendant view") || !appSource.includes('class="tree-toolbar outline-toolbar"') || !appSource.includes('class="tree-view-controls outline-view-controls"')) fail("Tree and Outline must switch the available shared-style toolbar without a separate Outline heading");
 if (!css.includes(".outline-row") || !css.includes(".outline-scan-bar") || !css.includes(".outline-action { appearance: none; display: inline-flex; flex-direction: column;") || !css.includes(".print-outline .outline-row") || !css.includes(".workspace-view-switch .tree-option-action { display: inline-flex; flex-direction: column;")) fail("Outline screen, controls, or stacked toolbar styling is missing");
 if (!css.includes(".print-outline .outline-person strong { flex: 1 1 auto; min-width: 0; max-width: none; overflow: visible; overflow-wrap: anywhere;") || !css.includes("text-overflow: clip; white-space: normal;")) fail("Outline print names must remain complete instead of being clipped or ellipsized");
-if (!appSource.includes('class="print-directory print-directory-page print-sheet-page"') || !appSource.includes('class="print-atlas print-atlas-page print-sheet-page"') || !appSource.includes('class="print-outline print-outline-page print-sheet-page"') || !appSource.includes("function printReportMetaHtml") || !css.includes(".print-preview-document > .print-directory-page") || !css.includes("body.printing-outline .print-outline-page")) fail("Directory, Groups, or Outline no longer expose explicit preview page breaks");
+if (!appSource.includes('class="print-directory print-directory-page print-sheet-page"') || !appSource.includes('class="print-atlas print-atlas-page print-sheet-page"') || !appSource.includes('class="print-outline print-outline-page print-sheet-page"') || !appSource.includes("function printReportMetaHtml") || !css.includes(".print-preview-document > .print-directory-page") || !css.includes(".print-preview-document > .print-outline-page { box-sizing: border-box; width: min(8.5in, 100%); height: 11in;") || !css.includes("body.printing-outline .print-outline-page { box-sizing: border-box; width: 7.5in; height: 10in;") || !css.includes("}\n\n.print-atlas > h2")) fail("Directory, Groups, or Outline no longer expose accurate portrait preview page breaks");
 const directoryBuilderStart = appSource.indexOf("function buildDirectoryReport");
 const treeBuilderStart = appSource.indexOf("function buildTreeReport");
 const groupsBuilderStart = appSource.indexOf("function buildGroupsReport");

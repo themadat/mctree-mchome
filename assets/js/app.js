@@ -3124,9 +3124,9 @@
     }
     style.textContent = mode === "labels"
       ? "@page { size: letter; margin: 0; }"
-      : mode === "tree" || mode === "outline"
+      : mode === "tree"
         ? "@page { size: letter landscape; margin: .5in; }"
-        : '@page { size: letter; margin: .5in; @top-right { content: "' + printDate() + '"; color: #555; font: 6pt Helvetica, Arial, sans-serif; } @bottom-left { content: ""; } @bottom-right { content: counter(page) " of " counter(pages); color: #555; font: 6pt Helvetica, Arial, sans-serif; } }';
+        : "@page { size: letter portrait; margin: .5in; }";
     document.body.classList.toggle("printing-labels", mode === "labels");
     document.body.classList.toggle("printing-directory", mode === "directory");
     document.body.classList.toggle("printing-groups", mode === "groups");
@@ -3461,7 +3461,7 @@
     const households = printHouseholds(directoryPeople, context.graph, context.state);
     const reportDate = printDate();
     const householdPages = printItemPages(households, config.controls.maxPrintDirectoryUnits, function (household) {
-      return 2 + household.partners.length + (household.sameAddress.length ? 1 : 0);
+      return 4 + Math.max(0, household.partners.length - 1) + (household.sameAddress.length ? 1 : 0);
     });
     const pageCount = householdPages.length;
     const pages = householdPages.map(function (pageHouseholds, index) {

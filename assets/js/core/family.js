@@ -696,9 +696,10 @@
         const parentCenter = parentCenters.length
           ? parentCenters.reduce(function (sum, value) { return sum + value; }, 0) / parentCenters.length
           : 0;
+        branch.parentCenter = parentCenters.length ? parentCenter : Number.NEGATIVE_INFINITY;
         branch.idealLeft = parentCenter - childAnchorCenter;
       });
-      branches.sort(function (first, second) { return first.idealLeft - second.idealLeft || first.order - second.order; });
+      branches.sort(function (first, second) { return first.parentCenter - second.parentCenter || first.order - second.order; });
       const branchOffsets = [];
       let branchCursor = 0;
       branches.forEach(function (branch, index) {

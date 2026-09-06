@@ -1175,9 +1175,9 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
 .print-preview-scroll { padding: 1rem; background: #4b504e; }
 .print-preview-document { color: #111; font-family: Georgia, "Times New Roman", serif; font-size: 10pt; line-height: 1.35; }
 .print-preview-document > section, .print-preview-document > article { width: min(8.5in, 100%); margin: 0 auto 1rem; padding: .55in; background: #fff; box-shadow: 0 8px 28px rgba(0, 0, 0, .28); }
-.print-preview-document > .print-directory-page, .print-preview-document > .print-atlas-page { box-sizing: border-box; width: min(8.5in, 100%); min-height: 11in; padding: .5in; }
+.print-preview-document > .print-directory-page, .print-preview-document > .print-atlas-page { box-sizing: border-box; width: min(8.5in, 100%); height: 11in; padding: .5in; }
 .print-preview-document > .print-tree-page { box-sizing: border-box; width: min(11in, 100%); padding: .5in; }
-.print-preview-document > .print-outline-page { box-sizing: border-box; width: min(11in, 100%); min-height: 8.5in; padding: .5in; }
+.print-preview-document > .print-outline-page { box-sizing: border-box; width: min(8.5in, 100%); height: 11in; padding: .5in; }
 .print-preview-document > .print-label-sheet { box-sizing: border-box; display: grid; grid-template-columns: repeat(3, 2.625in); grid-template-rows: repeat(10, 1in); column-gap: .125in; width: 8.5in; height: 11in; padding: .5in .1875in; }
 .print-mailing-label { box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; width: 2.625in; height: 1in; padding: .09in .14in; overflow: hidden; font-family: Helvetica, Arial, sans-serif; }
 .print-mailing-label strong, .print-mailing-label span { display: block; overflow-wrap: anywhere; font-size: 9pt; line-height: 1.13; }
@@ -1190,7 +1190,7 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
 .print-outline .print-report-header > div { display: grid; }
 .print-outline .print-report-header p { margin: .015in 0 0; color: #555; font: 7pt Helvetica, Arial, sans-serif; }
 .print-outline-rows { display: grid; }
-.print-outline .outline-row { --outline-person-width: 2.7in; display: grid; grid-template-columns: .18in .28in var(--outline-person-width) minmax(4.05in, auto) minmax(.3in, 1fr); align-items: center; gap: .05in; width: calc(100% - var(--outline-print-offset)); min-width: 0; min-height: .21in; margin: 0 0 0 var(--outline-print-offset); padding: .012in .035in; border: 0; border-bottom: .6pt solid #ccc; border-radius: 0; background: transparent; box-shadow: none; break-inside: avoid-page; page-break-inside: avoid; color: #111; }
+.print-outline .outline-row { --outline-person-width: 2.05in; display: grid; grid-template-columns: .18in .28in var(--outline-person-width) minmax(3.15in, auto) minmax(.3in, 1fr); align-items: center; gap: .05in; width: calc(100% - var(--outline-print-offset)); min-width: 0; min-height: .21in; margin: 0 0 0 var(--outline-print-offset); padding: .012in .035in; border: 0; border-bottom: .6pt solid #ccc; border-radius: 0; background: transparent; box-shadow: none; break-inside: avoid-page; page-break-inside: avoid; color: #111; }
 .print-outline .outline-root-row { margin-bottom: .05in; border: 1pt solid #777; background: #f6f4ef; }
 .print-outline .outline-row.lineage-highlight { background: #e7f0f4; }
 .print-outline .outline-toggle-placeholder { width: .18in; color: #888; }
@@ -1202,7 +1202,7 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
 .print-outline .outline-person small { flex: 0 0 auto; max-width: none; overflow: visible; color: #555; font: 5.6pt Helvetica, Arial, sans-serif; text-overflow: clip; white-space: nowrap; }
 .print-outline .outline-person.deceased small { color: #6c5847; }
 .print-outline .outline-partners { display: block; }
-.print-outline .outline-partner { grid-template-columns: 1.35in var(--outline-person-width); gap: .04in; }
+.print-outline .outline-partner { grid-template-columns: 1.05in var(--outline-person-width); gap: .04in; }
 .print-outline .outline-relationship { color: #555; }
 .print-outline .outline-relationship > span, .print-outline .outline-relationship::after { height: 1pt; background: #a86f00; }
 .print-outline .outline-relationship small { font: 700 4.8pt Helvetica, Arial, sans-serif; }
@@ -1439,40 +1439,42 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
   body.printing-tree .print-tree-page { box-sizing: border-box; width: 10in; height: 7.5in; padding: 0; overflow: hidden; break-after: page; page-break-after: always; }
   body.printing-tree .print-tree-page:last-child { break-after: auto; page-break-after: auto; }
   body.printing-tree .print-tree-svg { width: 10in; height: 6.66in; aspect-ratio: auto; }
-  body.printing-directory .print-directory-page, body.printing-groups .print-atlas-page { box-sizing: border-box; width: 7.5in; min-height: 10in; break-after: page; page-break-after: always; }
-  body.printing-outline .print-outline-page { box-sizing: border-box; width: 10in; min-height: 7.5in; break-after: page; page-break-after: always; }
+  body.printing-directory .print-directory-page, body.printing-groups .print-atlas-page { box-sizing: border-box; width: 7.5in; height: 10in; break-after: page; page-break-after: always; }
+  body.printing-outline .print-outline-page { box-sizing: border-box; width: 7.5in; height: 10in; break-after: page; page-break-after: always; }
   body.printing-directory .print-directory-page:last-child, body.printing-groups .print-atlas-page:last-child, body.printing-outline .print-outline-page:last-child { break-after: auto; page-break-after: auto; }
-  .print-atlas > h2 { margin: 0 0 .08in; }
-  .print-atlas > h2 { break-before: page; }
-  .print-component { margin: .12in 0; padding: .09in; border: 1px solid #888; break-inside: auto; }
-  .print-component > header { display: flex; align-items: flex-end; justify-content: space-between; gap: .1in; padding-bottom: .04in; border-bottom: 2px solid #333; break-after: avoid; }
-  .print-component > header > div { display: grid; }
-  .print-component > header span { color: #555; font: 700 6.5pt Helvetica, Arial, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
-  .print-component > header h3 { margin: 0; font-size: 13pt; }
-  .print-component > header p { margin: 0; color: #555; font-size: 8pt; }
-  .print-generation { display: block; padding: .055in 0; border-top: 1px solid #bbb; break-inside: avoid-page; }
-  .print-generation:first-of-type { border-top: 0; }
-  .print-generation h4 { margin: 0 0 .035in; font: 800 7pt Helvetica, Arial, sans-serif; letter-spacing: .04em; text-transform: uppercase; }
-  .print-generation > div { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .035in; }
-  .print-generation span { display: grid; min-width: 0; padding: .035in .045in; border: 1px solid #bbb; font-size: 8pt; line-height: 1.15; break-inside: avoid; }
-  .print-generation span.print-lineal { border-color: #9f686a; box-shadow: inset 0 0 0 1px #cba6a8; }
-  .print-generation span.print-lineage-highlight { border-color: #8f5b5d; background: #f2e2df; box-shadow: inset 0 0 0 1px #8f5b5d; }
-  .print-generation span.print-deceased { background: #eadcc9; color: #3f3025; }
-  .print-generation span.print-deceased small { color: #6c5847; }
-  .print-generation strong { overflow-wrap: anywhere; font-size: 6.5pt; line-height: 1.05; }
-  .print-map-name-row { display: flex; min-width: 0; align-items: flex-start; justify-content: space-between; gap: .025in; }
-  .print-map-name-row strong { min-width: 0; }
-  .print-bloodline-icon { display: grid; flex: 0 0 auto; width: .085in; height: .11in; color: #8f5b5d; }
-  .print-bloodline-icon .sf-symbol { width: 100%; height: 100%; }
-  .print-generation .print-name-smaller strong { font-size: 5pt; }
-  .print-generation .print-name-smallest strong { font-size: 3.8pt; }
-  .print-generation .print-name-tiniest strong { font-size: 3.1pt; }
-  .print-generation small { color: #555; font: 7pt Helvetica, Arial, sans-serif; }
-  .print-generation-branch { padding: .055in 0; border-top: 1px solid #999; break-before: auto; }
-  .print-generation-branch > header { padding: .04in .055in; border-left: 3px solid #7b4e16; background: #f3efe8; break-after: avoid; }
-  .print-generation-branch > header span { color: #555; font: 700 6.5pt Helvetica, Arial, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
-  .print-generation-branch > header h4 { margin: 0; font-size: 9pt; }
-  .print-directory-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+}
+
+.print-atlas > h2 { margin: 0 0 .08in; }
+.print-atlas > h2 { break-before: page; }
+.print-component { margin: .12in 0; padding: .09in; border: 1px solid #888; break-inside: auto; }
+.print-component > header { display: flex; align-items: flex-end; justify-content: space-between; gap: .1in; padding-bottom: .04in; border-bottom: 2px solid #333; break-after: avoid; }
+.print-component > header > div { display: grid; }
+.print-component > header span { color: #555; font: 700 6.5pt Helvetica, Arial, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+.print-component > header h3 { margin: 0; font-size: 13pt; }
+.print-component > header p { margin: 0; color: #555; font-size: 8pt; }
+.print-generation { display: block; padding: .055in 0; border-top: 1px solid #bbb; break-inside: avoid-page; }
+.print-generation:first-of-type { border-top: 0; }
+.print-generation h4 { margin: 0 0 .035in; font: 800 7pt Helvetica, Arial, sans-serif; letter-spacing: .04em; text-transform: uppercase; }
+.print-generation > div { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .035in; }
+.print-generation span { display: grid; min-width: 0; padding: .035in .045in; border: 1px solid #bbb; font-size: 8pt; line-height: 1.15; break-inside: avoid; }
+.print-generation span.print-lineal { border-color: #9f686a; box-shadow: inset 0 0 0 1px #cba6a8; }
+.print-generation span.print-lineage-highlight { border-color: #8f5b5d; background: #f2e2df; box-shadow: inset 0 0 0 1px #8f5b5d; }
+.print-generation span.print-deceased { background: #eadcc9; color: #3f3025; }
+.print-generation span.print-deceased small { color: #6c5847; }
+.print-generation strong { overflow-wrap: anywhere; font-size: 6.5pt; line-height: 1.05; }
+.print-map-name-row { display: flex; min-width: 0; align-items: flex-start; justify-content: space-between; gap: .025in; }
+.print-map-name-row strong { min-width: 0; }
+.print-bloodline-icon { display: grid; flex: 0 0 auto; width: .085in; height: .11in; color: #8f5b5d; }
+.print-bloodline-icon .sf-symbol { width: 100%; height: 100%; }
+.print-generation .print-name-smaller strong { font-size: 5pt; }
+.print-generation .print-name-smallest strong { font-size: 3.8pt; }
+.print-generation .print-name-tiniest strong { font-size: 3.1pt; }
+.print-generation small { color: #555; font: 7pt Helvetica, Arial, sans-serif; }
+.print-generation-branch { padding: .055in 0; border-top: 1px solid #999; break-before: auto; }
+.print-generation-branch > header { padding: .04in .055in; border-left: 3px solid #7b4e16; background: #f3efe8; break-after: avoid; }
+.print-generation-branch > header span { color: #555; font: 700 6.5pt Helvetica, Arial, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+.print-generation-branch > header h4 { margin: 0; font-size: 9pt; }
+.print-directory-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
   .print-directory-household-column { width: 30%; }
   .print-directory-phone-column { width: 14%; }
   .print-directory-email-column { width: 21%; }
@@ -1527,4 +1529,3 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
   .print-wide { grid-column: 1 / -1; }
   .print-source > p { margin: 0 0 .06in; color: #555; }
   .print-source dl > div { break-inside: avoid; }
-}
