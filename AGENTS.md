@@ -17,7 +17,7 @@ McFamily is a dependency-free static HTML/CSS/JavaScript family atlas. `context/
 - The current five-file McFamily ZIP contract is exact and latest-only. Never add demo/blank first-run bypasses or commit real family data.
 - Relationships are authoritative. Reject missing references, self-links, duplicates, and ancestry cycles; derive relatives and lineage.
 - Use semantic HTML, labels, visible focus, escaped text, safe URLs, touch targets, reduced motion, and the shared inline SVG catalog.
-- Application versions are `major.minor.patch.build`. Every completed app update increments build; a requested major/minor/patch change resets build to `1`. Keep config, release entry, HTML queries, and service-worker ids identical.
+- Application versions are `major.minor.patch.build`. Every completed app update increments build; a requested major/minor/patch change resets build to `1`. Keep config, release entry, HTML queries, service-worker ids, and the version in `.github/workflows/deploy-pages.yml`'s workflow `name` identical.
 
 ## Lifecycle shorthand
 

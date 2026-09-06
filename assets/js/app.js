@@ -1821,7 +1821,7 @@
     const unplacedLineageControl = state().ui.treeMode === "overview" ? '<button type="button" class="tree-line-toggle action-button" data-toggle-unplaced-lineage aria-pressed="' + String(!state().ui.hideUnplacedLineage) + '" title="Toggle unresolved Lineal people"><span class="tree-toggle-symbol" data-symbol="unknownLineal" aria-hidden="true"></span><span class="button-label">?? Lineal</span></button>' : "";
     zoomControls.insertAdjacentHTML("beforebegin", '<button type="button" class="tree-line-toggle tree-line-toggle-stacked action-button" data-toggle-non-lineal aria-pressed="' + String(state().ui.showInferredParentLines) + '" title="Toggle Non-Lineal parent lines"><span class="tree-toggle-symbol" data-symbol="nonLinealLinesFill" aria-hidden="true"></span><span class="button-label">Non-Lineal<br>Lines</span></button>' + unplacedLineageControl);
     const zoomSection = wrapTreeControl(zoomControls, "Zoom", "tree-zoom-setting");
-    if (familyEditingEnabled()) zoomSection.insertAdjacentHTML("afterend", '<button type="button" class="tree-print-action" data-print-tree aria-label="Print the current Family Tree" title="Print the current Family Tree"><span class="tree-print-action-icon" data-symbol="print" aria-hidden="true"></span><span>Tree</span></button>');
+    if (familyEditingEnabled()) zoomSection.insertAdjacentHTML("afterend", '<button type="button" class="tree-print-action" data-print-tree aria-label="Print the current Family Tree" title="Print the current Family Tree"><span class="tree-print-action-icon" data-symbol="print" aria-hidden="true"></span><span>Print</span></button>');
     $("#directoryPanel", workspaceGrid).insertAdjacentHTML("afterend", '<button id="directoryTreeDivider" class="family-resize-handle" type="button" role="separator" aria-orientation="vertical" aria-label="Resize list and Family Tree" aria-valuemin="220" aria-valuemax="480" aria-valuenow="' + state().ui.directoryPanelWidth + '"' + (directoryCollapsed ? " hidden" : "") + '><span aria-hidden="true"></span><output class="family-divider-percentage" aria-hidden="true"></output></button>');
     $(".tree-panel", workspaceGrid).insertAdjacentHTML("afterend", '<button id="treeProfileDivider" class="family-resize-handle" type="button" role="separator" aria-orientation="vertical" aria-label="Resize Family Tree and selected person" aria-valuemin="240" aria-valuemax="600" aria-valuenow="' + state().ui.profilePanelWidth + '"' + (profileCollapsed ? " hidden" : "") + '><span aria-hidden="true"></span><output class="family-divider-percentage" aria-hidden="true"></output></button>');
     $("#directorySort").value = state().ui.directorySort;
@@ -3595,12 +3595,14 @@
       const generationNodes = layout.nodes.filter(function (node) { return generations.has(node.generation); });
       const horizontalBands = printTreeHorizontalBands(generationNodes, visibleEdges, maximumPeopleAcross);
       horizontalBands.forEach(function (horizontalBand, columnIndex) {
-        const selectedNodes = printTreeContextNodes(generationNodes, generationNodes.filter(function (node) { return horizontalBand.nodeIds.has(node.id); }), visibleEdges, maximumPeopleAcross);
-        const selectedIds = new Set(selectedNodes.map(function (node) { return node.id; }));
+        const contextNodes = printTreeContextNodes(generationNodes, generationNodes.filter(function (node) { return horizontalBand.nodeIds.has(node.id); }), visibleEdges, maximumPeopleAcross);
+        const contextIds = new Set(contextNodes.map(function (node) { return node.id; }));
+        const contextEdges = visibleEdges.filter(function (edge) { return contextIds.has(edge.from.id) && contextIds.has(edge.to.id); });
+        const selectedNodes = family.packHorizontalNodeClusters(contextNodes, contextEdges, 26).sort(function (a, b) { return a.generation - b.generation || a.x - b.x; });
         const pageNodeById = new Map(selectedNodes.map(function (node) { return [node.id, node]; }));
         pagePlans.push({
           nodes: selectedNodes,
-          edges: visibleEdges.filter(function (edge) { return selectedIds.has(edge.from.id) && selectedIds.has(edge.to.id); }).map(function (edge) {
+          edges: contextEdges.map(function (edge) {
             return Object.assign({}, edge, { from: pageNodeById.get(edge.from.id), to: pageNodeById.get(edge.to.id) });
           }),
           bounds: printTreeContentBounds(selectedNodes, generationBand.metrics),
