@@ -1175,8 +1175,9 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
 .print-preview-scroll { padding: 1rem; background: #4b504e; }
 .print-preview-document { color: #111; font-family: Georgia, "Times New Roman", serif; font-size: 10pt; line-height: 1.35; }
 .print-preview-document > section, .print-preview-document > article { width: min(8.5in, 100%); margin: 0 auto 1rem; padding: .55in; background: #fff; box-shadow: 0 8px 28px rgba(0, 0, 0, .28); }
+.print-preview-document > .print-directory-page, .print-preview-document > .print-atlas-page { box-sizing: border-box; width: min(8.5in, 100%); min-height: 11in; padding: .5in; }
 .print-preview-document > .print-tree-page { box-sizing: border-box; width: min(11in, 100%); padding: .5in; }
-.print-preview-document > .print-outline { box-sizing: border-box; width: min(11in, 100%); padding: .5in; }
+.print-preview-document > .print-outline-page { box-sizing: border-box; width: min(11in, 100%); min-height: 8.5in; padding: .5in; }
 .print-preview-document > .print-label-sheet { box-sizing: border-box; display: grid; grid-template-columns: repeat(3, 2.625in); grid-template-rows: repeat(10, 1in); column-gap: .125in; width: 8.5in; height: 11in; padding: .5in .1875in; }
 .print-mailing-label { box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; width: 2.625in; height: 1in; padding: .09in .14in; overflow: hidden; font-family: Helvetica, Arial, sans-serif; }
 .print-mailing-label strong, .print-mailing-label span { display: block; overflow-wrap: anywhere; font-size: 9pt; line-height: 1.13; }
@@ -1185,6 +1186,7 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
 .print-preview-document .print-report-header { display: flex; align-items: baseline; justify-content: space-between; gap: .2in; margin: 0 0 .12in; }
 .print-preview-document .print-report-header h1 { margin: 0; }
 .print-preview-document .print-report-header time { color: #555; font: 7pt Helvetica, Arial, sans-serif; white-space: nowrap; }
+.print-report-meta { display: inline-flex; flex: 0 0 auto; align-items: baseline; gap: .1in; color: #555; font: 6.5pt Helvetica, Arial, sans-serif; white-space: nowrap; }
 .print-outline .print-report-header > div { display: grid; }
 .print-outline .print-report-header p { margin: .015in 0 0; color: #555; font: 7pt Helvetica, Arial, sans-serif; }
 .print-outline-rows { display: grid; }
@@ -1437,6 +1439,9 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
   body.printing-tree .print-tree-page { box-sizing: border-box; width: 10in; height: 7.5in; padding: 0; overflow: hidden; break-after: page; page-break-after: always; }
   body.printing-tree .print-tree-page:last-child { break-after: auto; page-break-after: auto; }
   body.printing-tree .print-tree-svg { width: 10in; height: 6.66in; aspect-ratio: auto; }
+  body.printing-directory .print-directory-page, body.printing-groups .print-atlas-page { box-sizing: border-box; width: 7.5in; min-height: 10in; break-after: page; page-break-after: always; }
+  body.printing-outline .print-outline-page { box-sizing: border-box; width: 10in; min-height: 7.5in; break-after: page; page-break-after: always; }
+  body.printing-directory .print-directory-page:last-child, body.printing-groups .print-atlas-page:last-child, body.printing-outline .print-outline-page:last-child { break-after: auto; page-break-after: auto; }
   .print-atlas > h2 { margin: 0 0 .08in; }
   .print-atlas > h2 { break-before: page; }
   .print-component { margin: .12in 0; padding: .09in; border: 1px solid #888; break-inside: auto; }
