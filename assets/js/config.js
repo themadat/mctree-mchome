@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.127",
-      buildId: "0.0.1.127",
+      version: "0.0.1.128",
+      buildId: "0.0.1.128",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -170,13 +170,13 @@
 
     releases: [
       {
-        version: "0.0.1.127",
-        date: "2026-09-04T22:02:40.000Z",
-        title: "Parent-centered Tree branches",
-        summary: "Tree descendant branches now center beneath their specific parents or parent couple while collision packing keeps neighboring families separated.",
+        version: "0.0.1.128",
+        date: "2026-09-04T22:22:50.000Z",
+        title: "Collision-free Tree print",
+        summary: "Tree print pages now separate repeated context cards, the Tree print action is labelled Print, and Pages deployment notifications identify the McFamily version.",
         features: [],
-        improvements: ["Centered each sibling branch beneath its own recorded parent or parent couple", "Packed adjacent family branches without node overlaps"],
-        fixes: [],
+        improvements: ["Renamed the Tree toolbar's print action to Print", "Added a version-labelled GitHub Pages deployment workflow with commit-based run titles"],
+        fixes: ["Packed repeated parent and spouse context on each Tree print page so cards cannot overlap"],
         knownIssues: []
       }
     ],

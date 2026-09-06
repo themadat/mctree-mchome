@@ -500,6 +500,65 @@
     return best ? best.lines : parts.slice(0, 3);
   }
 
+  function packHorizontalNodeClusters(nodes, edges, gap) {
+    const spacing = Math.max(0, Number(gap) || 0);
+    const packedNodes = nodes.map(function (node) { return Object.assign({}, node); });
+    const nodeById = new Map(packedNodes.map(function (node) { return [node.id, node]; }));
+    const parent = new Map(packedNodes.map(function (node) { return [node.id, node.id]; }));
+    function root(id) {
+      let current = id;
+      while (parent.get(current) !== current) current = parent.get(current);
+      let cursor = id;
+      while (parent.get(cursor) !== cursor) {
+        const next = parent.get(cursor);
+        parent.set(cursor, current);
+        cursor = next;
+      }
+      return current;
+    }
+    (edges || []).forEach(function (edge) {
+      if (!edge || !edge.relationship || edge.relationship.type !== "partner") return;
+      const first = edge.from && nodeById.get(edge.from.id);
+      const second = edge.to && nodeById.get(edge.to.id);
+      if (!first || !second || first.generation !== second.generation) return;
+      const firstRoot = root(first.id);
+      const secondRoot = root(second.id);
+      if (firstRoot !== secondRoot) parent.set(secondRoot, firstRoot);
+    });
+    const generations = new Map();
+    packedNodes.forEach(function (node) {
+      if (!generations.has(node.generation)) generations.set(node.generation, []);
+      generations.get(node.generation).push(node);
+    });
+    generations.forEach(function (generationNodes) {
+      const grouped = new Map();
+      generationNodes.forEach(function (node) {
+        const key = root(node.id);
+        if (!grouped.has(key)) grouped.set(key, []);
+        grouped.get(key).push(node);
+      });
+      const clusters = Array.from(grouped.values()).map(function (members) {
+        const left = Math.min.apply(null, members.map(function (node) { return node.x; }));
+        const right = Math.max.apply(null, members.map(function (node) { return node.x + node.width; }));
+        return { members: members, left: left, right: right };
+      }).sort(function (first, second) { return first.left - second.left || first.right - second.right; });
+      if (!clusters.length) return;
+      const originalCenter = (clusters[0].left + Math.max.apply(null, clusters.map(function (cluster) { return cluster.right; }))) / 2;
+      let cursor = clusters[0].left - spacing;
+      clusters.forEach(function (cluster) {
+        const shift = Math.max(0, cursor + spacing - cluster.left);
+        if (shift) cluster.members.forEach(function (node) { node.x += shift; });
+        cluster.left += shift;
+        cluster.right += shift;
+        cursor = cluster.right;
+      });
+      const packedCenter = (clusters[0].left + clusters[clusters.length - 1].right) / 2;
+      const recenter = originalCenter - packedCenter;
+      if (recenter) generationNodes.forEach(function (node) { node.x += recenter; });
+    });
+    return packedNodes;
+  }
+
   function layout(state, options) {
     const settings = Object.assign({ mode: "focus", focusId: "", ancestorDepth: 2, descendantDepth: 2, nodeView: "condensed", nameBasis: "lineal", nameLength: "short", hideUnplacedLineage: false }, options || {});
     if (options && options.depth != null) {
@@ -773,6 +832,7 @@
     partnerMaritalStatusId: partnerMaritalStatusId,
     partnerLineKind: partnerLineKind,
     treeNameLines: treeNameLines,
+    packHorizontalNodeClusters: packHorizontalNodeClusters,
     layout: layout,
     validateRelationshipDraft: validateRelationshipDraft,
     lifespan: lifespan

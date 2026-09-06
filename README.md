@@ -2,7 +2,7 @@
 
 McFamily is a private family atlas: an interactive lineage tree, indented descendant Outline, searchable people list, person/place editor, saved-change history, and print-ready family directory. It is plain HTML, CSS, and JavaScript with no runtime dependencies or custom backend.
 
-Current pre-1.0 version: `0.0.1.127`. Application versions use `major.minor.patch.build`; the first repository 1.0 cut is therefore `1.0.0.1`.
+Current pre-1.0 version: `0.0.1.128`. Application versions use `major.minor.patch.build`; the first repository 1.0 cut is therefore `1.0.0.1`.
 
 ## Use McFamily
 
@@ -46,6 +46,7 @@ assets/js/config.js         Identity, versions, limits, vocabularies, help, rele
 assets/js/core/             State, storage, family, package, cloud, component, and PWA modules
 assets/js/app.js            Workspace rendering and interaction
 assets/icons/               Deployed PWA assets
+.github/workflows/          Version-labelled GitHub Pages deployment
 scripts/verify.mjs          Fast dependency-free repository verification
 context/LLM_HANDOFF.md      Current implementation invariants for agents
 context/WISHES.md           Explicit lifecycle backlog
@@ -62,19 +63,20 @@ Run the fast baseline after every change:
 node scripts/verify.mjs
 ```
 
-It checks JavaScript syntax, manifests, version alignment, asset references, retired compatibility tokens, the absence of a duplicate Pages publisher, and `git diff --check`. Use [docs/TESTING.md](docs/TESTING.md) to select browser tests for the area changed; run its full release gate only for a release cut.
+It checks JavaScript syntax, manifests, version alignment including the Pages workflow name, asset references, retired compatibility tokens, a single Pages publisher, and `git diff --check`. Use [docs/TESTING.md](docs/TESTING.md) to select browser tests for the area changed; run its full release gate only for a release cut.
 
 Architecture and privacy boundaries are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Do not commit synthetic or real data fixtures unless they are explicitly safe and necessary.
 
 ## Publishing
 
-GitHub Pages is configured to publish the repository's `main` branch from its root. The generated **pages build and deployment** run is the authoritative production result; no second workflow copies the site to `gh-pages`.
+GitHub Pages must use **Settings → Pages → GitHub Actions** as its only publishing source. The checked-in `deploy-pages.yml` workflow publishes the repository root after each push to `main`; do not also enable **Deploy from a branch**, which would create duplicate deployments and notifications. Its run title mirrors the required versioned commit subject in Actions, while its workflow name includes the app name and current version for GitHub Mobile push notifications.
 
 An application release must keep these surfaces identical:
 
 - `assets/js/config.js` identity version/build and sole current release entry
 - every `?v=` query and visible version in `index.html`
 - `CACHE_NAME` and `ASSET_VERSION` in `sw.js`
+- the version in `.github/workflows/deploy-pages.yml`'s workflow `name`
 - current documentation
 
 The private encrypted family vault is published separately from inside McFamily and remains recoverable through its data repository history.

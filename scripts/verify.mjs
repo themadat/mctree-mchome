@@ -172,6 +172,16 @@ for (const generation of new Set(parentCenteredLayout.nodes.map((node) => node.g
   const row = parentCenteredLayout.nodes.filter((node) => node.generation === generation).sort((first, second) => first.x - second.x);
   if (row.some((node, index) => index && row[index - 1].x + row[index - 1].width > node.x + 0.01)) fail("Parent-centered Tree branches overlap");
 }
+const printPackingNodes = [
+  { id: "A", generation: 1, x: 0, width: 100 },
+  { id: "B", generation: 1, x: 126, width: 100 },
+  { id: "C", generation: 1, x: 190, width: 100 },
+  { id: "D", generation: 1, x: 270, width: 100 }
+];
+const printPackingEdges = [{ relationship: { type: "partner" }, from: printPackingNodes[0], to: printPackingNodes[1] }];
+const packedPrintNodes = App.family.packHorizontalNodeClusters(printPackingNodes, printPackingEdges, 26).sort((first, second) => first.x - second.x);
+if (packedPrintNodes.some((node, index) => index && packedPrintNodes[index - 1].x + packedPrintNodes[index - 1].width + 26 > node.x + 0.01)) fail("Tree print context cards overlap");
+if (Math.abs((packedPrintNodes.find((node) => node.id === "B").x - packedPrintNodes.find((node) => node.id === "A").x) - 126) > 0.01 || printPackingNodes[2].x !== 190) fail("Tree print packing broke partner spacing or mutated the live Tree");
 
 const index = read("index.html");
 const css = read("assets/css/app.css");
@@ -182,6 +192,7 @@ const appSource = read("assets/js/app.js");
 const familySource = read("assets/js/core/family.js");
 const componentsSource = read("assets/js/core/components.js");
 const iconsSource = read("assets/js/icons.js");
+const pagesWorkflow = read(".github/workflows/deploy-pages.yml");
 if (!index.includes('id="relationPerson1Search"') || !index.includes('id="relationPerson2Search"') || !appSource.includes("model.fuzzySearchMatch(query, searchText)")) fail("Connect Existing People search controls are missing");
 if (!index.includes('id="unknownPerson"') || !appSource.includes('data-rebuild-lineage="') || !appSource.includes("family.isLineageEligiblePerson(root.id, sourceState)")) fail("Unknown person or Editor lineage repair controls are missing");
 if (!index.includes('id="adminIntegritySection"') || !index.includes("Bad Lineage IDs") || !index.includes("Unknown or Invalid Relationships") || !appSource.includes("renderIntegrityIssues();")) fail("Admin Data Cleanup lists are missing from Settings");
@@ -216,14 +227,14 @@ if (!appSource.includes('? "@page { size: letter landscape; margin: .5in; }"')) 
 for (const previewCall of ['openPrintPreview(trigger, "Directory Preview", "directory")', 'openPrintPreview(trigger, "Groups Preview", "groups")', 'openPrintPreview(trigger, "Labels Preview", "labels")', 'openPrintPreview(trigger, "Outline Preview", "outline")', '"pages"), "tree")']) if (!appSource.includes(previewCall)) fail("A print action no longer opens the shared preview first");
 if (!index.includes('id="printPreviewPrintButton"') || !index.includes('<span class="eyebrow">Print Preview</span>') || !appSource.includes('if (activePrintPreviewMode) invokeNativePrint(activePrintPreviewMode)') || !css.includes('.print-preview-actions { display: flex;')) fail("The print preview header action is missing");
 if (!appSource.includes('data-zoom-step="5" aria-label="Increase zoom by five percent"') || !appSource.includes('data-zoom-step="-5" aria-label="Decrease zoom by five percent"') || !read("assets/js/core/family.js").includes("const verticalGap = 40;") || !appSource.includes("+ 40 * Math.max(0, plannedLevels - 1) + 40")) fail("Tree spacing or five-percent zoom stepping regressed");
-if (!appSource.includes("function printTreeGenerationBands") || !appSource.includes("function printTreeHorizontalBands") || !appSource.includes("function printTreePartnerClusters") || !appSource.includes("function printTreeContextNodes") || !appSource.includes('settings.push(config.controls.maxPrintTreeLevels + " Levels / " + config.controls.maxPrintTreePeopleAcross + " People Maximum")')) fail("Semantic Tree print pagination is missing");
+if (!appSource.includes("function printTreeGenerationBands") || !appSource.includes("function printTreeHorizontalBands") || !appSource.includes("function printTreePartnerClusters") || !appSource.includes("function printTreeContextNodes") || !appSource.includes("family.packHorizontalNodeClusters(contextNodes, contextEdges, 26)") || !appSource.includes('settings.push(config.controls.maxPrintTreeLevels + " Levels / " + config.controls.maxPrintTreePeopleAcross + " People Maximum")')) fail("Semantic or collision-free Tree print pagination is missing");
 if (!appSource.includes("function ancestorAtGeneration") || !appSource.includes("family.isLinealRelationship(b.relationship)") || !appSource.includes("return assignments.flatMap(function (ids) { return splitCandidate(ids, depth + 1); })")) fail("Tree print pages no longer keep descendant branches with their parents");
 if (!appSource.includes('width="9" height="9"') || !appSource.includes('(lifeY - 8)') || !read("assets/js/core/family.js").includes('(detailed ? 26 : 12) + Math.max(1, lineCount) * 14 + (detailed && settings.showDeveloperScale ? 13 : 0)')) fail("Detailed Tree cards are no longer using the compact shared metadata row");
 const printActionOrder = ["printButton", "groupsButton", "labelsButton"].map((id) => index.indexOf(`id="${id}"`));
 if (printActionOrder.some((position) => position < 0) || printActionOrder.some((position, item) => item && position <= printActionOrder[item - 1])) fail("Directory, Groups, and Labels are no longer ordered together");
 if (index.includes('id="outlineButton"') || !appSource.includes('class="segmented workspace-view-switch"') || !appSource.includes('data-workspace-view="outline"')) fail("Outline must be available beside Tree in the central view switch, not the application toolbar");
 if (!iconsSource.includes("outline: __OUTLINE") || !iconsSource.includes("M14.7217 19.0625L31.7969 19.0625")) fail("The requested Outline symbol is missing");
-if (!iconsSource.includes("print: __PRINTER_FILL") || !iconsSource.includes("M25.615 5.30273L7.05176 5.30273") || !appSource.includes('data-print-tree aria-label="Print the current Family Tree"') || !appSource.includes('data-symbol="print"') || !appSource.includes('outlineActionHtml("data-print-outline", "print", "Print")')) fail("Tree and Outline no longer share the requested print symbol");
+if (!iconsSource.includes("print: __PRINTER_FILL") || !iconsSource.includes("M25.615 5.30273L7.05176 5.30273") || !appSource.includes('data-print-tree aria-label="Print the current Family Tree"') || !appSource.includes('data-symbol="print"') || !appSource.includes('<span>Print</span></button>') || !appSource.includes('outlineActionHtml("data-print-outline", "print", "Print")')) fail("Tree and Outline no longer share the requested Print action");
 if (!iconsSource.includes("outlineRoot: __OUTLINE_ROOT") || !iconsSource.includes("M9.77051 24.947L33.7012 24.947") || !appSource.includes('"outlineRoot", "Reset Root"')) fail("The requested Outline root symbol or Reset Root action is missing");
 if (!iconsSource.includes("outlineExpand: __OUTLINE_EXPAND") || !iconsSource.includes("M0.523688 14.043L11.0999 20.2344") || !iconsSource.includes("outlineCondense: __OUTLINE_CONDENSE") || !iconsSource.includes("M1.68945 20.2344L12.2656 14.043") || !css.includes('[data-symbol="outlineExpand"] .sf-symbol') || !css.includes("transform: rotate(90deg)")) fail("The requested rotated and directionally distinct Outline expand and condense symbols are missing");
 if (!appSource.includes("function buildOutlineRows") || !appSource.includes("function buildOutlineReport") || !appSource.includes("ignoreCollapsed: true") || !appSource.includes('data-outline-branch=') || !appSource.includes('data-outline-highlight')) fail("Interactive or printable Outline behavior is missing");
@@ -248,6 +259,9 @@ const swVersion = (sw.match(/ASSET_VERSION = "([^"]+)"/) || [])[1];
 if (indexVersion !== config.identity.version || swVersion !== config.identity.version) fail("HTML, config, and service-worker versions differ");
 const queryVersions = Array.from(index.matchAll(/\?v=([0-9.]+)/g), (match) => match[1]);
 if (!queryVersions.length || queryVersions.some((version) => version !== config.identity.version)) fail("HTML asset query versions differ");
+if (!pagesWorkflow.includes("name: Deploy " + config.identity.name + " v" + config.identity.version)) fail("Pages workflow name does not identify the current app version");
+if (!pagesWorkflow.includes('run-name: Deploy ${{ github.event.head_commit.message }}')) fail("Pages run title no longer mirrors the versioned commit subject");
+for (const contract of ["actions/checkout@v6", "actions/configure-pages@v5", "actions/upload-pages-artifact@v4", "actions/deploy-pages@v4", "path: ."]) if (!pagesWorkflow.includes(contract)) fail("Pages workflow is missing " + contract);
 
 const manifests = ["manifest.webmanifest", "manifest-dark.webmanifest"].map((path) => [path, JSON.parse(read(path))]);
 for (const [path, manifest] of manifests) {
@@ -272,7 +286,8 @@ for (const token of forbidden) {
   if (hit) fail("Retired token " + token + " remains in " + hit);
 }
 
-if (existsSync(resolve(root, ".github/workflows/deploy.yml"))) fail("The redundant gh-pages publisher must remain removed");
+const pagesPublishers = filesBelow(".github/workflows").filter((path) => /\.ya?ml$/.test(path) && read(path).includes("actions/deploy-pages@"));
+if (pagesPublishers.length !== 1 || pagesPublishers[0] !== ".github/workflows/deploy-pages.yml") fail("Exactly one checked-in Pages publisher must remain configured");
 for (const path of ["index.html", "manifest.webmanifest", "manifest-dark.webmanifest", "sw.js", "assets/css", "assets/js", "assets/icons"]) {
   if (!existsSync(resolve(root, path)) || statSync(resolve(root, path)).size === 0) fail("Required runtime path is missing: " + path);
 }
