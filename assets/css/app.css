@@ -1439,8 +1439,8 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
   body.printing-tree .print-tree-page { box-sizing: border-box; width: 10in; height: 7.5in; padding: 0; overflow: hidden; break-after: page; page-break-after: always; }
   body.printing-tree .print-tree-page:last-child { break-after: auto; page-break-after: auto; }
   body.printing-tree .print-tree-svg { width: 10in; height: 6.66in; aspect-ratio: auto; }
-  body.printing-directory .print-directory-page, body.printing-groups .print-atlas-page { box-sizing: border-box; width: 7.5in; height: 10in; break-after: page; page-break-after: always; }
-  body.printing-outline .print-outline-page { box-sizing: border-box; width: 7.5in; height: 10in; break-after: page; page-break-after: always; }
+  body.printing-directory .print-directory-page, body.printing-groups .print-atlas-page { box-sizing: border-box; width: 7.5in; break-after: page; page-break-after: always; }
+  body.printing-outline .print-outline-page { box-sizing: border-box; width: 7.5in; break-after: page; page-break-after: always; }
   body.printing-directory .print-directory-page:last-child, body.printing-groups .print-atlas-page:last-child, body.printing-outline .print-outline-page:last-child { break-after: auto; page-break-after: auto; }
 }
 
