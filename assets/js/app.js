@@ -1639,7 +1639,7 @@
     const current = state();
     const graph = relationshipGraph(current);
     const root = outlineRootPerson();
-    if (!root) return { html: "", root: null, visibleCount: 0, branchKeys: [], highlightPath: null };
+    if (!root) return { html: "", rows: [], root: null, visibleCount: 0, branchKeys: [], highlightPath: null };
     const availableHighlightPath = outlinePathKeys(root, current.ui.selectedPersonId, graph);
     const highlightPath = outlineHighlightEnabled ? availableHighlightPath : null;
     const rows = [];
@@ -1676,7 +1676,7 @@
       });
     }
     visit(root, 0, [], new Set());
-    return { html: rows.join(""), root: root, visibleCount: visiblePersonIds.size, branchKeys: branchKeys, highlightPath: highlightPath, availableHighlightPath: availableHighlightPath };
+    return { html: rows.join(""), rows: rows, root: root, visibleCount: visiblePersonIds.size, branchKeys: branchKeys, highlightPath: highlightPath, availableHighlightPath: availableHighlightPath };
   }
 
   function outlinePanelHtml(nameControls) {
@@ -3258,8 +3258,8 @@
     return '<tbody class="print-directory-household ' + sizeClass + '"><tr class="print-household-card-row"><td colspan="4"><table class="print-household-card">' + columns + "<tbody>" + householdRows + sameAddress + '<tr class="print-household-lineage"><td colspan="4">' + printLineageProgressionHtml(main, graph) + "</td></tr></tbody></table></td></tr></tbody>";
   }
 
-  function printGenerationSection(generation, people) {
-    return '<section class="print-generation"><h4>Generation ' + generation + '</h4><div>' + people.slice().sort(function (a, b) {
+  function printGenerationSection(generation, people, continued) {
+    return '<section class="print-generation"><h4>Generation ' + generation + (continued ? " (continued)" : "") + '</h4><div>' + people.slice().sort(function (a, b) {
       return family.compareLineage(a, b) || model.sortName(a).localeCompare(model.sortName(b));
     }).map(function (person) {
       const classes = printMapPersonClasses(person).trim();
@@ -3318,6 +3318,62 @@
     return { people: people, relationships: relationships, state: printState, graph: graph };
   }
 
+  function printItemPages(items, maximum, weightFor) {
+    const pages = [];
+    let page = [];
+    let weight = 0;
+    items.forEach(function (item) {
+      const itemWeight = Math.max(1, Number(weightFor ? weightFor(item) : 1) || 1);
+      if (page.length && weight + itemWeight > maximum) {
+        pages.push(page);
+        page = [];
+        weight = 0;
+      }
+      page.push(item);
+      weight += itemWeight;
+    });
+    if (page.length || !pages.length) pages.push(page);
+    return pages;
+  }
+
+  function printReportMetaHtml(reportDate, pageNumber, pageCount) {
+    return '<span class="print-report-meta"><span>Page ' + pageNumber + " of " + pageCount + '</span><time datetime="' + reportDate + '">' + reportDate + "</time></span>";
+  }
+
+  function printPreviewPageTitle(label, pageCount) {
+    return label + " Preview · " + pageCount + " " + (pageCount === 1 ? "page" : "pages");
+  }
+
+  function printGroupsPageBody(segments) {
+    if (!segments.length) return '<p class="print-directory-empty">No family groups are available.</p>';
+    let html = "";
+    let componentId = "";
+    let branchKey = "";
+    let componentOpen = false;
+    let branchOpen = false;
+    segments.forEach(function (segment) {
+      if (segment.componentId !== componentId) {
+        if (branchOpen) html += "</section>";
+        if (componentOpen) html += "</article>";
+        html += '<article class="print-component"><header><div><span>Root Ancestor</span><h3>' + u.escapeHtml(model.displayName(segment.rootAncestor)) + "</h3></div></header>";
+        componentId = segment.componentId;
+        branchKey = "";
+        componentOpen = true;
+        branchOpen = false;
+      }
+      if (segment.branchKey !== branchKey) {
+        if (branchOpen) html += "</section>";
+        branchKey = segment.branchKey;
+        branchOpen = Boolean(branchKey);
+        if (branchOpen) html += '<section class="print-generation-branch"><header><span>Generation 3 Line</span><h4>' + u.escapeHtml(segment.branchLabel) + "</h4></header>";
+      }
+      html += printGenerationSection(segment.generation, segment.people, segment.continued);
+    });
+    if (branchOpen) html += "</section>";
+    if (componentOpen) html += "</article>";
+    return html;
+  }
+
   function buildGroupsReport() {
     const context = printableFamilyContext();
     const people = context.people;
@@ -3331,14 +3387,20 @@
     }).sort(function (a, b) {
       return Number(Boolean(georgeMcMillenRoot && b.includes(georgeMcMillenRoot.id))) - Number(Boolean(georgeMcMillenRoot && a.includes(georgeMcMillenRoot.id)));
     });
-    const componentHtml = componentsList.map(function (ids) {
+    const segments = [];
+    componentsList.forEach(function (ids) {
       const componentPeople = ids.map(function (id) { return graph.peopleById.get(id); }).filter(Boolean);
       const idSet = new Set(ids);
+      const componentId = ids.slice().sort().join("|");
       const groups = new Map();
       componentPeople.forEach(function (person) { const level = printGenerations.get(person.id) || 0; if (!groups.has(level)) groups.set(level, []); groups.get(level).push(person); });
       const sortedLevels = Array.from(groups.keys()).sort(function (a, b) { return a - b; });
       const rootAncestor = printComponentRoot(ids, graph, printGenerations);
-      const earlyGenerations = sortedLevels.filter(function (level) { return level <= 3; }).map(function (level) { return printGenerationSection(level, groups.get(level)); }).join("");
+      sortedLevels.filter(function (level) { return level <= 3; }).forEach(function (level) {
+        printItemPages(groups.get(level), config.controls.maxPrintGroupPeoplePerSection).forEach(function (generationPeople, index) {
+          segments.push({ componentId: componentId, rootAncestor: rootAncestor, branchKey: "", branchLabel: "", generation: level, people: generationPeople, continued: index > 0 });
+        });
+      });
       const branches = new Map();
       sortedLevels.filter(function (level) { return level >= 4; }).forEach(function (level) {
         groups.get(level).forEach(function (person) {
@@ -3349,27 +3411,65 @@
           branches.get(key).generations.get(level).push(person);
         });
       });
-      const branchHtml = Array.from(branches.values()).sort(function (a, b) {
-        if (!a.anchor) return 1;
-        if (!b.anchor) return -1;
-        return family.compareLineage(a.anchor, b.anchor) || model.sortName(a.anchor).localeCompare(model.sortName(b.anchor));
-      }).map(function (branch) {
+      Array.from(branches.entries()).sort(function (a, b) {
+        const first = a[1];
+        const second = b[1];
+        if (!first.anchor) return 1;
+        if (!second.anchor) return -1;
+        return family.compareLineage(first.anchor, second.anchor) || model.sortName(first.anchor).localeCompare(model.sortName(second.anchor));
+      }).forEach(function (entry) {
+        const key = entry[0];
+        const branch = entry[1];
         const label = branch.anchor ? "Descendants of " + model.displayName(branch.anchor) : "Other Later Generations";
-        return '<section class="print-generation-branch"><header><span>Generation 3 Line</span><h4>' + u.escapeHtml(label) + '</h4></header>' + Array.from(branch.generations.keys()).sort(function (a, b) { return a - b; }).map(function (level) { return printGenerationSection(level, branch.generations.get(level)); }).join("") + "</section>";
-      }).join("");
-      return '<article class="print-component"><header><div><span>Root Ancestor</span><h3>' + u.escapeHtml(model.displayName(rootAncestor)) + "</h3></div></header>" + earlyGenerations + branchHtml + "</article>";
-    }).join("");
+        Array.from(branch.generations.keys()).sort(function (a, b) { return a - b; }).forEach(function (level) {
+          printItemPages(branch.generations.get(level), config.controls.maxPrintGroupPeoplePerSection).forEach(function (generationPeople, index) {
+            segments.push({ componentId: componentId, rootAncestor: rootAncestor, branchKey: componentId + "|" + key, branchLabel: label, generation: level, people: generationPeople, continued: index > 0 });
+          });
+        });
+      });
+    });
+    const groupPages = [];
+    let groupPage = [];
+    let groupPageUnits = 0;
+    segments.forEach(function (segment) {
+      const prior = groupPage[groupPage.length - 1];
+      let units = 1 + Math.ceil(segment.people.length / 6);
+      if (!prior || prior.componentId !== segment.componentId) units += 2;
+      if (segment.branchKey && (!prior || prior.componentId !== segment.componentId || prior.branchKey !== segment.branchKey)) units += 1;
+      if (groupPage.length && groupPageUnits + units > config.controls.maxPrintGroupUnits) {
+        groupPages.push(groupPage);
+        groupPage = [];
+        groupPageUnits = 0;
+        units = 3 + Math.ceil(segment.people.length / 6) + (segment.branchKey ? 1 : 0);
+      }
+      groupPage.push(segment);
+      groupPageUnits += units;
+    });
+    if (groupPage.length || !groupPages.length) groupPages.push(groupPage);
     const reportDate = printDate();
-    $("#printReport").innerHTML = '<section class="print-atlas"><header class="print-report-header"><h1>Family Groups</h1><time datetime="' + reportDate + '">' + reportDate + "</time></header>" + componentHtml + "</section>";
+    const pageCount = groupPages.length;
+    const pages = groupPages.map(function (pageSegments, index) {
+      return '<section class="print-atlas print-atlas-page print-sheet-page" aria-label="Family Groups page ' + (index + 1) + " of " + pageCount + '"><header class="print-report-header"><h1>Family Groups</h1>' + printReportMetaHtml(reportDate, index + 1, pageCount) + "</header>" + printGroupsPageBody(pageSegments) + "</section>";
+    });
+    $("#printReport").innerHTML = pages.join("");
+    return { pageCount: pageCount };
   }
 
   function buildDirectoryReport() {
     const context = printableFamilyContext();
     const directoryPeople = printDirectoryPeople(context.people, context.state);
     const households = printHouseholds(directoryPeople, context.graph, context.state);
-    const directoryHtml = households.length ? '<table class="print-directory-table"><colgroup><col class="print-directory-household-column"><col class="print-directory-phone-column"><col class="print-directory-email-column"><col class="print-directory-address-column"></colgroup><thead><tr><th scope="col">Household</th><th scope="col">Phone</th><th scope="col">Email</th><th scope="col"><span class="print-directory-address-heading"><span>Address</span><span>Landline</span></span></th></tr></thead>' + households.map(function (household) { return printHouseholdHtml(household, context.graph); }).join("") + "</table>" : '<p class="print-directory-empty">No phone, email, or address information is recorded.</p>';
     const reportDate = printDate();
-    $("#printReport").innerHTML = '<section class="print-directory"><header class="print-report-header"><h1>Directory of McMillen Clan</h1><time datetime="' + reportDate + '">' + reportDate + "</time></header>" + directoryHtml + "</section>";
+    const householdPages = printItemPages(households, config.controls.maxPrintDirectoryUnits, function (household) {
+      return 2 + household.partners.length + (household.sameAddress.length ? 1 : 0);
+    });
+    const pageCount = householdPages.length;
+    const pages = householdPages.map(function (pageHouseholds, index) {
+      const directoryHtml = pageHouseholds.length ? '<table class="print-directory-table"><colgroup><col class="print-directory-household-column"><col class="print-directory-phone-column"><col class="print-directory-email-column"><col class="print-directory-address-column"></colgroup><thead><tr><th scope="col">Household</th><th scope="col">Phone</th><th scope="col">Email</th><th scope="col"><span class="print-directory-address-heading"><span>Address</span><span>Landline</span></span></th></tr></thead>' + pageHouseholds.map(function (household) { return printHouseholdHtml(household, context.graph); }).join("") + "</table>" : '<p class="print-directory-empty">No phone, email, or address information is recorded.</p>';
+      return '<section class="print-directory print-directory-page print-sheet-page" aria-label="Directory page ' + (index + 1) + " of " + pageCount + '"><header class="print-report-header"><h1>Directory of McMillen Clan</h1>' + printReportMetaHtml(reportDate, index + 1, pageCount) + "</header>" + directoryHtml + "</section>";
+    });
+    $("#printReport").innerHTML = pages.join("");
+    return { pageCount: pageCount };
   }
 
   function buildOutlineReport() {
@@ -3377,8 +3477,13 @@
     if (!result.root) return { error: "The Descendant Outline has no root person to print." };
     const reportDate = printDate();
     const rootName = model.treeName(result.root, "lineal", "full");
-    $("#printReport").innerHTML = '<section class="print-outline"><header class="print-report-header"><div><h1>Descendant Outline</h1><p>Root: ' + u.escapeHtml(rootName) + '</p></div><time datetime="' + reportDate + '">' + reportDate + '</time></header><div class="print-outline-rows">' + result.html + "</div></section>";
-    return { error: "" };
+    const outlinePages = printItemPages(result.rows, config.controls.maxPrintOutlineRows);
+    const pageCount = outlinePages.length;
+    const pages = outlinePages.map(function (rows, index) {
+      return '<section class="print-outline print-outline-page print-sheet-page" aria-label="Descendant Outline page ' + (index + 1) + " of " + pageCount + '"><header class="print-report-header"><div><h1>Descendant Outline</h1><p>Root: ' + u.escapeHtml(rootName) + "</p></div>" + printReportMetaHtml(reportDate, index + 1, pageCount) + '</header><div class="print-outline-rows">' + rows.join("") + "</div></section>";
+    });
+    $("#printReport").innerHTML = pages.join("");
+    return { error: "", pageCount: pageCount };
   }
 
   function printTreeGenerationBands(metrics, maximum) {
@@ -3585,9 +3690,8 @@
     ];
     if (fullTree) settings.push(current.ui.hideUnplacedLineage ? "?? Lineal Hidden" : "?? Lineal Shown");
     const visibleEdges = layout.edges.filter(function (edge) { return current.ui.showInferredParentLines || !isNonLinealParentEdge(edge); });
-    const zoomForCapacity = Math.max(1, zoom);
-    const maximumLevels = Math.max(2, Math.min(config.controls.maxPrintTreeLevels, Math.floor(config.controls.maxPrintTreeLevels / zoomForCapacity)));
-    const maximumPeopleAcross = Math.max(3, Math.min(config.controls.maxPrintTreePeopleAcross, Math.floor(config.controls.maxPrintTreePeopleAcross / zoomForCapacity)));
+    const maximumLevels = fullTree ? config.controls.maxPrintTreeLevels : config.controls.maxPrintLineageLevels;
+    const maximumPeopleAcross = fullTree ? config.controls.maxPrintTreePeopleAcross : config.controls.maxPrintLineagePeopleAcross;
     const generationBands = printTreeGenerationBands(layout.generationMetrics, maximumLevels);
     const pagePlans = [];
     generationBands.forEach(function (generationBand, rowIndex) {
@@ -3618,7 +3722,7 @@
       });
     });
     const pageCount = pagePlans.length;
-    if (pageCount > config.controls.maxPrintTreePages) return { error: "This zoom would create " + pageCount + " pages. Zoom out until the Tree needs " + config.controls.maxPrintTreePages + " pages or fewer." };
+    if (pageCount > config.controls.maxPrintTreePages) return { error: "This view would create " + pageCount + " pages. Switch to Lineage or reduce its visible Ancestors and Descendants until the Tree needs " + config.controls.maxPrintTreePages + " pages or fewer." };
     const maximumNodeWidth = Math.max.apply(null, layout.nodes.map(function (node) { return node.renderWidth || node.width; }));
     const maximumRowHeight = Math.max.apply(null, layout.generationMetrics.map(function (metric) { return metric.height; }));
     const plannedPeopleAcross = Math.max.apply(null, pagePlans.map(function (plan) {
@@ -3633,7 +3737,7 @@
     let pageWorldHeight = Math.max(baseHeight / zoom, Math.max.apply(null, pagePlans.map(function (plan) { return plan.bounds.height + 40; })));
     if (pageWorldWidth / pageWorldHeight < 1.5) pageWorldWidth = pageWorldHeight * 1.5;
     else pageWorldHeight = pageWorldWidth / 1.5;
-    settings.push(config.controls.maxPrintTreeLevels + " Levels / " + config.controls.maxPrintTreePeopleAcross + " People Maximum");
+    settings.push(maximumLevels + " Levels / " + maximumPeopleAcross + " People Maximum");
     const pages = pagePlans.map(function (plan, index) {
       const pageNumber = index + 1;
       const x = (plan.bounds.left + plan.bounds.right - pageWorldWidth) / 2;
@@ -3682,15 +3786,15 @@
   function printDirectory(eventOrTrigger) {
     if (printFamilyOutputUnavailable("the Directory")) return;
     const trigger = eventOrTrigger && eventOrTrigger.currentTarget instanceof HTMLElement ? eventOrTrigger.currentTarget : eventOrTrigger instanceof HTMLElement ? eventOrTrigger : document.activeElement;
-    buildDirectoryReport();
-    openPrintPreview(trigger, "Directory Preview", "directory");
+    const result = buildDirectoryReport();
+    openPrintPreview(trigger, printPreviewPageTitle("Directory", result.pageCount), "directory");
   }
 
   function printGroups(eventOrTrigger) {
     if (printFamilyOutputUnavailable("Family Groups")) return;
     const trigger = eventOrTrigger && eventOrTrigger.currentTarget instanceof HTMLElement ? eventOrTrigger.currentTarget : eventOrTrigger instanceof HTMLElement ? eventOrTrigger : document.activeElement;
-    buildGroupsReport();
-    openPrintPreview(trigger, "Groups Preview", "groups");
+    const result = buildGroupsReport();
+    openPrintPreview(trigger, printPreviewPageTitle("Groups", result.pageCount), "groups");
   }
 
   function printOutline(eventOrTrigger) {
@@ -3701,7 +3805,7 @@
       components.message("Nothing to print", result.error);
       return;
     }
-    openPrintPreview(trigger, "Outline Preview", "outline");
+    openPrintPreview(trigger, printPreviewPageTitle("Outline", result.pageCount), "outline");
   }
 
   function printTree(eventOrTrigger) {
@@ -3709,10 +3813,10 @@
     const trigger = eventOrTrigger && eventOrTrigger.currentTarget instanceof HTMLElement ? eventOrTrigger.currentTarget : eventOrTrigger instanceof HTMLElement ? eventOrTrigger : document.activeElement;
     const result = buildTreeReport();
     if (result.error) {
-      components.message("Tree is too large at this zoom", result.error);
+      components.message("Tree is too large to print", result.error);
       return;
     }
-    openPrintPreview(trigger, "Tree Preview · " + result.pageCount + " " + (result.pageCount === 1 ? "page" : "pages"), "tree");
+    openPrintPreview(trigger, printPreviewPageTitle("Tree", result.pageCount), "tree");
   }
 
   function filteredRoadmap() {
