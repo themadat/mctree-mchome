@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.136",
-      buildId: "0.0.1.136",
+      version: "0.0.1.137",
+      buildId: "0.0.1.137",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -176,13 +176,13 @@
 
     releases: [
       {
-        version: "0.0.1.136",
-        date: "2026-09-07T20:43:09.000Z",
-        title: "Placeholder name cleanup",
-        summary: "Data Cleanup now identifies every placeholder name part, even when the person also has valid name information.",
+        version: "0.0.1.137",
+        date: "2026-09-07T21:04:19.000Z",
+        title: "Accurate Outline print margins",
+        summary: "The Descendant Outline now uses the full printable area inside true half-inch page margins without spilling fitted content onto another sheet.",
         features: [],
-        improvements: ["Listed each affected Birth, Current, Preferred, or Maiden name part in the cleanup reason"],
-        fixes: ["Classified Unknown, Unknown Name, Maiden, Maiden Name, Name, None, N/A, NA, dashes, and question-mark-only text as placeholder name parts"],
+        improvements: ["Matched native Outline pagination to the dimensions shown in Print Preview"],
+        fixes: ["Removed inherited application padding that enlarged print margins and forced Outline rows onto a second page"],
         knownIssues: []
       }
     ],
