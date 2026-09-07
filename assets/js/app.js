@@ -4274,7 +4274,7 @@
       cleanupGroupHtml("incomplete-birthdays", "Incomplete Birthdays", "People whose birth date is less precise than YYYY-MM-DD.", report.incompleteBirthdays.length, cleanupPersonIssuesHtml(report.incompleteBirthdays, peopleById, "No incomplete birthdays found.")),
       cleanupGroupHtml("unknown-deaths", "Unknown Deaths", "Deceased people with no known digits in their death date.", report.unknownDeaths.length, cleanupPersonIssuesHtml(report.unknownDeaths, peopleById, "No unknown deaths found.")),
       cleanupGroupHtml("incomplete-deaths", "Incomplete Deaths", "Deceased people whose death date is less precise than YYYY-MM-DD.", report.incompleteDeaths.length, cleanupPersonIssuesHtml(report.incompleteDeaths, peopleById, "No incomplete deaths found.")),
-      cleanupGroupHtml("unknown-names", "Unknown Names", "People without a known first, middle, or last name in any name set.", report.unknownNames.length, cleanupPersonIssuesHtml(report.unknownNames, peopleById, "No unknown names found.")),
+      cleanupGroupHtml("unknown-names", "Placeholder or Unknown Names", "People with placeholder name parts or no known first, middle, or last name.", report.unknownNames.length, cleanupPersonIssuesHtml(report.unknownNames, peopleById, "No placeholder or unknown names found.")),
       cleanupGroupHtml("lineage", "Bad Lineage IDs", "Missing, duplicate, malformed, or incorrectly extended Lineage IDs.", report.lineage.length, cleanupPersonIssuesHtml(lineagePersonIssues, peopleById, "No bad Lineage IDs found."))
     ].join("");
   }

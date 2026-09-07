@@ -145,14 +145,23 @@ partialDeath.names.birth.first = "Partial";
 partialDeath.names.current.first = "Partial";
 partialDeath.death.date = { value: "2020", qualifier: "exact" };
 partialDeath.source.fields["person-date-death-value"] = "2020";
-cleanupState.workspace.people.push(missingDeath, partialDeath);
+const placeholderName = structuredClone(cleanupFirst);
+placeholderName.id = "P005";
+placeholderName.names.birth.middle = "UNKNOWN";
+placeholderName.names.current.middle = "Maiden Name";
+placeholderName.names.preferred.first = "Name";
+placeholderName.addresses = [];
+placeholderName.source.fields["lineage-id"] = "";
+cleanupState.workspace.people.push(missingDeath, partialDeath, placeholderName);
 const cleanupReport = App.stateModel.dataCleanupIssues(cleanupState);
 if (!cleanupReport.partnerAddresses.some((issue) => issue.relationshipId === "R001")) fail("Mismatched current partner addresses are missing from Data Cleanup");
 if (cleanupReport.unknownBirthdays.map((issue) => issue.personId).join(",") !== "P002") fail("Unknown birthdays are classified incorrectly in Data Cleanup");
 if (!cleanupReport.incompleteBirthdays.some((issue) => issue.personId === "P001")) fail("Year-only birthdays are missing from Data Cleanup");
 if (cleanupReport.unknownDeaths.map((issue) => issue.personId).join(",") !== "P003") fail("Unknown deceased-person death dates are classified incorrectly in Data Cleanup");
 if (cleanupReport.incompleteDeaths.map((issue) => issue.personId).join(",") !== "P004") fail("Year-only death dates are missing from Data Cleanup");
-if (cleanupReport.unknownNames.map((issue) => issue.personId).join(",") !== "P002") fail("Unknown names are classified incorrectly in Data Cleanup");
+if (cleanupReport.unknownNames.map((issue) => issue.personId).join(",") !== "P002,P005") fail("Unknown or placeholder names are classified incorrectly in Data Cleanup");
+const placeholderNameIssue = cleanupReport.unknownNames.find((issue) => issue.personId === "P005");
+if (!placeholderNameIssue || !placeholderNameIssue.reason.includes("Birth middle “UNKNOWN”") || !placeholderNameIssue.reason.includes("Current middle “Maiden Name”") || !placeholderNameIssue.reason.includes("Preferred first “Name”")) fail("Data Cleanup does not identify every placeholder name part");
 
 vm.runInContext(read("assets/js/core/family.js"), runtime, { filename: "assets/js/core/family.js" });
 const siblingFixture = {
