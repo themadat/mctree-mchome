@@ -563,7 +563,7 @@
         search: u.cleanLine(sourceUi.search, 200),
         favoritePersonIds: Array.from(new Set((Array.isArray(sourceUi.favoritePersonIds) ? sourceUi.favoritePersonIds : []).map(function (id) { return u.cleanLine(id, 100); }).filter(function (id) { return personIds.has(id); }))).slice(0, config.controls.maxPeople),
         favoritesOnly: sourceUi.favoritesOnly === true,
-        supportTab: ["settings", "help", "releases", "shortcuts", "roadmap", "developer"].includes(sourceUi.supportTab) ? sourceUi.supportTab : "settings"
+        supportTab: ["settings", "cleanup", "help", "releases", "shortcuts", "roadmap", "developer"].includes(sourceUi.supportTab) ? sourceUi.supportTab : "settings"
       },
       modules: {
         family: { enabled: true },
@@ -745,6 +745,102 @@
       }
       return issues;
     }, []);
+  }
+
+  function cleanupPersonDateValue(person, kind) {
+    const fields = u.plainObject(u.plainObject(person && person.source).fields);
+    const sourceValue = u.cleanLine(fields["person-date-" + kind + "-value"], 40);
+    const normalizedValue = u.cleanLine(person && person[kind] && person[kind].date && person[kind].date.value, 40);
+    return sourceValue || normalizedValue;
+  }
+
+  function cleanupDateIssues(people, kind) {
+    const label = kind === "birth" ? "Birth" : "Death";
+    const candidates = kind === "birth" ? people : people.filter(function (person) { return person.livingStatus === "deceased"; });
+    const unknown = [];
+    const incomplete = [];
+    candidates.forEach(function (person) {
+      const value = cleanupPersonDateValue(person, kind);
+      if (!value || !/\d/.test(value)) {
+        unknown.push({ personId: person.id, reason: "No " + kind + " date is recorded" + (kind === "death" ? " for this deceased person." : ".") });
+      } else if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        incomplete.push({ personId: person.id, value: value, reason: label + " date " + value + " is not a complete YYYY-MM-DD date." });
+      }
+    });
+    return { unknown: unknown, incomplete: incomplete };
+  }
+
+  function cleanupNameIssues(people) {
+    const placeholders = new Set(["unknown", "none", "n/a", "na", "----"]);
+    return people.filter(function (person) {
+      const names = u.plainObject(person.names);
+      const values = [names.birth, names.current, names.preferred].flatMap(function (parts) {
+        const normalized = normalizeNameParts(parts);
+        return [normalized.first, normalized.middle, normalized.last];
+      }).concat(u.cleanLine(names.maidenLast, 120));
+      return !values.some(function (value) {
+        const normalized = u.cleanLine(value, 120).toLocaleLowerCase();
+        return Boolean(normalized && !placeholders.has(normalized) && !/^\?+$/.test(normalized));
+      });
+    }).map(function (person) { return { personId: person.id, reason: "No known first, middle, or last name is recorded." }; });
+  }
+
+  function cleanupCurrentAddress(person) {
+    return (person && person.addresses || []).find(function (address) {
+      return address.current && [address.line1, address.line2, address.city, address.region, address.postalCode, address.country].some(function (value) { return Boolean(u.cleanLine(value, 200)); });
+    }) || null;
+  }
+
+  function cleanupAddressKey(address) {
+    return [address.line1, address.line2, address.city, address.region, address.postalCode, address.country].map(function (value) {
+      return u.cleanLine(value, 200).toLocaleLowerCase().replace(/\s+/g, " ");
+    }).join("|");
+  }
+
+  function cleanupPartnerAddressIssues(people, relationships) {
+    const peopleById = new Map(people.map(function (person) { return [person.id, person]; }));
+    const endedStatuses = new Set(["separated", "divorced", "widowed", "annulled", "former"]);
+    return relationships.filter(function (relationship) {
+      if (relationship.type !== "partner" || endedStatuses.has(relationship.status)) return false;
+      const fields = u.plainObject(u.plainObject(relationship.source).fields);
+      const endDate = u.cleanLine(fields["date-end-value"] || fields.date_end_value, 40) || u.cleanLine(relationship.endDate && relationship.endDate.value, 40);
+      const endReason = u.cleanLine(fields["end-reason"] || fields.end_reason, 80);
+      return !endDate && !endReason;
+    }).reduce(function (issues, relationship) {
+      const first = peopleById.get(relationship.person1Id);
+      const second = peopleById.get(relationship.person2Id);
+      if (!first || !second || first.livingStatus !== "living" || second.livingStatus !== "living") return issues;
+      const firstAddress = cleanupCurrentAddress(first);
+      const secondAddress = cleanupCurrentAddress(second);
+      if (!firstAddress || !secondAddress || cleanupAddressKey(firstAddress) === cleanupAddressKey(secondAddress)) return issues;
+      issues.push({
+        relationshipId: relationship.id,
+        person1Id: first.id,
+        person2Id: second.id,
+        person1Address: formatAddress(firstAddress),
+        person2Address: formatAddress(secondAddress),
+        reason: "Current postal addresses do not match."
+      });
+      return issues;
+    }, []);
+  }
+
+  function dataCleanupIssues(input) {
+    const workspace = u.plainObject(u.plainObject(input).workspace);
+    const people = Array.isArray(workspace.people) ? workspace.people : [];
+    const relationships = Array.isArray(workspace.relationships) ? workspace.relationships : [];
+    const births = cleanupDateIssues(people, "birth");
+    const deaths = cleanupDateIssues(people, "death");
+    return {
+      relationships: relationshipIssues(input),
+      partnerAddresses: cleanupPartnerAddressIssues(people, relationships),
+      unknownBirthdays: births.unknown,
+      incompleteBirthdays: births.incomplete,
+      unknownDeaths: deaths.unknown,
+      incompleteDeaths: deaths.incomplete,
+      unknownNames: cleanupNameIssues(people),
+      lineage: lineageIssues(input)
+    };
   }
 
   function parentAdjacency(relationships) {
@@ -985,6 +1081,7 @@
     personSearchText: personSearchText,
     normalizeSearchText: normalizeSearchText,
     fuzzySearchMatch: fuzzySearchMatch,
+    dataCleanupIssues: dataCleanupIssues,
     lineageIssues: lineageIssues,
     relationshipIssues: relationshipIssues,
     hasAncestryCycle: hasAncestryCycle,

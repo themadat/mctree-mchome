@@ -122,6 +122,38 @@ const unknownPersonRoundTrip = await App.portability.prepareBytes(App.portabilit
 const restoredUnknownPerson = unknownPersonRoundTrip.state.workspace.people.find((person) => person.id === "P002");
 if (!restoredUnknownPerson || !restoredUnknownPerson.unknownPerson || restoredUnknownPerson.livingStatus !== "unknown" || App.stateModel.displayName(restoredUnknownPerson) !== "Unknown person" || unknownPersonRoundTrip.state.workspace.relationships[0].status !== "married") fail("An Unknown married partner failed its package round trip");
 
+const cleanupState = structuredClone(unknownPersonRoundTrip.state);
+const cleanupFirst = cleanupState.workspace.people.find((person) => person.id === "P001");
+const cleanupSecond = cleanupState.workspace.people.find((person) => person.id === "P002");
+cleanupFirst.addresses = [{ current: true, line1: "1 Alpha Street", city: "Example", region: "IL", postalCode: "60000", country: "US" }];
+cleanupSecond.livingStatus = "living";
+cleanupSecond.addresses = [{ current: true, line1: "2 Beta Street", city: "Example", region: "IL", postalCode: "60000", country: "US" }];
+const missingDeath = structuredClone(cleanupFirst);
+missingDeath.id = "P003";
+missingDeath.names.birth.first = "Missing";
+missingDeath.names.current.first = "Missing";
+missingDeath.livingStatus = "deceased";
+missingDeath.birth.date = { value: "1970-01-02", qualifier: "exact" };
+missingDeath.death.date = { value: "", qualifier: "exact" };
+missingDeath.addresses = [];
+missingDeath.source.fields["person-date-birth-value"] = "1970-01-02";
+missingDeath.source.fields["person-date-death-value"] = "";
+missingDeath.source.fields["lineage-id"] = "";
+const partialDeath = structuredClone(missingDeath);
+partialDeath.id = "P004";
+partialDeath.names.birth.first = "Partial";
+partialDeath.names.current.first = "Partial";
+partialDeath.death.date = { value: "2020", qualifier: "exact" };
+partialDeath.source.fields["person-date-death-value"] = "2020";
+cleanupState.workspace.people.push(missingDeath, partialDeath);
+const cleanupReport = App.stateModel.dataCleanupIssues(cleanupState);
+if (!cleanupReport.partnerAddresses.some((issue) => issue.relationshipId === "R001")) fail("Mismatched current partner addresses are missing from Data Cleanup");
+if (cleanupReport.unknownBirthdays.map((issue) => issue.personId).join(",") !== "P002") fail("Unknown birthdays are classified incorrectly in Data Cleanup");
+if (!cleanupReport.incompleteBirthdays.some((issue) => issue.personId === "P001")) fail("Year-only birthdays are missing from Data Cleanup");
+if (cleanupReport.unknownDeaths.map((issue) => issue.personId).join(",") !== "P003") fail("Unknown deceased-person death dates are classified incorrectly in Data Cleanup");
+if (cleanupReport.incompleteDeaths.map((issue) => issue.personId).join(",") !== "P004") fail("Year-only death dates are missing from Data Cleanup");
+if (cleanupReport.unknownNames.map((issue) => issue.personId).join(",") !== "P002") fail("Unknown names are classified incorrectly in Data Cleanup");
+
 vm.runInContext(read("assets/js/core/family.js"), runtime, { filename: "assets/js/core/family.js" });
 const siblingFixture = {
   workspace: {
@@ -218,7 +250,7 @@ const iconsSource = read("assets/js/icons.js");
 const pagesWorkflow = read(".github/workflows/deploy-pages.yml");
 if (!index.includes('id="relationPerson1Search"') || !index.includes('id="relationPerson2Search"') || !appSource.includes("model.fuzzySearchMatch(query, searchText)")) fail("Connect Existing People search controls are missing");
 if (!index.includes('id="unknownPerson"') || !appSource.includes('data-rebuild-lineage="') || !appSource.includes("family.isLineageEligiblePerson(root.id, sourceState)")) fail("Unknown person or Editor lineage repair controls are missing");
-if (!index.includes('id="adminIntegritySection"') || !index.includes("Bad Lineage IDs") || !index.includes("Unknown or Invalid Relationships") || !appSource.includes("renderIntegrityIssues();")) fail("Admin Data Cleanup lists are missing from Settings");
+if (!index.includes('id="dataCleanupTab"') || !index.includes('data-support-tab="cleanup" data-editor-only') || !index.includes('id="dataCleanupGroups"') || index.includes('id="adminIntegritySection"') || !appSource.includes("renderDataCleanup();") || !appSource.includes('cleanupGroupHtml("unknown-names"') || !appSource.includes('cleanupGroupHtml("lineage"') || !css.includes(".data-cleanup-group[open]") || !css.includes(".data-cleanup-grid")) fail("Editor Data Cleanup sidebar or collapsible issue groups are missing");
 if (!cloud.includes("if (!definition.canManage) prepared.state.preferences.controls.developerMode = false;")) fail("Non-Admin hosted access no longer defaults Developer Mode off");
 const toolbarOrder = ["cloudAuditButton", "addPersonButton", "directoryButton", "printButton"].map((id) => index.indexOf(`id="${id}"`));
 if (toolbarOrder.some((position) => position < 0) || !(toolbarOrder[0] < toolbarOrder[1] && toolbarOrder[1] < toolbarOrder[2] && toolbarOrder[2] < toolbarOrder[3])) fail("Header actions are no longer ordered Save, Add, List, Directory");

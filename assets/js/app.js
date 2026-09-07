@@ -4077,7 +4077,7 @@
   function openSupport(tab, trigger) {
     if (!initialized()) return;
     const requested = tab || state().ui.supportTab || "settings";
-    const chosen = requested === "developer" && !developerReferencesEnabled() ? "settings" : requested;
+    const chosen = (requested === "developer" && !developerReferencesEnabled()) || (requested === "cleanup" && !familyEditingEnabled()) ? "settings" : requested;
     switchSupportTab(chosen);
     components.openDialog("#supportDialog", { trigger: trigger, focus: "[data-support-tab='" + chosen + "']" });
     renderSupport();
@@ -4085,6 +4085,7 @@
 
   function switchSupportTab(tab) {
     if (tab === "developer" && !developerReferencesEnabled()) tab = "settings";
+    if (tab === "cleanup" && !familyEditingEnabled()) tab = "settings";
     storage.mutate(function (next) { next.ui.supportTab = tab; }, { touch: false, reason: "support-tab" });
     $$('[data-support-tab]').forEach(function (button) { const selected = button.dataset.supportTab === tab; button.setAttribute("aria-selected", String(selected)); button.tabIndex = selected ? 0 : -1; });
     $$('[data-support-panel]').forEach(function (panel) { panel.hidden = panel.dataset.supportPanel !== tab; });
@@ -4093,6 +4094,7 @@
     else if (tab === "shortcuts") renderShortcuts();
     else if (tab === "roadmap") renderSupportRoadmap();
     else if (tab === "developer") renderDeveloper();
+    else if (tab === "cleanup") renderDataCleanup();
     else renderSettings();
   }
 
@@ -4111,7 +4113,6 @@
       item.button.dataset.openUrl = url;
       item.button.disabled = !url;
     });
-    renderIntegrityIssues();
     renderLocalStatus();
   }
 
@@ -4181,30 +4182,62 @@
     $("#restoreFavoritesButton").hidden = !adminFavoritesRestoreEnabled();
   }
 
-  function renderIntegrityIssues() {
-    const section = $("#adminIntegritySection");
-    if (!section || !adminFavoritesRestoreEnabled()) return;
-    const peopleById = new Map(state().workspace.people.map(function (person) { return [person.id, person]; }));
-    const lineageIssues = model.lineageIssues(state());
-    const relationshipIssues = model.relationshipIssues(state());
-    $("#adminLineageIssueCount").textContent = String(lineageIssues.length);
-    $("#adminRelationshipIssueCount").textContent = String(relationshipIssues.length);
-    $("#adminLineageIssues").innerHTML = lineageIssues.length ? lineageIssues.map(function (issue) {
+  function cleanupPersonIssuesHtml(issues, peopleById, emptyMessage) {
+    return issues.length ? issues.slice().sort(function (first, second) {
+      return model.sortName(peopleById.get(first.personId)).localeCompare(model.sortName(peopleById.get(second.personId))) || first.personId.localeCompare(second.personId);
+    }).map(function (issue) {
       const person = peopleById.get(issue.personId);
-      return '<li><button type="button" class="developer-issue-button" data-cleanup-person="' + u.escapeHtml(issue.personId) + '"><strong>' + u.escapeHtml((person ? model.displayName(person) : issue.personId) + " · " + issue.value) + '</strong><small>' + u.escapeHtml(issue.personId + " · " + issue.reasons.join(" ")) + "</small></button></li>";
-    }).join("") : '<li class="developer-issue-empty">No bad Lineage IDs found.</li>';
-    $("#adminRelationshipIssues").innerHTML = relationshipIssues.length ? relationshipIssues.map(function (issue) {
+      return '<li><button type="button" class="developer-issue-button" data-cleanup-person="' + u.escapeHtml(issue.personId) + '"><strong>' + u.escapeHtml(person ? model.displayName(person) : issue.personId) + '</strong><small>' + u.escapeHtml(issue.personId + " · " + issue.reason) + "</small></button></li>";
+    }).join("") : '<li class="developer-issue-empty">' + u.escapeHtml(emptyMessage) + "</li>";
+  }
+
+  function cleanupRelationshipIssuesHtml(issues, peopleById, emptyMessage) {
+    return issues.length ? issues.map(function (issue) {
       const firstId = issue.parentId || issue.person1Id;
       const secondId = issue.childId || issue.person2Id;
       const first = peopleById.get(firstId);
       const second = peopleById.get(secondId);
       const pair = (first ? model.displayName(first) : firstId) + (issue.parentId ? " → " : " ↔ ") + (second ? model.displayName(second) : secondId);
       return '<li><button type="button" class="developer-issue-button" data-cleanup-relationship="' + u.escapeHtml(issue.relationshipId) + '"><strong>' + u.escapeHtml(pair) + '</strong><small>' + u.escapeHtml(issue.relationshipId + " · " + issue.reason) + "</small></button></li>";
-    }).join("") : '<li class="developer-issue-empty">No unknown or invalid relationships found.</li>';
+    }).join("") : '<li class="developer-issue-empty">' + u.escapeHtml(emptyMessage) + "</li>";
+  }
+
+  function cleanupPartnerAddressIssuesHtml(issues, peopleById) {
+    return issues.length ? issues.map(function (issue) {
+      const first = peopleById.get(issue.person1Id);
+      const second = peopleById.get(issue.person2Id);
+      const firstName = first ? model.displayName(first) : issue.person1Id;
+      const secondName = second ? model.displayName(second) : issue.person2Id;
+      const addresses = firstName + ": " + issue.person1Address.replace(/\n/g, ", ") + " · " + secondName + ": " + issue.person2Address.replace(/\n/g, ", ");
+      return '<li><article class="developer-issue-card"><strong>' + u.escapeHtml(firstName + " ↔ " + secondName) + '</strong><small>' + u.escapeHtml(issue.reason + " " + addresses) + '</small><div class="cleanup-pair-actions"><button type="button" class="button small" data-cleanup-person="' + u.escapeHtml(issue.person1Id) + '">Open ' + u.escapeHtml(firstName) + '</button><button type="button" class="button small" data-cleanup-person="' + u.escapeHtml(issue.person2Id) + '">Open ' + u.escapeHtml(secondName) + "</button></div></article></li>";
+    }).join("") : '<li class="developer-issue-empty">No mismatched current partner addresses found.</li>';
+  }
+
+  function cleanupGroupHtml(key, title, description, count, listHtml) {
+    return '<details class="data-cleanup-group" data-cleanup-group="' + u.escapeHtml(key) + '"><summary><span><strong>' + u.escapeHtml(title) + '</strong><small>' + u.escapeHtml(description) + '</small></span><span class="count-pill">' + count + '</span></summary><div class="data-cleanup-group-content"><ul class="developer-issue-list">' + listHtml + "</ul></div></details>";
+  }
+
+  function renderDataCleanup() {
+    const container = $("#dataCleanupGroups");
+    if (!container || !familyEditingEnabled()) return;
+    const peopleById = new Map(state().workspace.people.map(function (person) { return [person.id, person]; }));
+    const report = model.dataCleanupIssues(state());
+    const lineagePersonIssues = report.lineage.map(function (issue) { return { personId: issue.personId, reason: issue.value + " · " + issue.reasons.join(" ") }; });
+    container.innerHTML = [
+      cleanupGroupHtml("relationships", "Unknown or Invalid Relationships", "Unknown types, endings, or invalid Lineal parent statuses.", report.relationships.length, cleanupRelationshipIssuesHtml(report.relationships, peopleById, "No unknown or invalid relationships found.")),
+      cleanupGroupHtml("partner-addresses", "Mismatched Addresses for Partners", "Living partners in an ongoing relationship whose current postal addresses differ.", report.partnerAddresses.length, cleanupPartnerAddressIssuesHtml(report.partnerAddresses, peopleById)),
+      cleanupGroupHtml("unknown-birthdays", "Unknown Birthdays", "People with no known digits in their birth date.", report.unknownBirthdays.length, cleanupPersonIssuesHtml(report.unknownBirthdays, peopleById, "No unknown birthdays found.")),
+      cleanupGroupHtml("incomplete-birthdays", "Incomplete Birthdays", "People whose birth date is less precise than YYYY-MM-DD.", report.incompleteBirthdays.length, cleanupPersonIssuesHtml(report.incompleteBirthdays, peopleById, "No incomplete birthdays found.")),
+      cleanupGroupHtml("unknown-deaths", "Unknown Deaths", "Deceased people with no known digits in their death date.", report.unknownDeaths.length, cleanupPersonIssuesHtml(report.unknownDeaths, peopleById, "No unknown deaths found.")),
+      cleanupGroupHtml("incomplete-deaths", "Incomplete Deaths", "Deceased people whose death date is less precise than YYYY-MM-DD.", report.incompleteDeaths.length, cleanupPersonIssuesHtml(report.incompleteDeaths, peopleById, "No incomplete deaths found.")),
+      cleanupGroupHtml("unknown-names", "Unknown Names", "People without a known first, middle, or last name in any name set.", report.unknownNames.length, cleanupPersonIssuesHtml(report.unknownNames, peopleById, "No unknown names found.")),
+      cleanupGroupHtml("lineage", "Bad Lineage IDs", "Missing, duplicate, malformed, or incorrectly extended Lineage IDs.", report.lineage.length, cleanupPersonIssuesHtml(lineagePersonIssues, peopleById, "No bad Lineage IDs found."))
+    ].join("");
   }
 
   function renderSupport() {
     $("#developerTab").hidden = !developerReferencesEnabled();
+    $("#dataCleanupTab").hidden = !familyEditingEnabled();
     switchSupportTab(state().ui.supportTab);
   }
 
