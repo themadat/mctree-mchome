@@ -1569,6 +1569,18 @@
     return birth + " – " + death;
   }
 
+  function outlineLifeDatesHtml(person) {
+    const birth = lifeDateLabel(person, "birth") || "????";
+    const death = person.livingStatus === "living" ? "" : (lifeDateLabel(person, "death") || "????");
+    const fullBirthYear = /^\d{4}(?:-|$)/.test(lifeDateValue(person, "birth"));
+    const fullDeathYear = /^\d{4}(?:-|$)/.test(lifeDateValue(person, "death"));
+    const dates = birth + " – " + death;
+    if (fullBirthYear && fullDeathYear) {
+      return '<small class="outline-life-dates is-stacked" aria-label="' + u.escapeHtml(dates) + '"><span aria-hidden="true">(' + u.escapeHtml(birth) + ' –</span><span aria-hidden="true">' + u.escapeHtml(death) + ")</span></small>";
+    }
+    return '<small class="outline-life-dates">(' + u.escapeHtml(dates) + ")</small>";
+  }
+
   function outlineRelationshipDate(relationship) {
     function date(kind) {
       return model.formatFlexibleDate(relationship && relationship[kind + "Date"]) || partialDateLabel(relationshipDateValue(relationship, kind));
@@ -1600,10 +1612,11 @@
     const settings = Object.assign({ print: false, partner: false }, options || {});
     const name = outlineName(person);
     const dates = outlineLifeDates(person);
+    const datesHtml = outlineLifeDatesHtml(person);
     const selected = !settings.print && state().ui.selectedPersonId === person.id;
     const classes = "outline-person" + (settings.partner ? " outline-spouse" : "") + (person.livingStatus === "deceased" ? " deceased" : "") + (selected ? " selected" : "");
-    if (settings.print) return '<span class="' + classes + '"><strong>' + u.escapeHtml(name) + '</strong><small>(' + u.escapeHtml(dates) + ")</small></span>";
-    return '<button type="button" class="' + classes + '" data-outline-person="' + u.escapeHtml(person.id) + '" aria-label="View ' + u.escapeHtml(name + ", " + dates) + '"><strong>' + u.escapeHtml(name) + '</strong><small>(' + u.escapeHtml(dates) + ")</small></button>";
+    if (settings.print) return '<span class="' + classes + '"><strong>' + u.escapeHtml(name) + "</strong>" + datesHtml + "</span>";
+    return '<button type="button" class="' + classes + '" data-outline-person="' + u.escapeHtml(person.id) + '" aria-label="View ' + u.escapeHtml(name + ", " + dates) + '"><strong>' + u.escapeHtml(name) + "</strong>" + datesHtml + "</button>";
   }
 
   function outlinePartnersHtml(person, print) {
@@ -1656,14 +1669,15 @@
       const hiddenCount = collapsed ? family.descendantsOf(person.id, graph).length : 0;
       const classes = ["outline-row", depth === 0 ? "outline-root-row" : "", highlighted ? "lineage-highlight" : "", selected ? "selected" : ""].filter(Boolean).join(" ");
       const safeDepth = Math.max(0, depth);
+      const generationNumber = relationshipGeneration(person);
       const style = ' style="--outline-offset:' + (safeDepth * 2) + 'rem;--outline-print-offset:' + (safeDepth * 0.2) + 'in"';
       const attributes = settings.print ? "" : ' role="treeitem" aria-level="' + (depth + 1) + '"' + (children.length ? ' aria-expanded="' + String(!collapsed) + '"' : "") + (selected ? ' aria-selected="true"' : "");
       const toggle = settings.print
-        ? '<span class="outline-toggle-placeholder" aria-hidden="true"></span>'
+        ? ""
         : children.length
           ? '<button type="button" class="outline-branch-toggle" data-outline-branch="' + u.escapeHtml(key) + '" aria-label="' + (collapsed ? "Expand" : "Collapse") + " descendants of " + u.escapeHtml(outlineName(person)) + '" aria-expanded="' + String(!collapsed) + '"><span data-symbol="' + (collapsed ? "chevronRight" : "chevronDown") + '" aria-hidden="true"></span></button>'
           : '<span class="outline-toggle-placeholder" aria-hidden="true">•</span>';
-      const generation = '<span class="outline-generation" title="Generation ' + (depth + 1) + '">G' + (depth + 1) + "</span>";
+      const generation = '<span class="outline-generation" title="Generation ' + generationNumber + '">G' + generationNumber + "</span>";
       const partners = '<span class="outline-partners">' + outlinePartnersHtml(person, settings.print) + "</span>";
       const hidden = hiddenCount ? '<span class="outline-hidden-count">' + hiddenCount + " hidden</span>" : "";
       rows.push('<div class="' + classes + '"' + style + attributes + ">" + toggle + generation + outlinePersonHtml(person, { print: settings.print }) + partners + '<span class="outline-scan-bar" aria-hidden="true"></span>' + hidden + "</div>");
@@ -1686,10 +1700,34 @@
     const homeId = current.workspace.family.homePersonId;
     const printAction = familyEditingEnabled() ? outlineActionHtml("data-print-outline", "print", "Print") : "";
     const resetRootAction = outlineActionHtml("data-outline-reset-root", "outlineRoot", "Reset Root", root && root.id !== homeId ? "" : " disabled");
-    const expandAction = outlineActionHtml("data-outline-expand-all", "outlineExpand", "Expand all");
-    const collapseAction = outlineActionHtml("data-outline-collapse-all", "outlineCondense", "Condense all");
+    const expandAction = outlineActionHtml("data-outline-expand-all", "outlineExpand", "Expand<br>All");
+    const collapseAction = outlineActionHtml("data-outline-collapse-all", "outlineCondense", "Condense<br>All");
+    const condenseLineageAction = outlineActionHtml("data-outline-condense-lineage", "outlineCondenseLineage", "Condense<br>Lineage");
     const lineageAction = outlineActionHtml('data-outline-highlight aria-pressed="' + String(outlineHighlightEnabled) + '"', "lineageView", "Lineage");
-    return '<section class="tree-panel outline-panel workspace-card" aria-label="Outline"><header class="tree-toolbar outline-toolbar"><div class="tree-view-controls outline-view-controls">' + workspaceViewControlHtml() + (nameControls || "") + '<div class="tree-control-section outline-root-setting"><span class="tree-control-heading">Root</span><div class="outline-root-controls">' + outlineRootPickerHtml(root) + '</div></div><div class="outline-actions" role="group" aria-label="Outline controls">' + resetRootAction + expandAction + collapseAction + lineageAction + printAction + '</div><span id="outlineCount" class="visually-hidden" aria-live="polite"></span></div></header><div class="outline-scroll"><div id="descendantOutline" class="descendant-outline" role="tree" aria-label="Indented descendant outline" tabindex="0"></div></div></section>';
+    return '<section class="tree-panel outline-panel workspace-card" aria-label="Outline"><header class="tree-toolbar outline-toolbar"><div class="tree-view-controls outline-view-controls">' + workspaceViewControlHtml() + (nameControls || "") + '<div class="tree-control-section outline-root-setting"><span class="tree-control-heading">Root</span><div class="outline-root-controls">' + outlineRootPickerHtml(root) + '</div></div><div class="outline-actions" role="group" aria-label="Outline controls">' + resetRootAction + expandAction + collapseAction + condenseLineageAction + lineageAction + printAction + '</div><span id="outlineCount" class="visually-hidden" aria-live="polite"></span></div></header><div class="outline-scroll"><div id="descendantOutline" class="descendant-outline" role="tree" aria-label="Indented descendant outline" tabindex="0"></div></div></section>';
+  }
+
+  function revealOutlinePerson(personId) {
+    const root = outlineRootPerson();
+    const graph = relationshipGraph(state());
+    let path = outlinePathKeys(root, personId, graph);
+    if (!path) {
+      const partnerEntries = graph.partners.get(personId) || [];
+      for (let index = 0; index < partnerEntries.length && !path; index += 1) {
+        path = outlinePathKeys(root, partnerEntries[index].person.id, graph);
+      }
+    }
+    if (path) path.forEach(function (key) { outlineCollapsedBranches.delete(key); });
+    return path;
+  }
+
+  function centerSelectedOutlinePerson() {
+    if (workspaceView !== "outline") return;
+    const scroller = $(".outline-scroll");
+    const selectedPerson = $(".outline-person.selected", scroller);
+    const selectedRow = selectedPerson && selectedPerson.closest(".outline-row");
+    if (!scroller || !selectedRow) return;
+    scroller.scrollTop = Math.max(0, selectedRow.offsetTop - (scroller.clientHeight - selectedRow.offsetHeight) / 2);
   }
 
   function renderOutline() {
@@ -1705,6 +1743,11 @@
       highlight.disabled = !result.availableHighlightPath;
       highlight.setAttribute("aria-pressed", String(outlineHighlightEnabled && Boolean(result.highlightPath)));
       highlight.title = result.availableHighlightPath ? "Highlight the selected descendant's direct lineage" : "Select a descendant of the root to highlight its lineage";
+    }
+    const condenseLineage = $("[data-outline-condense-lineage]");
+    if (condenseLineage) {
+      condenseLineage.disabled = !result.availableHighlightPath;
+      condenseLineage.title = result.availableHighlightPath ? "Condense branches outside the selected descendant's direct lineage" : "Select a descendant of the root to condense around its lineage";
     }
   }
 
@@ -1848,8 +1891,10 @@
       if (settings.focusMode) next.ui.treeMode = "focus";
       if (settings.mobileProfile) next.ui.mobileView = "profile";
     }, { touch: false, reason: "select-person" });
+    if (workspaceView === "outline") revealOutlinePerson(id);
     treeNeedsFit = settings.focus;
     renderWorkspace();
+    if (workspaceView === "outline") requestAnimationFrame(centerSelectedOutlinePerson);
     announce("Selected " + model.displayName(state().workspace.people.find(function (person) { return person.id === id; })) + ".");
   }
 
@@ -3521,7 +3566,7 @@
   }
 
   function buildOutlineReport() {
-    const result = buildOutlineRows({ print: true, ignoreCollapsed: true });
+    const result = buildOutlineRows({ print: true });
     if (!result.root) return { error: "The Descendant Outline has no root person to print." };
     const reportDate = printDate();
     const rootName = model.treeName(result.root, "lineal", "full");
@@ -4286,6 +4331,20 @@
       announce("Collapsed every descendant branch.");
       return;
     }
+    if (target.closest("[data-outline-condense-lineage]")) {
+      const result = buildOutlineRows({ ignoreCollapsed: true });
+      const lineageKeys = result.availableHighlightPath;
+      if (!lineageKeys) return;
+      const selectedKey = Array.from(lineageKeys).slice(-1)[0];
+      outlineCollapsedBranches.clear();
+      result.branchKeys.forEach(function (key) {
+        if (!lineageKeys.has(key) || key === selectedKey) outlineCollapsedBranches.add(key);
+      });
+      renderOutline();
+      requestAnimationFrame(centerSelectedOutlinePerson);
+      announce("Condensed branches outside the selected descendant's direct lineage.");
+      return;
+    }
     if (target.closest("[data-outline-highlight]")) {
       outlineHighlightEnabled = !outlineHighlightEnabled;
       renderOutline();
@@ -4295,13 +4354,17 @@
     const outlineRootOption = target.closest("[data-outline-root-option]");
     if (outlineRootOption) {
       outlineRootId = outlineRootOption.dataset.outlineRootOption;
+      revealOutlinePerson(state().ui.selectedPersonId);
       renderWorkspace();
+      requestAnimationFrame(centerSelectedOutlinePerson);
       announce("Changed the Outline root.");
       return;
     }
     if (target.closest("[data-outline-reset-root]")) {
       outlineRootId = state().workspace.family.homePersonId;
+      revealOutlinePerson(state().ui.selectedPersonId);
       renderWorkspace();
+      requestAnimationFrame(centerSelectedOutlinePerson);
       announce("Reset the Outline to the Root Ancestor.");
       return;
     }
@@ -4310,12 +4373,18 @@
       const nextView = workspaceViewButton.dataset.workspaceView;
       if (nextView === workspaceView) return;
       workspaceView = nextView;
-      if (workspaceView === "outline") outlineRootPerson();
+      if (workspaceView === "outline") {
+        outlineRootPerson();
+        revealOutlinePerson(state().ui.selectedPersonId);
+      }
       storage.mutate(function (next) { next.ui.mobileView = "tree"; }, { touch: false, reason: "workspace-view" });
       treeNeedsFit = workspaceView === "tree";
       renderHeader();
       renderWorkspace();
-      requestAnimationFrame(function () { (workspaceView === "outline" ? $("#descendantOutline") : $("#familyTreeSvg"))?.focus(); });
+      requestAnimationFrame(function () {
+        if (workspaceView === "outline") centerSelectedOutlinePerson();
+        (workspaceView === "outline" ? $("#descendantOutline") : $("#familyTreeSvg"))?.focus({ preventScroll: true });
+      });
       announce(workspaceView === "outline" ? "Opened the descendant Outline." : "Returned to the Family Tree.");
       return;
     }
