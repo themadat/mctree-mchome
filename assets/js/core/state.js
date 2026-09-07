@@ -10,6 +10,7 @@
   const PARTNER_STATUSES = new Set(config.partnerStatuses.map(function (item) { return item.id; }));
   const DATE_QUALIFIERS = new Set(["exact", "about", "before", "after"]);
   const NAME_PART_KEYS = ["prefix", "first", "middle", "last", "suffix"];
+  const NAME_PLACEHOLDERS = new Set(["unknown", "unknown name", "none", "n/a", "na", "----", "maiden", "maiden name", "name"]);
   function blankNameParts() {
     return { prefix: "", first: "", middle: "", last: "", suffix: "" };
   }
@@ -771,18 +772,28 @@
   }
 
   function cleanupNameIssues(people) {
-    const placeholders = new Set(["unknown", "none", "n/a", "na", "----"]);
-    return people.filter(function (person) {
+    return people.reduce(function (issues, person) {
       const names = u.plainObject(person.names);
-      const values = [names.birth, names.current, names.preferred].flatMap(function (parts) {
-        const normalized = normalizeNameParts(parts);
-        return [normalized.first, normalized.middle, normalized.last];
-      }).concat(u.cleanLine(names.maidenLast, 120));
-      return !values.some(function (value) {
-        const normalized = u.cleanLine(value, 120).toLocaleLowerCase();
-        return Boolean(normalized && !placeholders.has(normalized) && !/^\?+$/.test(normalized));
+      const entries = ["birth", "current", "preferred"].flatMap(function (kind) {
+        const parts = normalizeNameParts(names[kind]);
+        return NAME_PART_KEYS.map(function (key) { return { label: kind.charAt(0).toUpperCase() + kind.slice(1) + " " + key, value: parts[key] }; });
+      }).concat({ label: "Maiden last", value: u.cleanLine(names.maidenLast, 120) });
+      const placeholderParts = entries.filter(function (entry) {
+        const normalized = u.cleanLine(entry.value, 120).toLocaleLowerCase();
+        return Boolean(normalized && (NAME_PLACEHOLDERS.has(normalized) || /^\?+$/.test(normalized)));
       });
-    }).map(function (person) { return { personId: person.id, reason: "No known first, middle, or last name is recorded." }; });
+      const hasKnownName = entries.some(function (entry) {
+        if (!/(first|middle|last)$/.test(entry.label)) return false;
+        const normalized = u.cleanLine(entry.value, 120).toLocaleLowerCase();
+        return Boolean(normalized && !NAME_PLACEHOLDERS.has(normalized) && !/^\?+$/.test(normalized));
+      });
+      if (placeholderParts.length) {
+        issues.push({ personId: person.id, reason: "Placeholder name " + (placeholderParts.length === 1 ? "part" : "parts") + ": " + placeholderParts.map(function (entry) { return entry.label + " “" + entry.value + "”"; }).join(", ") + "." });
+      } else if (!hasKnownName) {
+        issues.push({ personId: person.id, reason: "No known first, middle, or last name is recorded." });
+      }
+      return issues;
+    }, []);
   }
 
   function cleanupCurrentAddress(person) {
