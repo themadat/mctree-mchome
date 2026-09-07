@@ -20,6 +20,7 @@
   let appIconHoldHandled = false;
   let personDraft = { addresses: [], phones: [], emails: [] };
   let pendingRelative = null;
+  let relatedAddressAutofillApplied = false;
   let currentTreeLayout = null;
   let treeNeedsFit = true;
   let treeSurfaceMode = "natural";
@@ -2232,6 +2233,48 @@
     return { value: value, qualifier: "exact" };
   }
 
+  function currentAddressForPerson(person) {
+    const addresses = person && person.addresses || [];
+    return addresses.find(function (address) { return address.current; }) || addresses[0] || null;
+  }
+
+  function relatedPersonAddressDraft(person) {
+    const address = currentAddressForPerson(person);
+    if (!address) return null;
+    return {
+      id: u.uid("address"), placeId: address.placeId || "", residenceId: "", label: address.label || "Home", current: true,
+      line1: address.line1 || "", line2: address.line2 || "", city: address.city || "", region: address.region || "", postalCode: address.postalCode || "", country: address.country || "", phone: address.phone || "",
+      startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, notes: "",
+      source: { format: "mcresidences-v1", fields: {} }, placeSource: u.clone(address.placeSource || { format: "mcplaces-v2", fields: {} }), order: 0
+    };
+  }
+
+  function applyRelatedAddressAutofill(checked) {
+    const sourcePerson = pendingRelative && state().workspace.people.find(function (candidate) { return candidate.id === pendingRelative.sourceId; });
+    const address = checked ? relatedPersonAddressDraft(sourcePerson) : null;
+    if (checked && !address) return;
+    if (checked) personDraft.addresses = [address];
+    else if (relatedAddressAutofillApplied) personDraft.addresses = [];
+    relatedAddressAutofillApplied = Boolean(checked && address);
+    renderPersonRepeatables();
+    updatePersonFormValidity();
+  }
+
+  function detachRelatedAddressAutofill() {
+    const toggle = $("#relatedAddressAutofill");
+    if (!relatedAddressAutofillApplied || !toggle || !toggle.checked) return;
+    syncPersonRepeatables();
+    relatedAddressAutofillApplied = false;
+    toggle.checked = false;
+    personDraft.addresses.forEach(function (address) {
+      address.id = u.uid("address");
+      address.placeId = "";
+      address.residenceId = "";
+      address.placeSource = { format: "mcplaces-v2", fields: {} };
+    });
+    $("#relatedAddressAutofillNote").textContent = "Copied address edited; it will be saved separately.";
+  }
+
   function fillPersonForm(person) {
     const birthName = model.nameParts(person, "birth");
     const currentName = model.nameParts(person, "current");
@@ -2250,9 +2293,9 @@
     Object.keys(values).forEach(function (id) { const input = $("#" + id); if (input) input.value = values[id] || ""; });
     $("#unknownPerson").checked = Boolean(person && person.unknownPerson);
     const pendingContext = Boolean(!person && pendingRelative);
+    const sourcePerson = pendingContext && state().workspace.people.find(function (candidate) { return candidate.id === pendingRelative.sourceId; });
     $("#pendingRelativeSummary").hidden = !pendingContext;
     if (pendingContext) {
-      const sourcePerson = state().workspace.people.find(function (candidate) { return candidate.id === pendingRelative.sourceId; });
       const sourceName = profileName(sourcePerson);
       $("#pendingRelativeType").textContent = pendingRelative.role === "partner" ? "Partners" : "Parent → Child";
       $("#pendingRelativePeople").textContent = pendingRelative.role === "parent" ? "New parent → " + sourceName : pendingRelative.role === "child" ? sourceName + " → New child" : sourceName + " ↔ New partner";
@@ -2261,7 +2304,7 @@
     const pendingPartner = !person && pendingRelative && pendingRelative.role === "partner";
     $("#pendingPartnerStatusField").hidden = !pendingPartner;
     if (pendingPartner) {
-      $("#pendingPartnerStatusLabel").textContent = "Relationship to " + model.displayName(state().workspace.people.find(function (candidate) { return candidate.id === pendingRelative.sourceId; }));
+      $("#pendingPartnerStatusLabel").textContent = "Relationship to " + model.displayName(sourcePerson);
       $("#pendingPartnerStatus").innerHTML = config.partnerStatuses.map(function (item) {
         const label = item.id === "partnered" ? "Unmarried partners" : item.id === "unknown" ? "Unknown" : item.label;
         return '<option value="' + u.escapeHtml(item.id) + '">' + u.escapeHtml(label) + "</option>";
@@ -2269,8 +2312,14 @@
       $("#pendingPartnerStatus").value = "unknown";
     }
     personNameOverrides = new Set(person ? ["current", "preferred"].flatMap(function (group) { return NAME_PARTS.map(function (part) { return targetNameInputId(group, part); }); }) : []);
+    const autofilledAddress = pendingContext ? relatedPersonAddressDraft(sourcePerson) : null;
+    $("#relatedAddressAutofillField").hidden = !pendingContext;
+    $("#relatedAddressAutofill").checked = Boolean(autofilledAddress);
+    $("#relatedAddressAutofill").disabled = Boolean(pendingContext && !autofilledAddress);
+    $("#relatedAddressAutofillNote").textContent = pendingContext ? autofilledAddress ? "Using " + profileName(sourcePerson) + "’s current address." : profileName(sourcePerson) + " has no address to copy." : "";
+    relatedAddressAutofillApplied = Boolean(autofilledAddress);
     personDraft = {
-      addresses: u.clone(person && person.addresses || []),
+      addresses: person ? u.clone(person.addresses || []) : autofilledAddress ? [autofilledAddress] : [],
       phones: u.clone(person && person.phones || []),
       emails: u.clone(person && person.emails || [])
     };
@@ -2925,8 +2974,7 @@
   }
 
   function printHouseholdAddress(person) {
-    const addresses = person && person.addresses || [];
-    return addresses.find(function (address) { return address.current; }) || addresses[0] || null;
+    return currentAddressForPerson(person);
   }
 
   function printDirectoryEligible(person) {
@@ -4609,6 +4657,8 @@
     });
     $("#personDialog").addEventListener("input", function (event) {
       if (event.target.matches("[data-phone-input]")) formatPhoneInput(event.target);
+      if (event.target.id === "relatedAddressAutofill") applyRelatedAddressAutofill(event.target.checked);
+      else if (event.target.closest("#addressEditor")) detachRelatedAddressAutofill();
       if (event.target.matches("[data-new-person-relationship-search]")) filterNewPersonRelationshipPicker(event.target);
       const birthName = /^birthName(Prefix|First|Middle|Last|Suffix)$/.exec(event.target.id);
       if (birthName) syncBirthNamePart(birthName[1]);
@@ -4627,11 +4677,11 @@
       if (updatePersonFormValidity()) $("#personFormError").hidden = true;
     });
     $("#personDialog").addEventListener("click", function (event) {
-      if (event.target.closest("[data-add-address]")) { syncPersonRepeatables(); personDraft.addresses.push({ id: u.uid("address"), label: "Home", current: true, startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, order: personDraft.addresses.length }); renderPersonRepeatables(); updatePersonFormValidity(); }
+      if (event.target.closest("[data-add-address]")) { detachRelatedAddressAutofill(); syncPersonRepeatables(); personDraft.addresses.push({ id: u.uid("address"), label: "Home", current: true, startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, order: personDraft.addresses.length }); renderPersonRepeatables(); updatePersonFormValidity(); }
       if (event.target.closest("[data-add-phone]")) { syncPersonRepeatables(); personDraft.phones.push({ id: u.uid("phone"), label: "Mobile", value: "", order: personDraft.phones.length }); renderPersonRepeatables(); updatePersonFormValidity(); }
       if (event.target.closest("[data-add-email]")) { syncPersonRepeatables(); personDraft.emails.push({ id: u.uid("email"), label: "Personal", value: "", order: personDraft.emails.length }); renderPersonRepeatables(); updatePersonFormValidity(); }
       const removeAddress = event.target.closest("[data-remove-address]");
-      if (removeAddress) { syncPersonRepeatables(); personDraft.addresses.splice(Number(removeAddress.dataset.removeAddress), 1); renderPersonRepeatables(); updatePersonFormValidity(); }
+      if (removeAddress) { detachRelatedAddressAutofill(); syncPersonRepeatables(); personDraft.addresses.splice(Number(removeAddress.dataset.removeAddress), 1); renderPersonRepeatables(); updatePersonFormValidity(); }
       const removeContact = event.target.closest("[data-remove-contact]");
       if (removeContact) { syncPersonRepeatables(); const parts = removeContact.dataset.removeContact.split(":"); personDraft[parts[0] + "s"].splice(Number(parts[1]), 1); renderPersonRepeatables(); updatePersonFormValidity(); }
     });
