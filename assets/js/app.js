@@ -1747,7 +1747,7 @@
     const condenseLineage = $("[data-outline-condense-lineage]");
     if (condenseLineage) {
       condenseLineage.disabled = !result.availableHighlightPath;
-      condenseLineage.title = result.availableHighlightPath ? "Condense branches outside the selected descendant's direct lineage" : "Select a descendant of the root to condense around its lineage";
+      condenseLineage.title = result.availableHighlightPath ? "Condense other branches and expand every descendant below the selected person" : "Select a descendant of the root to condense around its lineage";
     }
   }
 
@@ -3565,15 +3565,59 @@
     return { pageCount: pageCount };
   }
 
+  function outlinePrintHeaderHtml(rootName, reportDate, pageNumber, pageCount) {
+    return '<header class="print-report-header"><div><h1>Descendant Outline</h1><p>Root: ' + u.escapeHtml(rootName) + "</p></div>" + printReportMetaHtml(reportDate, pageNumber, pageCount) + "</header>";
+  }
+
+  function paginateOutlineRows(rows, headerHtml) {
+    if (!rows.length) return [[]];
+    const measurement = document.createElement("div");
+    measurement.className = "print-preview-document print-outline-measure";
+    measurement.setAttribute("aria-hidden", "true");
+    measurement.innerHTML = '<section class="print-outline print-outline-page print-sheet-page">' + headerHtml + '<div class="print-outline-rows">' + rows.join("") + "</div></section>";
+    document.body.appendChild(measurement);
+    try {
+      const page = $(".print-outline-page", measurement);
+      const rowContainer = $(".print-outline-rows", measurement);
+      const measuredRows = $$(".outline-row", rowContainer);
+      const pageStyle = getComputedStyle(page);
+      const pageBottom = page.getBoundingClientRect().bottom - (parseFloat(pageStyle.paddingBottom) || 0);
+      const availableHeight = pageBottom - rowContainer.getBoundingClientRect().top;
+      if (!(availableHeight > 0) || measuredRows.length !== rows.length) return printItemPages(rows, config.controls.maxPrintOutlineRows);
+      const rowHeights = measuredRows.map(function (row, index) {
+        const current = row.getBoundingClientRect();
+        const next = measuredRows[index + 1]?.getBoundingClientRect();
+        return next ? next.top - current.top : current.height + (parseFloat(getComputedStyle(row).marginBottom) || 0);
+      });
+      const pages = [];
+      let pageRows = [];
+      let usedHeight = 0;
+      rows.forEach(function (row, index) {
+        const rowHeight = rowHeights[index];
+        if (pageRows.length && (pageRows.length >= config.controls.maxPrintOutlineRows || usedHeight + rowHeight > availableHeight)) {
+          pages.push(pageRows);
+          pageRows = [];
+          usedHeight = 0;
+        }
+        pageRows.push(row);
+        usedHeight += rowHeight;
+      });
+      if (pageRows.length) pages.push(pageRows);
+      return pages;
+    } finally {
+      measurement.remove();
+    }
+  }
+
   function buildOutlineReport() {
     const result = buildOutlineRows({ print: true });
     if (!result.root) return { error: "The Descendant Outline has no root person to print." };
     const reportDate = printDate();
     const rootName = model.treeName(result.root, "lineal", "full");
-    const outlinePages = printItemPages(result.rows, config.controls.maxPrintOutlineRows);
+    const outlinePages = paginateOutlineRows(result.rows, outlinePrintHeaderHtml(rootName, reportDate, 1, 1));
     const pageCount = outlinePages.length;
     const pages = outlinePages.map(function (rows, index) {
-      return '<section class="print-outline print-outline-page print-sheet-page" aria-label="Descendant Outline page ' + (index + 1) + " of " + pageCount + '"><header class="print-report-header"><div><h1>Descendant Outline</h1><p>Root: ' + u.escapeHtml(rootName) + "</p></div>" + printReportMetaHtml(reportDate, index + 1, pageCount) + '</header><div class="print-outline-rows">' + rows.join("") + "</div></section>";
+      return '<section class="print-outline print-outline-page print-sheet-page" aria-label="Descendant Outline page ' + (index + 1) + " of " + pageCount + '">' + outlinePrintHeaderHtml(rootName, reportDate, index + 1, pageCount) + '<div class="print-outline-rows">' + rows.join("") + "</div></section>";
     });
     $("#printReport").innerHTML = pages.join("");
     return { error: "", pageCount: pageCount };
@@ -4369,13 +4413,14 @@
       const lineageKeys = result.availableHighlightPath;
       if (!lineageKeys) return;
       const selectedKey = Array.from(lineageKeys).slice(-1)[0];
+      const selectedDescendantPrefix = selectedKey + "|";
       outlineCollapsedBranches.clear();
       result.branchKeys.forEach(function (key) {
-        if (!lineageKeys.has(key) || key === selectedKey) outlineCollapsedBranches.add(key);
+        if (!lineageKeys.has(key) && !key.startsWith(selectedDescendantPrefix)) outlineCollapsedBranches.add(key);
       });
       renderOutline();
       requestAnimationFrame(centerSelectedOutlinePerson);
-      announce("Condensed branches outside the selected descendant's direct lineage.");
+      announce("Condensed other branches and expanded every descendant below the selected person.");
       return;
     }
     if (target.closest("[data-outline-highlight]")) {
