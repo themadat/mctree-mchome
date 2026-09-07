@@ -864,8 +864,10 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
 .outline-person strong, .outline-person small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .outline-person strong { flex: 1 1 auto; min-width: 0; font-size: .74rem; line-height: 1.1; }
 .outline-person small { flex: 0 0 auto; color: var(--muted); font-size: .61rem; font-variant-numeric: tabular-nums; }
-.outline-life-dates.is-stacked { display: grid; justify-items: center; line-height: .82; }
+.outline-life-dates.is-stacked { display: grid; justify-items: center; line-height: .96; }
 .outline-life-dates.is-stacked span { display: block; }
+.outline-life-dates.is-stacked span:first-child { transform: translateY(-.5px); }
+.outline-life-dates.is-stacked span:last-child { transform: translateY(.5px); }
 .outline-person.deceased { background: var(--deceased-card); color: var(--deceased-card-text); }
 .outline-person.deceased small { color: var(--deceased-card-muted); }
 .outline-row.selected > .outline-person, .outline-person.selected { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
@@ -1196,6 +1198,7 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
 .print-preview-document > .print-directory-page, .print-preview-document > .print-atlas-page { box-sizing: border-box; width: min(8.5in, 100%); height: 11in; padding: .5in; }
 .print-preview-document > .print-tree-page { box-sizing: border-box; width: min(11in, 100%); padding: .5in; }
 .print-preview-document > .print-outline-page { box-sizing: border-box; width: min(8.5in, 100%); height: 11in; padding: .5in; }
+.print-outline-measure { position: fixed; top: 0; left: -200vw; width: 8.5in; visibility: hidden; pointer-events: none; }
 .print-preview-document > .print-label-sheet { box-sizing: border-box; display: grid; grid-template-columns: repeat(3, 2.625in); grid-template-rows: repeat(10, 1in); column-gap: .125in; width: 8.5in; height: 11in; padding: .5in .1875in; }
 .print-mailing-label { box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; width: 2.625in; height: 1in; padding: .09in .14in; overflow: hidden; font-family: Helvetica, Arial, sans-serif; }
 .print-mailing-label strong, .print-mailing-label span { display: block; overflow-wrap: anywhere; font-size: 9pt; line-height: 1.13; }
@@ -1217,7 +1220,7 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
 .print-outline .outline-person.outline-spouse { border-left-width: .6pt; border-left-color: #aaa; }
 .print-outline .outline-person strong { flex: 1 1 auto; min-width: 0; max-width: none; overflow: visible; overflow-wrap: anywhere; font-size: 6.4pt; line-height: 1.08; text-overflow: clip; white-space: normal; }
 .print-outline .outline-person small { flex: 0 0 auto; max-width: none; overflow: visible; color: #555; font: 5.6pt Helvetica, Arial, sans-serif; text-overflow: clip; white-space: nowrap; }
-.print-outline .outline-life-dates.is-stacked { line-height: .82; }
+.print-outline .outline-life-dates.is-stacked { line-height: .96; }
 .print-outline .outline-person.deceased small { color: #6c5847; }
 .print-outline .outline-partners { display: block; }
 .print-outline .outline-partner { grid-template-columns: 1.05in var(--outline-person-width); gap: .04in; }
