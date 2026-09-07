@@ -3215,7 +3215,7 @@
       style.media = "print";
       document.head.appendChild(style);
     }
-    style.textContent = mode === "labels"
+    style.textContent = mode === "labels" || mode === "outline"
       ? "@page { size: letter; margin: 0; }"
       : mode === "tree"
         ? "@page { size: letter landscape; margin: .5in; }"

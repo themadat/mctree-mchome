@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.137",
-      buildId: "0.0.1.137",
+      version: "0.0.1.138",
+      buildId: "0.0.1.138",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -176,13 +176,13 @@
 
     releases: [
       {
-        version: "0.0.1.137",
-        date: "2026-09-07T21:04:19.000Z",
-        title: "Accurate Outline print margins",
-        summary: "The Descendant Outline now uses the full printable area inside true half-inch page margins without spilling fitted content onto another sheet.",
+        version: "0.0.1.138",
+        date: "2026-09-07T21:19:23.000Z",
+        title: "Deterministic Outline print sheets",
+        summary: "The Descendant Outline now prints each planned page as one physical Letter sheet with exact half-inch internal margins.",
         features: [],
-        improvements: ["Matched native Outline pagination to the dimensions shown in Print Preview"],
-        fixes: ["Removed inherited application padding that enlarged print margins and forced Outline rows onto a second page"],
+        improvements: ["Made native Outline sheets use the same physical box and typography as Print Preview"],
+        fixes: ["Prevented the last fitted row from becoming an orphan on a nearly blank continuation sheet"],
         knownIssues: []
       }
     ],

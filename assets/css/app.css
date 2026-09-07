@@ -1199,6 +1199,7 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
 .print-preview-document > .print-tree-page { box-sizing: border-box; width: min(11in, 100%); padding: .5in; }
 .print-preview-document > .print-outline-page { box-sizing: border-box; width: min(8.5in, 100%); height: 11in; padding: .5in; }
 .print-outline-measure { position: fixed; top: 0; left: -200vw; width: 8.5in; visibility: hidden; pointer-events: none; }
+.print-outline-measure > .print-outline-page { height: calc(11in - 2px); }
 .print-preview-document > .print-label-sheet { box-sizing: border-box; display: grid; grid-template-columns: repeat(3, 2.625in); grid-template-rows: repeat(10, 1in); column-gap: .125in; width: 8.5in; height: 11in; padding: .5in .1875in; }
 .print-mailing-label { box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; width: 2.625in; height: 1in; padding: .09in .14in; overflow: hidden; font-family: Helvetica, Arial, sans-serif; }
 .print-mailing-label strong, .print-mailing-label span { display: block; overflow-wrap: anywhere; font-size: 9pt; line-height: 1.13; }
@@ -1461,7 +1462,10 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
   body.printing-tree .print-tree-page:last-child { break-after: auto; page-break-after: auto; }
   body.printing-tree .print-tree-svg { width: 10in; height: 6.66in; aspect-ratio: auto; }
   body.printing-directory .print-directory-page, body.printing-groups .print-atlas-page { box-sizing: border-box; width: 7.5in; break-after: page; page-break-after: always; }
-  body.printing-outline .print-outline-page { box-sizing: border-box; width: 7.5in; break-after: page; page-break-after: always; }
+  body.printing-outline #printReport { font-size: 10pt; }
+  body.printing-outline .print-report-header { margin-bottom: .12in; }
+  body.printing-outline .print-report-header time { font-size: 7pt; }
+  body.printing-outline .print-outline-page { box-sizing: border-box; width: 8.5in; height: 11in; padding: .5in; overflow: hidden; break-after: page; page-break-after: always; }
   body.printing-directory .print-directory-page:last-child, body.printing-groups .print-atlas-page:last-child, body.printing-outline .print-outline-page:last-child { break-after: auto; page-break-after: auto; }
 }
 
