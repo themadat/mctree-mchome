@@ -23,7 +23,7 @@ Serve the repository over HTTP with `?local=1` for local package tests. Use synt
 | State/storage | Current schema reload; wrong schema rejection; local recovery; hosted memory mode; favorites survive Lock; no full hosted state in localStorage |
 | Package/data | Valid current ZIP round trip; missing/extra/reordered header rejection; bad counts/references/ids/cycles rejection; no mutation before confirmation |
 | Hosted access | Unknown/wrong/revoked passphrase; each role projection; connection status; stale revision rejection; audit actor/detail; Lock clears decrypted state |
-| Editing | Add/edit/delete person; name propagation; auto lineage id; parent/partner validation; place/residence/contact edits; one audit line per field change |
+| Editing | Add/edit/delete person; name propagation; auto lineage id; parent/partner validation; a new relative defaults to the related person's current address, opt-out removes the untouched copy, and editing detaches it; place/residence/contact edits; one audit line per field change |
 | Tree | Summary vs Details; name basis/length; focus/full tree; partner order/lines; adoption/non-Lineal toggle; zoom/pan/scroll; selection and panel resize |
 | List/search | Fuzzy three-name search; favorites picker; living/contact filters; first/last sort; alphabet jump; role-redacted search fields |
 | Profile/Notes | Complete known/unknown values; clickable relatives; role visibility; Developer-only Imported Source; Notes last and editor-only |

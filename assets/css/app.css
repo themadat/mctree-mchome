@@ -1001,6 +1001,9 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
 .date-validation-message { margin-top: .1rem; color: var(--danger); font-size: .61rem; font-weight: 700; line-height: 1.25; }
 .person-contact-sections { display: grid; grid-template-columns: 1fr; align-items: start; gap: .28rem; }
 .person-contact-sections .muted-copy { display: none; }
+.related-address-autofill-field { align-items: flex-start; padding: .5rem .62rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); color: var(--text); }
+.related-address-autofill-field > span { display: grid; gap: .06rem; }
+.related-address-autofill-field small { color: var(--muted); font-size: .66rem; font-weight: 500; }
 .editor-notes-section .field { gap: .15rem; }
 .editor-notes-section textarea { min-height: 42px; padding: .38rem .5rem; resize: vertical; }
 .person-dialog input[aria-invalid="true"] { border-color: var(--danger); box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 13%, transparent); }
