@@ -1,22 +1,23 @@
 # Goal
-Prevent alternating blank pages when printing mailing labels.
+Keep search text session-only and prevent another publisher's searches from being restored.
 # Status
 COMPLETE
 # Checkpoint
 None.
 # Completed
-- Made label pages indivisible blocks with an inset grid shared by preview and native print.
-- Reset native print body layout and synchronized version 0.0.1.139.
+- Added shared search-free snapshots to package, local/recovery, and diagnostic persistence.
+- Cleared searches from older packages and local/recovery loads.
+- Synchronized version 0.0.1.140 and documented session-only search.
 # Remaining
 - None.
 # Verification
-- Build: PASS (static asset/config checks; no build step)
-- Tests: PASS (Chromium PDF page counts/content and Chromium/WebKit screen/print geometry at 390/1440px for 1, 30, 31, 60, 181 labels)
-- Lint: PASS (JavaScript syntax and diff checks)
-- Review: PASS (request, Avery dimensions, scoped CSS, versions, and clean diff reviewed)
+- Build: PASS (static asset/version checks; no build step)
+- Tests: PASS (desktop/mobile ZIP round trips for all access modes; legacy package/local/recovery loads; live-search preservation; reload; keyboard search/Escape; favorites; hosted memory and Lock)
+- Lint: PASS (runtime syntax and diff checks)
+- Review: PASS (persistence boundaries, non-mutating snapshots, existing package compatibility, and final diff reviewed)
 # Next
-User may commit/push 0.0.1.139 and confirm printing from the affected iOS device.
+User may commit and push 0.0.1.140; no repository commit or push was performed.
 # Decisions
-- Preserve Avery 5260 label dimensions and use synthetic data only.
+- Cover global, List, and roadmap searches; preserve other settings and device favorites.
+- Never mutate the active search merely because the user exports or saves.
 - Do not commit or push without user instruction.
-- Native iOS print dialog not available; standalone macOS WebKit print harness timed out and was stopped.

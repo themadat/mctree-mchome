@@ -541,7 +541,7 @@
       },
       preferences: u.plainObject(settings.preferences), ui: u.plainObject(settings.ui), modules: u.plainObject(settings.modules)
     };
-    const prepared = model.prepare(rawState);
+    const prepared = model.prepare(model.withoutSessionSearch(rawState));
     if (prepared.state.workspace.people.length !== people.length || prepared.state.workspace.relationships.length !== relationships.length || prepared.state.workspace.places.length !== places.length || prepared.state.workspace.residences.length !== residences.length) {
       throw new Error("Package normalization changed record counts; the import was rejected instead of silently dropping data.");
     }
@@ -687,7 +687,8 @@
     state.workspace.relationships.forEach(function (relationship) { if (relationship.place) relationshipDetails[relationship.id] = { place: relationship.place }; });
     const placeDetails = {};
     state.workspace.places.forEach(function (place) { if (place.phone) placeDetails[place.id] = { phone: place.phone }; });
-    add("family", "McFamily", "settings-json", JSON.stringify({ preferences: state.preferences, ui: state.ui, modules: state.modules, personDetails: personDetails, placeDetails: placeDetails, relationshipDetails: relationshipDetails }));
+    const savedSettings = model.withoutSessionSearch(state);
+    add("family", "McFamily", "settings-json", JSON.stringify({ preferences: savedSettings.preferences, ui: savedSettings.ui, modules: savedSettings.modules, personDetails: personDetails, placeDetails: placeDetails, relationshipDetails: relationshipDetails }));
     FILE_NAMES.forEach(function (name) { add("schema", name, "schema-version", FILE_SCHEMA_VERSIONS[name]); });
     state.meta.package.auditHistory.forEach(function (audit, index) {
       rows.push({

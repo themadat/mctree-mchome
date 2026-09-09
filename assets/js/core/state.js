@@ -940,6 +940,15 @@
     return normalize(touch(next));
   }
 
+  // Search text belongs to the live session, never a shared or persisted snapshot.
+  function withoutSessionSearch(state) {
+    const modules = u.plainObject(state.modules);
+    return Object.assign({}, state, {
+      ui: Object.assign({}, state.ui, { search: "", directorySearch: "" }),
+      modules: Object.assign({}, modules, { roadmap: Object.assign({}, modules.roadmap, { search: "" }) })
+    });
+  }
+
   function exportEnvelope(state) {
     return {
       exportFormat: "mcfamily-diagnostic-state",
@@ -947,7 +956,7 @@
       exportedAt: u.isoNow(),
       application: { name: config.identity.name, version: config.identity.version, buildId: config.identity.buildId },
       schemaVersion: config.schemaVersion,
-      state: normalize(u.clone(state))
+      state: withoutSessionSearch(normalize(u.clone(state)))
     };
   }
 
@@ -1080,6 +1089,7 @@
     prepare: prepare,
     touch: touch,
     resetPreferences: resetPreferences,
+    withoutSessionSearch: withoutSessionSearch,
     exportEnvelope: exportEnvelope,
     displayName: displayName,
     treeName: treeName,

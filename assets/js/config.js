@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.139",
-      buildId: "0.0.1.139",
+      version: "0.0.1.140",
+      buildId: "0.0.1.140",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -176,13 +176,13 @@
 
     releases: [
       {
-        version: "0.0.1.139",
-        date: "2026-09-09T14:06:44.000Z",
-        title: "Stable mailing-label print sheets",
-        summary: "Mailing labels use indivisible Letter sheets with an inset Avery 5260 grid to prevent blank continuation pages.",
+        version: "0.0.1.140",
+        date: "2026-09-09T14:35:01.000Z",
+        title: "Session-only searches",
+        summary: "Search text stays in the current session and cannot carry over from another editor's published family package.",
         features: [],
-        improvements: ["Preserved exact Avery label spacing in preview and native print"],
-        fixes: ["Removed paginated label-grid flow and the inherited fixed-height application layout from native printing"],
+        improvements: ["Kept active searches intact while saving and exporting"],
+        fixes: ["Excluded global, List, and roadmap search text from packages and saved snapshots", "Cleared stale searches when opening older packages, local state, and recovery snapshots"],
         knownIssues: []
       }
     ],

@@ -127,7 +127,7 @@
     try {
       const parsed = JSON.parse(raw);
       const prepared = model.prepare(parsed.state || parsed);
-      return { state: prepared.state, createdAt: parsed.createdAt || "", reason: parsed.reason || "Recovery snapshot" };
+      return { state: model.withoutSessionSearch(prepared.state), createdAt: parsed.createdAt || "", reason: parsed.reason || "Recovery snapshot" };
     } catch (error) {
       return null;
     }
@@ -159,7 +159,7 @@
     if (raw) {
       try {
         const prepared = model.prepare(JSON.parse(raw));
-        currentState = restoreDevicePreferences(prepared.state);
+        currentState = restoreDevicePreferences(model.withoutSessionSearch(prepared.state));
         loadReport = {
           source: "current",
           warnings: prepared.validation.warnings,
@@ -196,7 +196,7 @@
     if (!currentState) return false;
     const normalized = model.normalize(currentState);
     currentState = normalized;
-    const json = JSON.stringify(normalized);
+    const json = JSON.stringify(model.withoutSessionSearch(normalized));
     if (json === lastSavedJson) return true;
     if (fullStateMemoryOnly) {
       lastSavedJson = json;
@@ -230,7 +230,7 @@
     const snapshot = {
       createdAt: u.isoNow(),
       reason: u.cleanLine(reason || "Before data replacement", 160),
-      state: model.normalize(u.clone(state || getState()))
+      state: model.withoutSessionSearch(model.normalize(u.clone(state || getState())))
     };
     return writeLocal(config.storage.recoveryKey, JSON.stringify(snapshot));
   }
