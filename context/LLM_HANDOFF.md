@@ -1,6 +1,6 @@
 # McFamily implementation contract
 
-McFamily `0.0.1.139` is a dependency-free static family atlas. It uses latest-only application schema v14 and strict dataset `17.0.x` packages. The hosted app anonymously downloads public ciphertext, matches a passphrase locally, and decrypts only the corresponding view. There is no backend, account provider, cloud database, package manager, or runtime build.
+McFamily `0.0.1.140` is a dependency-free static family atlas. It uses latest-only application schema v14 and strict dataset `17.0.x` packages. The hosted app anonymously downloads public ciphertext, matches a passphrase locally, and decrypts only the corresponding view. There is no backend, account provider, cloud database, package manager, or runtime build.
 
 Read only the task-relevant detail after this file:
 
@@ -42,6 +42,7 @@ Read only the task-relevant detail after this file:
 ## Behavior contracts
 
 - The header keeps search centered independently of the action group. Favorites is anchored inside the search field after the `/` hint; the toolbar orders Save, Add, List, then Directory before the remaining output/settings actions. Outline belongs in the central Tree/Outline view switch, not the application toolbar. Responsive layouts give search a full row before controls can overlap.
+- Global, List, and roadmap search text is session-only: package export, local save/recovery, and diagnostic snapshots clear it without changing live searches; package import and local state/recovery load discard older saved searches.
 - List search is fuzzy across all name variants and allowed family fields. Favorites are device preferences, not search scope state. Contact filters and indicators apply to living people.
 - Tree cards support Summary (name only) and Details (name, years, contact and Lineal symbols). Name basis is Lineal/Birth, Legal/Current, or Preferred/Display; length is Short or Full. Full tree and focus mode center each sibling branch beneath its specific parent or parent couple, retain the parents' left-to-right order even when a later branch is much wider, then collision-pack neighboring family branches without overlap while preserving documented partner and lineage placement.
 - Selecting a person opens the profile; closing it deselects. Search selections return to focus mode. The initialized application remains fixed within the viewport so only the List, Tree, and Person panes scroll vertically; those panels are collapsible and horizontally resizable.
