@@ -3215,11 +3215,13 @@
       style.media = "print";
       document.head.appendChild(style);
     }
-    style.textContent = mode === "labels" || mode === "outline"
-      ? "@page { size: letter; margin: 0; }"
-      : mode === "tree"
-        ? "@page { size: letter landscape; margin: .5in; }"
-        : "@page { size: letter portrait; margin: .5in; }";
+    style.textContent = mode === "labels"
+      ? "@page { size: letter portrait; margin: .5in .1875in; }"
+      : mode === "outline"
+        ? "@page { size: letter; margin: 0; }"
+        : mode === "tree"
+          ? "@page { size: letter landscape; margin: .5in; }"
+          : "@page { size: letter portrait; margin: .5in; }";
     document.body.classList.toggle("printing-labels", mode === "labels");
     document.body.classList.toggle("printing-directory", mode === "directory");
     document.body.classList.toggle("printing-groups", mode === "groups");
@@ -3548,18 +3550,61 @@
     return { pageCount: pageCount };
   }
 
+  function directoryPrintHeaderHtml(reportDate, pageNumber, pageCount) {
+    return '<header class="print-report-header"><h1>Directory of McMillen Clan</h1>' + printReportMetaHtml(reportDate, pageNumber, pageCount) + "</header>";
+  }
+
+  function directoryPrintTableHtml(rows) {
+    return rows.length ? '<table class="print-directory-table"><colgroup><col class="print-directory-household-column"><col class="print-directory-phone-column"><col class="print-directory-email-column"><col class="print-directory-address-column"></colgroup><thead><tr><th scope="col">Household</th><th scope="col">Phone</th><th scope="col">Email</th><th scope="col"><span class="print-directory-address-heading"><span>Address</span><span>Landline</span></span></th></tr></thead>' + rows.join("") + "</table>" : '<p class="print-directory-empty">No phone, email, or address information is recorded.</p>';
+  }
+
+  function paginateDirectoryHouseholds(rows, headerHtml) {
+    if (!rows.length) return [[]];
+    const measurement = document.createElement("div");
+    measurement.className = "print-preview-document print-directory-measure";
+    measurement.setAttribute("aria-hidden", "true");
+    measurement.innerHTML = '<section class="print-directory print-directory-page">' + headerHtml + directoryPrintTableHtml(rows) + "</section>";
+    document.body.appendChild(measurement);
+    try {
+      const sheet = $(".print-directory-page", measurement);
+      const measuredRows = $$(".print-directory-table > .print-directory-household", measurement);
+      const sheetStyle = getComputedStyle(sheet);
+      // Reserve two pixels at the physical boundary for print rounding.
+      const pageBottom = sheet.getBoundingClientRect().bottom - parseFloat(sheetStyle.paddingBottom) - 2;
+      const availableHeight = pageBottom - (measuredRows[0]?.getBoundingClientRect().top || 0);
+      if (!(availableHeight > 0) || measuredRows.length !== rows.length) return printItemPages(rows, config.controls.maxPrintDirectoryFallbackRows);
+      const pages = [];
+      let pageRows = [];
+      let usedHeight = 0;
+      rows.forEach(function (row, index) {
+        const bounds = measuredRows[index].getBoundingClientRect();
+        const next = measuredRows[index + 1]?.getBoundingClientRect();
+        const height = next ? next.top - bounds.top : bounds.height;
+        if (pageRows.length && usedHeight + height > availableHeight) {
+          pages.push(pageRows);
+          pageRows = [];
+          usedHeight = 0;
+        }
+        pageRows.push(row);
+        usedHeight += height;
+      });
+      if (pageRows.length) pages.push(pageRows);
+      return pages;
+    } finally {
+      measurement.remove();
+    }
+  }
+
   function buildDirectoryReport() {
     const context = printableFamilyContext();
     const directoryPeople = printDirectoryPeople(context.people, context.state);
     const households = printHouseholds(directoryPeople, context.graph, context.state);
     const reportDate = printDate();
-    const householdPages = printItemPages(households, config.controls.maxPrintDirectoryUnits, function (household) {
-      return 5 + Math.max(0, household.partners.length - 1);
-    });
+    const rows = households.map(function (household) { return printHouseholdHtml(household, context.graph); });
+    const householdPages = paginateDirectoryHouseholds(rows, directoryPrintHeaderHtml(reportDate, 1, Math.max(1, rows.length)));
     const pageCount = householdPages.length;
-    const pages = householdPages.map(function (pageHouseholds, index) {
-      const directoryHtml = pageHouseholds.length ? '<table class="print-directory-table"><colgroup><col class="print-directory-household-column"><col class="print-directory-phone-column"><col class="print-directory-email-column"><col class="print-directory-address-column"></colgroup><thead><tr><th scope="col">Household</th><th scope="col">Phone</th><th scope="col">Email</th><th scope="col"><span class="print-directory-address-heading"><span>Address</span><span>Landline</span></span></th></tr></thead>' + pageHouseholds.map(function (household) { return printHouseholdHtml(household, context.graph); }).join("") + "</table>" : '<p class="print-directory-empty">No phone, email, or address information is recorded.</p>';
-      return '<section class="print-directory print-directory-page print-sheet-page" aria-label="Directory page ' + (index + 1) + " of " + pageCount + '"><header class="print-report-header"><h1>Directory of McMillen Clan</h1>' + printReportMetaHtml(reportDate, index + 1, pageCount) + "</header>" + directoryHtml + "</section>";
+    const pages = householdPages.map(function (pageRows, index) {
+      return '<section class="print-directory print-directory-page print-sheet-page" aria-label="Directory page ' + (index + 1) + " of " + pageCount + '">' + directoryPrintHeaderHtml(reportDate, index + 1, pageCount) + directoryPrintTableHtml(pageRows) + "</section>";
     });
     $("#printReport").innerHTML = pages.join("");
     return { pageCount: pageCount };

@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.140",
-      buildId: "0.0.1.140",
+      version: "0.0.1.141",
+      buildId: "0.0.1.141",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -92,7 +92,7 @@
       maxPrintLineageLevels: 12,
       maxPrintLineagePeopleAcross: 16,
       maxPrintOutlineRows: 44,
-      maxPrintDirectoryUnits: 70,
+      maxPrintDirectoryFallbackRows: 14,
       maxPrintGroupUnits: 26,
       maxPrintGroupPeoplePerSection: 42,
       maxPrintTreePages: 240
@@ -176,13 +176,13 @@
 
     releases: [
       {
-        version: "0.0.1.140",
-        date: "2026-09-09T14:35:01.000Z",
-        title: "Session-only searches",
-        summary: "Search text stays in the current session and cannot carry over from another editor's published family package.",
+        version: "0.0.1.141",
+        date: "2026-09-09T15:01:42.000Z",
+        title: "Labels and Directory print fit",
+        summary: "Mailing labels reserve their physical margins outside the label grid, and Directory pages fit the actual household content.",
         features: [],
-        improvements: ["Kept active searches intact while saving and exporting"],
-        fixes: ["Excluded global, List, and roadmap search text from packages and saved snapshots", "Cleared stale searches when opening older packages, local state, and recovery snapshots"],
+        improvements: ["Measured Directory household heights to fill each page while keeping cards together", "Matched Directory preview typography and widths to native print"],
+        fixes: ["Added printable-area label sheets with a rounding guard without shifting Avery 5260 positions", "Removed Directory viewport constraints and conservative page estimates"],
         knownIssues: []
       }
     ],
