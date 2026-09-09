@@ -1,23 +1,27 @@
 # Goal
-Keep search text session-only and prevent another publisher's searches from being restored.
+Fix recurring blank label sheets in native print and reduce wasted Directory page space.
 # Status
 COMPLETE
 # Checkpoint
-None.
+1 (working tree on 9d68d8b; no checkpoint commit).
 # Completed
-- Added shared search-free snapshots to package, local/recovery, and diagnostic persistence.
-- Cleared searches from older packages and local/recovery loads.
-- Synchronized version 0.0.1.140 and documented session-only search.
+- Retained the existing label change to use printable-area dimensions and physical page margins.
+- Retained measured Directory household pagination and shared preview/native typography.
+- Synchronized version 0.0.1.141, release notes, caches, and current documentation.
+- Verified 27 Chromium/native WebKit PDFs: expected page counts, no blank pages or split households, all fixture content present, and unchanged Avery positions.
+- Desktop/mobile preview, keyboard focus/print/Escape, layout restoration, and representative PDF visual checks pass.
+- Complex Directory fixture now produces five PDF pages matching preview (previously nine); simple 90-household fixture drops from seven pages to six.
 # Remaining
 - None.
 # Verification
-- Build: PASS (static asset/version checks; no build step)
-- Tests: PASS (desktop/mobile ZIP round trips for all access modes; legacy package/local/recovery loads; live-search preservation; reload; keyboard search/Escape; favorites; hosted memory and Lock)
-- Lint: PASS (runtime syntax and diff checks)
-- Review: PASS (persistence boundaries, non-mutating snapshots, existing package compatibility, and final diff reviewed)
+- Build: PASS (0.0.1.141 static asset/version checks; no build step)
+- Tests: PASS (27 synthetic PDFs, desktop/mobile, keyboard, and visual checks)
+- Lint: PASS (baseline syntax/diff checks)
+- Review: PASS (request scope, shared typography, sheet geometry, version alignment, and final diff)
 # Next
-User may commit and push 0.0.1.140; no repository commit or push was performed.
+User may commit and push 0.0.1.141. No commit or push was performed; the task preview server was stopped.
 # Decisions
-- Cover global, List, and roadmap searches; preserve other settings and device favorites.
-- Never mutate the active search merely because the user exports or saves.
-- Do not commit or push without user instruction.
+- Use only synthetic family data; preserve exact Avery positions and keep Directory households together.
+- Version remains canonical in assets/js/config.js; checkpoints do not change its four-part format.
+- The original recurring label failure was not reproduced with explicit Letter print settings; revised pagination and unchanged label positions passed both engines.
+- Do not commit or push without instruction.
