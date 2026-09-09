@@ -1200,7 +1200,10 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
 .print-preview-document > .print-outline-page { box-sizing: border-box; width: min(8.5in, 100%); height: 11in; padding: .5in; }
 .print-outline-measure { position: fixed; top: 0; left: -200vw; width: 8.5in; visibility: hidden; pointer-events: none; }
 .print-outline-measure > .print-outline-page { height: calc(11in - 2px); }
-.print-preview-document > .print-label-sheet { box-sizing: border-box; display: grid; grid-template-columns: repeat(3, 2.625in); grid-template-rows: repeat(10, 1in); column-gap: .125in; width: 8.5in; height: 11in; padding: .5in .1875in; }
+.print-preview-document > .print-label-sheet { box-sizing: border-box; width: 8.5in; height: 11in; padding: 0; }
+/* Keep the label grid inside one physical sheet, outside paginated grid flow. */
+.print-label-sheet { position: relative; }
+.print-label-grid { position: absolute; top: .5in; left: .1875in; display: grid; grid-template-columns: repeat(3, 2.625in); grid-template-rows: repeat(10, 1in); column-gap: .125in; width: 8.125in; height: 10in; }
 .print-mailing-label { box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; width: 2.625in; height: 1in; padding: .09in .14in; overflow: hidden; font-family: Helvetica, Arial, sans-serif; }
 .print-mailing-label strong, .print-mailing-label span { display: block; overflow-wrap: anywhere; font-size: 9pt; line-height: 1.13; }
 .print-mailing-label strong { font-weight: 700; }
@@ -1447,11 +1450,12 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
   @page { size: letter; margin: .5in; }
   :root { color-scheme: light; font-size: 10pt; }
   html, body { min-height: 0; overflow: visible; background: #fff !important; color: #111 !important; }
+  body.printing-labels[data-onboarding="false"] { display: block; height: auto; overflow: visible; }
   body > *:not(#printReport) { display: none !important; }
   #printReport { display: block !important; margin: 0; padding: 0; color: #111; font-family: Georgia, "Times New Roman", serif; line-height: 1.35; }
   #printReport a { color: #111; text-decoration: none; }
   body.printing-labels #printReport { line-height: 1; }
-  body.printing-labels .print-label-sheet { box-sizing: border-box; display: grid; grid-template-columns: repeat(3, 2.625in); grid-template-rows: repeat(10, 1in); column-gap: .125in; width: 8.5in; height: calc(11in - 1px); padding: .5in .1875in calc(.5in - 1px); overflow: hidden; break-after: page; page-break-after: always; }
+  body.printing-labels .print-label-sheet { box-sizing: border-box; display: block; width: 8.5in; height: 11in; margin: 0; padding: 0; overflow: hidden; break-inside: avoid; page-break-inside: avoid; break-after: page; page-break-after: always; }
   body.printing-labels .print-label-sheet:last-child { break-after: auto; page-break-after: auto; }
   body.printing-labels .print-mailing-label { outline: 0; }
   .print-report-header { display: flex; align-items: baseline; justify-content: space-between; gap: .2in; margin: 0 0 .1in; }

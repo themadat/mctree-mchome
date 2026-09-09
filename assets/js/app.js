@@ -3199,10 +3199,10 @@
     for (let offset = 0; offset < entries.length; offset += 30) {
       const labels = entries.slice(offset, offset + 30);
       while (labels.length < 30) labels.push(null);
-      pages.push('<section class="print-label-sheet" aria-label="Avery 5260 mailing-label sheet">' + labels.map(function (entry) {
+      pages.push('<section class="print-label-sheet" aria-label="Avery 5260 mailing-label sheet"><div class="print-label-grid">' + labels.map(function (entry) {
         if (!entry) return '<article class="print-mailing-label print-mailing-label-blank" aria-hidden="true"></article>';
         return '<article class="print-mailing-label"><strong>' + u.escapeHtml(entry.labelNames || entry.names) + '</strong><span>' + u.escapeHtml(entry.addressLines[0] || "") + '</span><span>' + u.escapeHtml(entry.addressLines[1] || "") + "</span></article>";
-      }).join("") + "</section>");
+      }).join("") + "</div></section>");
     }
     $("#printReport").innerHTML = pages.join("");
   }

@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.138",
-      buildId: "0.0.1.138",
+      version: "0.0.1.139",
+      buildId: "0.0.1.139",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -176,13 +176,13 @@
 
     releases: [
       {
-        version: "0.0.1.138",
-        date: "2026-09-07T21:19:23.000Z",
-        title: "Deterministic Outline print sheets",
-        summary: "The Descendant Outline now prints each planned page as one physical Letter sheet with exact half-inch internal margins.",
+        version: "0.0.1.139",
+        date: "2026-09-09T14:06:44.000Z",
+        title: "Stable mailing-label print sheets",
+        summary: "Mailing labels use indivisible Letter sheets with an inset Avery 5260 grid to prevent blank continuation pages.",
         features: [],
-        improvements: ["Made native Outline sheets use the same physical box and typography as Print Preview"],
-        fixes: ["Prevented the last fitted row from becoming an orphan on a nearly blank continuation sheet"],
+        improvements: ["Preserved exact Avery label spacing in preview and native print"],
+        fixes: ["Removed paginated label-grid flow and the inherited fixed-height application layout from native printing"],
         knownIssues: []
       }
     ],
