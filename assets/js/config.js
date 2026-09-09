@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.141",
-      buildId: "0.0.1.141",
+      version: "0.0.1.142",
+      buildId: "0.0.1.142",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -93,8 +93,7 @@
       maxPrintLineagePeopleAcross: 16,
       maxPrintOutlineRows: 44,
       maxPrintDirectoryFallbackRows: 14,
-      maxPrintGroupUnits: 26,
-      maxPrintGroupPeoplePerSection: 42,
+      printGroupColumns: 6,
       maxPrintTreePages: 240
     },
 
@@ -176,13 +175,13 @@
 
     releases: [
       {
-        version: "0.0.1.141",
-        date: "2026-09-09T15:01:42.000Z",
-        title: "Labels and Directory print fit",
-        summary: "Mailing labels reserve their physical margins outside the label grid, and Directory pages fit the actual household content.",
+        version: "0.0.1.142",
+        date: "2026-09-09T20:04:50.000Z",
+        title: "Fuller Directory and Groups pages",
+        summary: "Directory uses a smaller title and tighter header spacing, while Groups fills each page with measured generation rows.",
         features: [],
-        improvements: ["Measured Directory household heights to fill each page while keeping cards together", "Matched Directory preview typography and widths to native print"],
-        fixes: ["Added printable-area label sheets with a rounding guard without shifting Avery 5260 positions", "Removed Directory viewport constraints and conservative page estimates"],
+        improvements: ["Made room for another ordinary Directory address card per page", "Filled Groups pages using actual row heights while preserving six-column cards and branch context"],
+        fixes: ["Showed generation continuation headings only after a page break", "Removed fixed 42-person chunks and estimated Groups page limits", "Matched Groups preview and native print styles", "Kept Print and Close visible in previews with enlarged text"],
         knownIssues: []
       }
     ],

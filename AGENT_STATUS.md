@@ -1,27 +1,27 @@
 # Goal
-Fix recurring blank label sheets in native print and reduce wasted Directory page space.
+Compact Directory headings to fit another address card and fill Groups pages without repeating a generation heading on the same page.
 # Status
 COMPLETE
 # Checkpoint
-1 (working tree on 9d68d8b; no checkpoint commit).
+1 (working tree on b3ca3c8; application version still 0.0.1.141).
 # Completed
-- Retained the existing label change to use printable-area dimensions and physical page margins.
-- Retained measured Directory household pagination and shared preview/native typography.
-- Synchronized version 0.0.1.141, release notes, caches, and current documentation.
-- Verified 27 Chromium/native WebKit PDFs: expected page counts, no blank pages or split households, all fixture content present, and unchanged Avery positions.
-- Desktop/mobile preview, keyboard focus/print/Escape, layout restoration, and representative PDF visual checks pass.
-- Complex Directory fixture now produces five PDF pages matching preview (previously nine); simple 90-household fixture drops from seven pages to six.
+- Confirmed Groups splits generations into 42-person chunks and packs pages with estimated weights, causing duplicate continuation headings and unused space.
+- Compacted Directory title and column-header spacing; ordinary fixture increases from 15 to 16 cards per page.
+- Groups now measures whole grid rows with shared preview/native styles; a 360-person fixture drops from four to three pages.
+- Desktop/mobile previews and keyboard checks pass; all 17 Chromium/native WebKit PDFs have matching page counts and complete synthetic content.
+- Verified that another grid row cannot fit at continuation boundaries and that continuation headings occur only across pages.
+- Synchronized version 0.0.1.142 and current documentation.
+- Kept preview Print/Close controls visible at 200% text with a wrapping header; normal mobile and keyboard checks also pass.
 # Remaining
 - None.
 # Verification
-- Build: PASS (0.0.1.141 static asset/version checks; no build step)
-- Tests: PASS (27 synthetic PDFs, desktop/mobile, keyboard, and visual checks)
-- Lint: PASS (baseline syntax/diff checks)
-- Review: PASS (request scope, shared typography, sheet geometry, version alignment, and final diff)
+- Build: PASS (0.0.1.142 static asset/version checks; no build step)
+- Tests: PASS (PDF content/page counts, native print, desktop/mobile, keyboard, visual, and boundary checks)
+- Lint: PASS (syntax/diff checks)
+- Review: PASS (request scope, full-page row fit, continuation semantics, shared styles, and final diff)
 # Next
-User may commit and push 0.0.1.141. No commit or push was performed; the task preview server was stopped.
+User may commit and push 0.0.1.142. No commit or push was performed; the task preview server was stopped.
 # Decisions
-- Use only synthetic family data; preserve exact Avery positions and keep Directory households together.
-- Version remains canonical in assets/js/config.js; checkpoints do not change its four-part format.
-- The original recurring label failure was not reproduced with explicit Letter print settings; revised pagination and unchanged label positions passed both engines.
+- Preserve household cards, six-column Groups cards, half-inch margins, and Root/Generation 3 branch context.
+- Use synthetic fixtures only; do not copy the screenshots' family data into the repository.
 - Do not commit or push without instruction.

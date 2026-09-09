@@ -3469,6 +3469,58 @@
     return html;
   }
 
+  function paginateGroupSegments(segments, reportDate) {
+    const measurement = document.createElement("div");
+    measurement.className = "print-preview-document print-groups-measure";
+    measurement.setAttribute("aria-hidden", "true");
+    const maximumPages = Math.max(1, segments.reduce(function (total, segment) { return total + segment.people.length; }, 0));
+    measurement.innerHTML = '<section class="print-atlas print-atlas-page"><header class="print-report-header"><h1>Family Groups</h1>' + printReportMetaHtml(reportDate, maximumPages, maximumPages) + '</header><div class="print-groups-page-body"></div></section>';
+    document.body.appendChild(measurement);
+    try {
+      const sheet = $(".print-atlas-page", measurement);
+      const body = $(".print-groups-page-body", measurement);
+      const pageBottom = sheet.getBoundingClientRect().bottom - parseFloat(getComputedStyle(sheet).paddingBottom) - 2;
+      const pages = [];
+      let page = [];
+      segments.forEach(function (segment) {
+        const people = segment.people.slice().sort(function (a, b) {
+          return family.compareLineage(a, b) || model.sortName(a).localeCompare(model.sortName(b));
+        });
+        let offset = 0;
+        while (offset < people.length) {
+          const fragment = function (rows) {
+            return Object.assign({}, segment, { people: people.slice(offset, offset + rows * config.controls.printGroupColumns), continued: offset > 0 });
+          };
+          // Find the largest whole grid-row fragment that fits with the existing page content.
+          let low = 0;
+          let high = Math.ceil((people.length - offset) / config.controls.printGroupColumns);
+          while (low < high) {
+            const rows = Math.ceil((low + high) / 2);
+            body.innerHTML = printGroupsPageBody(page.concat(fragment(rows)));
+            if (body.getBoundingClientRect().bottom <= pageBottom) low = rows;
+            else high = rows - 1;
+          }
+          if (!low && page.length) {
+            pages.push(page);
+            page = [];
+            continue;
+          }
+          const fitted = fragment(Math.max(1, low));
+          page.push(fitted);
+          offset += fitted.people.length;
+          if (offset < people.length) {
+            pages.push(page);
+            page = [];
+          }
+        }
+      });
+      if (page.length || !pages.length) pages.push(page);
+      return pages;
+    } finally {
+      measurement.remove();
+    }
+  }
+
   function buildGroupsReport() {
     const context = printableFamilyContext();
     const people = context.people;
@@ -3492,9 +3544,7 @@
       const sortedLevels = Array.from(groups.keys()).sort(function (a, b) { return a - b; });
       const rootAncestor = printComponentRoot(ids, graph, printGenerations);
       sortedLevels.filter(function (level) { return level <= 3; }).forEach(function (level) {
-        printItemPages(groups.get(level), config.controls.maxPrintGroupPeoplePerSection).forEach(function (generationPeople, index) {
-          segments.push({ componentId: componentId, rootAncestor: rootAncestor, branchKey: "", branchLabel: "", generation: level, people: generationPeople, continued: index > 0 });
-        });
+        segments.push({ componentId: componentId, rootAncestor: rootAncestor, branchKey: "", branchLabel: "", generation: level, people: groups.get(level) });
       });
       const branches = new Map();
       sortedLevels.filter(function (level) { return level >= 4; }).forEach(function (level) {
@@ -3517,34 +3567,15 @@
         const branch = entry[1];
         const label = branch.anchor ? "Descendants of " + model.displayName(branch.anchor) : "Other Later Generations";
         Array.from(branch.generations.keys()).sort(function (a, b) { return a - b; }).forEach(function (level) {
-          printItemPages(branch.generations.get(level), config.controls.maxPrintGroupPeoplePerSection).forEach(function (generationPeople, index) {
-            segments.push({ componentId: componentId, rootAncestor: rootAncestor, branchKey: componentId + "|" + key, branchLabel: label, generation: level, people: generationPeople, continued: index > 0 });
-          });
+          segments.push({ componentId: componentId, rootAncestor: rootAncestor, branchKey: componentId + "|" + key, branchLabel: label, generation: level, people: branch.generations.get(level) });
         });
       });
     });
-    const groupPages = [];
-    let groupPage = [];
-    let groupPageUnits = 0;
-    segments.forEach(function (segment) {
-      const prior = groupPage[groupPage.length - 1];
-      let units = 1 + Math.ceil(segment.people.length / 6);
-      if (!prior || prior.componentId !== segment.componentId) units += 2;
-      if (segment.branchKey && (!prior || prior.componentId !== segment.componentId || prior.branchKey !== segment.branchKey)) units += 1;
-      if (groupPage.length && groupPageUnits + units > config.controls.maxPrintGroupUnits) {
-        groupPages.push(groupPage);
-        groupPage = [];
-        groupPageUnits = 0;
-        units = 3 + Math.ceil(segment.people.length / 6) + (segment.branchKey ? 1 : 0);
-      }
-      groupPage.push(segment);
-      groupPageUnits += units;
-    });
-    if (groupPage.length || !groupPages.length) groupPages.push(groupPage);
     const reportDate = printDate();
+    const groupPages = paginateGroupSegments(segments, reportDate);
     const pageCount = groupPages.length;
     const pages = groupPages.map(function (pageSegments, index) {
-      return '<section class="print-atlas print-atlas-page print-sheet-page" aria-label="Family Groups page ' + (index + 1) + " of " + pageCount + '"><header class="print-report-header"><h1>Family Groups</h1>' + printReportMetaHtml(reportDate, index + 1, pageCount) + "</header>" + printGroupsPageBody(pageSegments) + "</section>";
+      return '<section class="print-atlas print-atlas-page print-sheet-page" aria-label="Family Groups page ' + (index + 1) + " of " + pageCount + '"><header class="print-report-header"><h1>Family Groups</h1>' + printReportMetaHtml(reportDate, index + 1, pageCount) + "</header>" + '<div class="print-groups-page-body">' + printGroupsPageBody(pageSegments) + "</div></section>";
     });
     $("#printReport").innerHTML = pages.join("");
     return { pageCount: pageCount };
