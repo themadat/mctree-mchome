@@ -539,7 +539,7 @@
         people: people, relationships: relationships, places: places, residences: residences,
         documents: [{ id: "app-notes", title: "Notes", html: u.escapeHtml(metadata.family.notes).replace(/\n/g, "<br>"), order: 0, createdAt: now, updatedAt: now }]
       },
-      preferences: u.plainObject(settings.preferences), ui: u.plainObject(settings.ui), modules: u.plainObject(settings.modules)
+      preferences: u.plainObject(settings.preferences), ui: model.createDefaultState().ui, modules: u.plainObject(settings.modules)
     };
     const prepared = model.prepare(model.withoutSessionSearch(rawState));
     if (prepared.state.workspace.people.length !== people.length || prepared.state.workspace.relationships.length !== relationships.length || prepared.state.workspace.places.length !== places.length || prepared.state.workspace.residences.length !== residences.length) {
@@ -688,7 +688,7 @@
     const placeDetails = {};
     state.workspace.places.forEach(function (place) { if (place.phone) placeDetails[place.id] = { phone: place.phone }; });
     const savedSettings = model.withoutSessionSearch(state);
-    add("family", "McFamily", "settings-json", JSON.stringify({ preferences: savedSettings.preferences, ui: savedSettings.ui, modules: savedSettings.modules, personDetails: personDetails, placeDetails: placeDetails, relationshipDetails: relationshipDetails }));
+    add("family", "McFamily", "settings-json", JSON.stringify({ preferences: savedSettings.preferences, modules: savedSettings.modules, personDetails: personDetails, placeDetails: placeDetails, relationshipDetails: relationshipDetails }));
     FILE_NAMES.forEach(function (name) { add("schema", name, "schema-version", FILE_SCHEMA_VERSIONS[name]); });
     state.meta.package.auditHistory.forEach(function (audit, index) {
       rows.push({

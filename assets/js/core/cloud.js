@@ -820,6 +820,7 @@
       activeSession = { grant: opened.grant, keys: opened.keys, baselineState: u.clone(opened.prepared.state) };
       storage.useHostedMemory();
       try { localStorage.setItem(config.storage.hostedSeenKey, "1"); } catch (storageError) { /* Hosted state remains safely memory-only. */ }
+      storage.setUserViewScope(opened.grant.id);
       storage.replace(opened.prepared.state, { saveRecovery: false, clearRecovery: true, reason: "hosted-unlock", touch: false });
       $("#accessPassphrase").value = "";
       renderAccessState();
@@ -914,6 +915,7 @@
       activeSession = { grant: currentVault.grants.find(function (grant) { return grant.id === "owner"; }), keys: keys, baselineState: u.clone(nextState) };
       storage.useHostedMemory();
       try { localStorage.setItem(config.storage.hostedSeenKey, "1"); } catch (storageError) { /* Hosted state remains safely memory-only. */ }
+      storage.setUserViewScope(activeSession.grant.id);
       storage.replace(nextState, { saveRecovery: false, clearRecovery: true, reason: "hosted-access-publish", touch: false });
       renderAccessState();
       visiblePassphrases.forEach(function (value, id) {
@@ -1116,6 +1118,7 @@
     rolePreview = "";
     activeSession = null;
     currentVault = null;
+    storage.setUserViewScope("");
     storage.clearAll({ preserveDevicePreferences: true });
     location.reload();
   }
@@ -1157,6 +1160,7 @@
       if (localOwner) {
         rolePreview = "";
         activeSession = { grant: { id: "owner", mode: "owner", label: "Owner Setup" }, keys: {}, baselineState: u.clone(storage.getState()) };
+        storage.setUserViewScope("owner");
         renderAccessState();
         finishUnlock();
         return;
@@ -1233,6 +1237,7 @@
       if (currentVault || !initialized() || portability.accessModeFor(storage.getState()) !== "editor") return;
       rolePreview = "";
       activeSession = { grant: { id: "owner", mode: "owner", label: "Owner Setup" }, keys: {}, baselineState: u.clone(storage.getState()) };
+      storage.setUserViewScope("owner");
       renderAccessState();
       finishUnlock();
     });
