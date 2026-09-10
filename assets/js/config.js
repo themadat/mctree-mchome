@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.142",
-      buildId: "0.0.1.142",
+      version: "0.0.1.143",
+      buildId: "0.0.1.143",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -175,13 +175,13 @@
 
     releases: [
       {
-        version: "0.0.1.142",
-        date: "2026-09-09T20:04:50.000Z",
-        title: "Fuller Directory and Groups pages",
-        summary: "Directory uses a smaller title and tighter header spacing, while Groups fills each page with measured generation rows.",
+        version: "0.0.1.143",
+        date: "2026-09-10T14:21:26.000Z",
+        title: "Safari print pagination",
+        summary: "Directory, Groups, and Outline keep their planned page counts in Safari's native print dialog.",
         features: [],
-        improvements: ["Made room for another ordinary Directory address card per page", "Filled Groups pages using actual row heights while preserving six-column cards and branch context"],
-        fixes: ["Showed generation continuation headings only after a page break", "Removed fixed 42-person chunks and estimated Groups page limits", "Matched Groups preview and native print styles", "Kept Print and Close visible in previews with enlarged text"],
+        improvements: ["Preserved compact Directory headings and full Groups page density"],
+        fixes: ["Made page settings available before Safari calculates its native preview", "Removed alternating blank Outline sheets caused by a full-height page frame", "Kept Outline printing in ordinary document flow with half-inch page margins"],
         knownIssues: []
       }
     ],

@@ -1394,7 +1394,7 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
   @page { size: letter; margin: .5in; }
   :root { color-scheme: light; font-size: 10pt; }
   html, body { min-height: 0; overflow: visible; background: #fff !important; color: #111 !important; }
-  body.printing-labels[data-onboarding="false"], body.printing-directory[data-onboarding="false"], body.printing-groups[data-onboarding="false"] { display: block; height: auto; overflow: visible; }
+  body.printing-labels[data-onboarding="false"], body.printing-directory[data-onboarding="false"], body.printing-groups[data-onboarding="false"], body.printing-outline[data-onboarding="false"] { display: block; height: auto; overflow: visible; }
   body > *:not(#printReport) { display: none !important; }
   #printReport { display: block !important; margin: 0; padding: 0; color: #111; font-family: Georgia, "Times New Roman", serif; line-height: 1.35; }
   #printReport a { color: #111; text-decoration: none; }
@@ -1417,7 +1417,7 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
   body.printing-outline #printReport { font-size: 10pt; }
   body.printing-outline .print-report-header { margin-bottom: .12in; }
   body.printing-outline .print-report-header time { font-size: 7pt; }
-  body.printing-outline .print-outline-page { box-sizing: border-box; width: 8.5in; height: 11in; padding: .5in; overflow: hidden; break-after: page; page-break-after: always; }
+  body.printing-outline .print-outline-page { box-sizing: border-box; display: flow-root; width: 7.5in; padding: 0; break-after: page; page-break-after: always; }
   body.printing-directory .print-directory-page:last-child, body.printing-groups .print-atlas-page:last-child, body.printing-outline .print-outline-page:last-child { break-after: auto; page-break-after: auto; }
 }
 
