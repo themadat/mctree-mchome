@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.143",
-      buildId: "0.0.1.143",
+      version: "0.0.1.144",
+      buildId: "0.0.1.144",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -41,6 +41,8 @@
       stateKey: "mcfamily.state.v14",
       recoveryKey: "mcfamily.recovery.v6",
       devicePreferencesKey: "mcfamily.device-preferences.v1",
+      userViewPreferencesKey: "mcfamily.user-view.v1",
+      userViewPreferenceFields: ["selectedPersonId", "treeFocusId", "treeMode", "treeNodeView", "treeNameBasis", "treeNameLength", "generationDepth", "ancestorDepth", "descendantDepth", "profileCollapsed", "showInferredParentLines", "hideUnplacedLineage", "panelSizingCustomized", "directoryPanelWidth", "profilePanelWidth"],
       cloudSettingsKey: "mcfamily.cloud.settings.v1",
       cloudTokenKey: "mcfamily.cloud.token.v1",
       cloudBaselineKey: "mcfamily.cloud.baseline.v1",
@@ -175,13 +177,13 @@
 
     releases: [
       {
-        version: "0.0.1.143",
-        date: "2026-09-10T14:21:26.000Z",
-        title: "Safari print pagination",
-        summary: "Directory, Groups, and Outline keep their planned page counts in Safari's native print dialog.",
+        version: "0.0.1.144",
+        date: "2026-09-10T21:13:33.000Z",
+        title: "Personal Tree preferences",
+        summary: "Each sign-in keeps its own selected person and Tree settings on this browser instead of inheriting the publisher's view.",
         features: [],
-        improvements: ["Preserved compact Directory headings and full Groups page density"],
-        fixes: ["Made page settings available before Safari calculates its native preview", "Removed alternating blank Outline sheets caused by a full-height page frame", "Kept Outline printing in ordinary document flow with half-inch page margins"],
+        improvements: ["Restored personal selection, Tree mode, card/name choices, levels, and panel settings after sign-in"],
+        fixes: ["Excluded interface state from shared packages and ignored it in older packages", "Separated Tree preferences by access grant and cleared selections that no longer exist"],
         knownIssues: []
       }
     ],

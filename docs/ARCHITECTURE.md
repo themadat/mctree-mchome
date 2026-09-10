@@ -84,3 +84,7 @@ The repository's GitHub Pages setting uses **GitHub Actions** as its only source
 ## Security boundary
 
 Static encryption reduces accidental exposure but is not an identity system. Security depends on private passphrases, a scoped GitHub token on editing devices, trusted client code, and prompt revocation when a secret is shared. PII must never enter this repository, issue trackers, logs, screenshots, or test fixtures.
+
+### Personal Tree view
+
+Shared five-file packages omit `ui`; imports ignore older embedded interface state. `mcfamily.user-view.v1.<grant-id>` stores only an allowlist of person IDs and Tree display settings on the current browser. Hosted unlock chooses the actual access grant before restoring these settings. New grants start with neutral defaults; invalid/deleted selections are cleared. Saving family data preserves the current user’s saved view, and Reset Preferences affects only that user’s Tree record. No names, search text, family records, credentials, or keys belong in the view record. Existing device favorites and List visibility keep their separate storage. These preferences do not synchronize across devices.

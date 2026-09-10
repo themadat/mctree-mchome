@@ -20,7 +20,7 @@ Serve the repository over HTTP with `?local=1` for local package tests. Use synt
 
 | Area changed | Minimum browser checks |
 | --- | --- |
-| State/storage | Current schema reload; wrong schema rejection; local recovery; hosted memory mode; favorites survive Lock; no full hosted state in localStorage |
+| State/storage | Two different actual sign-ins on one browser restore independent selected people and Tree modes/card/name/depth/panel choices; fresh sign-ins start neutral even with an older publisher UI embedded in the package; all access-mode exports omit `ui`; import/publish preserves the signed-in user’s view; missing saved IDs deselect; Reset Preferences changes only that user’s view; role preview does not switch preference ownership; no names/searches/credentials enter view storage; Current schema reload; wrong schema rejection; local recovery; hosted memory mode; favorites survive Lock; no full hosted state in localStorage |
 | Package/data | Valid current ZIP round trip; missing/extra/reordered header rejection; bad counts/references/ids/cycles rejection; no mutation before confirmation |
 | Hosted access | Unknown/wrong/revoked passphrase; each role projection; connection status; stale revision rejection; audit actor/detail; Lock clears decrypted state |
 | Editing | Add/edit/delete person; name propagation; auto lineage id; parent/partner validation; a new relative defaults to the related person's current address, opt-out removes the untouched copy, and editing detaches it; place/residence/contact edits; one audit line per field change |

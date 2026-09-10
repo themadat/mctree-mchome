@@ -6,6 +6,7 @@
   const u = App.utils;
   const model = App.stateModel;
   let currentState;
+  let userViewScope = localDevelopmentMode() ? "local" : "";
   let persistentStorageAvailable = true;
   let fullStateMemoryOnly = false;
   let lastSavedJson = "";
@@ -121,6 +122,42 @@
     return restored;
   }
 
+  function userViewKey() {
+    return userViewScope ? config.storage.userViewPreferencesKey + "." + encodeURIComponent(userViewScope) : "";
+  }
+
+  function setUserViewScope(scope) {
+    // Choose the grant before loading its family; never capture the prior user's view here.
+    userViewScope = localDevelopmentMode() ? "local" : u.cleanLine(scope, 100);
+  }
+
+  function saveUserViewPreferences(state) {
+    const key = userViewKey();
+    if (!key || !state.workspace.family.initializedAt) return;
+    const ui = {};
+    config.storage.userViewPreferenceFields.forEach(function (field) { ui[field] = state.ui[field]; });
+    writeLocal(key, JSON.stringify({ version: 1, ui: ui }));
+  }
+
+  function restoreUserViewPreferences(state) {
+    let saved = {};
+    const key = userViewKey();
+    try {
+      const stored = key && JSON.parse(readLocal(key) || "null");
+      if (stored && stored.version === 1) saved = u.plainObject(stored.ui);
+    } catch (error) { /* Invalid local view preferences fall back to neutral defaults. */ }
+    const defaults = model.createDefaultState().ui;
+    const ui = Object.assign({}, state.ui);
+    config.storage.userViewPreferenceFields.forEach(function (field) {
+      ui[field] = Object.prototype.hasOwnProperty.call(saved, field) ? saved[field] : defaults[field];
+    });
+    const personIds = new Set(state.workspace.people.map(function (person) { return person.id; }));
+    if (!personIds.has(ui.selectedPersonId)) ui.selectedPersonId = "";
+    if (!personIds.has(ui.treeFocusId)) ui.treeFocusId = "";
+    state.ui = model.normalize(Object.assign({}, state, { ui: ui })).ui;
+    return state;
+  }
+
   function readRecovery() {
     const raw = readLocal(config.storage.recoveryKey);
     if (!raw) return null;
@@ -159,7 +196,7 @@
     if (raw) {
       try {
         const prepared = model.prepare(JSON.parse(raw));
-        currentState = restoreDevicePreferences(model.withoutSessionSearch(prepared.state));
+        currentState = restoreUserViewPreferences(restoreDevicePreferences(model.withoutSessionSearch(prepared.state)));
         loadReport = {
           source: "current",
           warnings: prepared.validation.warnings,
@@ -175,7 +212,7 @@
 
     const recovery = readRecovery();
     if (recovery) {
-      currentState = restoreDevicePreferences(recovery.state);
+      currentState = restoreUserViewPreferences(restoreDevicePreferences(recovery.state));
       loadReport = { source: "recovery", warnings: [], recovered: true, error: parseError };
       saveNow();
       return currentState;
@@ -220,6 +257,7 @@
     if (settings.touch) model.touch(state);
     currentState = model.normalize(state);
     saveDevicePreferences(currentState);
+    saveUserViewPreferences(currentState);
     if (settings.save) scheduleSave();
     emit("app:statechange", { reason: settings.reason, state: currentState });
     return currentState;
@@ -245,10 +283,12 @@
     const savedDevicePreferences = settings.preserveDevicePreferences ? (readDevicePreferences() || (currentState && saveDevicePreferences(currentState))) : null;
     if (settings.clearRecovery) clearRecovery();
     else if (settings.saveRecovery && currentState) saveRecovery(settings.recoveryReason, currentState);
-    currentState = settings.preserveDevicePreferences ? applyDevicePreferences(prepared.state, savedDevicePreferences) : prepared.state;
+    currentState = settings.preserveDevicePreferences ? restoreUserViewPreferences(applyDevicePreferences(prepared.state, savedDevicePreferences)) : prepared.state;
     if (!settings.preserveDevicePreferences) {
       removeLocal(config.storage.devicePreferencesKey);
+      if (userViewKey()) removeLocal(userViewKey());
       saveDevicePreferences(currentState);
+      saveUserViewPreferences(currentState);
     }
     if (settings.touch) model.touch(currentState);
     lastSavedJson = "";
@@ -281,7 +321,10 @@
     scheduleSave.cancel();
     removeHistoricalStateKeys();
     [config.storage.stateKey, config.storage.recoveryKey, config.storage.cloudBaselineKey].filter(Boolean).forEach(removeLocal);
-    if (!settings.preserveDevicePreferences) removeLocal(config.storage.devicePreferencesKey);
+    if (!settings.preserveDevicePreferences) {
+      removeLocal(config.storage.devicePreferencesKey);
+      if (userViewKey()) removeLocal(userViewKey());
+    }
     lastSavedJson = "";
     currentState = model.createDefaultState({ demo: false });
     if (settings.preserveDevicePreferences) applyDevicePreferences(currentState, savedDevicePreferences);
@@ -321,6 +364,7 @@
     restoreRecovery: restoreRecovery,
     recoveryInfo: recoveryInfo,
     readDevicePreferences: readDevicePreferences,
+    setUserViewScope: setUserViewScope,
     clearAll: clearAll,
     usage: usage,
     useHostedMemory: useHostedMemory,
