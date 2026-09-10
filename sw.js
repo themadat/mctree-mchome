@@ -1,7 +1,7 @@
 "use strict";
 
-const CACHE_NAME = "mcfamily-shell-0.0.1.142";
-const ASSET_VERSION = "0.0.1.142";
+const CACHE_NAME = "mcfamily-shell-0.0.1.143";
+const ASSET_VERSION = "0.0.1.143";
 const versioned = function (path) { return path + "?v=" + ASSET_VERSION; };
 const SHELL = [
   "./",

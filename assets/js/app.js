@@ -3212,16 +3212,15 @@
     if (!style) {
       style = document.createElement("style");
       style.id = "dynamicPrintPageStyle";
-      style.media = "print";
+      // Safari reads @page before switching media when it builds its native preview.
+      // Restricting this rule to print media gives the first pagination stale margins.
       document.head.appendChild(style);
     }
     style.textContent = mode === "labels"
       ? "@page { size: letter portrait; margin: .5in .1875in; }"
-      : mode === "outline"
-        ? "@page { size: letter; margin: 0; }"
-        : mode === "tree"
-          ? "@page { size: letter landscape; margin: .5in; }"
-          : "@page { size: letter portrait; margin: .5in; }";
+      : mode === "tree"
+        ? "@page { size: letter landscape; margin: .5in; }"
+        : "@page { size: letter portrait; margin: .5in; }";
     document.body.classList.toggle("printing-labels", mode === "labels");
     document.body.classList.toggle("printing-directory", mode === "directory");
     document.body.classList.toggle("printing-groups", mode === "groups");
