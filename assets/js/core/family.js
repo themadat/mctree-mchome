@@ -150,6 +150,62 @@
     return entry && entry.person || entry;
   }
 
+  function incompleteBirth(person) {
+    const value = String(person && person.birth && person.birth.date && person.birth.date.value || sourceField(person, "person-date-birth-value") || "");
+    return !/^\d{4}-\d{2}-\d{2}$/.test(value);
+  }
+
+  // Insert recorded positions into the date-sorted Lineal sibling group. A
+  // position belongs to its parent-child link, never to a calculated ID.
+  function orderedLinealChildren(parentId, stateOrGraph) {
+    const graph = stateOrGraph.peopleById ? stateOrGraph : indexes(stateOrGraph);
+    const entries = (graph.children.get(parentId) || []).filter(function (entry) { return isLinealRelationship(entry.relationship); });
+    const placed = entries.filter(function (entry) { return entry.relationship.birthOrder && incompleteBirth(entry.person); });
+    const result = entries.filter(function (entry) { return !placed.includes(entry); }).sort(compareBirthOrder);
+    placed.sort(function (a, b) { return a.relationship.birthOrder - b.relationship.birthOrder || compareBirthOrder(a, b); }).forEach(function (entry) {
+      result.splice(Math.min(entry.relationship.birthOrder - 1, result.length), 0, entry);
+    });
+    return result;
+  }
+
+  function recordBirthOrder(state, personId, position) {
+    const link = state.workspace.relationships.find(function (item) { return item.childId === personId && isLinealRelationship(item); });
+    if (!link) return;
+    const person = state.workspace.people.find(function (item) { return item.id === personId; });
+    const entries = orderedLinealChildren(link.parentId, state).filter(function (entry) { return entry.person.id !== personId; });
+    if (position != null && (!Number.isInteger(position) || position < 1 || position > entries.length + 1 || position > config.controls.maxLineageSegment)) throw new Error("Choose a valid birth position.");
+    link.birthOrder = null;
+    if (position != null && incompleteBirth(person)) {
+      entries.splice(position - 1, 0, { person: person, relationship: link });
+      entries.forEach(function (entry, index) {
+        if (entry.relationship === link || entry.relationship.birthOrder) entry.relationship.birthOrder = index + 1;
+      });
+    }
+  }
+
+  function sortBirthOrder(entries, stateOrGraph) {
+    const graph = stateOrGraph.peopleById ? stateOrGraph : indexes(stateOrGraph);
+    const result = entries.slice().sort(compareBirthOrder);
+    const parentIds = new Set();
+    entries.forEach(function (entry) {
+      (graph.parents.get(relationPerson(entry).id) || []).filter(function (link) { return isLinealRelationship(link.relationship); }).forEach(function (link) { parentIds.add(link.person.id); });
+    });
+    parentIds.forEach(function (parentId) {
+      const ordered = orderedLinealChildren(parentId, graph);
+      const ids = new Set(ordered.map(function (entry) { return entry.person.id; }));
+      const slots = [];
+      const present = new Map();
+      result.forEach(function (entry, index) {
+        const id = relationPerson(entry).id;
+        if (ids.has(id)) { slots.push(index); present.set(id, entry); }
+      });
+      ordered.filter(function (entry) { return present.has(entry.person.id); }).forEach(function (entry, index) {
+        result[slots[index]] = present.get(entry.person.id);
+      });
+    });
+    return result;
+  }
+
   function compareBirthOrder(a, b) {
     const first = relationPerson(a);
     const second = relationPerson(b);
@@ -269,9 +325,9 @@
     const person = graph.peopleById.get(id);
     return {
       parents: (graph.parents.get(id) || []).slice().sort(function (a, b) { return bloodlineParentRank(person, a) - bloodlineParentRank(person, b) || compareBirthOrder(a, b); }),
-      children: (graph.children.get(id) || []).slice().sort(compareBirthOrder),
+      children: sortBirthOrder(graph.children.get(id) || [], graph),
       partners: orderPartnerHistory(graph.partners.get(id) || []),
-      siblings: siblingsOf(id, graph).sort(compareBirthOrder)
+      siblings: sortBirthOrder(siblingsOf(id, graph), graph)
     };
   }
 
@@ -815,6 +871,10 @@
     indexes: indexes,
     relationGroups: relationGroups,
     compareBirthOrder: compareBirthOrder,
+    incompleteBirth: incompleteBirth,
+    recordBirthOrder: recordBirthOrder,
+    orderedLinealChildren: orderedLinealChildren,
+    sortBirthOrder: sortBirthOrder,
     siblingRelationshipKind: siblingRelationshipKind,
     isLinealRelationship: isLinealRelationship,
     isLineageEligiblePerson: isLineageEligiblePerson,

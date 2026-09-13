@@ -369,6 +369,7 @@
         type: "parent-child",
         parentId: parentId,
         childId: childId,
+        birthOrder: source.birthOrder == null ? null : source.birthOrder,
         lineage: PARENT_LINEAGES.has(source.lineage) ? source.lineage : "non-lineal",
         kind: PARENT_KINDS.has(source.kind) ? source.kind : "unknown",
         startDate: normalizeFlexibleDate(source.startDate),
@@ -894,9 +895,29 @@
     return { ok: errors.length === 0, errors: errors, warnings: warnings };
   }
 
+  function birthOrderErrors(input) {
+    const errors = [];
+    const used = new Set();
+    const relationships = input.workspace.relationships;
+    relationships.forEach(function (relationship) {
+      if (relationship.birthOrder == null) return;
+      const eligible = relationship.type === "parent-child" && relationship.lineage === "lineal" && config.parentKinds.some(function (kind) { return kind.id === relationship.kind && kind.lineal; });
+      const key = relationship.parentId + "|" + relationship.birthOrder;
+      if (!eligible || !Number.isInteger(relationship.birthOrder) || relationship.birthOrder < 1 || relationship.birthOrder > config.controls.maxLineageSegment || used.has(key)) errors.push("Invalid or duplicate recorded birth position on " + relationship.id + ".");
+      used.add(key);
+    });
+    return errors;
+  }
+
   function prepare(input) {
     const currentInput = requireCurrentState(input);
-    const rawErrors = rawRelationshipErrors(currentInput).concat(rawPlaceErrors(currentInput));
+    const rawErrors = rawRelationshipErrors(currentInput).concat(rawPlaceErrors(currentInput), birthOrderErrors(currentInput));
+    const lineageValues = new Set();
+    currentInput.workspace.people.forEach(function (person) {
+      const value = u.cleanLine(person.source && person.source.fields && person.source.fields["lineage-id"], 100);
+      if (value && lineageValues.has(value)) rawErrors.push("Duplicate Lineage ID: " + value + ". Lineage IDs must be unique.");
+      if (value) lineageValues.add(value);
+    });
     if (rawErrors.length) throw new Error(rawErrors.join(" "));
     const state = normalize(currentInput);
     const validation = validate(state);

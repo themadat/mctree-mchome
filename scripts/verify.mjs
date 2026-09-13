@@ -191,6 +191,53 @@ for (const kind of ["step", "foster", "guardian", "unknown"]) {
   if (!/must be Non-Lineal/.test(App.family.validateRelationshipDraft({ type: "parent-child", parentId: "P001", childId: "P003", lineage: "lineal", kind }, siblingFixture, "R002"))) fail("The relationship editor accepts a Lineal " + kind + " link");
 }
 
+// Recorded positions must survive all packages and remain independent of lineage IDs.
+const orderedFixture = structuredClone(roundTrip.state);
+for (const [offset, birth] of ["1980-01-01", "????", "1990-01-01", "????"].entries()) {
+  const person = structuredClone(orderedFixture.workspace.people[0]);
+  person.id = "P00" + (offset + 2);
+  person.names.birth.first = person.names.current.first = "Sibling" + offset;
+  person.birth.date = { value: birth === "????" ? "" : birth, qualifier: birth === "????" ? "about" : "exact" };
+  person.source.fields["person-date-birth-value"] = birth;
+  person.source.fields["person-date-birth-descriptor"] = birth === "????" ? "partial" : "day";
+  person.source.fields["lineage-id"] = "01.0" + (offset + 1);
+  orderedFixture.workspace.people.push(person);
+  orderedFixture.workspace.relationships.push({ id: "R00" + (offset + 1), type: "parent-child", parentId: "P001", childId: person.id, lineage: "lineal", kind: "biological", createdAt: now, updatedAt: now, order: offset + 1, source: { fields: {} } });
+}
+const orderedIds = (fixture) => App.family.orderedLinealChildren("P001", fixture).map((entry) => entry.person.id).join(",");
+App.family.recordBirthOrder(orderedFixture, "P003", 1);
+App.family.recordBirthOrder(orderedFixture, "P005", 3);
+if (orderedIds(orderedFixture) !== "P003,P002,P005,P004") fail("Unknown birthdays cannot be placed before and between known siblings");
+App.family.recordBirthOrder(orderedFixture, "P003", 4);
+if (orderedIds(orderedFixture) !== "P002,P005,P004,P003") fail("Moving one unknown sibling did not preserve another's relative position");
+if (App.family.sortBirthOrder(orderedFixture.workspace.people.slice(1), orderedFixture).map((person) => person.id).join(",") !== orderedIds(orderedFixture)) fail("Display and Lineal ordering differ");
+for (const role of ["editor", "pii-viewer", "redacted-viewer"]) {
+  const projection = App.portability.accessState(orderedFixture, role);
+  const restored = await App.portability.prepareBytes(App.portability.packageBytes(projection), "ordered-" + role + ".zip");
+  if (orderedIds(restored.state) !== orderedIds(orderedFixture)) fail("Birth order was lost in " + role + " package");
+}
+const completeBirthday = structuredClone(orderedFixture);
+completeBirthday.workspace.people[2].birth.date.value = "1970-01-01";
+App.family.recordBirthOrder(completeBirthday, "P003", 4);
+if (completeBirthday.workspace.relationships[1].birthOrder !== null || orderedIds(completeBirthday).split(",")[0] !== "P003") fail("A complete birthday did not restore date order");
+for (const invalid of [0, -1, 1.5, "2", 97]) {
+  const bad = structuredClone(orderedFixture);
+  bad.workspace.relationships[1].birthOrder = invalid;
+  let rejected = false;
+  try { App.stateModel.prepare(bad); } catch (_) { rejected = true; }
+  if (!rejected) fail("Invalid birth position was accepted: " + invalid);
+}
+const duplicatePosition = structuredClone(orderedFixture);
+duplicatePosition.workspace.relationships[1].birthOrder = duplicatePosition.workspace.relationships[3].birthOrder;
+let rejectedPosition = false;
+try { await App.portability.prepareBytes(App.portability.packageBytes(duplicatePosition), "duplicate-position.zip"); } catch (_) { rejectedPosition = true; }
+if (!rejectedPosition) fail("Duplicate birth position was imported");
+const duplicateLineage = structuredClone(orderedFixture);
+duplicateLineage.workspace.people[2].source.fields["lineage-id"] = duplicateLineage.workspace.people[1].source.fields["lineage-id"];
+let rejectedLineage = false;
+try { await App.portability.prepareBytes(App.portability.packageBytes(duplicateLineage), "duplicate-lineage.zip"); } catch (_) { rejectedLineage = true; }
+if (!rejectedLineage) fail("Duplicate Lineage IDs were imported");
+
 const layoutPerson = (id, lineage, primary = true) => ({
   id,
   names: { birth: { first: id, last: "Layout" }, current: { first: id, last: "Layout" }, preferred: {} },

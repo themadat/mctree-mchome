@@ -565,16 +565,8 @@
       seen.add(person.id);
       people.push(person);
     });
-    people.sort(function (first, second) {
-      const firstDate = relationshipBirthValue(first);
-      const secondDate = relationshipBirthValue(second);
-      const firstUnknown = !firstDate || /^\?{4}/.test(firstDate);
-      const secondUnknown = !secondDate || /^\?{4}/.test(secondDate);
-      if (firstUnknown !== secondUnknown) return firstUnknown ? 1 : -1;
-      if (firstDate && secondDate && firstDate !== secondDate) return firstDate.localeCompare(secondDate);
-      return model.sortName(first).localeCompare(model.sortName(second)) || first.id.localeCompare(second.id);
-    });
-    return new Map(people.map(function (person, index) { return [person.id, index + 1]; }));
+    const ordered = family.sortBirthOrder(people, state());
+    return new Map(ordered.map(function (person, index) { return [person.id, index + 1]; }));
   }
 
   function birthOrderContext(person, orderMap) {
@@ -773,12 +765,7 @@
   }
 
   function linealChildRelationships(sourceState, parentId) {
-    const peopleById = new Map(sourceState.workspace.people.map(function (person) { return [person.id, person]; }));
-    return sourceState.workspace.relationships.filter(function (relationship) {
-      return family.isLinealRelationship(relationship) && relationship.parentId === parentId;
-    }).sort(function (first, second) {
-      return family.compareBirthOrder(peopleById.get(first.childId), peopleById.get(second.childId));
-    });
+    return family.orderedLinealChildren(parentId, sourceState).map(function (entry) { return entry.relationship; });
   }
 
   function claimedLinealChildRelationships(sourceState, parentId) {
@@ -857,6 +844,11 @@
   }
 
   function rebuildLineageAfterRelationshipChange(sourceState, previous, relationship) {
+    if (relationship && previous && (previous.parentId !== relationship.parentId || previous.childId !== relationship.childId || !family.isLinealRelationship(relationship))) {
+      relationship.birthOrder = null;
+      const savedLink = sourceState.workspace.relationships.find(function (item) { return item.id === relationship.id; });
+      if (savedLink) savedLink.birthOrder = null;
+    }
     const previousClaimedLineal = previous && previous.type === "parent-child" && previous.lineage === "lineal" ? previous : null;
     const previousLineal = family.isLinealRelationship(previous) ? previous : null;
     const nextLineal = family.isLinealRelationship(relationship) ? relationship : null;
@@ -1538,7 +1530,7 @@
   }
 
   function outlineChildren(person, graph) {
-    return (graph.children.get(person.id) || []).slice().sort(family.compareBirthOrder);
+    return family.sortBirthOrder(graph.children.get(person.id) || [], graph);
   }
 
   function outlineBranchKey(path) {
@@ -2376,11 +2368,44 @@
     updatePersonFormValidity();
   }
 
+  function personLinealLink(current, personId) {
+    return current.workspace.relationships.find(function (link) { return link.childId === personId && family.isLinealRelationship(link); });
+  }
+
+  function fillBirthOrderControl(person) {
+    const link = person && personLinealLink(state(), person.id);
+    const field = $("#personBirthOrderField");
+    const select = $("#personBirthOrder");
+    field.hidden = !link;
+    select.innerHTML = '<option value="">Not recorded — use date order</option>';
+    if (!link) return;
+    const siblings = family.orderedLinealChildren(link.parentId, state()).filter(function (entry) { return entry.person.id !== person.id; });
+    for (let index = 0; index <= siblings.length; index += 1) {
+      const label = index < siblings.length ? "Before " + model.displayName(siblings[index].person) : siblings.length ? "After " + model.displayName(siblings[siblings.length - 1].person) : "Only child";
+      select.add(new Option((index + 1) + " · " + label, String(index + 1)));
+    }
+    select.value = link.birthOrder ? family.orderedLinealChildren(link.parentId, state()).findIndex(function (entry) { return entry.person.id === person.id; }) + 1 : "";
+    updateBirthOrderControl();
+  }
+
+  function updateBirthOrderControl() {
+    $("#personBirthOrder").disabled = /^\d{4}-\d{2}-\d{2}$/.test($("#birthDate").value.trim());
+  }
+
+  function applyPersonBirthOrder(next, person) {
+    const link = personLinealLink(next, person.id);
+    if (!link) return;
+    const value = $("#personBirthOrder").disabled ? "" : $("#personBirthOrder").value;
+    family.recordBirthOrder(next, person.id, value ? Number(value) : null);
+    rebuildLineageForPerson(next, person.id);
+  }
+
   function openPersonEditor(id, trigger) {
     if (!familyEditingEnabled()) return;
     const person = id ? state().workspace.people.find(function (item) { return item.id === id; }) : null;
     $("#personDialogTitle").textContent = person ? "Edit " + model.displayName(person) : pendingRelative ? "Add " + pendingRelative.role : "Add Person";
     fillPersonForm(person);
+    fillBirthOrderControl(person);
     components.openDialog("#personDialog", { trigger: trigger, focus: "#birthNameFirst" });
   }
 
@@ -2515,10 +2540,23 @@
         }
       }
     }
+    let orderedCandidate = null;
+    if (existing) {
+      try {
+        orderedCandidate = u.clone(state());
+        orderedCandidate.workspace.people[orderedCandidate.workspace.people.findIndex(function (item) { return item.id === person.id; })] = u.clone(person);
+        applyPersonBirthOrder(orderedCandidate, orderedCandidate.workspace.people.find(function (item) { return item.id === person.id; }));
+        model.prepare(orderedCandidate);
+      } catch (error) { return showPersonError(error.message); }
+    }
     storage.mutate(function (next) {
       if (existing) next.workspace.people[next.workspace.people.findIndex(function (item) { return item.id === existing.id; })] = person;
       else next.workspace.people.push(person);
-      syncPersonAddressRecords(next, person);
+      if (orderedCandidate) {
+        next.workspace.relationships = orderedCandidate.workspace.relationships;
+        next.workspace.people = orderedCandidate.workspace.people;
+      }
+      syncPersonAddressRecords(next, next.workspace.people.find(function (item) { return item.id === person.id; }));
       if (!next.workspace.family.homePersonId) next.workspace.family.homePersonId = person.id;
       next.ui.selectedPersonId = person.id;
       next.ui.treeFocusId = person.id;
@@ -2798,7 +2836,7 @@
     source.fields["date-end-value"] = endValue;
     source.fields["date-end-descriptor"] = endDescriptor;
     const relationship = {
-      id: existing ? existing.id : u.uid("relationship"), type: type,
+      id: existing ? existing.id : u.uid("relationship"), type: type, birthOrder: existing ? existing.birthOrder : null,
       startDate: normalizedPersonDate(startValue, startDescriptor), endDate: normalizedPersonDate(endValue, endDescriptor), place: existing ? existing.place : "", notes: $("#relationshipNotes").value,
       source: source,
       order: existing ? existing.order : state().workspace.relationships.length + 1, createdAt: existing ? existing.createdAt : now, updatedAt: now
@@ -4341,10 +4379,17 @@
     if (!container || !familyEditingEnabled()) return;
     const peopleById = new Map(state().workspace.people.map(function (person) { return [person.id, person]; }));
     const report = model.dataCleanupIssues(state());
+    const unknownLinealBirths = state().workspace.people.filter(function (person) {
+      return !/\d/.test(lifeDateValue(person, "birth")) && (personLinealLink(state(), person.id) || person.id === state().workspace.family.homePersonId || state().workspace.relationships.some(function (link) { return link.parentId === person.id && family.isLinealRelationship(link); }));
+    }).map(function (person) {
+      const link = personLinealLink(state(), person.id);
+      return { personId: person.id, reason: link ? link.birthOrder ? "Birth position recorded: " + (family.orderedLinealChildren(link.parentId, state()).findIndex(function (entry) { return entry.person.id === person.id; }) + 1) : "Birth order needs review." : "Root ancestor — no sibling position." };
+    });
     const lineagePersonIssues = report.lineage.map(function (issue) { return { personId: issue.personId, reason: issue.value + " · " + issue.reasons.join(" ") }; });
     container.innerHTML = [
       cleanupGroupHtml("relationships", "Unknown or Invalid Relationships", "Unknown types, endings, or invalid Lineal parent statuses.", report.relationships.length, cleanupRelationshipIssuesHtml(report.relationships, peopleById, "No unknown or invalid relationships found.")),
       cleanupGroupHtml("partner-addresses", "Mismatched Addresses for Partners", "Living partners in an ongoing relationship whose current postal addresses differ.", report.partnerAddresses.length, cleanupPartnerAddressIssuesHtml(report.partnerAddresses, peopleById)),
+      cleanupGroupHtml("unknown-lineal-births", "Unknown Lineal Births", "All Lineal people with unknown birthdays. Open a person to edit their birth order.", unknownLinealBirths.length, cleanupPersonIssuesHtml(unknownLinealBirths, peopleById, "No unknown Lineal birthdays found.")),
       cleanupGroupHtml("unknown-birthdays", "Unknown Birthdays", "People with no known digits in their birth date.", report.unknownBirthdays.length, cleanupPersonIssuesHtml(report.unknownBirthdays, peopleById, "No unknown birthdays found.")),
       cleanupGroupHtml("incomplete-birthdays", "Incomplete Birthdays", "People whose birth date is less precise than YYYY-MM-DD.", report.incompleteBirthdays.length, cleanupPersonIssuesHtml(report.incompleteBirthdays, peopleById, "No incomplete birthdays found.")),
       cleanupGroupHtml("unknown-deaths", "Unknown Deaths", "Deceased people with no known digits in their death date.", report.unknownDeaths.length, cleanupPersonIssuesHtml(report.unknownDeaths, peopleById, "No unknown deaths found.")),
@@ -4882,6 +4927,7 @@
       if (event.target.id === "relatedAddressAutofill") applyRelatedAddressAutofill(event.target.checked);
       else if (event.target.closest("#addressEditor")) detachRelatedAddressAutofill();
       if (event.target.matches("[data-new-person-relationship-search]")) filterNewPersonRelationshipPicker(event.target);
+      if (event.target.id === "birthDate") updateBirthOrderControl();
       const birthName = /^birthName(Prefix|First|Middle|Last|Suffix)$/.exec(event.target.id);
       if (birthName) syncBirthNamePart(birthName[1]);
       const derivedName = /^(current|preferred)Name(Prefix|First|Middle|Last|Suffix)$/.exec(event.target.id);

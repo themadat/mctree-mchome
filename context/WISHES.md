@@ -8,11 +8,11 @@ Next id: `WISH-002`
 
 ### WISH-001 — Known birth order with unknown birthdays
 
-- Status: Proposed
+- Status: Active
 - Priority: P1
 - Effort: Medium
 - Target: Unscheduled
-- Plan: —
+- Plan: context/WISH-001-birth-order-PLAN.md
 - Released: —
 - Affected modules: Person editor, shared family ordering, Lineage ID calculation, Settings Data Cleanup, state and package persistence.
 
@@ -39,10 +39,11 @@ Constraints and assumptions:
 - Keep editing accessible and limited to existing editing roles; preserve static, offline-capable operation.
 - Unresolved birth order must not be presented as confirmed merely because a deterministic fallback places a person last.
 
-Open questions:
+Implementation decisions:
 
-- Should partially known birthdays also allow explicit order when the known date components cannot determine sibling order?
-- When a birthday is later supplied or a Lineal parent changes, how should an existing order choice be reconciled with the new facts?
+- Unknown and incomplete birthdays allow recorded order. A full birthday restores date order.
+- Changing the Lineal parent clears the old placement.
+- Implemented in 0.0.1.145; awaiting an explicitly requested release cut.
 
 ## Entry template
 

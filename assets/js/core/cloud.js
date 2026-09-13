@@ -506,7 +506,7 @@
       updated: function (before, after) {
         const areas = changedAreaLabels(before, after, [
           ["type", "type"], ["parentId", "parent"], ["childId", "child"], ["person1Id", "first person"], ["person2Id", "second person"],
-          ["lineage", "lineage"], ["kind", "parent type"], ["status", "status"], ["order", "order"], ["startDate", "start date"], ["endDate", "end date"],
+          ["lineage", "lineage"], ["birthOrder", "birth order"], ["kind", "parent type"], ["status", "status"], ["order", "order"], ["startDate", "start date"], ["endDate", "end date"],
           ["place", "place"], ["notes", "Notes"], ["source", "source details"]
         ]);
         addUpdatedAreaChanges(changes, "relationship", relationshipLabel(after, current), areas);

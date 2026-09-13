@@ -475,6 +475,14 @@
         ]) }, order: order
       };
     });
+    const birthOrder = metadata.family.settings.birthOrder;
+    if (birthOrder != null && (typeof birthOrder !== "object" || Array.isArray(birthOrder))) throw new Error("Birth order metadata must be a relationship-position map.");
+    Object.entries(birthOrder || {}).forEach(function (entry) {
+      const relationship = relationships.find(function (item) { return item.id === entry[0]; });
+      if (!relationship) throw new Error("Birth order references a missing relationship.");
+      relationship.birthOrder = entry[1];
+      if (entry[1] == null) throw new Error("Birth order positions must be positive integers.");
+    });
     const relationshipDetails = u.plainObject(metadata.family.settings.relationshipDetails);
     relationships.forEach(function (relationship) {
       relationship.place = u.cleanLine(u.plainObject(relationshipDetails[relationship.id]).place, 500);
@@ -687,8 +695,10 @@
     state.workspace.relationships.forEach(function (relationship) { if (relationship.place) relationshipDetails[relationship.id] = { place: relationship.place }; });
     const placeDetails = {};
     state.workspace.places.forEach(function (place) { if (place.phone) placeDetails[place.id] = { phone: place.phone }; });
+    const birthOrder = {};
+    state.workspace.relationships.forEach(function (relationship) { if (relationship.birthOrder != null) birthOrder[relationship.id] = relationship.birthOrder; });
     const savedSettings = model.withoutSessionSearch(state);
-    add("family", "McFamily", "settings-json", JSON.stringify({ preferences: savedSettings.preferences, modules: savedSettings.modules, personDetails: personDetails, placeDetails: placeDetails, relationshipDetails: relationshipDetails }));
+    add("family", "McFamily", "settings-json", JSON.stringify({ preferences: savedSettings.preferences, modules: savedSettings.modules, personDetails: personDetails, placeDetails: placeDetails, relationshipDetails: relationshipDetails, birthOrder: birthOrder }));
     FILE_NAMES.forEach(function (name) { add("schema", name, "schema-version", FILE_SCHEMA_VERSIONS[name]); });
     state.meta.package.auditHistory.forEach(function (audit, index) {
       rows.push({
