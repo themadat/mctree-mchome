@@ -1035,11 +1035,22 @@
     }).join("") + "</dl></details>";
   }
 
+  function addressRoster(placeId) {
+    const editable = familyEditingEnabled();
+    const rows = state().workspace.residences.filter(function (link) { return link.placeId === placeId; }).map(function (link) {
+      const person = state().workspace.people.find(function (item) { return item.id === link.personId; });
+      if (!person) return "";
+      const name = u.escapeHtml(model.displayName(person));
+      return '<div class="address-roster-row"><span>' + name + (link.current ? '' : ' <small>(Former)</small>') + '</span>' + (editable ? '<button type="button" class="button small danger-text" data-unassign-residence="' + u.escapeHtml(link.id) + '" aria-label="Remove ' + name + ' from this address"><span data-symbol="close" aria-hidden="true"></span></button>' : '') + '</div>';
+    }).join("");
+    return '<div class="address-roster" aria-label="People assigned to this address">' + rows + '</div>' + (editable ? '<div class="address-assignment-actions"><button type="button" class="button small" data-address-add-people="' + u.escapeHtml(placeId) + '"><span data-symbol="add" aria-hidden="true"></span>Add</button><button type="button" class="button small" data-edit-address="' + u.escapeHtml(placeId) + '"><span data-symbol="pencil" aria-hidden="true"></span>Edit</button></div>' : '');
+  }
+
   function profileAddressCard(address) {
     const start = addressDateLabel(address, "start");
     const end = addressDateLabel(address, "end");
     const phone = address.phone ? '<p class="address-phone">' + u.escapeHtml(address.phone) + "</p>" : "";
-    return '<article class="contact-card"><header><strong>' + u.escapeHtml(address.label) + '</strong><span class="status-pill" data-kind="' + (address.current ? "success" : "neutral") + '">' + (address.current ? "Current" : "Former") + '</span></header><address>' + u.escapeHtml(model.formatAddress(address)).replace(/\n/g, "<br>") + '</address>' + phone + ((start || end) ? '<small>' + u.escapeHtml([start, end].filter(Boolean).join(" – ")) + "</small>" : "") + (address.notes ? "<p>" + u.escapeHtml(address.notes) + "</p>" : "") + addressSourceDetails(address) + (familyEditingEnabled() ? '<button type="button" class="button small" data-edit-address="' + u.escapeHtml(address.placeId) + '">Edit address & people</button>' : "") + "</article>";
+    return '<article class="contact-card"><header><strong>' + u.escapeHtml(address.label) + '</strong><span class="status-pill" data-kind="' + (address.current ? "success" : "neutral") + '">' + (address.current ? "Current" : "Former") + '</span></header><address>' + u.escapeHtml(model.formatAddress(address)).replace(/\n/g, "<br>") + '</address>' + phone + ((start || end) ? '<small>' + u.escapeHtml([start, end].filter(Boolean).join(" – ")) + "</small>" : "") + (address.notes ? "<p>" + u.escapeHtml(address.notes) + "</p>" : "") + addressSourceDetails(address) + addressRoster(address.placeId) + "</article>";
   }
 
   function printSource(person) {
@@ -1976,6 +1987,7 @@
     let matches = addressAssignments.map(function (entry, index) { return { entry: entry, index: index }; }).filter(function (item) {
       return query ? relationshipPersonMatches(item.entry.person, query) : item.entry.assigned;
     });
+    $("#addressEditPeople").setAttribute("aria-expanded", "false");
     $("#addressPeopleCount").textContent = addressAssignments.filter(function (entry) { return entry.assigned; }).length + " assigned";
     const total = matches.length;
     matches = matches.slice(0, 100);
@@ -1988,9 +2000,10 @@
         return '<label class="field date-input-field"><span>' + label + '</span><input data-residence-field="' + kind + 'Date" data-date-input maxlength="10" placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" aria-describedby="shared-' + kind + index + '-error" value="' + u.escapeHtml(entry[kind + "Value"]) + '"' + disabled + '><small id="shared-' + kind + index + '-error" class="date-validation-message" data-date-error hidden>' + DATE_INPUT_HELP + '</small></label>';
       };
       const name = u.escapeHtml(model.displayName(entry.person));
-      return '<article class="address-person-card" data-address-person="' + index + '"><div class="address-person-heading"><strong>' + name + '</strong><button type="button" class="button small ' + (entry.assigned ? 'danger-text' : 'primary') + '" data-toggle-address-person="' + index + '" aria-label="' + (entry.assigned ? 'Remove ' : 'Add ') + name + '"' + disabled + '>' + (entry.assigned ? 'Remove' : 'Add') + '</button></div>' + (entry.assigned ? '<details class="address-person-details"><summary>Dates &amp; notes · ' + (residence.current ? 'Current' : 'Former') + '</summary><div class="form-grid"><label class="check-field"><input type="checkbox" data-residence-field="current"' + (residence.current ? ' checked' : '') + disabled + '><span>Current address</span></label>' + dateField("start", "Move-in date") + dateField("end", "Move-out date") + '<label class="field"><span>Assignment notes</span><textarea data-residence-field="notes" rows="2" maxlength="1000"' + disabled + '>' + u.escapeHtml(residence.notes || "") + '</textarea></label></div></details>' : '') + '</article>';
+      return '<article class="address-person-card" data-address-person="' + index + '"><div class="address-person-heading"><strong>' + name + '</strong><button type="button" class="button small ' + (entry.assigned ? 'danger-text' : 'primary') + '" data-toggle-address-person="' + index + '" aria-label="' + (entry.assigned ? 'Remove ' : 'Add ') + name + '"' + disabled + '>' + (entry.assigned ? '<span data-symbol="close" aria-hidden="true"></span>' : '<span data-symbol="add" aria-hidden="true"></span> Add') + '</button></div>' + (entry.assigned ? '<details class="address-person-details"><summary>Dates &amp; notes · ' + (residence.current ? 'Current' : 'Former') + '</summary><div class="form-grid"><label class="check-field"><input type="checkbox" data-residence-field="current"' + (residence.current ? ' checked' : '') + disabled + '><span>Current address</span></label>' + dateField("start", "Move-in date") + dateField("end", "Move-out date") + '<label class="field"><span>Assignment notes</span><textarea data-residence-field="notes" rows="2" maxlength="1000"' + disabled + '>' + u.escapeHtml(residence.notes || "") + '</textarea></label></div></details>' : '') + '</article>';
 
     }).join("") || '<p class="muted-copy">' + (query ? 'No people found.' : 'No people assigned. Search for a person to assign.') + '</p>';
+    icons.mount($("#addressPeople"));
     if (total > 100) $("#addressPeople").insertAdjacentHTML("beforeend", '<p>Showing 100 matches. Refine your search to find more.</p>');
   }
 
@@ -5058,6 +5071,13 @@
     });
     $("#addressSearch").addEventListener("input", renderAddressLibrary);
     $("#addressPeopleSearch").addEventListener("input", renderAddressPeople);
+    $("#addressAddPeople").addEventListener("click", function () { $("#addressPeopleSearch").focus(); });
+    $("#addressEditPeople").addEventListener("click", function () {
+      const details = $$(".address-person-details", $("#addressPeople"));
+      const expand = details.some(function (item) { return !item.open; });
+      details.forEach(function (item) { item.open = expand; });
+      $("#addressEditPeople").setAttribute("aria-expanded", String(expand));
+    });
     $("#newSharedAddress").addEventListener("click", function (event) { openAddressEditor("", event.currentTarget); });
     $("#addressLibraryList").addEventListener("click", function (event) {
       const assign = event.target.closest("[data-assign-address]");
@@ -5134,6 +5154,20 @@
       if (removeContact) { syncPersonRepeatables(); const parts = removeContact.dataset.removeContact.split(":"); personDraft[parts[0] + "s"].splice(Number(parts[1]), 1); renderPersonRepeatables(); updatePersonFormValidity(); }
     });
     document.addEventListener("click", function (event) {
+      const removeResident = event.target.closest("[data-unassign-residence]");
+      if (removeResident && familyEditingEnabled()) {
+        storage.mutate(function (next) { next.workspace.residences = next.workspace.residences.filter(function (link) { return link.id !== removeResident.dataset.unassignResidence; }); }, { reason: "unassign-address" });
+        renderAll();
+        const focus = $("#profilePanel [data-address-add-people]") || $("#profilePanel [data-manage-addresses]");
+        if (focus) focus.focus();
+        return;
+      }
+      const addResidents = event.target.closest("[data-address-add-people]");
+      if (addResidents) {
+        openAddressEditor(addResidents.dataset.addressAddPeople, addResidents);
+        if (familyEditingEnabled()) requestAnimationFrame(function () { $("#addressPeopleSearch").focus(); });
+        return;
+      }
       const manageAddresses = event.target.closest("[data-manage-addresses]");
       if (manageAddresses) { openAddressLibrary(manageAddresses, false); return; }
       const editAddress = event.target.closest("[data-edit-address]");

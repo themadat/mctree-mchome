@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.150",
-      buildId: "0.0.1.150",
+      version: "0.0.1.151",
+      buildId: "0.0.1.151",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -177,13 +177,13 @@
 
     releases: [
       {
-        version: "0.0.1.150",
+        version: "0.0.1.151",
         date: "2026-09-20T12:00:00.000Z",
-        title: "Reliable birth-order exports",
-        summary: "New relationship IDs now use consistent capitalization across CSV records and metadata when saving or exporting.",
+        title: "Flexible header and address people lists",
+        summary: "The search adapts to spaced toolbar buttons, and address cards list assigned people with remove, Add, and Edit controls.",
         features: [],
-        improvements: ["Preserve birth positions and relationship places across all access-mode packages"],
-        fixes: ["Fix missing-relationship errors caused by lowercase IDs in birth-order metadata"],
+        improvements: ["Flexible header search and separated button labels", "Scannable assigned-person rows with X, Add, and pencil Edit controls"],
+        fixes: ["Prevent toolbar actions from overlapping the search field"],
         knownIssues: []
       }
     ],

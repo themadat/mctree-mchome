@@ -158,6 +158,7 @@
     descendantsDepth: __TEXT_LINE_FIRST_AND_ARROWTRIANGLE_FORWARD,
     ancestorsDepth: __TEXT_LINE_LAST_AND_ARROWTRIANGLE_FORWARD,
     back: __ARROW_BACKWARD_CIRCLE,
+    pencil: `<svg class="sf-symbol" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="m16 3 5 5-12 12-6 1 1-6Z M14 5l5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>`,
     close: __XMARK
   });
 
