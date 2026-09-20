@@ -1,6 +1,6 @@
 # McFamily implementation contract
 
-McFamily `0.0.1.149` is a dependency-free static family atlas. It uses latest-only application schema v14 and strict dataset `17.0.x` packages. The hosted app anonymously downloads public ciphertext, matches a passphrase locally, and decrypts only the corresponding view. There is no backend, account provider, cloud database, package manager, or runtime build.
+McFamily `0.0.1.150` is a dependency-free static family atlas. It uses latest-only application schema v14 and strict dataset `17.0.x` packages. The hosted app anonymously downloads public ciphertext, matches a passphrase locally, and decrypts only the corresponding view. There is no backend, account provider, cloud database, package manager, or runtime build.
 
 Read only the task-relevant detail after this file:
 
@@ -14,6 +14,7 @@ Read only the task-relevant detail after this file:
 - Never commit real family data, decrypted ZIPs, vault keys, passphrases, or GitHub tokens.
 - Fresh local browsers have no demo or blank-family bypass. They require a valid initialized current ZIP. Hosted browsers require a valid current encrypted vault and passphrase.
 - The data package contains exactly five root CSV files with exact ordered headers. Reject missing/additional files or columns, malformed ZIP/CSV, bad counts or ids, missing references, duplicate/self relationships, invalid vocabularies, and ancestry cycles before mutation.
+- Relationship CSV IDs and birthOrder/relationshipDetails metadata keys export in uppercase together, without mutating live IDs.
 - Relationship records are authoritative. Derive ancestors, descendants, siblings, family units, and lineage; do not duplicate them on people.
 - A child has at most one Lineal parent and may have multiple Non-Lineal parents. Lineage ids derive from the Lineal parent path. Adoption can therefore be Lineal/Adopted while biological parents are Non-Lineal/Biological.
 - Owner/Editor receive full editing data; Member receives full PII read-only; Viewer receives a separately encrypted redacted package without contacts, places, residences, or unstructured source notes.

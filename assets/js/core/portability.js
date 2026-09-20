@@ -642,7 +642,7 @@
       const partnerType = relationship.type === "partner" ? (["marriage", "partnership", "UNKNOWN"].includes(savedPartnerType) ? savedPartnerType : relationship.status === "partnered" ? "partnership" : relationship.status === "unknown" ? "UNKNOWN" : "marriage") : "";
       const endReason = relationship.type === "partner" ? (["death", "divorce", "separation", "annulment", "UNKNOWN"].includes(savedEndReason) ? savedEndReason : ({ widowed: "death", divorced: "divorce", separated: "separation", annulled: "annulment", former: "UNKNOWN" }[relationship.status] || "")) : "";
       return Object.assign({}, fields, {
-        "relationship-id": relationship.id, "relationship-type": relationship.type,
+        "relationship-id": relationship.id.toUpperCase(), "relationship-type": relationship.type,
         "person-1-id": relationship.type === "parent-child" ? relationship.parentId : relationship.person1Id,
         "person-2-id": relationship.type === "parent-child" ? relationship.childId : relationship.person2Id,
         "parent-lineage": relationship.type === "parent-child" ? relationship.lineage : "",
@@ -703,11 +703,11 @@
       if (details.gender || details.pronouns || details.birthPlace || details.deathPlace || details.heritageNote || details.phones.length || details.emails.length) personDetails[person.id] = details;
     });
     const relationshipDetails = {};
-    state.workspace.relationships.forEach(function (relationship) { if (relationship.place) relationshipDetails[relationship.id] = { place: relationship.place }; });
+    state.workspace.relationships.forEach(function (relationship) { if (relationship.place) relationshipDetails[relationship.id.toUpperCase()] = { place: relationship.place }; });
     const placeDetails = {};
     state.workspace.places.forEach(function (place) { if (place.phone) placeDetails[place.id] = { phone: place.phone }; });
     const birthOrder = {};
-    state.workspace.relationships.forEach(function (relationship) { if (relationship.birthOrder != null) birthOrder[relationship.id] = relationship.birthOrder; });
+    state.workspace.relationships.forEach(function (relationship) { if (relationship.birthOrder != null) birthOrder[relationship.id.toUpperCase()] = relationship.birthOrder; });
     const savedSettings = model.withoutSessionSearch(state);
     add("family", "McFamily", "settings-json", JSON.stringify({ preferences: savedSettings.preferences, modules: savedSettings.modules, personDetails: personDetails, placeDetails: placeDetails, relationshipDetails: relationshipDetails, birthOrder: birthOrder }));
     FILE_NAMES.forEach(function (name) { add("schema", name, "schema-version", FILE_SCHEMA_VERSIONS[name]); });

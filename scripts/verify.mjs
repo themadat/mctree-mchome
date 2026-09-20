@@ -257,6 +257,24 @@ duplicatePosition.workspace.relationships[1].birthOrder = duplicatePosition.work
 let rejectedPosition = false;
 try { await App.portability.prepareBytes(App.portability.packageBytes(duplicatePosition), "duplicate-position.zip"); } catch (_) { rejectedPosition = true; }
 if (!rejectedPosition) fail("Duplicate birth position was imported");
+// App-created relationship IDs are lowercase UUIDs; CSV and metadata must agree.
+const lowercaseRelationships = structuredClone(orderedFixture);
+for (const link of lowercaseRelationships.workspace.relationships) {
+  link.id = "relationship-" + link.id.toLowerCase();
+  link.place = "Synthetic relationship place";
+}
+const beforeLowercaseExport = JSON.stringify(lowercaseRelationships);
+for (const role of ["editor", "pii-viewer", "redacted-viewer"]) {
+  const source = App.portability.accessState(lowercaseRelationships, role);
+  const result = (await App.portability.prepareBytes(App.portability.packageBytes(source), "lowercase-" + role + ".zip")).state;
+  for (const link of source.workspace.relationships) {
+    const restored = result.workspace.relationships.find((item) => item.id === link.id.toUpperCase());
+    if (!restored || (restored.birthOrder ?? null) !== (link.birthOrder ?? null) || restored.place !== link.place) fail("Lowercase relationship export lost birth order or supplemental place data for " + role);
+  }
+}
+if (JSON.stringify(lowercaseRelationships) !== beforeLowercaseExport) fail("Relationship ID export normalization mutated the working copy");
+if ((await App.portability.currentChangesBackup(lowercaseRelationships)).emergency) fail("Lowercase relationship IDs incorrectly require an emergency backup");
+
 const recordedLink = orderedFixture.workspace.relationships.find((link) => link.birthOrder != null);
 for (const badId of ["MISSING999", recordedLink.id.toLowerCase()]) {
   const files = App.portability.packageFiles(orderedFixture);

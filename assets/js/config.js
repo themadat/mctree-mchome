@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.149",
-      buildId: "0.0.1.149",
+      version: "0.0.1.150",
+      buildId: "0.0.1.150",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -177,13 +177,13 @@
 
     releases: [
       {
-        version: "0.0.1.149",
+        version: "0.0.1.150",
         date: "2026-09-20T12:00:00.000Z",
-        title: "Editor backups for unpublished changes",
-        summary: "Editors and Admins can export their current working copy from Save, including an emergency backup when validation fails.",
-        features: ["Export current changes in Save"],
-        improvements: ["Validated recovery ZIPs for ordinary backups", "Emergency JSON preserves invalid working data for assisted repair"],
-        fixes: ["Backups do not mutate working data or require publication"],
+        title: "Reliable birth-order exports",
+        summary: "New relationship IDs now use consistent capitalization across CSV records and metadata when saving or exporting.",
+        features: [],
+        improvements: ["Preserve birth positions and relationship places across all access-mode packages"],
+        fixes: ["Fix missing-relationship errors caused by lowercase IDs in birth-order metadata"],
         knownIssues: []
       }
     ],
