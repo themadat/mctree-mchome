@@ -1510,3 +1510,13 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
   .print-wide { grid-column: 1 / -1; }
   .print-source > p { margin: 0 0 .06in; color: #555; }
   .print-source dl > div { break-inside: avoid; }
+
+/* Shared addresses and person-specific residence assignments. */
+.address-assignment-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-block: .6rem; }
+#addressLibraryList { margin-top: 1rem; }
+#addressPeople fieldset { min-width: 0; }
+#addressPeople .form-grid[hidden] { display: none; }
+#addressPeople input, #sharedAddressFields input { min-width: 0; }
+#addressPeople legend, #addressLibraryList address { overflow-wrap: anywhere; }
+#addressPeople .check-field { min-height: 44px; }
+#addressDialog input[aria-invalid="true"] { border-color: var(--danger); }

@@ -84,6 +84,31 @@ currentState.meta.package = {
 const packageBytes = App.portability.packageBytes(App.stateModel.normalize(currentState));
 const roundTrip = await App.portability.prepareBytes(packageBytes, "synthetic.zip");
 if (roundTrip.state.workspace.people.length !== 1 || roundTrip.state.meta.package.datasetVersion !== config.datasetVersion) fail("Synthetic current-package round trip failed");
+// Shared places remain authoritative, with independent residence history and notes.
+const sharedAddressFixture = structuredClone(roundTrip.state);
+const secondResident = structuredClone(sharedAddressFixture.workspace.people[0]);
+secondResident.id = "P002";
+secondResident.source.fields["lineage-id"] = "";
+sharedAddressFixture.workspace.people.push(secondResident);
+sharedAddressFixture.workspace.places = [{ id: "L0001", label: "Home", line1: "1 Synthetic Street", notes: "Shared note" }];
+sharedAddressFixture.workspace.residences = sharedAddressFixture.workspace.people.map((person, index) => ({
+  id: "RS000" + (index + 1), personId: person.id, placeId: "L0001", current: true,
+  startDate: { value: "2020", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, notes: "Resident " + index
+}));
+sharedAddressFixture.workspace.places[0].line1 = "2 Synthetic Street";
+const sharedAddressState = App.stateModel.prepare(sharedAddressFixture).state;
+if (!sharedAddressState.workspace.people.every((person) => person.addresses[0].line1 === "2 Synthetic Street")) fail("Shared place updates do not reach every resident");
+if (sharedAddressState.workspace.people[0].addresses[0].residenceNotes !== "Resident 0") fail("Residence notes are not separate from shared address notes");
+sharedAddressState.workspace.residences[1].current = false;
+sharedAddressState.workspace.residences[1].endDate = { value: "2026-09", qualifier: "exact" };
+const movedResident = App.stateModel.prepare(sharedAddressState).state;
+if (!movedResident.workspace.people[0].addresses[0].current || movedResident.workspace.people[1].addresses[0].current) fail("Moving out changes another resident's status");
+movedResident.workspace.residences = [];
+const unassignedAddress = App.stateModel.prepare(movedResident).state;
+if (unassignedAddress.workspace.people.some((person) => person.addresses.length)) fail("Unassigning leaves a stale derived address");
+const unassignedRoundTrip = await App.portability.prepareBytes(App.portability.packageBytes(unassignedAddress), "unassigned-synthetic.zip");
+if (unassignedRoundTrip.state.workspace.places.length !== 1 || unassignedRoundTrip.state.workspace.residences.length) fail("Unassigned addresses do not survive a current ZIP round trip");
+
 const compatibleParentState = structuredClone(roundTrip.state);
 for (const [index, kind] of ["step", "foster", "guardian", "unknown"].entries()) {
   const child = structuredClone(compatibleParentState.workspace.people[0]);

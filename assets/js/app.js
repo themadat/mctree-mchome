@@ -238,6 +238,7 @@
       $(selector).disabled = !isInitialized || !familyEditingEnabled();
       $(selector).hidden = isInitialized && !familyEditingEnabled();
     });
+    $("#addressesButton").hidden = !isInitialized || !familyEditingEnabled();
     $("#addPersonButton").disabled = !isInitialized || !familyEditingEnabled();
     $("#addPersonButton").hidden = isInitialized && !familyEditingEnabled();
     $("#addPersonButton").title = isInitialized && familyEditingEnabled() ? "Add person" : "Family editing is unavailable";
@@ -1038,7 +1039,7 @@
     const start = addressDateLabel(address, "start");
     const end = addressDateLabel(address, "end");
     const phone = address.phone ? '<p class="address-phone">' + u.escapeHtml(address.phone) + "</p>" : "";
-    return '<article class="contact-card"><header><strong>' + u.escapeHtml(address.label) + '</strong><span class="status-pill" data-kind="' + (address.current ? "success" : "neutral") + '">' + (address.current ? "Current" : "Former") + '</span></header><address>' + u.escapeHtml(model.formatAddress(address)).replace(/\n/g, "<br>") + '</address>' + phone + ((start || end) ? '<small>' + u.escapeHtml([start, end].filter(Boolean).join(" – ")) + "</small>" : "") + (address.notes ? "<p>" + u.escapeHtml(address.notes) + "</p>" : "") + addressSourceDetails(address) + "</article>";
+    return '<article class="contact-card"><header><strong>' + u.escapeHtml(address.label) + '</strong><span class="status-pill" data-kind="' + (address.current ? "success" : "neutral") + '">' + (address.current ? "Current" : "Former") + '</span></header><address>' + u.escapeHtml(model.formatAddress(address)).replace(/\n/g, "<br>") + '</address>' + phone + ((start || end) ? '<small>' + u.escapeHtml([start, end].filter(Boolean).join(" – ")) + "</small>" : "") + (address.notes ? "<p>" + u.escapeHtml(address.notes) + "</p>" : "") + addressSourceDetails(address) + (familyEditingEnabled() ? '<button type="button" class="button small" data-edit-address="' + u.escapeHtml(address.placeId) + '">Edit address & people</button>' : "") + "</article>";
   }
 
   function printSource(person) {
@@ -1077,7 +1078,7 @@
     const profileLabels = (developerReferencesEnabled() ? [person.reference] : []).concat(isHome ? ["Root Ancestor"] : []);
     const profileEyebrow = profileLabels.length ? '<span class="eyebrow">' + u.escapeHtml(profileLabels.join(" · ")) + "</span>" : "";
     const contactBlocks = [];
-    if (piiVisible() && person.addresses.length) contactBlocks.push('<section class="profile-section"><h3>Addresses</h3>' + person.addresses.slice().sort(function (a, b) { return a.order - b.order; }).map(profileAddressCard).join("") + "</section>");
+    if (piiVisible() && (person.addresses.length || familyEditingEnabled())) contactBlocks.push('<section class="profile-section"><div class="form-section-heading"><h3>Addresses</h3>' + (familyEditingEnabled() ? '<button type="button" class="button small" data-manage-addresses>Manage addresses</button>' : "") + '</div>' + person.addresses.slice().sort(function (a, b) { return a.order - b.order; }).map(profileAddressCard).join("") + "</section>");
     if (piiVisible() && (person.phones.length || person.emails.length)) contactBlocks.push('<section class="profile-section"><h3>Contact</h3><dl class="profile-list">' + person.phones.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + person.emails.map(function (item) { return '<div><dt>' + u.escapeHtml(item.label) + '</dt><dd>' + u.escapeHtml(item.value) + "</dd></div>"; }).join("") + "</dl></section>");
     const actionButton = function (label, symbol, attribute, danger, accessibleLabel) {
       return '<button type="button" class="profile-action' + (danger ? " danger-text" : "") + '" ' + attribute + ' aria-label="' + u.escapeHtml(accessibleLabel || label + " person") + '"><span class="profile-action-icon" data-symbol="' + symbol + '" aria-hidden="true"></span><span>' + u.escapeHtml(label) + "</span></button>";
@@ -1900,8 +1901,176 @@
     return model.formatFlexibleDate(address && address[kind + "Date"]) || partialDateLabel(addressDateValue(address, kind));
   }
 
+  let addressLibraryAssigning = false;
+  let addressAssignments = [];
+  let addressEditorOrigin = null;
+  const SHARED_ADDRESS_FIELDS = [
+    ["label", "Label", 60], ["line1", "Address line 1", 200], ["line2", "Address line 2", 200],
+    ["city", "City / locality", 100], ["region", "State / region", 100], ["postalCode", "Postal code", 40],
+    ["country", "Country", 100], ["phone", "Shared phone", 12], ["notes", "Shared address notes", 1000]
+  ];
+
+  function openAddressLibrary(trigger, assigning) {
+    if (!familyEditingEnabled()) return;
+    addressLibraryAssigning = assigning;
+    $("#addressSearch").value = "";
+    $("#addressLibraryTitle").textContent = assigning ? "Assign an address" : "Addresses";
+    $("#addressLibraryNote").textContent = assigning ? "Choose a shared address. The assignment saves with the person. Create a new address when someone moves to a different home." : "Edit an address to update everyone assigned, assign people, or record a move out. Unassigned addresses remain available.";
+    renderAddressLibrary();
+    components.openDialog("#addressLibraryDialog", { trigger: trigger, focus: "#addressSearch" });
+    $("#addressLibraryDialog .dialog-body").scrollTop = 0;
+  }
+
+  function renderAddressLibrary() {
+    const query = $("#addressSearch").value.trim();
+    const places = state().workspace.places.filter(function (place) { return !query || model.fuzzySearchMatch(query, place.label + " " + model.formatAddress(place)); });
+    $("#addressLibraryList").innerHTML = places.slice(0, 100).map(function (place) {
+      const count = state().workspace.residences.filter(function (item) { return item.placeId === place.id; }).length;
+      const assigned = addressLibraryAssigning && personDraft.addresses.some(function (item) { return item.placeId === place.id; });
+      return '<article class="contact-card"><strong>' + u.escapeHtml(place.label) + '</strong><address>' + u.escapeHtml(model.formatAddress(place)).replace(/\n/g, "<br>") + '</address><small>' + count + ' assignment' + (count === 1 ? '' : 's') + '</small><div class="address-assignment-actions"><button type="button" class="button small" data-edit-address="' + u.escapeHtml(place.id) + '">Edit address & people</button>' + (addressLibraryAssigning ? '<button type="button" class="button small primary" data-assign-address="' + u.escapeHtml(place.id) + '"' + (assigned ? ' disabled' : '') + '>' + (assigned ? 'Assigned' : 'Assign') + '</button>' : '') + '</div></article>';
+    }).join("") || '<p class="muted-copy">No addresses found. Create a new address to get started.</p>';
+    if (places.length > 100) $("#addressLibraryList").insertAdjacentHTML("beforeend", '<p>Showing the first 100 addresses. Refine your search to find more.</p>');
+  }
+
+  function assignAddressToPersonDraft(id) {
+    if (!familyEditingEnabled() || !$("#personDialog").open) return;
+    const place = state().workspace.places.find(function (item) { return item.id === id; });
+    if (!place || personDraft.addresses.some(function (item) { return item.placeId === id; })) return;
+    if (personDraft.addresses.length >= config.controls.maxAddressesPerPerson) return components.toast("This person has reached the address limit.", { kind: "warning" });
+    detachRelatedAddressAutofill();
+    personDraft.addresses.push(Object.assign({}, u.clone(place), { id: u.uid("address"), placeId: id, residenceId: "", current: true, notes: "", residenceNotes: "", startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, source: { format: "mcresidences-v1", fields: {} }, placeSource: u.clone(place.source), order: personDraft.addresses.length }));
+    renderPersonRepeatables();
+    updatePersonFormValidity();
+    components.closeDialog("#addressLibraryDialog", "assigned");
+  }
+
+  function openAddressEditor(id, trigger) {
+    if (!familyEditingEnabled()) return;
+    const place = state().workspace.places.find(function (item) { return item.id === id; }) || {};
+    addressEditorOrigin = trigger;
+    $("#sharedAddressId").value = place.id || "";
+    $("#addressDialogTitle").textContent = place.id ? "Edit shared address" : "New shared address";
+    $("#sharedAddressFields").innerHTML = SHARED_ADDRESS_FIELDS.map(function (field) {
+      const attributes = ' id="sharedAddress-' + field[0] + '" maxlength="' + field[2] + '"';
+      const input = field[0] === "notes" ? '<textarea' + attributes + ' rows="2">' + u.escapeHtml(place[field[0]] || "") + '</textarea>' : '<input' + attributes + (field[0] === "phone" ? ' type="tel" data-phone-input pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}"' : '') + ' value="' + u.escapeHtml(place[field[0]] || "") + '">';
+      return '<label class="field"><span>' + field[1] + '</span>' + input + '</label>';
+    }).join("");
+    const lockedPerson = $("#personDialog").open ? $("#personId").value : "";
+    $("#addressAssignmentNote").hidden = !lockedPerson;
+    addressAssignments = [];
+    state().workspace.people.forEach(function (person) {
+      const links = state().workspace.residences.filter(function (item) { return item.placeId === id && item.personId === person.id; });
+      (links.length ? links : [{ personId: person.id, current: true, startDate: { value: "" }, endDate: { value: "" }, notes: "", source: { format: "mcresidences-v1", fields: {} } }]).forEach(function (link) {
+        addressAssignments.push({ person: person, residence: u.clone(link), startValue: addressDateValue(link, "start"), endValue: addressDateValue(link, "end"), assigned: Boolean(link.id), locked: person.id === lockedPerson });
+      });
+    });
+    $("#addressPeopleSearch").value = "";
+    $("#addressFormError").hidden = true;
+    renderAddressPeople();
+    components.openDialog("#addressDialog", { trigger: trigger, focus: "#sharedAddress-label" });
+    $("#addressDialog .dialog-body").scrollTop = 0;
+  }
+
+  function renderAddressPeople() {
+    const query = $("#addressPeopleSearch").value.trim();
+    let matches = addressAssignments.map(function (entry, index) { return { entry: entry, index: index }; }).filter(function (item) {
+      return query ? relationshipPersonMatches(item.entry.person, query) : item.entry.assigned;
+    });
+    const total = matches.length;
+    matches = matches.slice(0, 100);
+    $("#addressPeople").innerHTML = matches.map(function (item) {
+      const entry = item.entry;
+      const residence = entry.residence;
+      const index = item.index;
+      const disabled = entry.locked ? ' disabled' : '';
+      const dateField = function (kind, label) {
+        return '<label class="field date-input-field"><span>' + label + '</span><input data-residence-field="' + kind + 'Date" data-date-input maxlength="10" placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" aria-describedby="shared-' + kind + index + '-error" value="' + u.escapeHtml(entry[kind + "Value"]) + '"' + disabled + '><small id="shared-' + kind + index + '-error" class="date-validation-message" data-date-error hidden>' + DATE_INPUT_HELP + '</small></label>';
+      };
+      return '<fieldset class="repeatable-card" data-address-person="' + index + '"><legend>' + u.escapeHtml(model.displayName(entry.person)) + '</legend><label class="check-field"><input type="checkbox" data-residence-field="assigned"' + (entry.assigned ? ' checked' : '') + disabled + '><span>Assigned (uncheck to unassign)</span></label><div class="form-grid" data-assignment-details' + (entry.assigned ? '' : ' hidden') + '><label class="check-field"><input type="checkbox" data-residence-field="current"' + (residence.current ? ' checked' : '') + disabled + '><span>Current</span></label>' + dateField("start", "Move-in date") + dateField("end", "Move-out date") + '<label class="field"><span>Assignment notes</span><textarea data-residence-field="notes" rows="2" maxlength="1000"' + disabled + '>' + u.escapeHtml(residence.notes || "") + '</textarea></label></div></fieldset>';
+    }).join("") || '<p class="muted-copy">' + (query ? 'No people found.' : 'No people assigned. Search for a person to assign.') + '</p>';
+    if (total > 100) $("#addressPeople").insertAdjacentHTML("beforeend", '<p>Showing 100 matches. Refine your search to find more.</p>');
+  }
+
+  function updateAddressAssignment(event) {
+    const input = event.target;
+    const row = input.closest("[data-address-person]");
+    if (!row) return;
+    const entry = addressAssignments[Number(row.dataset.addressPerson)];
+    if (!entry || entry.locked) return;
+    const field = input.dataset.residenceField;
+    if (field === "assigned") { entry.assigned = input.checked; $("[data-assignment-details]", row).hidden = !input.checked; }
+    else if (field === "current") entry.residence.current = input.checked;
+    else if (field === "notes") entry.residence.notes = input.value;
+    else if (field === "startDate" || field === "endDate") {
+      entry[field === "startDate" ? "startValue" : "endValue"] = input.value.trim();
+      validateDateInputControl(input);
+      if (field === "endDate" && input.value.trim()) {
+        entry.residence.current = false;
+        $('[data-residence-field="current"]', row).checked = false;
+      }
+    }
+  }
+
+  function saveSharedAddress(event) {
+    event.preventDefault();
+    if (!familyEditingEnabled()) return;
+    const fail = function (message) { const error = $("#addressFormError"); error.textContent = message; error.hidden = false; error.scrollIntoView({ block: "nearest" }); };
+    const previousId = $("#sharedAddressId").value;
+    const next = u.clone(state());
+    const existing = next.workspace.places.find(function (place) { return place.id === previousId; });
+    if (!existing && next.workspace.places.length >= config.controls.maxPlaces) return fail("The address limit has been reached.");
+    const place = existing || { id: nextNumericRecordId("L", next.workspace.places, 4), source: { format: "mcplaces-v2", fields: {} }, order: next.workspace.places.length };
+    SHARED_ADDRESS_FIELDS.forEach(function (field) { place[field[0]] = $("#sharedAddress-" + field[0]).value.trim(); });
+    place.phone = u.formatPhoneNumber(place.phone);
+    if (!["line1", "city", "region", "postalCode", "country"].some(function (key) { return Boolean(place[key]); })) return fail("Add a street address, city, region, postal code, or country.");
+    if (!existing) next.workspace.places.push(place);
+    const editableIds = new Set(addressAssignments.filter(function (entry) { return !entry.locked; }).map(function (entry) { return entry.person.id; }));
+    next.workspace.residences = next.workspace.residences.filter(function (link) { return link.placeId !== place.id || !editableIds.has(link.personId); });
+    try {
+      addressAssignments.filter(function (entry) { return entry.assigned && !entry.locked; }).forEach(function (entry) {
+        const link = u.clone(entry.residence);
+        link.id = link.id || nextNumericRecordId("RS", next.workspace.residences.concat(state().workspace.residences), 4);
+        link.placeId = place.id;
+        link.label = link.label || place.label || "Home";
+        link.order = Number.isFinite(link.order) ? link.order : next.workspace.residences.filter(function (item) { return item.personId === link.personId; }).length;
+        link.source = link.source || { format: "mcresidences-v1", fields: {} };
+        link.source.fields = link.source.fields || {};
+        ["start", "end"].forEach(function (kind) {
+          const value = entry[kind + "Value"].trim();
+          if (!validDateInput(value)) throw new Error("Correct the " + kind + " date for " + model.displayName(entry.person) + ". " + DATE_INPUT_HELP);
+          if (value === addressDateValue(link, kind)) return;
+          const descriptor = automaticDateDescriptor(value, "optional", "");
+          link[kind + "Date"] = normalizedPersonDate(value, descriptor);
+          link.source.fields["date-" + kind + "-value"] = value;
+          link.source.fields["date-" + kind + "-descriptor"] = descriptor;
+        });
+        next.workspace.residences.push(link);
+      });
+      for (const person of next.workspace.people) {
+        if (next.workspace.residences.filter(function (link) { return link.personId === person.id; }).length > config.controls.maxAddressesPerPerson) throw new Error(model.displayName(person) + " has reached the address limit.");
+      }
+      model.prepare(next);
+    } catch (error) { return fail(error.message); }
+    storage.mutate(function (current) { current.workspace.places = next.workspace.places; current.workspace.residences = next.workspace.residences; }, { reason: "edit-address" });
+    if ($("#personDialog").open) {
+      personDraft.addresses.forEach(function (address) {
+        const shared = state().workspace.places.find(function (item) { return item.id === address.placeId; });
+        if (shared) ["line1", "line2", "city", "region", "postalCode", "country", "phone"].forEach(function (field) { address[field] = shared[field]; });
+      });
+      renderPersonRepeatables();
+      updatePersonFormValidity();
+    }
+    renderAddressLibrary();
+    components.closeDialog("#addressDialog", "saved");
+    renderAll();
+    components.toast("Shared address and assignments saved.", { kind: "success" });
+  }
+
   function addressRow(address, index) {
-    return '<fieldset class="repeatable-card" data-address-index="' + index + '"><legend>Address ' + (index + 1) + '</legend><div class="repeatable-card-actions"><button type="button" class="button small danger-text" data-remove-address="' + index + '">Remove</button></div><div class="address-editor-grid"><label class="field"><span>Label</span><input data-address-field="label" value="' + u.escapeHtml(address.label || "Home") + '"></label><label class="field"><span>Address line 1</span><input data-address-field="line1" value="' + u.escapeHtml(address.line1 || "") + '"></label><label class="field"><span>Address line 2</span><input data-address-field="line2" value="' + u.escapeHtml(address.line2 || "") + '"></label><label class="field"><span>City / locality</span><input data-address-field="city" value="' + u.escapeHtml(address.city || "") + '"></label><label class="field"><span>State / region</span><input data-address-field="region" value="' + u.escapeHtml(address.region || "") + '"></label><label class="field"><span>Postal code</span><input data-address-field="postalCode" value="' + u.escapeHtml(address.postalCode || "") + '"></label><label class="field"><span>Country</span><input data-address-field="country" value="' + u.escapeHtml(address.country || "") + '"></label><label class="field address-phone-field"><span>Phone</span><input type="tel" inputmode="numeric" autocomplete="tel" maxlength="12" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" data-phone-input data-address-field="phone" value="' + u.escapeHtml(u.formatPhoneNumber(address.phone || "")) + '"></label><label class="check-field address-current-field"><input type="checkbox" data-address-field="current" ' + (address.current !== false ? "checked" : "") + '><span>Current<br>address</span></label><label class="field address-start-field date-input-field"><span>Start date</span><input data-address-field="startDate" data-date-input placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" inputmode="text" maxlength="10" autocomplete="off" spellcheck="false" aria-describedby="addressStartDateError' + index + '" value="' + u.escapeHtml(addressDateValue(address, "start")) + '"><small id="addressStartDateError' + index + '" class="date-validation-message" data-date-error hidden>' + DATE_INPUT_HELP + '</small></label><label class="field address-end-field date-input-field"><span>End date</span><input data-address-field="endDate" data-date-input placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" inputmode="text" maxlength="10" autocomplete="off" spellcheck="false" aria-describedby="addressEndDateError' + index + '" value="' + u.escapeHtml(addressDateValue(address, "end")) + '"><small id="addressEndDateError' + index + '" class="date-validation-message" data-date-error hidden>' + DATE_INPUT_HELP + '</small></label><label class="field address-notes-field"><span>Address notes</span><textarea data-address-field="notes" rows="1">' + u.escapeHtml(address.notes || "") + '</textarea></label></div><small class="address-validation-message" data-address-error hidden>Add at least one physical address field, or remove this address.</small></fieldset>';
+    const field = function (name, label) {
+      return '<label class="field date-input-field"><span>' + label + '</span><input data-address-field="' + name + 'Date" data-date-input placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" maxlength="10" aria-describedby="assignment' + name + index + 'Error" value="' + u.escapeHtml(addressDateValue(address, name)) + '"><small id="assignment' + name + index + 'Error" class="date-validation-message" data-date-error hidden>' + DATE_INPUT_HELP + '</small></label>';
+    };
+    return '<fieldset class="repeatable-card" data-address-index="' + index + '"><legend>' + u.escapeHtml(address.label || "Home") + '</legend><address>' + u.escapeHtml(model.formatAddress(address)).replace(/\n/g, "<br>") + '</address><div class="address-assignment-actions"><button type="button" class="button small" data-edit-address="' + u.escapeHtml(address.placeId) + '">Edit shared address</button><button type="button" class="button small danger-text" data-remove-address="' + index + '">Unassign</button></div><div class="form-grid"><label class="check-field"><input type="checkbox" data-address-field="current" ' + (address.current !== false ? 'checked' : '') + '><span>Current address (uncheck after moving out)</span></label>' + field("start", "Move-in date") + field("end", "Move-out date") + '<label class="field"><span>Assignment notes</span><textarea data-address-field="notes" rows="2">' + u.escapeHtml(address.residenceNotes === undefined ? address.notes || "" : address.residenceNotes) + '</textarea></label></div></fieldset>';
   }
 
   function contactRow(item, index, type) {
@@ -2023,9 +2192,8 @@
   }
 
   function addressEditorRowValid(row) {
-    return ["line1", "line2", "city", "region", "postalCode", "country"].some(function (field) {
-      return Boolean(String(row.querySelector('[data-address-field="' + field + '"]')?.value || "").trim());
-    });
+    const address = personDraft.addresses[Number(row.dataset.addressIndex)];
+    return Boolean(address && state().workspace.places.some(function (place) { return place.id === address.placeId; }));
   }
 
   function formatPhoneInput(input) {
@@ -2085,9 +2253,9 @@
       });
       return {
         id: previous.id || u.uid("address"), placeId: previous.placeId || "", residenceId: previous.residenceId || "",
-        label: value("label"), current: row.querySelector('[data-address-field="current"]')?.checked !== false,
-        line1: value("line1"), line2: value("line2"), city: value("city"), region: value("region"), postalCode: value("postalCode"), country: value("country"), phone: u.formatPhoneNumber(value("phone")),
-        startDate: normalizedPersonDate(startValue, source.fields["date-start-descriptor"]), endDate: normalizedPersonDate(endValue, source.fields["date-end-descriptor"]), notes: value("notes"), source: source,
+        label: previous.label || "Home", current: row.querySelector('[data-address-field="current"]')?.checked !== false,
+        line1: previous.line1, line2: previous.line2, city: previous.city, region: previous.region, postalCode: previous.postalCode, country: previous.country, phone: previous.phone,
+        startDate: normalizedPersonDate(startValue, source.fields["date-start-descriptor"]), endDate: normalizedPersonDate(endValue, source.fields["date-end-descriptor"]), notes: value("notes"), residenceNotes: value("notes"), source: source,
         placeSource: u.clone(previous.placeSource || { format: "mcplaces-v2", fields: {} }), order: index
       };
     });
@@ -2108,20 +2276,6 @@
     return prefix + String(highest + 1).padStart(minimumDigits, "0");
   }
 
-  function referencedPlaceIds(sourceState) {
-    const ids = new Set(sourceState.workspace.residences.map(function (residence) { return residence.placeId; }));
-    sourceState.workspace.relationships.forEach(function (relationship) {
-      const placeId = u.cleanLine(relationship.source && relationship.source.fields && relationship.source.fields["place-id"], 100);
-      if (placeId) ids.add(placeId);
-    });
-    return ids;
-  }
-
-  function removeUnreferencedPlaces(sourceState) {
-    const referenced = referencedPlaceIds(sourceState);
-    sourceState.workspace.places = sourceState.workspace.places.filter(function (place) { return referenced.has(place.id); });
-  }
-
   function syncPersonAddressRecords(sourceState, person) {
     const previousResidences = sourceState.workspace.residences.filter(function (residence) { return residence.personId === person.id; });
     const previousById = new Map(previousResidences.map(function (residence) { return [residence.id, residence]; }));
@@ -2131,17 +2285,7 @@
       if (!residenceId || sourceState.workspace.residences.some(function (residence) { return residence.id === residenceId; })) residenceId = nextNumericRecordId("RS", sourceState.workspace.residences.concat(previousResidences), 4);
       const previousResidence = previousById.get(residenceId);
       let placeId = /^L\d{4,}$/i.test(address.placeId || "") ? address.placeId.toUpperCase() : previousResidence && previousResidence.placeId || "";
-      if (!placeId || !sourceState.workspace.places.some(function (place) { return place.id === placeId; })) placeId = nextNumericRecordId("L", sourceState.workspace.places, 4);
-      let place = sourceState.workspace.places.find(function (item) { return item.id === placeId; });
-      if (!place) {
-        place = { id: placeId, source: { format: "mcplaces-v2", fields: {} }, order: sourceState.workspace.places.length };
-        sourceState.workspace.places.push(place);
-      }
-      if (address.placeSource && Object.keys(u.plainObject(address.placeSource.fields)).length) place.source = u.clone(address.placeSource);
-      Object.assign(place, {
-        label: address.label || "Home", line1: address.line1 || "", line2: address.line2 || "", city: address.city || "",
-        region: address.region || "", postalCode: address.postalCode || "", country: address.country || "", phone: address.phone || "", notes: ""
-      });
+      if (!placeId || !sourceState.workspace.places.some(function (place) { return place.id === placeId; })) throw new Error("Choose an existing address before saving this person.");
       const residence = {
         id: residenceId, personId: person.id, placeId: placeId, label: address.label || "Home", current: address.current !== false,
         startDate: address.startDate, endDate: address.endDate, notes: address.notes || "", source: u.clone(address.source || previousResidence && previousResidence.source || { format: "mcresidences-v1", fields: {} }), order: index
@@ -2149,7 +2293,6 @@
       sourceState.workspace.residences.push(residence);
       Object.assign(address, { id: residenceId, residenceId: residenceId, placeId: placeId });
     });
-    removeUnreferencedPlaces(sourceState);
   }
 
   function targetNameInputId(group, part) {
@@ -2298,18 +2441,10 @@
   }
 
   function detachRelatedAddressAutofill() {
-    const toggle = $("#relatedAddressAutofill");
-    if (!relatedAddressAutofillApplied || !toggle || !toggle.checked) return;
-    syncPersonRepeatables();
+    if (!relatedAddressAutofillApplied) return;
     relatedAddressAutofillApplied = false;
-    toggle.checked = false;
-    personDraft.addresses.forEach(function (address) {
-      address.id = u.uid("address");
-      address.placeId = "";
-      address.residenceId = "";
-      address.placeSource = { format: "mcplaces-v2", fields: {} };
-    });
-    $("#relatedAddressAutofillNote").textContent = "Copied address edited; it will be saved separately.";
+    $("#relatedAddressAutofill").checked = false;
+    $("#relatedAddressAutofillNote").textContent = "Address assignments customized for this person.";
   }
 
   function fillPersonForm(person) {
@@ -2526,6 +2661,14 @@
     if (!$$('input[type="email"]', $("#personDialog")).every(function (input) { return input.checkValidity(); })) return showPersonError("Correct the email address marked as invalid.");
     if (personDraft.addresses.some(function (address) { return ![address.line1, address.line2, address.city, address.region, address.postalCode, address.country].some(function (value) { return Boolean(String(value || "").trim()); }); })) return showPersonError("Every address needs at least one physical address field, or remove the empty address.");
     const person = collectPersonForm(existing);
+    try {
+      const candidate = u.clone(state());
+      if (existing) candidate.workspace.people[candidate.workspace.people.findIndex(function (item) { return item.id === person.id; })] = u.clone(person);
+      else candidate.workspace.people.push(u.clone(person));
+      syncPersonAddressRecords(candidate, candidate.workspace.people.find(function (item) { return item.id === person.id; }));
+      if (candidate.workspace.residences.length > config.controls.maxResidences) throw new Error("The residence limit has been reached.");
+      model.prepare(candidate);
+    } catch (error) { return showPersonError(error.message); }
     const relationshipDrafts = existing ? [] : newPersonRelationshipDrafts(person);
     if (relationshipDrafts.length) {
       const validationState = u.clone(state());
@@ -2944,7 +3087,6 @@
       next.workspace.relationships = next.workspace.relationships.filter(function (relationship) { return relationship.type === "parent-child" ? relationship.parentId !== id && relationship.childId !== id : relationship.person1Id !== id && relationship.person2Id !== id; });
       affectedParentIds.forEach(function (parentId) { rebuildLinealChildren(next, parentId); });
       next.workspace.residences = next.workspace.residences.filter(function (residence) { return residence.personId !== id; });
-      removeUnreferencedPlaces(next);
       next.ui.favoritePersonIds = next.ui.favoritePersonIds.filter(function (personId) { return personId !== id; });
       const fallback = next.workspace.people[0] && next.workspace.people[0].id || "";
       if (next.workspace.family.homePersonId === id) next.workspace.family.homePersonId = fallback;
@@ -4910,6 +5052,26 @@
       else if (event.target.id === "ancestorDepth" || event.target.id === "descendantDepth") updateTreeDepthControl(event.target, false);
       else if (event.target.id === "zoomValue") updateTreeZoomControl(event.target, false);
     });
+    $("#addressSearch").addEventListener("input", renderAddressLibrary);
+    $("#addressPeopleSearch").addEventListener("input", renderAddressPeople);
+    $("#newSharedAddress").addEventListener("click", function (event) { openAddressEditor("", event.currentTarget); });
+    $("#addressLibraryList").addEventListener("click", function (event) {
+      const assign = event.target.closest("[data-assign-address]");
+      if (assign) assignAddressToPersonDraft(assign.dataset.assignAddress);
+    });
+    $("#addressForm").addEventListener("submit", saveSharedAddress);
+    $("#addressForm").addEventListener("input", function (event) {
+      if (event.target.matches("[data-phone-input]")) formatPhoneInput(event.target);
+      updateAddressAssignment(event);
+    });
+    $("#addressDialog").addEventListener("close", function () {
+      addressAssignments = [];
+      if ($("#addressLibraryDialog").open) $("#addressSearch").focus();
+      else if ($("#personDialog").open) $("[data-add-address]").focus();
+      else if (addressEditorOrigin && addressEditorOrigin.isConnected) addressEditorOrigin.focus();
+      else $("#addressesButton").focus();
+    });
+    $("#addressLibraryDialog").addEventListener("close", function () { if ($("#personDialog").open) $("[data-add-address]").focus(); });
     $("#personForm").addEventListener("submit", savePerson);
     $("#relationshipForm").addEventListener("submit", saveRelationship);
     $("#relationshipType").addEventListener("change", updateRelationshipFormType);
@@ -4925,7 +5087,10 @@
     $("#personDialog").addEventListener("input", function (event) {
       if (event.target.matches("[data-phone-input]")) formatPhoneInput(event.target);
       if (event.target.id === "relatedAddressAutofill") applyRelatedAddressAutofill(event.target.checked);
-      else if (event.target.closest("#addressEditor")) detachRelatedAddressAutofill();
+      else if (event.target.closest("#addressEditor")) {
+        detachRelatedAddressAutofill();
+        if (event.target.dataset.addressField === "endDate" && event.target.value.trim()) $('[data-address-field="current"]', event.target.closest("[data-address-index]")).checked = false;
+      }
       if (event.target.matches("[data-new-person-relationship-search]")) filterNewPersonRelationshipPicker(event.target);
       if (event.target.id === "birthDate") updateBirthOrderControl();
       const birthName = /^birthName(Prefix|First|Middle|Last|Suffix)$/.exec(event.target.id);
@@ -4945,15 +5110,19 @@
       if (updatePersonFormValidity()) $("#personFormError").hidden = true;
     });
     $("#personDialog").addEventListener("click", function (event) {
-      if (event.target.closest("[data-add-address]")) { detachRelatedAddressAutofill(); syncPersonRepeatables(); personDraft.addresses.push({ id: u.uid("address"), label: "Home", current: true, startDate: { value: "", qualifier: "exact" }, endDate: { value: "", qualifier: "exact" }, order: personDraft.addresses.length }); renderPersonRepeatables(); updatePersonFormValidity(); }
+      if (event.target.closest("[data-add-address]")) { syncPersonRepeatables(); openAddressLibrary(event.target.closest("[data-add-address]"), true); }
       if (event.target.closest("[data-add-phone]")) { syncPersonRepeatables(); personDraft.phones.push({ id: u.uid("phone"), label: "Mobile", value: "", order: personDraft.phones.length }); renderPersonRepeatables(); updatePersonFormValidity(); }
       if (event.target.closest("[data-add-email]")) { syncPersonRepeatables(); personDraft.emails.push({ id: u.uid("email"), label: "Personal", value: "", order: personDraft.emails.length }); renderPersonRepeatables(); updatePersonFormValidity(); }
       const removeAddress = event.target.closest("[data-remove-address]");
-      if (removeAddress) { detachRelatedAddressAutofill(); syncPersonRepeatables(); personDraft.addresses.splice(Number(removeAddress.dataset.removeAddress), 1); renderPersonRepeatables(); updatePersonFormValidity(); }
+      if (removeAddress) { detachRelatedAddressAutofill(); syncPersonRepeatables(); personDraft.addresses.splice(Number(removeAddress.dataset.removeAddress), 1); renderPersonRepeatables(); updatePersonFormValidity(); $("[data-add-address]").focus(); }
       const removeContact = event.target.closest("[data-remove-contact]");
       if (removeContact) { syncPersonRepeatables(); const parts = removeContact.dataset.removeContact.split(":"); personDraft[parts[0] + "s"].splice(Number(parts[1]), 1); renderPersonRepeatables(); updatePersonFormValidity(); }
     });
     document.addEventListener("click", function (event) {
+      const manageAddresses = event.target.closest("[data-manage-addresses]");
+      if (manageAddresses) { openAddressLibrary(manageAddresses, false); return; }
+      const editAddress = event.target.closest("[data-edit-address]");
+      if (editAddress) { if ($("#personDialog").open) syncPersonRepeatables(); openAddressEditor(editAddress.dataset.editAddress, editAddress); return; }
       const action = event.target.closest("[data-action]");
       if (action && action.dataset.action === "clear-help-search") { $("#helpSearch").value = ""; renderHelp(); }
       const safeLink = event.target.closest("[data-open-url]");
