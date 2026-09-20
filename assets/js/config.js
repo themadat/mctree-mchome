@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.151",
-      buildId: "0.0.1.151",
+      version: "0.0.1.152",
+      buildId: "0.0.1.152",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -177,10 +177,10 @@
 
     releases: [
       {
-        version: "0.0.1.151",
+        version: "0.0.1.152",
         date: "2026-09-20T12:00:00.000Z",
-        title: "Flexible header and address people lists",
-        summary: "The search adapts to spaced toolbar buttons, and address cards list assigned people with remove, Add, and Edit controls.",
+        title: "Consistent address management controls",
+        summary: "Manage Addresses uses the same assigned-person lists and Add/Edit actions, with compact remove buttons to the left of each name.",
         features: [],
         improvements: ["Flexible header search and separated button labels", "Scannable assigned-person rows with X, Add, and pencil Edit controls"],
         fixes: ["Prevent toolbar actions from overlapping the search field"],

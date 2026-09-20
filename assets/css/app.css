@@ -1556,3 +1556,7 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
 }
 
 .address-person-details:not([open]) { display: none; }
+
+.address-roster-row, .address-person-heading { justify-content: flex-start; }
+.address-roster-row .button, .address-person-heading .button { order: -1; min-width: 32px; min-height: 32px; height: 32px; padding: .25rem .4rem; }
+.address-assignment-actions .button.small { min-height: 32px; height: 32px; padding-block: .25rem; }

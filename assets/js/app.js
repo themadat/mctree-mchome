@@ -1041,7 +1041,7 @@
       const person = state().workspace.people.find(function (item) { return item.id === link.personId; });
       if (!person) return "";
       const name = u.escapeHtml(model.displayName(person));
-      return '<div class="address-roster-row"><span>' + name + (link.current ? '' : ' <small>(Former)</small>') + '</span>' + (editable ? '<button type="button" class="button small danger-text" data-unassign-residence="' + u.escapeHtml(link.id) + '" aria-label="Remove ' + name + ' from this address"><span data-symbol="close" aria-hidden="true"></span></button>' : '') + '</div>';
+      return '<div class="address-roster-row"><span>' + name + (link.current ? '' : ' <small>(Former)</small>') + '</span>' + (editable ? '<button type="button" class="button small danger-text" data-unassign-residence="' + u.escapeHtml(link.id) + '" aria-label="Remove ' + name + ' from this address"' + ($('#personDialog').open && $('#personId').value === link.personId ? ' disabled' : '') + '><span data-symbol="close" aria-hidden="true"></span></button>' : '') + '</div>';
     }).join("");
     return '<div class="address-roster" aria-label="People assigned to this address">' + rows + '</div>' + (editable ? '<div class="address-assignment-actions"><button type="button" class="button small" data-address-add-people="' + u.escapeHtml(placeId) + '"><span data-symbol="add" aria-hidden="true"></span>Add</button><button type="button" class="button small" data-edit-address="' + u.escapeHtml(placeId) + '"><span data-symbol="pencil" aria-hidden="true"></span>Edit</button></div>' : '');
   }
@@ -1938,8 +1938,9 @@
     $("#addressLibraryList").innerHTML = places.slice(0, 100).map(function (place) {
       const count = state().workspace.residences.filter(function (item) { return item.placeId === place.id; }).length;
       const assigned = addressLibraryAssigning && personDraft.addresses.some(function (item) { return item.placeId === place.id; });
-      return '<article class="contact-card"><strong>' + u.escapeHtml(place.label) + '</strong><address>' + u.escapeHtml(model.formatAddress(place)).replace(/\n/g, "<br>") + '</address><small>' + count + ' assignment' + (count === 1 ? '' : 's') + '</small><div class="address-assignment-actions"><button type="button" class="button small" data-edit-address="' + u.escapeHtml(place.id) + '">Edit address & people</button>' + (addressLibraryAssigning ? '<button type="button" class="button small primary" data-assign-address="' + u.escapeHtml(place.id) + '"' + (assigned ? ' disabled' : '') + '>' + (assigned ? 'Assigned' : 'Assign') + '</button>' : '') + '</div></article>';
+      return '<article class="contact-card"><strong>' + u.escapeHtml(place.label) + '</strong><address>' + u.escapeHtml(model.formatAddress(place)).replace(/\n/g, "<br>") + '</address><small>' + count + ' assignment' + (count === 1 ? '' : 's') + '</small>' + addressRoster(place.id) + '<div class="address-assignment-actions">' + (addressLibraryAssigning ? '<button type="button" class="button small primary" data-assign-address="' + u.escapeHtml(place.id) + '"' + (assigned ? ' disabled' : '') + '>' + (assigned ? 'Assigned' : 'Assign') + '</button>' : '') + '</div></article>';
     }).join("") || '<p class="muted-copy">No addresses found. Create a new address to get started.</p>';
+    icons.mount($("#addressLibraryList"));
     if (places.length > 100) $("#addressLibraryList").insertAdjacentHTML("beforeend", '<p>Showing the first 100 addresses. Refine your search to find more.</p>');
   }
 
@@ -5156,8 +5157,10 @@
     document.addEventListener("click", function (event) {
       const removeResident = event.target.closest("[data-unassign-residence]");
       if (removeResident && familyEditingEnabled()) {
+        if (removeResident.disabled) return;
         storage.mutate(function (next) { next.workspace.residences = next.workspace.residences.filter(function (link) { return link.id !== removeResident.dataset.unassignResidence; }); }, { reason: "unassign-address" });
         renderAll();
+        if ($("#addressLibraryDialog").open) { renderAddressLibrary(); $("#addressSearch").focus(); return; }
         const focus = $("#profilePanel [data-address-add-people]") || $("#profilePanel [data-manage-addresses]");
         if (focus) focus.focus();
         return;
