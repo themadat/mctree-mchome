@@ -792,8 +792,8 @@
     return title + "-" + labels[mode || accessModeFor(state)] + "-" + new Date().toISOString().slice(0, 10) + "-v" + datasetVersionFor(state).replace(/\./g, "-") + ".zip";
   }
 
-  function downloadBytes(bytes, fileName) {
-    const blob = new Blob([bytes], { type: "application/zip" });
+  function downloadBytes(bytes, fileName, mimeType) {
+    const blob = new Blob([bytes], { type: mimeType || "application/zip" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -801,7 +801,42 @@
     document.body.appendChild(link);
     link.click();
     link.remove();
-    window.setTimeout(function () { URL.revokeObjectURL(url); }, 0);
+    window.setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+  }
+
+  async function currentChangesBackup(source) {
+    const snapshot = model.withoutSessionSearch(u.clone(source));
+    try {
+      model.prepare(snapshot);
+      const bytes = packageBytes(snapshot);
+      await prepareBytes(bytes, "current-changes.zip");
+      return { bytes: bytes, name: packageFileName(snapshot, "editor"), mime: "application/zip", emergency: false };
+    } catch (error) {
+      return {
+        bytes: new TextEncoder().encode(JSON.stringify(snapshot, null, 2)),
+        name: "McFamily-emergency-" + new Date().toISOString().replace(/[:.]/g, "-") + ".json",
+        mime: "application/json", emergency: true
+      };
+    }
+  }
+
+  async function exportCurrentChanges() {
+    const allowed = function () { return Boolean(App.cloud && App.cloud.canPublish() && storage.getState().workspace.family.initializedAt); };
+    if (!allowed()) return;
+    const button = document.querySelector("#exportCurrentChangesButton");
+    const status = document.querySelector("#exportCurrentChangesStatus");
+    button.disabled = true;
+    status.textContent = "Preparing a copy of your current changes…";
+    try {
+      const backup = await currentChangesBackup(storage.getState());
+      if (!allowed()) { status.textContent = "Export cancelled because your editing session ended."; return; }
+      downloadBytes(backup.bytes, backup.name, backup.mime);
+      status.textContent = backup.emergency
+        ? "Emergency backup download started. Your changes could not pass the normal file checks, so this JSON preserves them for repair. It cannot be opened using Open Recovery ZIP. Keep this tab open and ask your Admin to verify the backup and arrange recovery before refreshing."
+        : "Recovery ZIP download started. Confirm the file is in Downloads and have your Admin verify it before refreshing. It includes your unpublished changes and can be opened using Open Recovery ZIP.";
+    } catch (error) {
+      status.textContent = "The backup could not be created. Keep this tab open and contact your Admin before refreshing.";
+    } finally { button.disabled = false; }
   }
 
   function exportAccessPackage(mode) {
@@ -957,6 +992,7 @@
   }
 
   function init() {
+    document.querySelector("#exportCurrentChangesButton")?.addEventListener("click", exportCurrentChanges);
     document.querySelectorAll("[data-import-file-input]").forEach(function (input) {
       input.addEventListener("change", function (event) {
         const file = event.target.files && event.target.files[0];
@@ -971,6 +1007,8 @@
   App.portability = {
     init: init,
     exportPackage: exportPackage,
+    currentChangesBackup: currentChangesBackup,
+    exportCurrentChanges: exportCurrentChanges,
     exportAccessPackage: exportAccessPackage,
     exportCsv: exportPackage,
     previewFile: previewFile,

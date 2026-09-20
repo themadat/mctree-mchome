@@ -271,6 +271,22 @@ let duplicateBirthMessage = "";
 try { App.stateModel.prepare(duplicatePosition); } catch (error) { duplicateBirthMessage = error.message; }
 if (!duplicateBirthMessage.includes("also assigned to") || !duplicateBirthMessage.includes("McMetadata.csv") || !duplicateBirthMessage.includes(duplicatePosition.workspace.relationships[1].childId)) fail("Duplicate birth-position errors do not identify affected children and repair location");
 
+const backupSource = structuredClone(orderedFixture);
+backupSource.ui.search = "private session query";
+const beforeBackup = JSON.stringify(backupSource);
+const validBackup = await App.portability.currentChangesBackup(backupSource);
+if (validBackup.emergency || validBackup.mime !== "application/zip") fail("Valid editor backup did not produce a ZIP");
+await App.portability.prepareBytes(validBackup.bytes, validBackup.name);
+if (JSON.stringify(backupSource) !== beforeBackup) fail("Exporting changes mutated the working copy");
+const invalidBackupSource = structuredClone(duplicatePosition);
+invalidBackupSource.ui.search = "private session query";
+const invalidBeforeBackup = JSON.stringify(invalidBackupSource);
+const emergencyBackup = await App.portability.currentChangesBackup(invalidBackupSource);
+const recoveredSnapshot = JSON.parse(new TextDecoder().decode(emergencyBackup.bytes));
+if (!emergencyBackup.emergency || emergencyBackup.mime !== "application/json" || !emergencyBackup.name.endsWith(".json")) fail("Invalid changes did not produce an emergency backup");
+if (JSON.stringify(recoveredSnapshot.workspace) !== JSON.stringify(invalidBackupSource.workspace) || recoveredSnapshot.ui.search) fail("Emergency backup lost family edits or retained session search");
+if (JSON.stringify(invalidBackupSource) !== invalidBeforeBackup) fail("Emergency export changed live data");
+
 const duplicateLineage = structuredClone(orderedFixture);
 duplicateLineage.workspace.people[2].source.fields["lineage-id"] = duplicateLineage.workspace.people[1].source.fields["lineage-id"];
 let rejectedLineage = false;
