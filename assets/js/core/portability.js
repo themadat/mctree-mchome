@@ -479,9 +479,20 @@
     if (birthOrder != null && (typeof birthOrder !== "object" || Array.isArray(birthOrder))) throw new Error("Birth order metadata must be a relationship-position map.");
     Object.entries(birthOrder || {}).forEach(function (entry) {
       const relationship = relationships.find(function (item) { return item.id === entry[0]; });
-      if (!relationship) throw new Error("Birth order references a missing relationship.");
+      if (!relationship) {
+        const id = u.cleanLine(entry[0], 100);
+        const caseMatch = relationships.find(function (item) { return item.id === id.toUpperCase(); });
+        const personLabel = function (personId) {
+          const person = people.find(function (item) { return item.id === personId; });
+          return person ? model.displayName(person) + " (" + personId + ")" : personId;
+        };
+        const detail = caseMatch && caseMatch.type === "parent-child"
+          ? " This appears to refer to child " + personLabel(caseMatch.childId) + " and parent " + personLabel(caseMatch.parentId) + ". Change the metadata key to " + caseMatch.id + " (IDs must match exactly)."
+          : " The parent and child cannot be identified because that relationship record is absent. Ask the Owner/Editor to export a fresh complete ZIP. If repairing the ZIP manually, restore the intended relationship in McRelations.csv, or remove this birthOrder entry if the relationship was intentionally deleted; do not guess another relationship ID.";
+        throw new Error("Birth order references missing relationship “" + id + "”. In McMetadata.csv, find the family / McFamily / settings-json row and its birthOrder entry “" + id + "” (position " + u.cleanLine(String(entry[1]), 40) + "). No matching relationship-id exists in McRelations.csv." + detail + " No family data was changed.");
+      }
       relationship.birthOrder = entry[1];
-      if (entry[1] == null) throw new Error("Birth order positions must be positive integers.");
+      if (entry[1] == null) throw new Error("Birth order position for relationship " + relationship.id + " is empty. In McMetadata.csv → family / McFamily / settings-json → birthOrder, remove that entry to use date order or set a positive whole-number position.");
     });
     const relationshipDetails = u.plainObject(metadata.family.settings.relationshipDetails);
     relationships.forEach(function (relationship) {

@@ -257,6 +257,20 @@ duplicatePosition.workspace.relationships[1].birthOrder = duplicatePosition.work
 let rejectedPosition = false;
 try { await App.portability.prepareBytes(App.portability.packageBytes(duplicatePosition), "duplicate-position.zip"); } catch (_) { rejectedPosition = true; }
 if (!rejectedPosition) fail("Duplicate birth position was imported");
+const recordedLink = orderedFixture.workspace.relationships.find((link) => link.birthOrder != null);
+for (const badId of ["MISSING999", recordedLink.id.toLowerCase()]) {
+  const files = App.portability.packageFiles(orderedFixture);
+  files["McMetadata.csv"] = files["McMetadata.csv"].replaceAll('""' + recordedLink.id + '"":', '""' + badId + '"":');
+  let message = "";
+  try { App.portability.preparePackage(new Map(Object.entries(files)), "bad-birth-order.zip"); } catch (error) { message = error.message; }
+  if (!message.includes(badId) || !message.includes("McMetadata.csv") || !message.includes("McRelations.csv") || !message.includes("No family data was changed")) fail("Missing birth-order relationships lack actionable diagnostics");
+  if (badId === "MISSING999" && !message.includes("cannot be identified")) fail("Missing relationship diagnostics imply unknown people are identifiable");
+  if (badId !== "MISSING999" && (!message.includes(recordedLink.childId) || !message.includes(recordedLink.parentId) || !message.includes("IDs must match exactly"))) fail("Case mismatch diagnostics lack the affected people and exact ID repair");
+}
+let duplicateBirthMessage = "";
+try { App.stateModel.prepare(duplicatePosition); } catch (error) { duplicateBirthMessage = error.message; }
+if (!duplicateBirthMessage.includes("also assigned to") || !duplicateBirthMessage.includes("McMetadata.csv") || !duplicateBirthMessage.includes(duplicatePosition.workspace.relationships[1].childId)) fail("Duplicate birth-position errors do not identify affected children and repair location");
+
 const duplicateLineage = structuredClone(orderedFixture);
 duplicateLineage.workspace.people[2].source.fields["lineage-id"] = duplicateLineage.workspace.people[1].source.fields["lineage-id"];
 let rejectedLineage = false;

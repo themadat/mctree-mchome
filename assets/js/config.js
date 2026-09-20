@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.147",
-      buildId: "0.0.1.147",
+      version: "0.0.1.148",
+      buildId: "0.0.1.148",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -177,13 +177,13 @@
 
     releases: [
       {
-        version: "0.0.1.147",
-        date: "2026-09-19T12:00:00.000Z",
-        title: "Easier address editing",
-        summary: "A wider address editor with side-by-side details and people, clear Add and Remove buttons, and compact expandable residence details.",
-        features: ["Shared address library and dedicated address editor", "Searchable person assignments with individual move-in and move-out dates"],
-        improvements: ["Address edits update every assigned person", "Unassigned addresses remain available for reuse and package export"],
-        fixes: ["Person edits preserve shared address details and keep residence notes separate"],
+        version: "0.0.1.148",
+        date: "2026-09-20T12:00:00.000Z",
+        title: "Actionable birth-order errors",
+        summary: "Birth-order validation identifies the relationship, affected people when available, and the exact repair location.",
+        features: [],
+        improvements: ["Missing relationship errors identify the metadata entry and explain recovery", "Invalid and duplicate positions name the affected parent and children"],
+        fixes: ["Explain exact-ID capitalization mismatches without guessing or modifying family data"],
         knownIssues: []
       }
     ],

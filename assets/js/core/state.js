@@ -897,14 +897,23 @@
 
   function birthOrderErrors(input) {
     const errors = [];
-    const used = new Set();
+    const used = new Map();
     const relationships = input.workspace.relationships;
+    const personLabel = function (id) {
+      const person = input.workspace.people.find(function (item) { return item.id === id; });
+      return person ? displayName(person) + " (" + id + ")" : id || "unknown person";
+    };
     relationships.forEach(function (relationship) {
       if (relationship.birthOrder == null) return;
       const eligible = relationship.type === "parent-child" && relationship.lineage === "lineal" && config.parentKinds.some(function (kind) { return kind.id === relationship.kind && kind.lineal; });
       const key = relationship.parentId + "|" + relationship.birthOrder;
-      if (!eligible || !Number.isInteger(relationship.birthOrder) || relationship.birthOrder < 1 || relationship.birthOrder > config.controls.maxLineageSegment || used.has(key)) errors.push("Invalid or duplicate recorded birth position on " + relationship.id + ".");
-      used.add(key);
+      const context = relationship.type === "parent-child" ? "child " + personLabel(relationship.childId) + " with parent " + personLabel(relationship.parentId) : personLabel(relationship.person1Id) + " and " + personLabel(relationship.person2Id);
+      let reason = "";
+      if (!eligible) reason = "Only a Lineal Biological or Adopted parent-child relationship can have a recorded birth position.";
+      else if (!Number.isInteger(relationship.birthOrder) || relationship.birthOrder < 1 || relationship.birthOrder > config.controls.maxLineageSegment) reason = "The position must be a whole number from 1 to " + config.controls.maxLineageSegment + ".";
+      else if (used.has(key)) reason = "Position " + relationship.birthOrder + " is also assigned to " + personLabel(used.get(key).childId) + " (relationship " + used.get(key).id + "). Each sibling needs a different position.";
+      if (reason) errors.push("Birth order problem for " + context + " (relationship " + relationship.id + "). " + reason + " Ask the Owner/Editor to review the child's Birth order among Lineal siblings and export a fresh ZIP. For a ZIP that will not open, correct or remove birthOrder[\"" + relationship.id + "\"] in McMetadata.csv → family / McFamily / settings-json; removing it restores date-based ordering.");
+      used.set(key, relationship);
     });
     return errors;
   }
