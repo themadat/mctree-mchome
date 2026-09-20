@@ -1976,6 +1976,7 @@
     let matches = addressAssignments.map(function (entry, index) { return { entry: entry, index: index }; }).filter(function (item) {
       return query ? relationshipPersonMatches(item.entry.person, query) : item.entry.assigned;
     });
+    $("#addressPeopleCount").textContent = addressAssignments.filter(function (entry) { return entry.assigned; }).length + " assigned";
     const total = matches.length;
     matches = matches.slice(0, 100);
     $("#addressPeople").innerHTML = matches.map(function (item) {
@@ -1986,7 +1987,9 @@
       const dateField = function (kind, label) {
         return '<label class="field date-input-field"><span>' + label + '</span><input data-residence-field="' + kind + 'Date" data-date-input maxlength="10" placeholder="YYYY, YYYY-MM, or YYYY-MM-DD" aria-describedby="shared-' + kind + index + '-error" value="' + u.escapeHtml(entry[kind + "Value"]) + '"' + disabled + '><small id="shared-' + kind + index + '-error" class="date-validation-message" data-date-error hidden>' + DATE_INPUT_HELP + '</small></label>';
       };
-      return '<fieldset class="repeatable-card" data-address-person="' + index + '"><legend>' + u.escapeHtml(model.displayName(entry.person)) + '</legend><label class="check-field"><input type="checkbox" data-residence-field="assigned"' + (entry.assigned ? ' checked' : '') + disabled + '><span>Assigned (uncheck to unassign)</span></label><div class="form-grid" data-assignment-details' + (entry.assigned ? '' : ' hidden') + '><label class="check-field"><input type="checkbox" data-residence-field="current"' + (residence.current ? ' checked' : '') + disabled + '><span>Current</span></label>' + dateField("start", "Move-in date") + dateField("end", "Move-out date") + '<label class="field"><span>Assignment notes</span><textarea data-residence-field="notes" rows="2" maxlength="1000"' + disabled + '>' + u.escapeHtml(residence.notes || "") + '</textarea></label></div></fieldset>';
+      const name = u.escapeHtml(model.displayName(entry.person));
+      return '<article class="address-person-card" data-address-person="' + index + '"><div class="address-person-heading"><strong>' + name + '</strong><button type="button" class="button small ' + (entry.assigned ? 'danger-text' : 'primary') + '" data-toggle-address-person="' + index + '" aria-label="' + (entry.assigned ? 'Remove ' : 'Add ') + name + '"' + disabled + '>' + (entry.assigned ? 'Remove' : 'Add') + '</button></div>' + (entry.assigned ? '<details class="address-person-details"><summary>Dates &amp; notes · ' + (residence.current ? 'Current' : 'Former') + '</summary><div class="form-grid"><label class="check-field"><input type="checkbox" data-residence-field="current"' + (residence.current ? ' checked' : '') + disabled + '><span>Current address</span></label>' + dateField("start", "Move-in date") + dateField("end", "Move-out date") + '<label class="field"><span>Assignment notes</span><textarea data-residence-field="notes" rows="2" maxlength="1000"' + disabled + '>' + u.escapeHtml(residence.notes || "") + '</textarea></label></div></details>' : '') + '</article>';
+
     }).join("") || '<p class="muted-copy">' + (query ? 'No people found.' : 'No people assigned. Search for a person to assign.') + '</p>';
     if (total > 100) $("#addressPeople").insertAdjacentHTML("beforeend", '<p>Showing 100 matches. Refine your search to find more.</p>');
   }
@@ -1998,8 +2001,7 @@
     const entry = addressAssignments[Number(row.dataset.addressPerson)];
     if (!entry || entry.locked) return;
     const field = input.dataset.residenceField;
-    if (field === "assigned") { entry.assigned = input.checked; $("[data-assignment-details]", row).hidden = !input.checked; }
-    else if (field === "current") entry.residence.current = input.checked;
+    if (field === "current") entry.residence.current = input.checked;
     else if (field === "notes") entry.residence.notes = input.value;
     else if (field === "startDate" || field === "endDate") {
       entry[field === "startDate" ? "startValue" : "endValue"] = input.value.trim();
@@ -2009,6 +2011,8 @@
         $('[data-residence-field="current"]', row).checked = false;
       }
     }
+    const summary = $("summary", row);
+    if (summary) summary.textContent = "Dates & notes · " + (entry.residence.current ? "Current" : "Former");
   }
 
   function saveSharedAddress(event) {
@@ -5058,6 +5062,17 @@
     $("#addressLibraryList").addEventListener("click", function (event) {
       const assign = event.target.closest("[data-assign-address]");
       if (assign) assignAddressToPersonDraft(assign.dataset.assignAddress);
+    });
+    $("#addressPeople").addEventListener("click", function (event) {
+      const button = event.target.closest("[data-toggle-address-person]");
+      if (!button || !familyEditingEnabled()) return;
+      const index = Number(button.dataset.toggleAddressPerson);
+      const entry = addressAssignments[index];
+      if (!entry || entry.locked) return;
+      entry.assigned = !entry.assigned;
+      renderAddressPeople();
+      const nextButton = $('[data-toggle-address-person="' + index + '"]');
+      (nextButton || $("#addressPeopleSearch")).focus();
     });
     $("#addressForm").addEventListener("submit", saveSharedAddress);
     $("#addressForm").addEventListener("input", function (event) {

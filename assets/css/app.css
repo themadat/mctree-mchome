@@ -1520,3 +1520,21 @@ button.outline-person:hover, button.outline-person:focus-visible { border-color:
 #addressPeople legend, #addressLibraryList address { overflow-wrap: anywhere; }
 #addressPeople .check-field { min-height: 44px; }
 #addressDialog input[aria-invalid="true"] { border-color: var(--danger); }
+
+#addressDialog { width: min(1080px, calc(100vw - 2rem)); }
+.address-save-note { margin-top: 0; color: var(--muted); }
+.address-modal-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; }
+.address-modal-columns > section { min-width: 0; }
+.address-modal-columns h3 { margin: 0 0 .75rem; }
+.address-members > p { margin: 0 0 .75rem; }
+#addressPeople { margin-top: .75rem; gap: .5rem; }
+.address-person-card { padding: .6rem .75rem; border: 1px solid var(--line); border-radius: .65rem; }
+.address-person-heading { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+.address-person-heading strong { overflow-wrap: anywhere; }
+.address-person-heading .button { flex-shrink: 0; min-height: 44px; }
+.address-person-details summary { cursor: pointer; padding-block: .6rem; color: var(--muted); }
+.address-person-details .form-grid { margin-top: .3rem; }
+#sharedAddressFields .field:last-child { grid-column: 1 / -1; }
+@media (max-width: 760px) {
+  .address-modal-columns { grid-template-columns: 1fr; gap: 1rem; }
+}
