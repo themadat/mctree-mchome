@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.156",
-      buildId: "0.0.1.156",
+      version: "0.0.1.157",
+      buildId: "0.0.1.157",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -177,13 +177,13 @@
 
     releases: [
       {
-        version: "0.0.1.156",
+        version: "0.0.1.157",
         date: "2026-09-21T12:00:00.000Z",
-        title: "Organize Data Cleanup checks",
-        summary: "Data Cleanup groups related checks together with consistently sized collapsed headers.",
+        title: "Delete unassigned addresses",
+        summary: "Editors can delete unused shared address records while reviewing duplicate addresses or managing addresses.",
         features: [],
-        improvements: ["Order relationship and name checks first, followed by deaths, birthdays, lineage, and addresses"],
-        fixes: ["Reserve consistent title and description space in cleanup headers"],
+        improvements: ["Add a confirmed Delete address action for unassigned records"],
+        fixes: ["Protect current, former, and unsaved resident assignments from address deletion"],
         knownIssues: []
       }
     ],

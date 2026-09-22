@@ -1956,6 +1956,27 @@
     components.closeDialog("#addressLibraryDialog", "assigned");
   }
 
+  function addressHasAssignments(id) {
+    return state().workspace.residences.some(function (link) { return link.placeId === id; }) ||
+      ($("#personDialog").open && personDraft.addresses.some(function (address) { return address.placeId === id; })) ||
+      ($("#addressDialog").open && $("#sharedAddressId").value === id && addressAssignments.some(function (entry) { return entry.assigned; }));
+  }
+
+  async function deleteSharedAddress() {
+    const id = $("#sharedAddressId").value;
+    if (!familyEditingEnabled() || !id) return;
+    const place = state().workspace.places.find(function (item) { return item.id === id; });
+    if (!place) return;
+    if (addressHasAssignments(id)) return components.toast("Remove and save all assignments before deleting this address, including former residents.", { kind: "warning" });
+    const accepted = await components.confirm({ title: "Delete address?", message: "Delete this unassigned address and its phone number and notes? " + model.formatAddress(place).replace(/\n/g, ", "), confirmLabel: "Delete address", danger: true });
+    if (!accepted || !familyEditingEnabled() || addressHasAssignments(id)) return;
+    storage.mutate(function (next) { next.workspace.places = next.workspace.places.filter(function (item) { return item.id !== id; }); }, { reason: "delete-address" });
+    components.closeDialog("#addressDialog", "deleted");
+    renderAddressLibrary();
+    renderAll();
+    components.toast("Unassigned address deleted.", { kind: "success" });
+  }
+
   function openAddressEditor(id, trigger) {
     if (!familyEditingEnabled()) return;
     const place = state().workspace.places.find(function (item) { return item.id === id; }) || {};
@@ -1979,6 +2000,7 @@
     $("#addressPeopleSearch").value = "";
     $("#addressFormError").hidden = true;
     renderAddressPeople();
+    $("#deleteSharedAddress").hidden = !place.id || addressHasAssignments(place.id);
     components.openDialog("#addressDialog", { trigger: trigger, focus: "#sharedAddress-label" });
     $("#addressDialog .dialog-body").scrollTop = 0;
   }
@@ -5127,6 +5149,7 @@
       const nextButton = $('[data-toggle-address-person="' + index + '"]');
       (nextButton || $("#addressPeopleSearch")).focus();
     });
+    $("#deleteSharedAddress").addEventListener("click", deleteSharedAddress);
     $("#addressForm").addEventListener("submit", saveSharedAddress);
     $("#addressForm").addEventListener("input", function (event) {
       if (event.target.matches("[data-phone-input]")) formatPhoneInput(event.target);
