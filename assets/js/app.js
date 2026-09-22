@@ -3217,7 +3217,7 @@
   }
 
   function printHouseholdAddress(person) {
-    return currentAddressForPerson(person);
+    return (person.addresses || []).find(function (address) { return address.current; }) || null;
   }
 
   function printDirectoryEligible(person) {
@@ -3251,16 +3251,16 @@
   }
 
   function comparePrintHouseholdMain(a, b, graph, memberIds) {
+    const aParent = (graph.children.get(a.id) || []).some(function (entry) { return memberIds.has(entry.person.id); });
+    const bParent = (graph.children.get(b.id) || []).some(function (entry) { return memberIds.has(entry.person.id); });
+    if (aParent !== bParent) return aParent ? -1 : 1;
+    const aPartner = (graph.partners.get(a.id) || []).some(function (entry) { return memberIds.has(entry.person.id); });
+    const bPartner = (graph.partners.get(b.id) || []).some(function (entry) { return memberIds.has(entry.person.id); });
+    if (aPartner !== bPartner) return aPartner ? -1 : 1;
     const aLineage = lineageSegments(a);
     const bLineage = lineageSegments(b);
     if (Boolean(aLineage.length) !== Boolean(bLineage.length)) return aLineage.length ? -1 : 1;
     if (aLineage.length !== bLineage.length) return aLineage.length - bLineage.length;
-    const aPartner = (graph.partners.get(a.id) || []).some(function (entry) { return memberIds.has(entry.person.id); });
-    const bPartner = (graph.partners.get(b.id) || []).some(function (entry) { return memberIds.has(entry.person.id); });
-    if (aPartner !== bPartner) return aPartner ? -1 : 1;
-    const aParent = (graph.children.get(a.id) || []).some(function (entry) { return memberIds.has(entry.person.id); });
-    const bParent = (graph.children.get(b.id) || []).some(function (entry) { return memberIds.has(entry.person.id); });
-    if (aParent !== bParent) return aParent ? -1 : 1;
     return model.sortName(a).localeCompare(model.sortName(b)) || a.id.localeCompare(b.id);
   }
 
@@ -3303,7 +3303,10 @@
     const personIds = new Set(people.map(function (person) { return person.id; }));
     people.forEach(function (person) {
       family.relationGroups(person.id, printState).partners.filter(function (entry) { return entry.current; }).forEach(function (entry) {
-        if (entry.person && personIds.has(entry.person.id)) union(person.id, entry.person.id);
+        if (!entry.person || !personIds.has(entry.person.id) || person.livingStatus === "deceased" || entry.person.livingStatus === "deceased") return;
+        const firstAddress = printHouseholdAddress(person);
+        const secondAddress = printHouseholdAddress(entry.person);
+        if (!firstAddress || !secondAddress || printHouseholdAddressKey(person, firstAddress) === printHouseholdAddressKey(entry.person, secondAddress)) union(person.id, entry.person.id);
       });
     });
     const grouped = new Map();
@@ -3315,10 +3318,24 @@
     return Array.from(grouped.values()).map(function (household) {
       const memberIds = new Set(household.members.map(function (person) { return person.id; }));
       household.members.sort(function (a, b) { return model.sortName(a).localeCompare(model.sortName(b)) || a.id.localeCompare(b.id); });
-      household.main = household.members.slice().sort(function (a, b) { return comparePrintHouseholdMain(a, b, graph, memberIds); })[0];
+      const living = household.members.filter(function (person) { return person.livingStatus !== "deceased"; });
+      const candidates = living.length ? living : household.members;
+      const candidateIds = new Set(candidates.map(function (person) { return person.id; }));
+      const heads = candidates.filter(function (person) {
+        const visited = new Set([person.id]);
+        const pending = [person.id];
+        while (pending.length) {
+          for (const entry of graph.parents.get(pending.pop()) || []) {
+            if (candidateIds.has(entry.person.id)) return false;
+            if (!visited.has(entry.person.id)) { visited.add(entry.person.id); pending.push(entry.person.id); }
+          }
+        }
+        return true;
+      });
+      household.main = (heads.length ? heads : candidates).slice().sort(function (a, b) { return comparePrintHouseholdMain(a, b, graph, memberIds); })[0];
       household.address = printHouseholdPreferredAddress(household.members);
       household.partners = family.relationGroups(household.main.id, printState).partners.filter(function (entry) {
-        return entry.current && entry.person && memberIds.has(entry.person.id);
+        return entry.current && entry.person && entry.person.livingStatus !== "deceased" && memberIds.has(entry.person.id);
       }).sort(function (a, b) {
         return Number(b.current) - Number(a.current) || model.sortName(a.person).localeCompare(model.sortName(b.person));
       }).map(function (entry) { return entry.person; }).filter(function (partner) {
@@ -3544,10 +3561,12 @@
       const addressCell = index === 0 ? '<td class="print-household-address" rowspan="' + addressRows + '"><div class="print-household-address-layout"><address>' + address + "</address>" + addressPhone + "</div></td>" : "";
       return '<tr class="print-household-person-row"><td><h2 class="' + printHouseholdNameDensityClass(person).trim() + '">' + printHouseholdPersonName(person) + '</h2></td><td><p>' + printContactValues(person.phones) + '</p></td><td><p>' + printContactValues(person.emails) + "</p></td>" + addressCell + "</tr>";
     }).join("");
-    const sameAddress = household.sameAddress.length ? '<tr class="print-household-residents"><td colspan="3">' + household.sameAddress.map(function (person) { return u.escapeHtml(model.displayName(person)); }).join(", ") + "</td></tr>" : "";
+    const sameAddress = household.sameAddress.length ? '<tr class="print-household-residents"><td colspan="3"><span>Also at this address: </span>' + household.sameAddress.map(function (person) { return u.escapeHtml(model.displayName(person)); }).join(", ") + "</td></tr>" : "";
     const sizeClass = householdPeople.length === 1 && !household.sameAddress.length ? "print-household-single" : "print-household-multiple";
+    const lineagePeople = householdPeople.filter(function (person) { return isLinealPerson(person, graph); });
+    const lineageRow = lineagePeople.length ? '<tr class="print-household-lineage"><td colspan="4">' + lineagePeople.map(function (person) { return printLineageProgressionHtml(person, graph); }).join("<br>") + "</td></tr>" : "";
     const columns = '<colgroup><col class="print-directory-household-column"><col class="print-directory-phone-column"><col class="print-directory-email-column"><col class="print-directory-address-column"></colgroup>';
-    return '<tbody class="print-directory-household ' + sizeClass + '"><tr class="print-household-card-row"><td colspan="4"><table class="print-household-card">' + columns + "<tbody>" + householdRows + sameAddress + '<tr class="print-household-lineage"><td colspan="4">' + printLineageProgressionHtml(main, graph) + "</td></tr></tbody></table></td></tr></tbody>";
+    return '<tbody class="print-directory-household ' + sizeClass + '"><tr class="print-household-card-row"><td colspan="4"><table class="print-household-card">' + columns + "<tbody>" + householdRows + sameAddress + lineageRow + "</tbody></table></td></tr></tbody>";
   }
 
   function printGenerationSection(generation, people, continued) {

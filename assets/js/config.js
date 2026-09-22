@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.152",
-      buildId: "0.0.1.152",
+      version: "0.0.1.153",
+      buildId: "0.0.1.153",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -177,13 +177,13 @@
 
     releases: [
       {
-        version: "0.0.1.152",
-        date: "2026-09-20T12:00:00.000Z",
-        title: "Consistent address management controls",
-        summary: "Manage Addresses uses the same assigned-person lists and Add/Edit actions, with compact remove buttons to the left of each name.",
+        version: "0.0.1.153",
+        date: "2026-09-21T12:00:00.000Z",
+        title: "Parent-first households and remarriage layout",
+        summary: "Resident parents head address cards regardless of lineage, and remarried partners stay together in the Tree.",
         features: [],
-        improvements: ["Flexible header search and separated button labels", "Scannable assigned-person rows with X, Add, and pencil Edit controls"],
-        fixes: ["Prevent toolbar actions from overlapping the search field"],
+        improvements: ["Children sharing a parent's address appear as additional residents", "Separate current addresses remain separate households"],
+        fixes: ["Remove the detached layout block for a partner's new spouse", "Do not display a child's lineage as a non-Lineal parent's household lineage"],
         knownIssues: []
       }
     ],

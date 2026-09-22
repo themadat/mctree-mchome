@@ -503,7 +503,12 @@
         arranged.push(peopleById.get(current.id));
         used.add(current.id);
       }
-      componentIds.filter(function (id) { return !used.has(id); }).sort(function (a, b) { return itemOrder.get(a) - itemOrder.get(b); }).forEach(function (id) { arranged.push(peopleById.get(id)); used.add(id); });
+      componentIds.filter(function (id) { return !used.has(id); }).sort(function (a, b) { return itemOrder.get(a) - itemOrder.get(b); }).forEach(function (id) {
+        // A partner's other partners belong to the same layout block, not a detached branch.
+        placements.set(id, { side: "right", anchorId: anchorId, scale: 1, align: "top" });
+        arranged.push(peopleById.get(id));
+        used.add(id);
+      });
     });
     return arranged;
   }

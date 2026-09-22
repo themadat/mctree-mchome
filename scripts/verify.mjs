@@ -356,6 +356,19 @@ orderedBranchLayouts.forEach((orderedBranchLayout) => {
   const orderedCenter = (id) => orderedBranchNodes.get(id).x + orderedBranchNodes.get(id).width / 2;
   if (!(orderedCenter("OC1") < orderedCenter("OC2") && orderedCenter("OC2") < orderedCenter("OC3") && orderedCenter("OG1-1") < orderedCenter("OG2-1") && orderedCenter("OG2-1") < orderedCenter("OG3-1"))) fail("A wide later descendant branch crossed ahead of an earlier parent branch");
 });
+const remarriagePeople = [layoutPerson("RA", "01"), layoutPerson("RB", "", false), layoutPerson("RC", "", false), layoutPerson("RD", "01.01")];
+remarriagePeople[0].livingStatus = "deceased";
+const remarriageLinks = [
+  { id: "RM1", type: "partner", person1Id: "RA", person2Id: "RB", status: "widowed", source: { fields: { "partner-type": "marriage", "end-reason": "death" } } },
+  { id: "RM2", type: "partner", person1Id: "RB", person2Id: "RC", status: "married", source: { fields: { "partner-type": "marriage" } } },
+  { id: "RM3", type: "parent-child", parentId: "RA", childId: "RD", lineage: "lineal", kind: "biological" },
+  { id: "RM4", type: "parent-child", parentId: "RB", childId: "RD", lineage: "non-lineal", kind: "biological" }
+];
+const remarriageLayout = App.family.layout({ workspace: { people: remarriagePeople, relationships: remarriageLinks } }, { mode: "overview", nodeView: "detailed" });
+const remarriageNodes = new Map(remarriageLayout.nodes.map((node) => [node.id, node]));
+const remarriageGap = remarriageNodes.get("RC").x - remarriageNodes.get("RB").x - remarriageNodes.get("RB").width;
+if (remarriageGap < 0 || remarriageGap > 50) fail("A partner's new spouse became a detached Tree block");
+
 const printPackingNodes = [
   { id: "A", generation: 1, x: 0, width: 100 },
   { id: "B", generation: 1, x: 126, width: 100 },
