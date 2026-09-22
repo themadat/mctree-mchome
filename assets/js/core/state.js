@@ -809,6 +809,23 @@
     }).join("|");
   }
 
+  function cleanupDuplicateAddresses(workspace) {
+    const groups = new Map();
+    (workspace.places || []).forEach(function (place) {
+      const key = cleanupAddressKey(place);
+      if (!key.replace(/\|/g, "")) return;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(place);
+    });
+    return Array.from(groups.values()).filter(function (places) { return places.length > 1; }).map(function (places) {
+      return { address: formatAddress(places[0]), records: places.map(function (place) {
+        return { placeId: place.id, personIds: Array.from(new Set((workspace.residences || []).filter(function (residence) {
+          return residence.placeId === place.id;
+        }).map(function (residence) { return residence.personId; }))) };
+      }) };
+    });
+  }
+
   function cleanupPartnerAddressIssues(people, relationships) {
     const peopleById = new Map(people.map(function (person) { return [person.id, person]; }));
     const endedStatuses = new Set(["separated", "divorced", "widowed", "annulled", "former"]);
@@ -846,6 +863,7 @@
     return {
       relationships: relationshipIssues(input),
       partnerAddresses: cleanupPartnerAddressIssues(people, relationships),
+      duplicateAddresses: cleanupDuplicateAddresses(workspace),
       unknownBirthdays: births.unknown,
       incompleteBirthdays: births.incomplete,
       unknownDeaths: deaths.unknown,

@@ -178,6 +178,18 @@ placeholderName.names.preferred.first = "Name";
 placeholderName.addresses = [];
 placeholderName.source.fields["lineage-id"] = "";
 cleanupState.workspace.people.push(missingDeath, partialDeath, placeholderName);
+const duplicateState = structuredClone(cleanupState);
+duplicateState.workspace.places = [
+  { id: "L001", line1: "10 Test Street", city: "Example", line2: "Unit 1", phone: "111" },
+  { id: "L002", line1: " 10 TEST  Street ", city: "example", line2: "Unit 1", phone: "222" },
+  { id: "L003", line1: "10 Test Street", city: "Example", line2: "Unit 2" },
+  { id: "L004" }, { id: "L005" }
+];
+duplicateState.workspace.residences = [{ personId: "P001", placeId: "L001", current: true }];
+const duplicateBefore = JSON.stringify(duplicateState);
+const duplicates = App.stateModel.dataCleanupIssues(duplicateState).duplicateAddresses;
+if (duplicates.length !== 1 || duplicates[0].records.length !== 2 || duplicates[0].records[0].personIds.join() !== "P001" || duplicates[0].records[1].personIds.length) fail("Duplicate addresses must match normalized postal fields, include unassigned records, and ignore phone differences, blank addresses, and distinct units");
+if (JSON.stringify(duplicateState) !== duplicateBefore) fail("Duplicate address checks must not mutate data");
 const cleanupReport = App.stateModel.dataCleanupIssues(cleanupState);
 if (!cleanupReport.partnerAddresses.some((issue) => issue.relationshipId === "R001")) fail("Mismatched current partner addresses are missing from Data Cleanup");
 if (cleanupReport.unknownBirthdays.map((issue) => issue.personId).join(",") !== "P002") fail("Unknown birthdays are classified incorrectly in Data Cleanup");

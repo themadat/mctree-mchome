@@ -4550,6 +4550,15 @@
     }).join("") : '<li class="developer-issue-empty">No mismatched current partner addresses found.</li>';
   }
 
+  function cleanupDuplicateAddressesHtml(issues, peopleById) {
+    return issues.length ? issues.map(function (issue) {
+      return '<li><article class="developer-issue-card"><strong>' + u.escapeHtml(issue.address.replace(/\n/g, ", ")) + '</strong><small>Separate records for the same postal address. Review assignments and use one shared record. Check phone numbers, dates, and notes before removing a duplicate.</small><div class="cleanup-pair-actions">' + issue.records.map(function (record) {
+        const names = record.personIds.map(function (id) { const person = peopleById.get(id); return person ? model.displayName(person) : id; });
+        return '<button type="button" class="button small" data-cleanup-address="' + u.escapeHtml(record.placeId) + '">Review ' + u.escapeHtml(record.placeId + " · " + (names.join(", ") || "No people assigned")) + '</button>';
+      }).join("") + '</div></article></li>';
+    }).join("") : '<li class="developer-issue-empty">No duplicate postal addresses found.</li>';
+  }
+
   function cleanupGroupHtml(key, title, description, count, listHtml) {
     return '<details class="data-cleanup-group" data-cleanup-group="' + u.escapeHtml(key) + '"><summary><span><strong>' + u.escapeHtml(title) + '</strong><small>' + u.escapeHtml(description) + '</small></span><span class="count-pill">' + count + '</span></summary><div class="data-cleanup-group-content"><ul class="developer-issue-list">' + listHtml + "</ul></div></details>";
   }
@@ -4568,6 +4577,7 @@
     const lineagePersonIssues = report.lineage.map(function (issue) { return { personId: issue.personId, reason: issue.value + " · " + issue.reasons.join(" ") }; });
     container.innerHTML = [
       cleanupGroupHtml("relationships", "Unknown or Invalid Relationships", "Unknown types, endings, or invalid Lineal parent statuses.", report.relationships.length, cleanupRelationshipIssuesHtml(report.relationships, peopleById, "No unknown or invalid relationships found.")),
+      cleanupGroupHtml("duplicate-addresses", "Duplicate Addresses", "Separate address records with matching postal details, including unassigned records. Counts show groups of duplicates.", report.duplicateAddresses.length, cleanupDuplicateAddressesHtml(report.duplicateAddresses, peopleById)),
       cleanupGroupHtml("partner-addresses", "Mismatched Addresses for Partners", "Living partners in an ongoing relationship whose current postal addresses differ.", report.partnerAddresses.length, cleanupPartnerAddressIssuesHtml(report.partnerAddresses, peopleById)),
       cleanupGroupHtml("unknown-lineal-births", "Unknown Lineal Births", "All Lineal people with unknown birthdays. Open a person to edit their birth order.", unknownLinealBirths.length, cleanupPersonIssuesHtml(unknownLinealBirths, peopleById, "No unknown Lineal birthdays found.")),
       cleanupGroupHtml("unknown-birthdays", "Unknown Birthdays", "People with no known digits in their birth date.", report.unknownBirthdays.length, cleanupPersonIssuesHtml(report.unknownBirthdays, peopleById, "No unknown birthdays found.")),
@@ -4922,6 +4932,8 @@
   function bindSupportEvents() {
     const dialog = $("#supportDialog");
     dialog.addEventListener("click", function (event) {
+      const cleanupAddress = event.target.closest("[data-cleanup-address]");
+      if (cleanupAddress) { if (!familyEditingEnabled()) return; components.closeDialog("#supportDialog", "cleanup-address"); openAddressEditor(cleanupAddress.dataset.cleanupAddress, $("#supportButton")); return; }
       const cleanupPerson = event.target.closest("[data-cleanup-person]");
       if (cleanupPerson) { components.closeDialog("#supportDialog", "cleanup-person"); selectPerson(cleanupPerson.dataset.cleanupPerson, { focus: true, mobileProfile: true }); return; }
       const cleanupRelationship = event.target.closest("[data-cleanup-relationship]");

@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.154",
-      buildId: "0.0.1.154",
+      version: "0.0.1.155",
+      buildId: "0.0.1.155",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -177,13 +177,13 @@
 
     releases: [
       {
-        version: "0.0.1.154",
+        version: "0.0.1.155",
         date: "2026-09-21T12:00:00.000Z",
-        title: "Exclude deceased people from the contact Directory",
-        summary: "Deceased people no longer appear as contact households or get included through a surviving spouse.",
+        title: "Find duplicate shared addresses",
+        summary: "Data Cleanup identifies separate records with matching postal addresses and shows their assigned people.",
         features: [],
-        improvements: ["Keep deceased relatives in the family tree while excluding them from Directory and mailing households"],
-        fixes: ["Remove empty Directory cards for deceased spouses"],
+        improvements: ["Review each duplicate address directly from Data Cleanup"],
+        fixes: ["Detect duplicate postal records even when their phone numbers differ"],
         knownIssues: []
       }
     ],
