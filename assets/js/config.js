@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.153",
-      buildId: "0.0.1.153",
+      version: "0.0.1.154",
+      buildId: "0.0.1.154",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -177,13 +177,13 @@
 
     releases: [
       {
-        version: "0.0.1.153",
+        version: "0.0.1.154",
         date: "2026-09-21T12:00:00.000Z",
-        title: "Parent-first households and remarriage layout",
-        summary: "Resident parents head address cards regardless of lineage, and remarried partners stay together in the Tree.",
+        title: "Exclude deceased people from the contact Directory",
+        summary: "Deceased people no longer appear as contact households or get included through a surviving spouse.",
         features: [],
-        improvements: ["Children sharing a parent's address appear as additional residents", "Separate current addresses remain separate households"],
-        fixes: ["Remove the detached layout block for a partner's new spouse", "Do not display a child's lineage as a non-Lineal parent's household lineage"],
+        improvements: ["Keep deceased relatives in the family tree while excluding them from Directory and mailing households"],
+        fixes: ["Remove empty Directory cards for deceased spouses"],
         knownIssues: []
       }
     ],

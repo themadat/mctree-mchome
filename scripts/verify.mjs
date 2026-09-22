@@ -386,6 +386,19 @@ const sw = read("sw.js");
 const cloud = read("assets/js/core/cloud.js");
 const pwa = read("assets/js/core/pwa.js");
 const appSource = read("assets/js/app.js");
+const directoryFunctions = appSource.slice(appSource.indexOf("  function printHouseholdAddress("), appSource.indexOf("  function printHouseholdAddressKey("));
+const directoryTest = { u: App.utils, family: App.family };
+vm.createContext(directoryTest);
+vm.runInContext(directoryFunctions + "\nthis.selectDirectoryPeople = printDirectoryPeople;", directoryTest);
+const directoryResidents = [
+  { id: "DP1", livingStatus: "living", addresses: [{ current: true, line1: "Synthetic address" }], phones: [], emails: [] },
+  { id: "DP2", livingStatus: "deceased", addresses: [], phones: [], emails: [] },
+  { id: "DP3", livingStatus: "deceased", addresses: [{ current: true, line1: "Old address" }], phones: [{ value: "555-555-0100" }], emails: [] },
+  { id: "DP4", livingStatus: "living", addresses: [], phones: [{ value: "555-555-0101" }], emails: [] }
+];
+const directoryState = { workspace: { people: directoryResidents, relationships: [{ id: "DR1", type: "partner", person1Id: "DP1", person2Id: "DP2", status: "widowed", source: { fields: { "partner-type": "marriage", "end-reason": "death" } } }] } };
+if (directoryTest.selectDirectoryPeople(directoryResidents, directoryState).map((person) => person.id).join(",") !== "DP1,DP4") fail("Directory includes deceased people or drops living phone-only contacts");
+
 const familySource = read("assets/js/core/family.js");
 const componentsSource = read("assets/js/core/components.js");
 const iconsSource = read("assets/js/icons.js");

@@ -3221,6 +3221,7 @@
   }
 
   function printDirectoryEligible(person) {
+    if (person.livingStatus === "deceased") return false;
     const hasValue = function (item) { return Boolean(u.cleanLine(item && item.value, 240)); };
     return Boolean(printHouseholdAddress(person) || (person.phones || []).some(hasValue) || (person.emails || []).some(hasValue));
   }
@@ -3233,7 +3234,7 @@
       changed = false;
       Array.from(included).forEach(function (personId) {
         family.relationGroups(personId, printState).partners.filter(function (entry) { return entry.current; }).forEach(function (entry) {
-          if (entry.person && available.has(entry.person.id) && !included.has(entry.person.id)) {
+          if (entry.person && entry.person.livingStatus !== "deceased" && available.has(entry.person.id) && !included.has(entry.person.id)) {
             included.add(entry.person.id);
             changed = true;
           }
