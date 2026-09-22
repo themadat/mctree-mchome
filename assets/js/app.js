@@ -1957,7 +1957,7 @@
   }
 
   function addressHasAssignments(id) {
-    return state().workspace.residences.some(function (link) { return link.placeId === id; }) ||
+    return state().workspace.residences.some(function (link) { return link.placeId === id && !addressAssignments.some(function (entry) { return entry.residence.id === link.id && !entry.assigned && !entry.locked; }); }) ||
       ($("#personDialog").open && personDraft.addresses.some(function (address) { return address.placeId === id; })) ||
       ($("#addressDialog").open && $("#sharedAddressId").value === id && addressAssignments.some(function (entry) { return entry.assigned; }));
   }
@@ -1967,10 +1967,10 @@
     if (!familyEditingEnabled() || !id) return;
     const place = state().workspace.places.find(function (item) { return item.id === id; });
     if (!place) return;
-    if (addressHasAssignments(id)) return components.toast("Remove and save all assignments before deleting this address, including former residents.", { kind: "warning" });
-    const accepted = await components.confirm({ title: "Delete address?", message: "Delete this unassigned address and its phone number and notes? " + model.formatAddress(place).replace(/\n/g, ", "), confirmLabel: "Delete address", danger: true });
+    if (addressHasAssignments(id)) return components.toast("Remove all assignments before deleting this address, including former residents.", { kind: "warning" });
+    const accepted = await components.confirm({ title: "Delete address?", message: "Delete this address, its phone number and notes, and save the removal of its assignments? " + model.formatAddress(place).replace(/\n/g, ", "), confirmLabel: "Delete address", danger: true });
     if (!accepted || !familyEditingEnabled() || addressHasAssignments(id)) return;
-    storage.mutate(function (next) { next.workspace.places = next.workspace.places.filter(function (item) { return item.id !== id; }); }, { reason: "delete-address" });
+    storage.mutate(function (next) { next.workspace.residences = next.workspace.residences.filter(function (link) { return link.placeId !== id; }); next.workspace.places = next.workspace.places.filter(function (item) { return item.id !== id; }); }, { reason: "delete-address" });
     components.closeDialog("#addressDialog", "deleted");
     renderAddressLibrary();
     renderAll();
@@ -2000,12 +2000,13 @@
     $("#addressPeopleSearch").value = "";
     $("#addressFormError").hidden = true;
     renderAddressPeople();
-    $("#deleteSharedAddress").hidden = !place.id || addressHasAssignments(place.id);
     components.openDialog("#addressDialog", { trigger: trigger, focus: "#sharedAddress-label" });
     $("#addressDialog .dialog-body").scrollTop = 0;
   }
 
   function renderAddressPeople() {
+    const id = $("#sharedAddressId").value;
+    $("#deleteSharedAddress").hidden = !id || addressHasAssignments(id) || addressAssignments.some(function (entry) { return entry.assigned; });
     const query = $("#addressPeopleSearch").value.trim();
     let matches = addressAssignments.map(function (entry, index) { return { entry: entry, index: index }; }).filter(function (item) {
       return query ? relationshipPersonMatches(item.entry.person, query) : item.entry.assigned;
@@ -4955,7 +4956,7 @@
     const dialog = $("#supportDialog");
     dialog.addEventListener("click", function (event) {
       const cleanupAddress = event.target.closest("[data-cleanup-address]");
-      if (cleanupAddress) { if (!familyEditingEnabled()) return; components.closeDialog("#supportDialog", "cleanup-address"); openAddressEditor(cleanupAddress.dataset.cleanupAddress, $("#supportButton")); return; }
+      if (cleanupAddress) { if (!familyEditingEnabled()) return; openAddressEditor(cleanupAddress.dataset.cleanupAddress, cleanupAddress); return; }
       const cleanupPerson = event.target.closest("[data-cleanup-person]");
       if (cleanupPerson) { components.closeDialog("#supportDialog", "cleanup-person"); selectPerson(cleanupPerson.dataset.cleanupPerson, { focus: true, mobileProfile: true }); return; }
       const cleanupRelationship = event.target.closest("[data-cleanup-relationship]");
