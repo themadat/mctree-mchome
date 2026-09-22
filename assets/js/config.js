@@ -8,8 +8,8 @@
       name: "McFamily",
       shortName: "McFamily",
       description: "A private, local-first family tree, address book, and printable family atlas.",
-      version: "0.0.1.155",
-      buildId: "0.0.1.155",
+      version: "0.0.1.156",
+      buildId: "0.0.1.156",
       repository: {
         label: "Project repository",
         url: "https://github.com/themadat/mctree-mchome"
@@ -177,13 +177,13 @@
 
     releases: [
       {
-        version: "0.0.1.155",
+        version: "0.0.1.156",
         date: "2026-09-21T12:00:00.000Z",
-        title: "Find duplicate shared addresses",
-        summary: "Data Cleanup identifies separate records with matching postal addresses and shows their assigned people.",
+        title: "Organize Data Cleanup checks",
+        summary: "Data Cleanup groups related checks together with consistently sized collapsed headers.",
         features: [],
-        improvements: ["Review each duplicate address directly from Data Cleanup"],
-        fixes: ["Detect duplicate postal records even when their phone numbers differ"],
+        improvements: ["Order relationship and name checks first, followed by deaths, birthdays, lineage, and addresses"],
+        fixes: ["Reserve consistent title and description space in cleanup headers"],
         knownIssues: []
       }
     ],
